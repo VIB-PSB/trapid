@@ -29,6 +29,10 @@ class TrapidController extends AppController{
 			  );
 
 
+  function test(){
+  }
+
+
   function qdel_all($code=null){
     if($code=="enable_delete"){
       Configure::write("debug",2);
