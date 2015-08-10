@@ -1,0 +1,63 @@
+<div>
+<h2>GO term</h2>
+<div class="subdiv">
+	<?php echo $this->element("trapid_experiment");?>	
+	
+	<h3>Overview</h3>
+	<div class="subdiv">		
+		<dl class="standard">
+			<dt>InterPro domain</dt>
+			<dd>
+			<?php
+				$interpro	= $interpro_info['motif_id'];
+				if(!$exp_info['allow_linkout']){
+					echo $interpro;
+				}
+				else{
+					echo $html->link($interpro,$exp_info['datasource_URL']."interpro/view/".$interpro);
+				}			 
+			?>
+			</dd>
+			<dt>InterPro description</dt>
+			<dd><?php echo $interpro_info["desc"];?></dd>
+			<dt>#transcripts</dt>
+			<dd><?php echo $num_transcripts;?></dd>			
+		</dl>
+	</div>
+		
+
+	<h3>Toolbox</h3>		
+	<div class="subdiv">
+	<?php
+	$toolbox	= array("Title1"=>array(
+					array(
+						"Find the associated gene families",
+						$html->url(array("action"=>"assoc_gf",$exp_id,"interpro",$interpro)),
+						"some_image.png"
+					),
+					array(
+						"Do some other stuff",
+						$html->url(array("action"=>"bla","go",$exp_id)),
+						"some_image2.png"
+					),					
+				),
+				"Title2"=>array(
+					array(	
+						"Bla bla bla",
+						$html->url(array("action"=>"bla",$exp_id)),
+						"other_image.png"
+					),								
+				)
+			);
+	$this->set("toolbox",$toolbox);
+	echo $this->element("toolbox");
+	?>	
+	</div>
+
+	<h3>Transcripts</h3>
+	<div class="subdiv">
+	<?php echo $this->element("table_func");?>
+
+	</div>	
+</div>
+</div>

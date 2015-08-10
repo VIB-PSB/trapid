@@ -1,0 +1,12 @@
+#AuthUserFile /www/group/biocomp/extra/bioinformatics_prod/webtools/trapid/.htpasswd
+#AuthType Basic
+#AuthName "TRAPID is under construction. Please return later."
+#Require valid-user
+Action  application/x-httpd-php5 /cgi-bin/fast.fcgi 
+AddType application/x-httpd-php5 .php
+
+<IfModule mod_rewrite.c>
+   RewriteEngine on
+   RewriteRule    ^$ app/webroot/    [L]
+   RewriteRule    (.*) app/webroot/$1 [L]
+</IfModule>

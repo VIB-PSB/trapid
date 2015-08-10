@@ -1,0 +1,14 @@
+<?php
+  /*
+   */
+class GoParents extends AppModel{
+  var $name		= "GoParents";
+  var $useTable		= "go_parents";
+  var $useDbConfig 	= "db_plaza_public_02_5";
+
+
+
+
+
+}
+?>

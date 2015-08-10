@@ -1,0 +1,14 @@
+<div>
+<h2>Lengths distribution gene family</h2>
+<div class="subdiv">
+	<?php echo $this->element("trapid_experiment");?>
+	
+	<h3>ORF lengths</h3>
+	<?php
+	pr($gf_info);
+
+	?>	
+	
+</div>
+	
+</div>

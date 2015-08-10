@@ -1,0 +1,1017 @@
+<?php
+App::import("Sanitize");
+/*
+ * General controller class for the trapid functionality
+ */
+class ToolsController extends AppController{
+  var $name		= "Tools";
+  var $helpers		= array("Html","Form","Javascript","Ajax");
+
+  var $uses		= array("Authentication","Experiments","DataSources","Transcripts","GeneFamilies",
+				"TranscriptsGo","TranscriptsInterpro","TranscriptsLabels",
+
+				"AnnotSources","Annotation","ExtendedGo","ProteinMotifs","GfData","GoParents",
+
+				"FullTaxonomy"
+				);
+
+  var $components	= array("Cookie","TrapidUtils","Statistics");
+  var $paginate		= array(
+				"Transcripts"=>
+				array(
+					"limit"=>10,
+			       		"order"=>array("Transcripts.transcript_id"=>"ASC")					
+				)			
+			  );
+
+
+
+
+
+
+
+  /*
+   * Function for running framedp on a set of transcripts (from gene family page).
+   */
+  function framedp($exp_id=null,$gf_id=null,$transcript_id=null){
+
+    if(!$exp_id || !$gf_id){$this->redirect(array("controller"=>"trapid","action"=>"experiments"));}
+    $exp_id	= mysql_real_escape_string($exp_id);
+    parent::check_user_exp($exp_id);	 
+    $exp_info	= $this->Experiments->getDefaultInformation($exp_id);
+    $this->set("exp_info",$exp_info);
+    $this->set("exp_id",$exp_id);	   
+    $this->TrapidUtils->checkPageAccess($exp_info['title'],$exp_info["process_state"],$this->process_states["default"]);
+
+    if($exp_info['framedp_state']!="finished"){
+      $this->set("error","framedp_state");
+    }
+    
+    //check if correct gene family 
+    $gf_id	= mysql_real_escape_string($gf_id);
+    $gf_info	= $this->GeneFamilies->find("first",array("conditions"=>array("experiment_id"=>$exp_id,"gf_id"=>$gf_id)));
+    if(!$gf_info){$this->redirect(array("controller"=>"trapid","action"=>"experiment",$exp_id));}
+
+    $transcripts = $this->Transcripts->find("all",array("conditions"=>array("experiment_id"=>$exp_id,"gf_id"=>$gf_id)));
+
+    $this->set("transcripts",$transcripts);
+    $this->set("gf_id",$gf_id);
+    if($transcript_id){	//just for visualization reasons
+	    $this->set("selected_transcript_id",$transcript_id);	
+    }
+    if($_POST){     
+      //select the transcripts
+      $selected_transcripts = array();
+      foreach($_POST as $k=>$v){	
+	$transcript_info = $this->Transcripts->find("first",array("conditions"=>array("experiment_id"=>$exp_id,"transcript_id"=>$k)));
+	if($transcript_info){$selected_transcripts[mysql_real_escape_string($k)]=$transcript_info['Transcripts']['transcript_sequence'];}
+      }
+      if(count($selected_transcripts)==0){
+	$this->set("error","No transcripts selected");
+	return;
+      }
+      //create shell_file, also allready write the multi-fasta file containing the sequences
+      $qsub_file		= $this->TrapidUtils->create_qsub_script($exp_id);
+      $shell_file      		= $this->TrapidUtils->create_shell_script_framedp($exp_id,$exp_info['used_plaza_database'],$gf_id,$selected_transcripts);
+      		
+      if($shell_file == null || $qsub_file == null ){$this->set("error","problem creating program files");return;} 
+      $tmp_dir	= TMP."experiment_data/".$exp_id."/framedp/evaluation/";
+      $qsub_out	= $tmp_dir."framedp_".$exp_id."_".$gf_id.".out";
+      $qsub_err	= $tmp_dir."framedp_".$exp_id."_".$gf_id.".err";     
+      if(file_exists($qsub_out)){unlink($qsub_out);}
+      if(file_exists($qsub_err)){unlink($qsub_err);}
+      $command  	= "sh $qsub_file -q short -o $qsub_out -e $qsub_err $shell_file";
+      $output		= array();      
+      exec($command,$output);   	           
+      $cluster_job	= $this->TrapidUtils->getClusterJobId($output);
+      if($cluster_job==null){$this->set("error","Problem with retrieving job identifier from web cluster");return;}     
+      $this->set("job_id",$cluster_job); 
+    }
+    	 	      
+  }
+
+  function load_framedp($exp_id=null,$gf_id=null,$job_id=null){
+    $exp_id	= mysql_real_escape_string($exp_id);
+    parent::check_user_exp($exp_id);	
+    $exp_info	= $this->Experiments->getDefaultInformation($exp_id); 
+    $this->TrapidUtils->checkPageAccess($exp_info['title'],$exp_info["process_state"],$this->process_states["finished"]); 	
+    $this->set("exp_id",$exp_id);
+    $this->set("gf_id",$gf_id);
+    $this->layout = "";
+    if($gf_id==null || $job_id==null){$this->set("error","Incorrect parameters");return;}         
+    $cluster_res	= $this->TrapidUtils->waitfor_cluster($exp_id,$job_id,180,5);
+    if(isset($cluster_res["error"])){$this->set("error",$cluster_res["error"]);return;}
+    
+  }
+
+
+
+
+
+
+
+ function load_msa($exp_id=null,$gf_id=null,$job_id=null){
+    $exp_id	= mysql_real_escape_string($exp_id);
+    parent::check_user_exp($exp_id);	
+    $exp_info	= $this->Experiments->getDefaultInformation($exp_id); 
+    $this->TrapidUtils->checkPageAccess($exp_info['title'],$exp_info["process_state"],$this->process_states["finished"]); 	
+    $this->set("exp_id",$exp_id);
+    $this->layout = "";
+    if($gf_id==null || $job_id==null){$this->set("error","Incorrect parameters");return;}         
+    $cluster_res	= $this->TrapidUtils->waitfor_cluster($exp_id,$job_id,180,5);
+    if(isset($cluster_res["error"])){$this->set("error",$cluster_res["error"]);return;}
+    $gf_info	= $this->GeneFamilies->find("first",array("conditions"=>array("experiment_id"=>$exp_id,"gf_id"=>$gf_id)));   
+    if(!$gf_info){$this->set("error","No gene family information found");return;}
+    $this->set("gf_id",$gf_id);
+    $this->set("gf_info",$gf_info);    
+    $this->set("hashed_user_id",parent::get_hashed_user_id());
+  }
+
+
+
+
+
+  function view_msa($user_identifier=null,$exp_id=null,$gf_id=null,$type="normal"){
+    Configure::write("debug",1);
+    $this->layout = "";	    	 
+    if(!$user_identifier||!$exp_id || !$gf_id){return;}
+    $user_identifer = mysql_real_escape_string($user_identifier);
+    $exp_id	= mysql_real_escape_string($exp_id);
+    if(!parent::check_user_exp_no_cookie($user_identifier,$exp_id)){return;}
+    $gf_info	= $this->GeneFamilies->find("first",array("conditions"=>array("experiment_id"=>$exp_id,"gf_id"=>$gf_id)));   
+    if(!$gf_info){return;}
+    if(!($type=="normal" || $type=="stripped")){$type="normal";}
+    $this->set("gf_id",$gf_id);
+    if($type=="normal"){$this->set("msa",$gf_info['GeneFamilies']['msa']);}
+    else if($type=="stripped"){$this->set("msa",$gf_info['GeneFamilies']['msa_stripped']);}             
+    $this->set("file_name","msa_".$exp_id."_".$gf_id.".faln");
+  }
+
+
+
+  function create_msa($exp_id=null,$gf_id=null){
+    if(!$exp_id || !$gf_id){$this->redirect(array("controller"=>"trapid","action"=>"experiments"));}
+    $exp_id	= mysql_real_escape_string($exp_id);
+    parent::check_user_exp($exp_id);	 
+    $exp_info	= $this->Experiments->getDefaultInformation($exp_id);	
+    $this->set("exp_info",$exp_info);
+    $this->set("exp_id",$exp_id);
+
+    //check gf_id
+    $gf_info	= $this->GeneFamilies->find("first",array("conditions"=>array("experiment_id"=>$exp_id,"gf_id"=>$gf_id)));   
+    if(!$gf_info){$this->redirect(array("controller"=>"trapid","action"=>"experiment",$exp_id));}
+    $this->set("gf_id",$gf_id);
+    $this->set("gf_info",$gf_info);  
+
+    //get phylogenetic profile, depending on type of GF assignment (HOM/IORTHO)
+    $phylo_profile	= array();
+    if($exp_info['genefamily_type']=="HOM"){
+      $gf_content	= $this->GfData->find("all",array("conditions"=>array("gf_id"=>$gf_info['GeneFamilies']['plaza_gf_id']),"fields"=>"gene_id"));        
+      //pr($gf_content);
+      $phylo_profile	= $this->Annotation->getSpeciesProfile($this->TrapidUtils->reduceArray($gf_content,"GfData","gene_id"));
+    }
+    else if($exp_info['genefamily_type']=="IORTHO"){
+      $iortho_content	= $this->GeneFamilies->find("first",array("conditions"=>array("experiment_id"=>$exp_id,"gf_id"=>$gf_id),"fields"=>array("gf_content")));    
+      $phylo_profile=$this->Annotation->getSpeciesProfile(explode(" ",$iortho_content['GeneFamilies']['gf_content']));
+    }
+    $this->set("phylo_profile",$phylo_profile);      
+    
+	
+    //retrieve the species from the associated reference database
+    $available_species		= $this->AnnotSources->find("all");
+    $available_species_tax	= $this->TrapidUtils->indexArrayMulti($available_species,"AnnotSources","tax_id",array("species","common_name"));  
+    $available_species_common	= $this->TrapidUtils->indexArrayMulti($available_species,"AnnotSources","common_name",array("species","tax_id"));	
+    $available_clades		= $this->FullTaxonomy->findClades(array_keys($available_species_tax));   
+    ksort($available_species_common);
+
+    $clades_species_tax	= $available_clades["clade_species_tax"];
+    $clades_parental	= $available_clades["parent_child_clades"];
+    $full_tree		= $available_clades["full_tree"];
+    $this->set("available_species_tax",$available_species_tax);    
+    $this->set("available_clades",$clades_species_tax);
+    $this->set("parent_child_clades",$clades_parental);
+    $this->set("available_species_common",$available_species_common);
+    $this->set("full_tree",$full_tree);
+
+    $MAX_GENES_MSA_TREE		= 200;
+    $this->set("MAX_GENES",$MAX_GENES_MSA_TREE);
+
+    $editing_modes	= array("0.10"=>"Stringent editing","0.25"=>"Relaxed editing");
+    $this->set("editing_modes",$editing_modes);
+
+
+    // pr($clades_parental);
+    //pr($clades_species_tax);
+    //pr($full_tree);
+
+
+    //ok, check whether there is already a multiple sequence alignment present in the database.	
+    //if so, get the used-species, and the msa, and display it!  
+    if($gf_info['GeneFamilies']['msa']){          
+      $this->set("previous_result",true);
+      $tax2clades	= array();    
+      foreach($available_clades["clade_species_tax"] as $clade=>$tax_list){
+	foreach($tax_list as $tax){
+	  if(!array_key_exists($tax,$tax2clades)){$tax2clades[$tax]=array();}
+	  $tax2clades[$tax][$clade] = $clade;	
+	}
+      }    
+      $selected_species	= array(); 
+      $selected_clades	= array();	
+      $used_species	= explode(",",$gf_info['GeneFamilies']["used_species"]);
+      foreach($used_species as $us){
+	$selected_species[$us]	= $us;
+	foreach($tax2clades[$us] as $cl){$selected_clades[$cl] = $cl;}
+      }         
+      $this->set("selected_species",$selected_species);
+      $this->set("selected_clades",$selected_clades);
+      $this->set("hashed_user_id",parent::get_hashed_user_id());
+    }
+    
+    if($_POST){                
+      $tmp_dir	= TMP."experiment_data/".$exp_id."/";
+      $this->set("previous_result",false);
+      $selected_species	= array();
+      $selected_clades	= array();
+      foreach($_POST as $k=>$v){
+	$t	= trim($k);
+	if(array_key_exists($t,$available_species_tax)){$selected_species[$t]= $t;}
+	else if(array_key_exists($t,$clades_parental)){$selected_clades[$t]= $t;}
+      }
+      $this->set("selected_species",$selected_species);
+      $this->set("selected_clades",$selected_clades);  
+
+      // if(!array_key_exists("editing_mode",$_POST)){$this->set("error","No editing mode defined");return;}
+      //$editing_mode	= "0.10";
+      //if(array_key_exists($_POST["editing_mode"],$editing_modes)){$editing_mode = $_POST['editing_mode'];}
+      //$this->set("editing_mode",$editing_mode);
+
+      if(count($selected_species)==0){$this->set("error","No genes/species selected");return;}
+      //do it here, don't trust user input
+      $gene_count	= 0; 
+      foreach($selected_species as $ss){$gene_count+=$phylo_profile[$available_species_tax[$ss]['species']];}
+      if($gene_count>$MAX_GENES_MSA_TREE || $gene_count==0){$this->set("error","Incorrect number of genes selected");return;}
+    
+      //check for double gene ids/transcript ids in the input! Important, as this will otherwise crash the strip_msa procedure
+      $contains_double_entries	= $this->has_double_entries($exp_id,$gf_info['GeneFamilies'],$selected_species,$exp_info['genefamily_type']);
+      if($contains_double_entries){
+	$this->set("error","Some transcripts have the same name as genes in the selected species.");return;
+      }
+
+      //ok, now write this species information to the database.
+      $this->GeneFamilies->updateAll(array("used_species"=>"'".implode(",",$selected_species)."'"),array("experiment_id"=>$exp_id,"gf_id"=>$gf_id));
+      //create launch scripts, and put them on the web cluster. The view should show an ajax page which checks every X seconds 
+      //whether the job has finished yet.
+      $qsub_file		= $this->TrapidUtils->create_qsub_script($exp_id);
+      $shell_file      		= $this->TrapidUtils->create_shell_script_msa($exp_id,$exp_info['used_plaza_database'],$gf_id);
+      		
+      if($shell_file == null || $qsub_file == null ){$this->set("error","problem creating program files");return;} 
+      $qsub_out	= $tmp_dir."msa_".$exp_id."_".$gf_id.".out";
+      $qsub_err	= $tmp_dir."msa_".$exp_id."_".$gf_id.".err";     
+      if(file_exists($qsub_out)){unlink($qsub_out);}
+      if(file_exists($qsub_err)){unlink($qsub_err);}
+      $command  	= "sh $qsub_file -q short -o $qsub_out -e $qsub_err $shell_file";
+      $output		= array();      
+      exec($command,$output);   	           
+      $cluster_job	= $this->TrapidUtils->getClusterJobId($output);
+      if($cluster_job==null){$this->set("error","Problem with retrieving job identifier from web cluster");return;}
+      $this->set("job_id",$cluster_job);	     
+      //pr($cluster_job);      
+      $this->set("run_pipeline",true);
+      return; 
+    }
+  }
+
+
+  function has_double_entries($exp_id,$gf_info,$selected_species,$gf_type){
+    //step 1: get the transcript ids which are in the experiment and in the gene family.
+    $transcripts	= $this->Transcripts->find("all",array("conditions"=>array("experiment_id"=>$exp_id,"gf_id"=>$gf_info['gf_id']),"fields"=>array("transcript_id")));
+    $transcripts	= $this->TrapidUtils->reduceArray($transcripts,"Transcripts","transcript_id");
+    
+    //step 2: get the genes from the selected species and gene family
+    $gene_ids		= array();
+    if($gf_type=="HOM"){
+      $species	= $this->AnnotSources->find("all",array("conditions"=>array("tax_id"=>array_values($selected_species)),"fields"=>array("species")));
+      $species		= $this->TrapidUtils->indexArraySimple($species,"AnnotSources","species","species");
+      $gene_ids_gf	= $this->GfData->find("all",array("conditions"=>array("gf_id"=>$gf_info['plaza_gf_id']),"fields"=>array("gene_id")));
+      $gene_ids_gf	= $this->TrapidUtils->reduceArray($gene_ids_gf,"GfData","gene_id");
+      $gene_id_data	= $this->Annotation->find("all",array("conditions"=>array("gene_id"=>$gene_ids_gf),"fields"=>array("gene_id","species")));
+      foreach($gene_id_data as $gid){
+	$gene_id	= $gid['Annotation']['gene_id'];
+	$spec		= $gid['Annotation']['species'];
+	if(array_key_exists($spec,$species)){$gene_ids[] = $gene_id;}
+      }
+    }
+    else{
+      $gene_ids	= explode(" ",$gf_info['gf_content']);
+    }
+    $count_transcripts	= count($transcripts);
+    $count_genes	= count($gene_ids);
+    $count_merged	= count(array_unique(array_merge($transcripts,$gene_ids)));
+    if($count_merged==($count_transcripts+$count_genes)){
+      	return false;
+    }
+    else{
+    	return true;
+    }
+  }
+
+
+
+ function load_tree($exp_id=null,$gf_id=null,$job_id=null){
+    $exp_id	= mysql_real_escape_string($exp_id);
+    parent::check_user_exp($exp_id);	
+    $exp_info	= $this->Experiments->getDefaultInformation($exp_id); 
+    $this->TrapidUtils->checkPageAccess($exp_info['title'],$exp_info["process_state"],$this->process_states["finished"]); 	
+    $this->set("exp_id",$exp_id);
+    $this->layout = "";
+    if($gf_id==null || $job_id==null){$this->set("error","Incorrect parameters");return;}         
+    $cluster_res	= $this->TrapidUtils->waitfor_cluster($exp_id,$job_id,600,5);
+    if(isset($cluster_res["error"])){$this->set("error",$cluster_res["error"]);return;}
+    $gf_info	= $this->GeneFamilies->find("first",array("conditions"=>array("experiment_id"=>$exp_id,"gf_id"=>$gf_id)));   
+    if(!$gf_info){$this->set("error","No gene family information found");return;}
+    $this->set("gf_id",$gf_id);
+    $this->set("gf_info",$gf_info);    
+    $this->set("hashed_user_id",parent::get_hashed_user_id());
+  }
+  
+
+
+  function view_tree($user_identifier=null,$exp_id=null,$gf_id=null){
+    $this->layout 	= "";	    	 
+    if(!$user_identifier||!$exp_id || !$gf_id){return;}
+    $user_identifer 	= mysql_real_escape_string($user_identifier);
+    $exp_id		= mysql_real_escape_string($exp_id);
+    if(!parent::check_user_exp_no_cookie($user_identifier,$exp_id)){return;}
+    $gf_info		= $this->GeneFamilies->find("first",array("conditions"=>array("experiment_id"=>$exp_id,"gf_id"=>$gf_id)));   
+    if(!$gf_info){return;} 
+    $this->set("gf_id",$gf_id);
+    $this->set("tree",$gf_info['GeneFamilies']['tree']);
+    $this->set("file_name","tree_".$exp_id."_".$gf_id.".newick");
+  }
+
+
+
+  function create_tree($exp_id=null,$gf_id=null){
+    if(!$exp_id || !$gf_id){$this->redirect(array("controller"=>"trapid","action"=>"experiments"));}
+    $exp_id	= mysql_real_escape_string($exp_id);
+    parent::check_user_exp($exp_id);	 
+    $exp_info	= $this->Experiments->getDefaultInformation($exp_id);	
+    $this->set("exp_info",$exp_info);
+    $this->set("exp_id",$exp_id);
+
+    //check gf_id
+    $gf_info	= $this->GeneFamilies->find("first",array("conditions"=>array("experiment_id"=>$exp_id,"gf_id"=>$gf_id)));   
+    if(!$gf_info){$this->redirect(array("controller"=>"trapid","action"=>"experiment",$exp_id));}
+    $this->set("gf_id",$gf_id);
+    $this->set("gf_info",$gf_info);  
+
+    //get phylogenetic profile, depending on type of GF assignment (HOM/IORTHO)
+    $phylo_profile	= array();
+    if($exp_info['genefamily_type']=="HOM"){
+      $gf_content	= $this->GfData->find("all",array("conditions"=>array("gf_id"=>$gf_info['GeneFamilies']['plaza_gf_id']),"fields"=>"gene_id"));        
+      $phylo_profile	= $this->Annotation->getSpeciesProfile($this->TrapidUtils->reduceArray($gf_content,"GfData","gene_id"));
+      // pr($gf_content);
+    }
+    else if($exp_info['genefamily_type']=="IORTHO"){
+      $iortho_content	= $this->GeneFamilies->find("first",array("conditions"=>array("experiment_id"=>$exp_id,"gf_id"=>$gf_id),"fields"=>array("gf_content")));    
+      $phylo_profile=$this->Annotation->getSpeciesProfile(explode(" ",$iortho_content['GeneFamilies']['gf_content']));
+    }
+    $this->set("phylo_profile",$phylo_profile);      
+	
+    //get number of transcripts which are partial
+    $num_partial_transcripts = $this->Transcripts->find("count",array("conditions"=>array("experiment_id"=>$exp_id,"gf_id"=>$gf_id,"meta_annotation"=>"Partial")));
+    $this->set("num_partial_transcripts",$num_partial_transcripts);
+
+    //get all transcripts, together with their meta annotation
+    $gf_transcripts	= $this->Transcripts->find("all",array("conditions"=>array("experiment_id"=>$exp_id,"gf_id"=>$gf_id),"fields"=>array("transcript_id","meta_annotation")));
+    $gf_transcripts	= $this->TrapidUtils->indexArraySimple($gf_transcripts,"Transcripts","transcript_id","meta_annotation");
+    $this->set("gf_transcripts",$gf_transcripts);
+
+    //retrieve the species from the associated reference database
+    $available_species		= $this->AnnotSources->find("all");
+    $available_species_tax	= $this->TrapidUtils->indexArrayMulti($available_species,"AnnotSources","tax_id",array("species","common_name"));  
+    $available_species_common	= $this->TrapidUtils->indexArrayMulti($available_species,"AnnotSources","common_name",array("species","tax_id"));	
+    $available_clades		= $this->FullTaxonomy->findClades(array_keys($available_species_tax));   
+    ksort($available_species_common);
+
+    $clades_species_tax	= $available_clades["clade_species_tax"];
+    $clades_parental	= $available_clades["parent_child_clades"];
+    $full_tree		= $available_clades["full_tree"];	
+    $this->set("available_species_tax",$available_species_tax);
+    $this->set("available_clades",$clades_species_tax);
+    $this->set("parent_child_clades",$clades_parental);
+    $this->set("available_species_common",$available_species_common);
+    $this->set("full_tree",$full_tree);
+
+    $MAX_GENES_MSA_TREE		= 200;
+    $this->set("MAX_GENES",$MAX_GENES_MSA_TREE);
+
+    $editing_modes	= array("0.10"=>"Stringent editing","0.25"=>"Relaxed editing");
+    $this->set("editing_modes",$editing_modes);
+    $editing_mode	= "0.10";
+    $this->set("editing_mode",$editing_mode);
+
+    $bootstrap_modes	= array("1"=>"1","100"=>"100","500"=>"500");
+    $this->set("bootstrap_modes",$bootstrap_modes);
+    $bootstrap_mode	= "100";
+    $this->set("bootstrap_mode",$bootstrap_mode);
+
+    //ok, check whether there is already a multiple sequence alignment present in the database.	
+    //if so, get the used-species, and the msa, and display it!  
+    if($gf_info['GeneFamilies']['tree']){          
+      $this->set("previous_result",true);
+      $tax2clades	= array();    
+      foreach($available_clades["clade_species_tax"] as $clade=>$tax_list){
+	foreach($tax_list as $tax){
+	  if(!array_key_exists($tax,$tax2clades)){$tax2clades[$tax]=array();}
+	  $tax2clades[$tax][$clade] = $clade;	
+	}
+      }    
+      $selected_species	= array(); 
+      $selected_clades	= array();	
+      $used_species	= explode(",",$gf_info['GeneFamilies']["used_species"]);
+      foreach($used_species as $us){
+	$selected_species[$us]	= $us;
+	foreach($tax2clades[$us] as $cl){$selected_clades[$cl] = $cl;}
+      }         
+      $this->set("selected_species",$selected_species);
+      $this->set("selected_clades",$selected_clades);
+      $this->set("hashed_user_id",parent::get_hashed_user_id());
+    }
+
+    
+    if($_POST){                         	  
+      $tmp_dir	= TMP."experiment_data/".$exp_id."/";
+      $this->set("previous_result",false);
+      $selected_species	= array();
+      $selected_clades	= array();
+      $exclude_transcripts = array();
+      foreach($_POST as $k=>$v){
+	$t	= trim($k);
+	if(array_key_exists($t,$available_species_tax)){$selected_species[$t]= $t;}
+	else if(array_key_exists($t,$clades_parental)){$selected_clades[$t]= $t;}
+	else if(strlen($t)>8 && substr($t,0,8)=="exclude_"){
+	  $putative_transcript	= substr($t,8);
+	  //pr($putative_transcript);
+	  if(array_key_exists($putative_transcript,$gf_transcripts)){$exclude_transcripts[]=$putative_transcript;}
+	}	
+      }
+      //pr($exclude_transcripts);
+      //return;      
+      $this->set("selected_species",$selected_species);
+      $this->set("selected_clades",$selected_clades);        
+      
+
+      //select editing mode for MSA
+      if(!array_key_exists("editing_mode",$_POST)){$this->set("error","No editing mode defined");return;}   
+      if(array_key_exists($_POST["editing_mode"],$editing_modes)){$editing_mode = $_POST['editing_mode'];}
+      $this->set("editing_mode",$editing_mode);
+
+      //select bootstrapping for treebuilding
+      if(!array_key_exists("bootstrap_mode",$_POST)){$this->set("error","No bootstrap mode defined");return;}     
+      if(array_key_exists($_POST["bootstrap_mode"],$bootstrap_modes)){$bootstrap_mode = $_POST['bootstrap_mode'];}
+      $this->set("bootstrap_mode",$bootstrap_mode);
+
+
+      if(count($selected_species)==0){$this->set("error","No genes/species selected");return;}
+      //do count of genes here, don't trust user input
+      $gene_count	= 0; 
+      foreach($selected_species as $ss){$gene_count+=$phylo_profile[$available_species_tax[$ss]['species']];}
+      if($gene_count>$MAX_GENES_MSA_TREE || $gene_count==0){$this->set("error","Incorrect number of genes selected");return;}
+    
+      //check for double gene ids/transcript ids in the input! Important, as this will otherwise crash the strip_msa procedure
+      $contains_double_entries	= $this->has_double_entries($exp_id,$gf_info['GeneFamilies'],$selected_species,$exp_info['genefamily_type']);
+      if($contains_double_entries){
+	$this->set("error","Some transcripts have the same name as genes in the selected species.");return;
+      }
+
+
+      //ok, now write this species information to the database.
+      $this->GeneFamilies->updateAll(array("used_species"=>"'".implode(",",$selected_species)."'","exclude_transcripts"=>"'".implode(",",$exclude_transcripts)."'"),array("experiment_id"=>$exp_id,"gf_id"=>$gf_id));
+      
+      //create launch scripts, and put them on the web cluster. The view should show an ajax page which checks every X seconds 
+      //whether the job has finished yet.
+      $qsub_file		= $this->TrapidUtils->create_qsub_script($exp_id);
+      $shell_file      		= $this->TrapidUtils->create_shell_script_tree($exp_id,$exp_info['used_plaza_database'],$gf_id,
+									       $editing_mode,$bootstrap_mode);
+      		
+      if($shell_file == null || $qsub_file == null ){$this->set("error","problem creating program files");return;} 
+      $qsub_out	= $tmp_dir."tree_".$exp_id."_".$gf_id.".out";
+      $qsub_err	= $tmp_dir."tree_".$exp_id."_".$gf_id.".err";     
+      if(file_exists($qsub_out)){unlink($qsub_out);}
+      if(file_exists($qsub_err)){unlink($qsub_err);}
+      $command  	= "sh $qsub_file -q long -o $qsub_out -e $qsub_err $shell_file";
+      $output		= array();      
+      exec($command,$output);   	           
+      $cluster_job	= $this->TrapidUtils->getClusterJobId($output);
+      if($cluster_job==null){$this->set("error","Problem with retrieving job identifier from web cluster");return;}
+      $this->set("job_id",$cluster_job);	     
+      //pr($cluster_job);      
+      $this->set("run_pipeline",true);
+      return;	             	         
+    }    
+  }
+
+
+
+
+
+  /*
+   * Display ratios between 
+   */
+  function go_ratios($exp_id=null){
+    $exp_id	= mysql_real_escape_string($exp_id);
+    parent::check_user_exp($exp_id);	
+    $exp_info	= $this->Experiments->getDefaultInformation($exp_id); 
+    $this->TrapidUtils->checkPageAccess($exp_info['title'],$exp_info["process_state"],$this->process_states["finished"]); 
+    $this->set("exp_info",$exp_info);
+    $this->set("exp_id",$exp_id);
+
+    $subsets	= $this->TranscriptsLabels->getLabels($exp_id);
+    if(count($subsets) < 1){$this->redirect(array("controller"=>"trapid","action"=>"experiment",$exp_id));}
+    $this->set("subsets",$subsets);	
+
+    if($_POST){
+	
+    }
+
+	
+  }
+
+
+
+
+  function go_enrichment($exp_id=null){
+    $exp_id	= mysql_real_escape_string($exp_id);
+    parent::check_user_exp($exp_id);	
+    $exp_info	= $this->Experiments->getDefaultInformation($exp_id); 
+    $this->TrapidUtils->checkPageAccess($exp_info['title'],$exp_info["process_state"],$this->process_states["finished"]); 
+    $this->set("exp_info",$exp_info);
+    $this->set("exp_id",$exp_id);
+
+    //get subsets for this experiment.
+    $subsets	= $this->TranscriptsLabels->getLabels($exp_id);
+    if(count($subsets)==0){$this->set("error","No subsets defined");return;}
+    $this->set("subsets",$subsets);
+   
+    //possible p-values
+    $possible_pvalues	= array("0.1","0.05","0.01","0.005","0.001","0.0001","0.00001");
+    $selected_pvalue	= 0.05;
+    $this->set("possible_pvalues",$possible_pvalues);
+    $this->set("selected_pvalue",$selected_pvalue);
+
+    //see if the user posted form
+    if($_POST){
+      //check for present subset
+      if(!array_key_exists("subset",$_POST)){$this->set("error","No subset indicated in form");return;}
+      $subset		= mysql_real_escape_string($_POST['subset']);
+      if(!array_key_exists($subset,$subsets)){$this->set("error","Illegal subset");return;}	  
+      $this->set("selected_subset",$subset);
+
+      if(array_key_exists("pvalue",$_POST)){
+	$pvalue	= mysql_real_escape_string($_POST['pvalue']);
+	if(in_array($pvalue,$possible_pvalues)){$selected_pvalue=$pvalue;}
+	$this->set("selected_pvalue",$selected_pvalue);
+      }
+        
+      //file locations
+      $tmp_dir		= TMP."experiment_data/".$exp_id."/";
+      $result_file 	= "go_enrichment_".$exp_id."_".$subset."_".$selected_pvalue.".txt";
+      $all_go_file	= "transcript_go_".$exp_id."_all.txt";
+      $subset_go_file	= "transcript_go_".$exp_id."_".$subset.".txt";
+      $result_file_path	= $tmp_dir."".$result_file;
+      $all_go_file_path	= $tmp_dir."".$all_go_file;
+      $subset_go_file_path	= $tmp_dir."".$subset_go_file;
+     
+      if(!array_key_exists("use_cache",$_POST)){	//force recomputation : delete result
+	if(file_exists($result_file_path)){unlink($result_file_path);}	
+      }
+	
+
+      //if force computation or result does not exist: perform go enrichment computation
+      if(!file_exists($result_file_path)){
+	//create shell file which contains necessary java programs
+	$qsub_file  = $this->TrapidUtils->create_qsub_script($exp_id);     
+        $shell_file = $this->TrapidUtils->create_shell_file_go_enrich($exp_id,$exp_info['used_plaza_database'],$all_go_file_path,$subset_go_file_path,$result_file_path,$subset,$selected_pvalue);	     	
+	if($shell_file == null || $qsub_file == null ){$this->set("error","problem creating program files");return;} 
+	$qsub_out	= $tmp_dir."go_enrichment_".$subset.".out";
+      	$qsub_err	= $tmp_dir."go_enrichment_".$subset.".err";     
+      	if(file_exists($qsub_out)){unlink($qsub_out);}
+      	if(file_exists($qsub_err)){unlink($qsub_err);}
+	$command  	= "sh $qsub_file -q short -o $qsub_out -e $qsub_err $shell_file";
+	$output		= array();      
+        exec($command,$output);   	           
+	$cluster_job	= $this->TrapidUtils->getClusterJobId($output);
+	if($cluster_job==null){$this->set("error","Problem with retrieving job identifier from web cluster");return;}
+	$this->set("job_id",$cluster_job);	
+	$this->set("result_file",$result_file);       
+	return;
+      }	
+      else{
+	$this->set("result_file",$result_file);
+	return;
+      }
+    }     
+  }
+
+
+
+  function go_enrichment_graph($exp_id=null,$selected_subset=null,$go_type=null,$pvalue=null){
+    $exp_id	= mysql_real_escape_string($exp_id);
+    parent::check_user_exp($exp_id);	
+    $exp_info	= $this->Experiments->getDefaultInformation($exp_id); 
+    $this->TrapidUtils->checkPageAccess($exp_info['title'],$exp_info["process_state"],$this->process_states["finished"]); 
+    $this->set("exp_info",$exp_info);
+    $this->set("exp_id",$exp_id);
+
+    //get subsets for this experiment.
+    $subsets	= $this->TranscriptsLabels->getLabels($exp_id);
+    if(!$selected_subset || !array_key_exists($selected_subset,$subsets)){
+      $this->redirect(array("controller"=>"tools","action"=>"go_enrichment",$exp_id));
+    }
+    $this->set("selected_subset",$selected_subset);
+
+    //check go_type
+    $available_go_types	= array("BP"=>"Biological Process","CC"=>"Cellular Component","MF"=>"Molecular Function");
+    $this->set("available_go_types",$available_go_types);
+    if(!array_key_exists($go_type,$available_go_types)){
+	$this->redirect(array("controller"=>"tools","action"=>"go_enrichment",$exp_id));
+    }
+    $this->set("go_type",$go_type);
+    $this->set("pvalue",$pvalue);
+	
+    //file locations
+    $tmp_dir		= TMP."experiment_data/".$exp_id."/";
+    $result_file_path 	= $tmp_dir."go_enrichment_".$exp_id."_".$selected_subset."_".$pvalue.".txt";
+    if(!file_exists($result_file_path)){$this->redirect(array("controller"=>"tools","action"=>"go_enrichment",$exp_id));}
+    
+    //ok, now read the file.
+    $result_data_string	= array();
+    if(filesize($result_file_path)!=0){   
+	$fh	      		= fopen($result_file_path,"r");
+    	$result_data_string	= fread($fh,filesize($result_file_path));
+    	fclose($fh);  
+    }
+    $result	= array();    
+    foreach(explode("\n",$result_data_string) as $r){
+      $s	= explode("\t",$r);
+      if(count($s)==5){
+	if($s[3]>0){
+		$result[$s[0]]	= array("go"=>$s[0],"hidden"=>$s[1],"p_value"=>$s[2],"ratio"=>$s[3],"perc"=>$s[4]);
+	}
+      }
+    }
+    $go_data		= $this->ExtendedGo->find("all",array("conditions"=>array("go"=>array_keys($result))));   
+    $go_types		= $this->TrapidUtils->indexArraySimple($go_data,"ExtendedGo","go","type");
+    $go_sptr		= $this->TrapidUtils->indexArraySimple($go_data,"ExtendedGo","go","num_sptr_steps");
+
+    
+    $sptr_array		= array();
+    $max_sptr		= 0;	
+    $data		= array();
+    $go_desc		= array();
+    foreach($result as $go_id=>$g){
+      if($go_types[$go_id] == $go_type){
+	$data[$go_id]		= $g;
+	$sptr			= $go_sptr[$go_id];
+	if($sptr > $max_sptr){$max_sptr = $sptr;}
+	if(!array_key_exists($sptr,$sptr_array)){$sptr_array[$sptr] = array();}
+	$sptr_array[$sptr][] = $go_id;		
+      }
+    }
+
+
+    $all_graphs			= array();    
+    $accepted_gos		= array();
+    for($i = $max_sptr; $i>0;$i--){
+      if(array_key_exists($i,$sptr_array)){
+	  $level_gos 		= $sptr_array[$i];
+	  foreach($level_gos as $level_go){	
+	    if(count($all_graphs) > 0){
+	      //check the already present graphs in the array, to determine whether or not the given GO term is already accounted for
+    	      $done = false;
+    	      foreach($all_graphs as $ag){
+		if(array_key_exists($level_go,$ag['desc'])){$done = true; break 1;}
+	      }
+    	      if(!$done){
+		$all_graphs[$level_go] = $this->GoParents->getParentalGraph($level_go);
+		$accepted_gos[] = $level_go;
+	      }
+	    }
+	    else{
+	      $all_graphs[$level_go] = $this->GoParents->getParentalGraph($level_go);
+	      $accepted_gos[] = $level_go;
+	    }
+	  }
+      }
+    }          
+       
+    // pr($sptr_array);
+    //pr($data);
+    //pr($all_graphs);
+    //pr($accepted_gos);
+    $this->set("all_graphs",$all_graphs); 
+    $this->set("accepted_gos",$accepted_gos);
+    $this->set("data",$data);
+     
+  }
+
+
+
+  function load_go_enrichment($exp_id=null,$subset_title=null,$pvalue=null,$result_file=null,$job_id=null){
+    $exp_id	= mysql_real_escape_string($exp_id);
+    parent::check_user_exp($exp_id);	
+    $exp_info	= $this->Experiments->getDefaultInformation($exp_id); 
+    $this->TrapidUtils->checkPageAccess($exp_info['title'],$exp_info["process_state"],$this->process_states["finished"]); 	
+    $this->set("exp_id",$exp_id);
+    $this->layout = "";
+    $this->helpers[] = 'FlashChart';
+	
+    if($subset_title==null){
+      $this->set("error","No subset defined");
+      return;
+    }
+    $this->set("subset",urldecode($subset_title));
+
+    if($pvalue==null){
+      $this->set("error","No P-value defined");
+      return;
+    }
+    $this->set("selected_pvalue",$pvalue);
+
+    if($result_file==null){
+      $this->set("error","No result file defined");
+      return;
+    }    
+    $result_file_path	= TMP."experiment_data/".$exp_id."/".$result_file;
+    if($job_id!=null){      
+      $cluster_res	= $this->TrapidUtils->waitfor_cluster($exp_id,$job_id);
+      if(isset($cluster_res["error"])){$this->set("error",$cluster_res["error"]);return;}
+      $file_sync	= $this->TrapidUtils->sync_file($result_file_path);
+      if(!$file_sync){$this->set("error","Error syncing files");return;}
+    }
+
+    //ok, no error, so just read the result file
+    //account for possible 
+    $cont		= true;
+    $result_data_string	= array();
+    if(filesize($result_file_path)!=0){   
+	$fh	      		= fopen($result_file_path,"r");
+    	$result_data_string	= fread($fh,filesize($result_file_path));
+    	fclose($fh);  
+    }
+    $result	= array();    
+    foreach(explode("\n",$result_data_string) as $r){
+      $s	= explode("\t",$r);
+      if(count($s)==5){
+	if($s[3]>0){
+		$result[$s[0]]	= array("go"=>$s[0],"is_hidden"=>$s[1],"p-value"=>$s[2],"enrichment"=>$s[3],"subset_ratio"=>$s[4]);
+	}
+      }
+    }
+    $go_data		= $this->ExtendedGo->find("all",array("conditions"=>array("go"=>array_keys($result))));
+    $go_descriptions	= $this->TrapidUtils->indexArray($go_data,"ExtendedGo","go","desc");
+    $go_types		= array("MF"=>array(),"BP"=>array(),"CC"=>array());
+    foreach($go_data as $gd){  
+      $go_type	= $gd['ExtendedGo']['type'];
+      $go_types[$go_type][] = $gd['ExtendedGo']['go'];
+    }   
+
+    //ok, now we need to do quite some heavy queries to determine the subset ratios.
+
+    $this->set("result",$result);                  
+    $this->set("go_descriptions",$go_descriptions);
+    $this->set("go_types",$go_types);
+    
+  }
+
+
+
+
+
+
+
+  function orf_statistics($exp_id=null){
+    $exp_id	= mysql_real_escape_string($exp_id);
+    parent::check_user_exp($exp_id);	
+    $exp_info	= $this->Experiments->getDefaultInformation($exp_id); 
+    $this->TrapidUtils->checkPageAccess($exp_info['title'],$exp_info["process_state"],$this->process_states["default"]);       
+    $this->set("exp_info",$exp_info);
+    $this->set("exp_id",$exp_id);
+
+
+    //now, get distribution of meta annotation of ORF sequences.
+    $meta_info	= $this->Transcripts->getMetaAnnotation($exp_id);
+    $this->set("meta_info",$meta_info);
+
+  }
+
+
+
+  function length_distribution($exp_id=null,$sequence_type=null){
+    $exp_id	= mysql_real_escape_string($exp_id);
+    parent::check_user_exp($exp_id);	
+    $exp_info	= $this->Experiments->getDefaultInformation($exp_id); 
+    $this->TrapidUtils->checkPageAccess($exp_info['title'],$exp_info["process_state"],$this->process_states["default"]);       
+    $this->set("exp_info",$exp_info);
+    $this->set("exp_id",$exp_id);	
+
+    if($sequence_type!=null){if(!($sequence_type=="transcript" || $sequence_type=="orf")){$sequence_type="transcript";}}
+    else{$sequence_type	= "transcript";}
+    $this->set("sequence_type",$sequence_type);
+
+
+    //Binning information
+    $possible_bins	= array("5"=>"20","10"=>"15","20"=>"10","50"=>"5","100"=>"5","200"=>"5");
+    $this->set("possible_bins",$possible_bins);
+    $num_bins		= 50;
+    if($_POST && array_key_exists("num_bins",$_POST) && array_key_exists($_POST['num_bins'],$possible_bins)){
+      $num_bins	= mysql_real_escape_string($_POST['num_bins']);
+    }
+    $this->set("num_bins",$num_bins);
+    $this->set("bars_offset",$possible_bins[$num_bins]);	   
+
+    //based on sequence type, get different options
+    //transcript : different meta types, different graphtypes
+    if($sequence_type=="transcript"){
+	//get standard length information
+        $transcript_lengths	= $this->Transcripts->getLengths($exp_id,"transcript"); 
+	//graphtype information
+    	$possible_graphtypes   = array("grouped"=>"Adjacent","stacked"=>"Stacked");
+    	$this->set("possible_graphtypes",$possible_graphtypes);
+   	$graphtype		   = "grouped";
+    	if($_POST && array_key_exists("graphtype",$_POST) && array_key_exists($_POST['graphtype'],$possible_graphtypes)){
+      		$graphtype	   = mysql_real_escape_string($_POST['graphtype']);	 
+    	}
+    	$this->set("graphtype",$graphtype);
+	$bins_transcript		= $this->Statistics->create_length_bins($transcript_lengths,$num_bins);  
+	$json_transcript		= $this->Statistics->create_json_data_infovis($bins_transcript,"Transcript lengths");
+	//get extra information (partials/no info)
+    	$show_partials	= false;
+    	$show_noinfo	= false;   
+    	if($_POST && array_key_exists("meta_partial",$_POST)){$show_partials=true;}
+    	if($_POST && array_key_exists("meta_noinfo",$_POST)){$show_noinfo=true;} 
+	if($show_partials){
+	  	$partial_lengths	= $this->Transcripts->getLengths($exp_id,"transcript","Partial");       
+		$json_transcript	= $this->Statistics->update_json_data("Transcript lengths (Partial)",
+					$partial_lengths,$json_transcript,$bins_transcript); 	    
+		$this->set("meta_partial",1);     
+    	}
+    	if($show_noinfo){      
+	  	$noinfo_lengths		= $this->Transcripts->getLengths($exp_id,"transcript","No Information");
+      		$json_transcript	= $this->Statistics->update_json_data("Transcript lengths (No Information)",
+					$noinfo_lengths,$json_transcript,$bins_transcript);      		      
+      		$this->set("meta_noinfo",1);
+    	}
+	//update last label     
+    	$last_label_transcript	= explode(",",$bins_transcript["labels"][$num_bins-1]);	
+	$json_transcript["values"][$num_bins-1]["label"]=">=".$last_label_transcript[0];
+	 $this->set("bins_transcript",$json_transcript);
+    }
+    //orf: possible reference species
+    else if($sequence_type=="orf"){
+        $orf_lengths		= $this->Transcripts->getLengths($exp_id,"orf");	
+	//reference species
+    	$reference_species	= $this->AnnotSources->find("all",array("order"=>"`species` ASC"));
+    	$reference_species	= $this->TrapidUtils->indexArraySimple($reference_species,"AnnotSources","species","common_name");
+    	$this->set("available_reference_species",$reference_species);
+    	$selected_ref_species	= "";
+    	if($_POST && array_key_exists("reference_species",$_POST)){
+      		$rs	= mysql_real_escape_string($_POST['reference_species']);
+      		if($this->AnnotSources->find("first",array("conditions"=>array("species"=>$rs)))){
+			$selected_ref_species	= $rs;
+      		}
+    	}
+    	$this->set("selected_ref_species",$selected_ref_species);
+
+	//default value graph type
+	$this->set("graphtype","grouped");
+
+	$normalize_data	= false;
+    	//normalize the values of the json data if necessary.
+    	if(array_key_exists("normalize",$_POST) && $selected_ref_species!=""){
+      		$normalize_data	= true;
+      		$this->set("normalize_data",true);
+    	}   	
+	$bins_orf			= $this->Statistics->create_length_bins($orf_lengths,$num_bins);
+        $json_orf			= $this->Statistics->create_json_data_infovis($bins_orf,"ORF lengths");
+	if($selected_ref_species!=""){
+      		$ref_species_lengths	= $this->Annotation->getLengths($selected_ref_species);            
+      		$json_orf		= $this->Statistics->update_json_data($reference_species[$selected_ref_species],
+								      $ref_species_lengths,$json_orf,$bins_orf,false);	
+    	} 
+        $last_label_orf		= explode(",",$bins_orf["labels"][$num_bins-1]);
+	$json_orf["values"][$num_bins-1]["label"]=">=".$last_label_orf[0];
+	if($normalize_data){	 
+	  $json_orf			= $this->Statistics->normalize_json_data($json_orf);
+	}
+	//pr($json_orf);
+	$this->set("bins_orf",$json_orf);    
+    }
+    else{
+      $this->redirect(array("controller"=>"trapid","action"=>"experiment",$exp_id));
+    }
+
+
+  }
+
+
+
+
+
+  function statistics($exp_id=null,$pdf='0'){
+    $exp_id	= mysql_real_escape_string($exp_id);
+    parent::check_user_exp($exp_id);	
+    $exp_info	= $this->Experiments->getDefaultInformation($exp_id); 
+    $this->TrapidUtils->checkPageAccess($exp_info['title'],$exp_info["process_state"],$this->process_states["default"]);       
+    $this->set("exp_info",$exp_info);
+    $this->set("exp_id",$exp_id);
+
+    // pr($exp_info);
+    
+    //get transcript information
+    $num_transcripts	= $this->Transcripts->find("count",array("conditions"=>array("experiment_id"=>$exp_id)));
+    $seq_stats		= $this->Transcripts->getSequenceStats($exp_id);
+    $num_start_codons	= $this->Transcripts->find("count",array("conditions"=>array("experiment_id"=>$exp_id,"orf_contains_start_codon"=>1)));
+    $num_stop_codons	= $this->Transcripts->find("count",array("conditions"=>array("experiment_id"=>$exp_id,"orf_contains_stop_codon"=>1)));
+    $num_putative_fs	= $this->Transcripts->find("count",array("conditions"=>array("experiment_id"=>$exp_id,"putative_frameshift"=>1)));
+    $num_correct_fs	= $this->Transcripts->find("count",array("conditions"=>array("experiment_id"=>$exp_id,"is_frame_corrected"=>1)));
+    $meta_annot_fulllength	= $this->Transcripts->find("count",array("conditions"=>array("experiment_id"=>$exp_id,"meta_annotation"=>"Full Length")));
+    $meta_annot_partial	= $this->Transcripts->find("count",array("conditions"=>array("experiment_id"=>$exp_id,"meta_annotation"=>"Partial")));
+    $meta_annot_noinfo	= $this->Transcripts->find("count",array("conditions"=>array("experiment_id"=>$exp_id,"meta_annotation"=>"No Information")));
+
+    $this->set("num_transcripts",$num_transcripts);
+    $this->set("seq_stats",$seq_stats);
+    $this->set("num_start_codons",$num_start_codons);
+    $this->set("num_stop_codons",$num_stop_codons);
+    $this->set("num_putative_fs",$num_putative_fs);
+    $this->set("num_correct_fs",$num_correct_fs);
+    $this->set("meta_annot_fulllength",$meta_annot_fulllength);
+    $this->set("meta_annot_partial",$meta_annot_partial);
+    $this->set("meta_annot_noinfo",$meta_annot_noinfo);
+
+
+    //get gene family information
+    $num_gf		= $this->GeneFamilies->find("count",array("conditions"=>array("experiment_id"=>$exp_id)));
+    $num_transcript_gf	= $this->Transcripts->find("count",array("conditions"=>array("experiment_id"=>$exp_id,"not"=>array("gf_id"=>null))));
+    $biggest_gf	= $this->GeneFamilies->find("first",array("conditions"=>array("experiment_id"=>$exp_id),"order"=>array("num_transcripts DESC")));
+    $biggest_gf_res	= array("gf_id"=>$biggest_gf['GeneFamilies']['gf_id'],"num_transcripts"=>$biggest_gf['GeneFamilies']['num_transcripts']);    
+    $single_copy	= $this->GeneFamilies->find("count",array("conditions"=>array("experiment_id"=>$exp_id,"num_transcripts"=>1)));
+
+    $this->set("num_gf",$num_gf);
+    $this->set("num_transcript_gf",$num_transcript_gf);
+    $this->set("biggest_gf",$biggest_gf_res);
+    $this->set("single_copy",$single_copy);
+
+    //get functional data information
+    $go_stats		= $this->TranscriptsGo->getStats($exp_id);
+    $this->set("num_go",$go_stats['num_go']);
+    $this->set("num_transcript_go",$go_stats['num_transcript_go']);
+    $interpro_stats	= $this->TranscriptsInterpro->getStats($exp_id);
+    $this->set("num_interpro",$interpro_stats['num_interpro']);
+    $this->set("num_transcript_interpro",$interpro_stats['num_transcript_interpro']);
+
+    if($_POST || $pdf=='1'){
+      if($pdf=='1' || (array_key_exists("export_type",$_POST) && $_POST['export_type']=="pdf")){
+	$this->set("pdf_view",1);
+	$this->helpers[] 	= "fpdf";
+	$this->layout		= "pdf";	 
+	$transcript_counts	= array("#Transcripts"=>$num_transcripts,"Average transcript length"=>$seq_stats['transcript']." basepairs",
+					"#Transcripts with frameshift"=>$num_correct_fs);
+	$orf_counts		= array("Average ORF length"=>$seq_stats['orf']." basepairs","#ORFs with start codon"=>$num_start_codons,
+					"#ORFs with stop codon"=>$num_stop_codons,"#Full-length ORFs"=>$meta_annot_fulllength,
+					"#Partial ORFs"=>$meta_annot_partial,"#Too long ORFs"=>$meta_annot_toolong);
+					
+	$this->set("transcript_counts",$transcript_counts);
+	$this->set("orf_counts",$orf_counts);
+	$this->render();       
+      }
+    }
+
+
+  }
+
+
+  function comparative_statistics($exp_id=null){
+  }
+
+
+
+
+
+  /*
+   * Cookie setup: 
+   * The entire TRAPID websit is based on user-defined data sets, and as such a method for 
+   * account handling and user identification is required.
+   *
+   * The 'beforeFilter' method is executed BEFORE each method, and as such ensures that the necessary
+   * identification through cookies is done.
+   */
+  function beforeFilter(){
+    parent::beforeFilter();  
+  }
+
+
+}
+?>

@@ -1,0 +1,31 @@
+<?php
+
+  /*
+   * This model represents the storage of logging information for each experiment
+   * Actions can read and write to this table, providing an action, and the necessary parameters.
+   */
+
+class ExperimentLog extends AppModel{
+
+  var $name	= "ExperimentLog";
+  var $useTable = "experiment_log";
+	
+
+
+  function addAction($exp_id,$action,$param,$par_id=null){
+    $query	= null;
+    if($par_id==null){
+    	$query	= "INSERT INTO `experiment_log`(`experiment_id`,`date`,`action`,`parameters`) VALUES ('".$exp_id."',NOW(),'".$action."','".$param."')";
+    }
+    else{
+	$query	= "INSERT INTO `experiment_log`(`experiment_id`,`date`,`action`,`parameters`,`parent_id`) VALUES ('".$exp_id."',NOW(),'".$action."','".$param."','".$par_id."')";
+    }
+    $this->query($query);
+
+  }
+
+
+}
+
+
+?>

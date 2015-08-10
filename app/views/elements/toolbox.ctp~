@@ -1,0 +1,14 @@
+<div style="background-color:#D2D2D2;border:1px solid black;width:700px; padding-left:20px;padding-top:10px;">
+<?php
+foreach($toolbox as $subtitle=>$content){
+echo "<h4 style='text-decoration:underline;'>".$subtitle."</h4>\n";
+echo "<div class='subdiv bottom'>\n";
+echo "<ul>";
+foreach($content as $cont){
+	echo "<li><a href='".$cont[1]."'>".$cont[0]."</a></li>\n";
+}	
+echo "</ul>\n";	
+echo "</div>\n";
+}
+?>
+</div>

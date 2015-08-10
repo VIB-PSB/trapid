@@ -1,0 +1,14 @@
+<div style='min-height:400px;'>
+<h2>General documentation</h2>
+<div style='text-align:right;margin-right:20px;'>
+	<?php echo $html->link("Documentation",array("controller"=>"documentation","action"=>"index"));?>
+</div>
+<div class='subdiv' style='width:900px;'>
+	
+	
+
+	<h3>Full documentation</h3>
+	<div class='subdiv'>
+	</div>	
+</div>
+</div>

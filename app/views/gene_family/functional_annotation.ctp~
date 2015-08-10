@@ -1,0 +1,10 @@
+<div>
+<h2>Gene family</h2>
+<div class="subdiv">
+	<?php echo $this->element(); ?>
+	<h3>Associated functional annotation</h3>
+	<div class="subdiv">
+		
+	</div>
+</div>
+</div>
