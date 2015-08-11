@@ -30,6 +30,9 @@ class TrapidController extends AppController{
 
 
   function test(){
+
+	$this->set('data', json_encode(phpversion()));
+
   }
 
 
