@@ -1565,7 +1565,6 @@ class ToolsController extends AppController{
 
     
 	$this->set('sankeyData', json_encode($d));
-    //$this->render(); 
   }
 
 
