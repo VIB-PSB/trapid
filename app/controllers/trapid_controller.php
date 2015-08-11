@@ -30,6 +30,7 @@ class TrapidController extends AppController{
 
 
   function test(){
+    
 	$d = array(
             "nodes" =>  array(
                     array('name' => 'A'),
@@ -40,6 +41,7 @@ class TrapidController extends AppController{
                     )
             );
 
+    
 	$this->set('sankeyData', json_encode($d));
 
   }

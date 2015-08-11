@@ -231,6 +231,12 @@
 						$subset2
 					),					
 					array(
+						"Sankey diagram",
+						$html->url(array("controller"=>"tools","action"=>"sankey",$exp_id)),
+						"some_image.png",
+						$subset1
+					),					
+					array(
 						"Different subsets",
 						$html->url(array("controller"=>"labels","action"=>"subset_overview",$exp_id)),
 						"some_image.png",

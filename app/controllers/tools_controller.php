@@ -1549,6 +1549,25 @@ class ToolsController extends AppController{
   function comparative_statistics($exp_id=null){
   }
 
+  /*
+   * Display ratios between GO or protein domains
+   */
+  function sankey($exp_id=null){
+	$d = array(
+            "nodes" =>  array(
+                    array('name' => 'A'),
+                    array('name' => 'B')
+                    ), 
+            "links" => array(
+                    array("source" => 0,"target" => 1,"value"=>124.729)
+                    )
+            );
+
+    
+	$this->set('sankeyData', json_encode($d));
+    $this->render(); 
+  }
+
 
 
 

@@ -1,6 +1,6 @@
 
 // Sankey data should be supplied by the controller
-if (typeof sankeyData === 'undefined') {
+if (typeof sankeyData !== 'undefined') {
     var sankeyData = {"nodes":[
 	{"name":"Agricultural waste"},
 	{"name":"Bio-conversion"},
@@ -126,8 +126,10 @@ if (typeof sankeyData === 'undefined') {
 var margin = {top: 1, right: 1, bottom: 6, left: 1},
     width = 960 - margin.left - margin.right,
     height = 500 - margin.top - margin.bottom;
+
+// The format of the numbers when hovering over a link or node
 var formatNumber = d3.format(",.0f"),
-    format = function(d) { return formatNumber(d) + " TWh"; },
+    format = function(d) { return formatNumber(d) + " X"; },
     color = d3.scale.category20();
 
 var svg = d3.select("#sankey").append("svg")
@@ -192,5 +194,5 @@ function dragmove(d) {
 	link.attr("d", path);
 }
 
-var div = document.getElementById("t");
-div.innerHTML = div.innerHTML + 'jscript finished';
+//var div = document.getElementById("t");
+//div.innerHTML = div.innerHTML + 'jscript finished';
