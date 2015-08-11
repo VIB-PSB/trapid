@@ -1,6 +1,7 @@
 
-// Shouldn't be hardcoded
-var energy = {"nodes":[
+// Sankey data should be supplied by the controller
+if (typeof sankeyData === 'undefined') {
+    var sankeyData = {"nodes":[
 	{"name":"Agricultural waste"},
 	{"name":"Bio-conversion"},
 	{"name":"Liquid"},
@@ -120,6 +121,7 @@ var energy = {"nodes":[
 	{"source":46,"target":15,"value":19.013},
 	{"source":47,"target":15,"value":289.366}
 	]};
+}
 
 var margin = {top: 1, right: 1, bottom: 6, left: 1},
     width = 960 - margin.left - margin.right,
@@ -138,14 +140,14 @@ var sankey = d3.sankey()
 	.size([width, height])
 	.nodeWidth(15)
 	.nodePadding(10)
-	.nodes(energy.nodes)
-	.links(energy.links)
+	.nodes(sankeyData.nodes)
+	.links(sankeyData.links)
 	.layout(32);
 
 var path = sankey.link();
 
 var link = svg.append("g").selectAll(".link")
-	.data(energy.links)
+	.data(sankeyData.links)
 	.enter().append("path")
 	.attr("class", "link")
 	.attr("d", path)
@@ -156,7 +158,7 @@ link.append("title")
 	.text(function(d) { return d.source.name + " → " + d.target.name + "\n" + format(d.value); });
 
 var node = svg.append("g").selectAll(".node")
-	.data(energy.nodes)
+	.data(sankeyData.nodes)
 	.enter().append("g")
 	.attr("class", "node")
 	.attr("transform", function(d) { return "translate(" + d.x + "," + d.y + ")"; })

@@ -30,8 +30,17 @@ class TrapidController extends AppController{
 
 
   function test(){
+	$d = array(
+            "nodes" =>  array(
+                    array('name' => 'A'),
+                    array('name' => 'B')
+                    ), 
+            "links" => array(
+                    array("source" => 0,"target" => 1,"value"=>124.729)
+                    )
+            );
 
-	$this->set('data', json_encode(phpversion()));
+	$this->set('sankeyData', json_encode($d));
 
   }
 
