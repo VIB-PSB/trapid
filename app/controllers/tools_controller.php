@@ -1550,10 +1550,15 @@ class ToolsController extends AppController{
   }
 
   /*
-   * Display ratios between GO or protein domains
+   * Generate a Sankey diagra;
    */
   function sankey($exp_id=null){
-	$d = array(
+    $exp_id	= mysql_real_escape_string($exp_id);
+    //parent::check_user_exp($exp_id);	??
+    $rows	= $this->Transcripts->getLabelToGFMapping($exp_id);
+    // transform the data to the format expected by d3
+    // Expected format:
+	  /*$d = array(
             "nodes" =>  array(
                     array('name' => 'A'),
                     array('name' => 'B')
@@ -1562,8 +1567,33 @@ class ToolsController extends AppController{
                     array("source" => 0,"target" => 1,"value"=>124.729)
                     )
             );
+    */
+  // What we get from the DB: [[A,B,124]]
 
+
+    $names = array();
+    $nodes = array();
+    $links = array();
     
+    foreach ($rows as $row){
+      $gf_id = $row[0];
+      $label = $row[1];
+      $count = $row[2];
+      if(!in_array($label, $names)){
+        $names[] = $label;
+        $nodes[] = array('name' => $label);
+      }
+      if(!in_array($gf_id, $names)){
+        $names[] = $gf_id;
+        $nodes[] = array('name' => $gf_id);
+      }
+      $links[] = array("source" => array_search($label,$names),"target" => array_search($gf_id,$names),"value"=>$count);
+    }
+
+
+    $d = array("nodes" => $nodes, 
+               "links" => $links);
+   
 	$this->set('sankeyData', json_encode($d));
   }
 

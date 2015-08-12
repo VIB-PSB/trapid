@@ -1,7 +1,7 @@
 <p id="sankey" ></p>
 <!--<div id="t" ></div> -->
 <?php
-
+    //echo $sankeyData;
     echo '<script type="text/javascript">';
     echo "var sankeyData = " . $sankeyData;
     echo '</script>';	
