@@ -157,7 +157,7 @@ class Transcripts extends AppModel{
                FROM transcripts LEFT JOIN transcripts_labels ON 
                   (transcripts_labels.`transcript_id`=transcripts.`transcript_id` 
                    AND transcripts_labels.`experiment_id`=transcripts.`experiment_id`) 
-               WHERE transcripts.`experiment_id` = ".$exp_id."
+               WHERE transcripts.`experiment_id` = ".$exp_id." AND transcripts.`gf_id` IS NOT NULL 
                GROUP BY transcripts.`gf_id`, transcripts_labels.`label`
                ORDER BY COUNT( * ) DESC ";
     $res	= $this->query($query);

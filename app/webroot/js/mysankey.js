@@ -1,14 +1,23 @@
 
 // real_width is used for layout purposes
 var margin = {top: 1, right: 1, bottom: 6, left: 1},
-    real_width = 960,    
+    real_width = calculate_good_width(),    
     width = real_width - margin.left - margin.right,
-    height = 500 - margin.top - margin.bottom;
+    height = calculate_good_height() - margin.top - margin.bottom;
 
-// The format of the numbers when hovering over a link or node
-var formatNumber = d3.format(",.0f"),
-    format = function(d) { return formatNumber(d) + " genes"; },
-    color = d3.scale.category20();
+function calculate_good_height(){
+    return Math.log1p(sankeyData.nodes.length)* 200;
+    
+}
+
+function calculate_good_width(){
+    return Math.min(window.innerWidth - margin.left - margin.right,Math.log2(sankeyData.nodes.length)* 200);
+     
+    //return Math.log2(sankeyData.nodes.length)* 200;
+    
+}
+
+
 
 // Set the width of the div, so the buttons can float right.
 document.getElementById('sankey').setAttribute("style","display:block;width:"+ real_width.toString()+"px");
@@ -35,11 +44,16 @@ document.observe('dom:loaded', function(){
   $('min').observe('change', min_changed);
   $('max').observe('change', max_changed);
 });
+// The format of the numbers when hovering over a link or node
+var formatNumber = d3.format(",.0f"),
+    format = function(d) { return formatNumber(d) + " genes"; },
+    color = d3.scale.category20();
 
-
-    var svg = d3.select("#sankey").append("svg")
+var svg = d3.select("#sankey").append("svg")
 	    .attr("width", width + margin.left + margin.right)
 	    .attr("height", height + margin.top + margin.bottom);
+
+ // (Re)draw the sankey diagram
 function draw_sankey() {
     // Remove the old svg if it exists
     d3.select("svg").text('');
