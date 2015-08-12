@@ -55,7 +55,7 @@ function draw_sankey() {
     var maximal = ma.options[ma.selectedIndex].text; 
     
     //var sankey_data_copy = JSON.parse(JSON.stringify(sankeyData)); 
-    var sankey_data_copy = {nodes : sankeyData.nodes, links : []};
+    var sankey_data_copy = {nodes : [], links : []};
 
     // 1. get a list of all gfs we need to remove from the viz
     var bad_gfs = [];
@@ -69,10 +69,16 @@ function draw_sankey() {
     console.log(bad_gfs);
     // 2. Get the indices of these gfs
     var bad_indices = [];
+    var good_nodes = [];
     for(var j = 0; j < sankeyData.nodes.length; j++) {
         // If the name appears in the list of bad gf names, add the index
+        // BUG: if a label has the same name as a GF, it will be added to the bad_gfs
         if(bad_gfs.indexOf(sankeyData.nodes[j].name) > -1){
             bad_indices.push(j);
+        }
+        else {
+            var w = {name:sankeyData.nodes[j].name};
+            sankey_data_copy.nodes.push(w);
         }
     }    
 
@@ -80,7 +86,26 @@ function draw_sankey() {
     for(var j = 0; j < sankeyData.links.length; j++) {
         // If the target isn't bad, add the node
         if(!(bad_gfs.indexOf(sankeyData.links[j].target.name) > -1)){
-            sankey_data_copy.links.push(sankeyData.links[j]);
+            
+            // indices might have changed with the removal of nodes.
+            link = {"value":sankeyData.links[j].value};
+            var found = 0;
+            for (var i=0; i < sankey_data_copy.nodes.length; i++) {
+                
+                if (sankey_data_copy.nodes[i].name === sankeyData.nodes[sankeyData.links[j].target].name) {
+                    link['target'] = i;
+                    found++;
+                    if(found === 2) break;
+                    continue;
+                }
+                if (sankey_data_copy.nodes[i].name === sankeyData.nodes[sankeyData.links[j].source].name) {
+                    link['source'] = i;
+                    found++;
+                    if(found === 2) break;
+                }
+            }
+            if(found === 2)
+                sankey_data_copy.links.push(link);
         }
     }    
     console.log(sankey_data_copy);
