@@ -76,5 +76,33 @@ function dragmove(d) {
 	link.attr("d", path);
 }
 
-//var div = document.getElementById("t");
-//div.innerHTML = div.innerHTML + 'jscript finished';
+////////// Behaviour of the refine button and fields ////////////
+
+function min_changed(){    
+    for (var i = 0, len = $('max').options.length; i < len; i++) {
+        $('max').options[i].disabled = i > len - $('min').value;
+    }
+}
+
+function max_changed(){
+    for (var i = 0, len = $('min').options.length; i < len; i++) {
+        $('min').options[i].disabled = i > len - $('max').value;
+    }
+}
+
+document.observe('dom:loaded', function(){
+  $('min').observe('change', min_changed);
+  $('max').observe('change', max_changed);
+});
+
+
+
+
+function draw_sankey() {
+    var e = document.getElementById("min");
+    var minimal = e.options[e.selectedIndex].text;
+    var e = document.getElementById("max");
+    var maximal = e.options[e.selectedIndex].text;    
+
+}
+

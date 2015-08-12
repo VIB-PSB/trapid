@@ -13,8 +13,8 @@
     $selectable_values = range(0,$maximum_count,round($maximum_count/30 + 1));
     echo $form->create(false, array('id'=> 'refine_form', 'style' => 'float:right;'));
     //echo $form->create(false);
-    echo $form->input('Minimal # of overlapping genes: ', array('options' => $selectable_values, 'empty' => '','id' =>'min')); 
-    echo $form->input('Maximal # of overlapping genes: ', array('options' => $selectable_values, 'empty' => '','id' =>'max')); 
+    echo $form->input('Minimum gene family size: ', array('options' => $selectable_values, 'empty' => '0','id' =>'min')); 
+    echo $form->input('Maximum gene family size: ', array('options' => array_reverse($selectable_values), 'empty' => $maximum_count,'id' =>'max')); 
     echo '<br />';
     $options = array(
     'type' => 'button',
