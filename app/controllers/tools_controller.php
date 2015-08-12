@@ -1576,7 +1576,8 @@ class ToolsController extends AppController{
     $links = array();
     
     foreach ($rows as $row){
-      $gf_id = $row[0];
+      // Clean up the label, from expId_GFId to GFID, expId is assumed to be numerical
+      $gf_id = preg_replace("/\d*_/","",$row[0],1);
       $label = $row[1];
       $count = $row[2];
       if(!in_array($label, $names)){
