@@ -14,24 +14,89 @@ var formatNumber = d3.format(",.0f"),
 document.getElementById('sankey').setAttribute("style","display:block;width:"+ real_width.toString()+"px");
 document.getElementById('sankey').style.width=real_width.toString()+"px";
 
-var svg = d3.select("#sankey").append("svg")
-	.attr("width", width + margin.left + margin.right)
-	.attr("height", height + margin.top + margin.bottom)
-	.append("g")
-	.attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+////////// Behaviour of the refine button and fields ////////////
+
+/*  These functions disable the choice of a maximum below the set minimum and vice versa. */
+function min_changed(){    
+    for (var i = 0, len = $('max').options.length; i < len; i++) {
+        $('max').options[i].disabled = i > len - 1 - $('min').value;
+    }
+}
+
+function max_changed(){
+    for (var i = 0, len = $('min').options.length; i < len; i++) {
+        $('min').options[i].disabled = i > len - 1- $('max').value;
+    }
+}
+
+document.observe('dom:loaded', function(){
+  draw_sankey();
+  $('min').observe('change', min_changed);
+  $('max').observe('change', max_changed);
+});
+
+
+    var svg = d3.select("#sankey").append("svg")
+	    .attr("width", width + margin.left + margin.right)
+	    .attr("height", height + margin.top + margin.bottom);
+function draw_sankey() {
+    // Remove the old svg if it exists
+    d3.select("svg").text('');
+
+    var svg = d3.select("svg")
+	    .append("g")
+	    .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+
+    var e = document.getElementById("min");
+    var minimal = e.options[e.selectedIndex].text;
+    var ma = document.getElementById("max");
+    var maximal = ma.options[ma.selectedIndex].text; 
+    
+    //var sankey_data_copy = JSON.parse(JSON.stringify(sankeyData)); 
+    var sankey_data_copy = {nodes : sankeyData.nodes, links : []};
+
+    // 1. get a list of all gfs we need to remove from the viz
+    var bad_gfs = [];
+    for (var key in inflow_data) {
+      if (inflow_data.hasOwnProperty(key)) {
+            if(inflow_data[key] < minimal || inflow_data[key] > maximal){
+                bad_gfs.push(key);
+            }
+        }
+    }
+    console.log(bad_gfs);
+    // 2. Get the indices of these gfs
+    var bad_indices = [];
+    for(var j = 0; j < sankeyData.nodes.length; j++) {
+        // If the name appears in the list of bad gf names, add the index
+        if(bad_gfs.indexOf(sankeyData.nodes[j].name) > -1){
+            bad_indices.push(j);
+        }
+    }    
+
+    // 3. Remove all links with a target gf in the list.
+    for(var j = 0; j < sankeyData.links.length; j++) {
+        // If the target isn't bad, add the node
+        if(!(bad_gfs.indexOf(sankeyData.links[j].target.name) > -1)){
+            sankey_data_copy.links.push(sankeyData.links[j]);
+        }
+    }    
+    console.log(sankey_data_copy);
 
 var sankey = d3.sankey()
 	.size([width, height])
 	.nodeWidth(15)
 	.nodePadding(10)
-	.nodes(sankeyData.nodes)
-	.links(sankeyData.links)
+	.nodes(sankey_data_copy.nodes)
+	.links(sankey_data_copy.links)
 	.layout(32);
 
 var path = sankey.link();
 
 var link = svg.append("g").selectAll(".link")
-	.data(sankeyData.links)
+	.data(sankey_data_copy.links)
 	.enter().append("path")
 	.attr("class", "link")
 	.attr("d", path)
@@ -42,7 +107,7 @@ link.append("title")
 	.text(function(d) { return d.source.name + " → " + d.target.name + "\n" + format(d.value); });
 
 var node = svg.append("g").selectAll(".node")
-	.data(sankeyData.nodes)
+	.data(sankey_data_copy.nodes)
 	.enter().append("g")
 	.attr("class", "node")
 	.attr("transform", function(d) { return "translate(" + d.x + "," + d.y + ")"; })
@@ -70,39 +135,12 @@ node.append("text")
 	.attr("x", 6 + sankey.nodeWidth())
 	.attr("text-anchor", "start");
 
-function dragmove(d) {
-	d3.select(this).attr("transform", "translate(" + d.x + "," + (d.y = Math.max(0, Math.min(height - d.dy, d3.event.y))) + ")");
-	sankey.relayout();
-	link.attr("d", path);
-}
-
-////////// Behaviour of the refine button and fields ////////////
-
-function min_changed(){    
-    for (var i = 0, len = $('max').options.length; i < len; i++) {
-        $('max').options[i].disabled = i > len - $('min').value;
+    function dragmove(d) {
+	    d3.select(this).attr("transform", "translate(" + d.x + "," + (d.y = Math.max(0, Math.min(height - d.dy, d3.event.y))) + ")");
+	    sankey.relayout();
+	    link.attr("d", path);
     }
-}
-
-function max_changed(){
-    for (var i = 0, len = $('min').options.length; i < len; i++) {
-        $('min').options[i].disabled = i > len - $('max').value;
-    }
-}
-
-document.observe('dom:loaded', function(){
-  $('min').observe('change', min_changed);
-  $('max').observe('change', max_changed);
-});
-
-
-
-
-function draw_sankey() {
-    var e = document.getElementById("min");
-    var minimal = e.options[e.selectedIndex].text;
-    var e = document.getElementById("max");
-    var maximal = e.options[e.selectedIndex].text;    
+    
 
 }
 

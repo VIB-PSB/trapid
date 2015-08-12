@@ -1574,6 +1574,7 @@ class ToolsController extends AppController{
     $names = array();
     $nodes = array();
     $links = array();
+    $inflow = array();
     $max_count = 0;
     
     foreach ($rows as $row){
@@ -1588,12 +1589,15 @@ class ToolsController extends AppController{
       if(!in_array($gf_id, $names)){
         $names[] = $gf_id;
         $nodes[] = array('name' => $gf_id);
+        $inflow[$gf_id] = 0;
       }
       // Keeping track of the maximum number
       if($max_count < $count){
         $max_count = $count;
       }
       $links[] = array("source" => array_search($label,$names),"target" => array_search($gf_id,$names),"value"=>$count);
+      // Keeping track of total inflow in a gene_family
+      $inflow[$gf_id] += $count;
     }
 
     $d = array("nodes" => $nodes, 
@@ -1601,6 +1605,7 @@ class ToolsController extends AppController{
     
     $this->set('maximum_count', $max_count);
 	  $this->set('sankeyData', json_encode($d));
+    $this->set('inflow_data', json_encode($inflow));
   }
 
 
