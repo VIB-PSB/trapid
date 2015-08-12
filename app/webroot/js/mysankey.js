@@ -1,12 +1,18 @@
 
+// real_width is used for layout purposes
 var margin = {top: 1, right: 1, bottom: 6, left: 1},
-    width = 960 - margin.left - margin.right,
+    real_width = 960,    
+    width = real_width - margin.left - margin.right,
     height = 500 - margin.top - margin.bottom;
 
 // The format of the numbers when hovering over a link or node
 var formatNumber = d3.format(",.0f"),
     format = function(d) { return formatNumber(d) + " genes"; },
     color = d3.scale.category20();
+
+// Set the width of the div, so the buttons can float right.
+document.getElementById('sankey').setAttribute("style","display:block;width:"+ real_width.toString()+"px");
+document.getElementById('sankey').style.width=real_width.toString()+"px";
 
 var svg = d3.select("#sankey").append("svg")
 	.attr("width", width + margin.left + margin.right)

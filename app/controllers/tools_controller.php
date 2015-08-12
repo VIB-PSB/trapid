@@ -1574,6 +1574,7 @@ class ToolsController extends AppController{
     $names = array();
     $nodes = array();
     $links = array();
+    $max_count = 0;
     
     foreach ($rows as $row){
       // Clean up the label, from expId_GFId to GFID, expId is assumed to be numerical
@@ -1588,14 +1589,18 @@ class ToolsController extends AppController{
         $names[] = $gf_id;
         $nodes[] = array('name' => $gf_id);
       }
+      // Keeping track of the maximum number
+      if($max_count < $count){
+        $max_count = $count;
+      }
       $links[] = array("source" => array_search($label,$names),"target" => array_search($gf_id,$names),"value"=>$count);
     }
 
-
     $d = array("nodes" => $nodes, 
                "links" => $links);
-   
-	$this->set('sankeyData', json_encode($d));
+    
+    $this->set('maximum_count', $max_count);
+	  $this->set('sankeyData', json_encode($d));
   }
 
 

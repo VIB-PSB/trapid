@@ -1,5 +1,11 @@
-#sankey {
-  height: 500px;
+#sankey{
+  overflow:auto
+}
+
+#refine_form {
+  justify-content: center;
+  text-align: center;
+  margin: 10px 0px;
 }
 
 .node rect {
