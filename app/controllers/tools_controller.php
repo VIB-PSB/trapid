@@ -1547,10 +1547,11 @@ class ToolsController extends AppController{
 
 
   function comparative_statistics($exp_id=null){
+
   }
 
   /*
-   * Generate a Sankey diagra;
+   * Extract the necessary datastructs to generate a Sankey diagram
    */
   function sankey($exp_id=null){
     $exp_id	= mysql_real_escape_string($exp_id);
@@ -1571,14 +1572,14 @@ class ToolsController extends AppController{
   // What we get from the DB: [[A,B,124]]
 
 
-    $names = array();
+    $names = array(); // Helper array because searching in the associative $nodes array is slower
     $nodes = array();
     $links = array();
-    $inflow = array();
-    $max_count = 0;
+    $inflow = array(); // Keeps track of the total size of gf's
+    $k = 40; // The number of gfs we initially want to show.
     
     foreach ($rows as $row){
-      // Clean up the label, from expId_GFId to GFID, expId is assumed to be numerical
+      // Clean up the label, from expId_GFId to GFId, expId is assumed to be numerical
       $gf_id = preg_replace("/\d*_/","",$row[0],1);
       $label = $row[1];
       $count = $row[2];
@@ -1591,10 +1592,7 @@ class ToolsController extends AppController{
         $nodes[] = array('name' => $gf_id);
         $inflow[$gf_id] = 0;
       }
-      // Keeping track of the maximum number
-      if($max_count < $count){
-        $max_count = $count;
-      }
+  
       $links[] = array("source" => array_search($label,$names),"target" => array_search($gf_id,$names),"value"=>$count);
       // Keeping track of total inflow in a gene_family
       $inflow[$gf_id] += $count;
@@ -1602,12 +1600,24 @@ class ToolsController extends AppController{
 
     $d = array("nodes" => $nodes, 
                "links" => $links);
-    
-    $this->set('maximum_count', $max_count);
-	  $this->set('sankeyData', json_encode($d));
+    arsort($inflow);
+    if(count($inflow) < $k){
+        // There are less than k gfs, display them all.
+        $min = 0;
+    } else {
+        $min = reset(array_slice ($inflow, $k, 1, true));
+    }
+    //$this->set('maximum_count', $max_count);
+    $this->set('maximum_count', reset($inflow));
+    $this->set('minimum_count', $min);
+	$this->set('sankeyData', json_encode($d));
     $this->set('inflow_data', json_encode($inflow));
   }
 
+function cmp($a, $b)
+{
+    return strcmp($a["title"], $b["title"]);
+}
 
 
 
