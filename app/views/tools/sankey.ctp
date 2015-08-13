@@ -1,7 +1,11 @@
-<div id="sankey"  >
-<!--<div id="t" ></div> -->
+<div>
+<h2>Sankey Diagram</h2>
+<div class="subdiv">
+	<?php echo $this->element("trapid_experiment");?>
+<h3>Sankey Diagram</h3>
+<div id="sankey" class="subdiv">
+
 <?php
-    //echo $sankeyData;
     echo '<script type="text/javascript">';
     echo "var sankeyData = " . $sankeyData .";";
     echo "var inflow_data = " . $inflow_data .";";
@@ -36,4 +40,5 @@
 	
 ?>
 </div>
-
+</div>
+</div>

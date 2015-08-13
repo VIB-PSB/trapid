@@ -6,12 +6,12 @@ var margin = {top: 1, right: 1, bottom: 6, left: 1},
     height = calculate_good_height() - margin.top - margin.bottom;
 
 function calculate_good_height(){
-    return Math.log1p(sankeyData.nodes.length)* 100;
+    return Math.min(window.innerHeight - 200, Math.log1p(sankeyData.nodes.length)* 150);
     
 }
 
 function calculate_good_width(){
-    return Math.min(window.innerWidth - margin.left - margin.right - 40,Math.log2(sankeyData.nodes.length)* 200);
+    return Math.min(window.innerWidth - margin.left - margin.right - 80,Math.log2(sankeyData.nodes.length)* 200);
      
     //return Math.log2(sankeyData.nodes.length)* 200;
     

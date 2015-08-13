@@ -1555,7 +1555,12 @@ class ToolsController extends AppController{
    */
   function sankey($exp_id=null){
     $exp_id	= mysql_real_escape_string($exp_id);
-    //parent::check_user_exp($exp_id);	??
+    parent::check_user_exp($exp_id);	
+    $exp_info	= $this->Experiments->getDefaultInformation($exp_id); 
+    //$this->TrapidUtils->checkPageAccess($exp_info['title'],$exp_info["process_state"],$this->process_states["default"]);       
+    $this->set("exp_info",$exp_info);
+    $this->set("exp_id",$exp_id);  
+
     $rows	= $this->Transcripts->getLabelToGFMapping($exp_id);
     // transform the data to the format expected by d3
     // Expected format:
