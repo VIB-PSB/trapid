@@ -8,8 +8,10 @@
 <?php
     echo '<script type="text/javascript">';
     echo "var sankeyData = " . $sankeyData .";";
+    
     echo "var inflow_data = " . $inflow_data .";";
     echo '</script>';	
+    //echo "<p>var sankeyData = ". print_r( $sankeyData) ."</p>";
 
 	echo $html->css('sankey');
 	echo $javascript->link(array('d3-3.5.6.min','sankey','mysankey'));	

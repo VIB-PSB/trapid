@@ -1590,11 +1590,13 @@ class ToolsController extends AppController{
       $count = $row[2];
       if(!in_array($label, $names)){
         $names[] = $label;
-        $nodes[] = array('name' => $label);
+        $nodes[] = array('name' => $label, 
+                         'href' => Router::url(array("controller"=>"labels","action"=>"view",$exp_id,urlencode($label)),true));
       }
       if(!in_array($gf_id, $names)){
         $names[] = $gf_id;
-        $nodes[] = array('name' => $gf_id);
+        $nodes[] = array('name' => $gf_id, 
+                         'href' => Router::url(array("controller"=>"gene_family","action"=>"gene_family",$exp_id,urlencode($row[0])),true));
         $inflow[$gf_id] = 0;
       }
   

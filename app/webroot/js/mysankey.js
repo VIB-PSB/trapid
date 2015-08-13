@@ -6,18 +6,12 @@ var margin = {top: 1, right: 1, bottom: 6, left: 1},
     height = calculate_good_height() - margin.top - margin.bottom;
 
 function calculate_good_height(){
-    return Math.min(window.innerHeight - 200, Math.log1p(sankeyData.nodes.length)* 150);
-    
+    return Math.min(window.innerHeight - 200, Math.log1p(sankeyData.nodes.length)* 150);   
 }
 
 function calculate_good_width(){
     return Math.min(window.innerWidth - margin.left - margin.right - 80,Math.log2(sankeyData.nodes.length)* 200);
-     
-    //return Math.log2(sankeyData.nodes.length)* 200;
-    
 }
-
-
 
 // Set the width of the div, so the buttons can float right.
 document.getElementById('sankey').setAttribute("style","display:block;width:"+ real_width.toString()+"px");
@@ -44,6 +38,9 @@ document.observe('dom:loaded', function(){
   $('min').observe('change', min_changed);
   $('max').observe('change', max_changed);
 });
+
+////////// Sankey vizualization ////////////
+
 // The format of the numbers when hovering over a link or node
 var formatNumber = d3.format(",.0f"),
     format = function(d) { return formatNumber(d) + " genes"; },
@@ -91,7 +88,8 @@ function draw_sankey() {
             bad_indices.push(j);
         }
         else {
-            var w = {name:sankeyData.nodes[j].name};
+            var w = {name:sankeyData.nodes[j].name,
+                     href:sankeyData.nodes[j].href};
             sankey_data_copy.nodes.push(w);
         }
     }    
@@ -144,6 +142,9 @@ var link = svg.append("g").selectAll(".link")
 
 link.append("title")
 	.text(function(d) { return d.source.name + " → " + d.target.name + "\n" + format(d.value); });
+  
+// Work around to make something dragable also clickable
+// From http://jsfiddle.net/2EqA3/3/
 
 var node = svg.append("g").selectAll(".node")
 	.data(sankey_data_copy.nodes)
@@ -152,8 +153,17 @@ var node = svg.append("g").selectAll(".node")
 	.attr("transform", function(d) { return "translate(" + d.x + "," + d.y + ")"; })
 	.call(d3.behavior.drag()
 	.origin(function(d) { return d; })
-	.on("dragstart", function() { this.parentNode.appendChild(this); })
-	.on("drag", dragmove));
+	.on("dragstart", function() { 
+                        d3.event.sourceEvent.stopPropagation();
+                        this.parentNode.appendChild(this); })
+	.on("drag", dragmove))
+    .on('click', click);
+
+function click(d) {
+  if (d3.event.defaultPrevented)
+    { return;}
+  location.href = d.href;
+}
 
 node.append("rect")
 	.attr("height", function(d) { return d.dy; })
@@ -179,6 +189,9 @@ node.append("text")
 	    sankey.relayout();
 	    link.attr("d", path);
     }
+
+ 
+
     
 
 }
