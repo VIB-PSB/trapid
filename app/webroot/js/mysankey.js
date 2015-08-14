@@ -181,7 +181,7 @@ function click(d) {
   if (d3.event.defaultPrevented)
     { return;}
 //console.log(d.href);
-  location.href = d.href;
+  window.open(d.href,'_blank');
 }
 
 node.append("rect")

@@ -1614,9 +1614,9 @@ class ToolsController extends AppController{
         $out_min = 0;
     }
     $this->set('maximum_count', reset($inflow));
-    $this->set('minimum_count', round(sqrt(count($inflow))));
+    $this->set('minimum_count', round(log(count($inflow))));
     $this->set('left_maximum_count', reset($outflow));
-    $this->set('left_minimum_count', round(sqrt(count($outflow))));
+    $this->set('left_minimum_count', round(log(count($outflow))));
 	  $this->set('sankeyData', json_encode($d));
     $this->set('inflow_data', json_encode($inflow));
     $this->set('outflow_data', json_encode($outflow)); 
