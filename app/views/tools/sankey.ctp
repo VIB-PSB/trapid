@@ -9,6 +9,7 @@
     echo '<script type="text/javascript">';
     echo "var sankeyData = " . $sankeyData .";";
     echo "var inflow_data = " . $inflow_data .";";
+    echo "var outflow_data = " . $outflow_data .";";
     echo '</script>';	
 
 	echo $html->css('sankey');
@@ -18,18 +19,17 @@
     $number_of_choices = 31;
 
     ///////////////// Left refinement /////////////////
-    $left_maximum_count = $maximum_count;
-    $left_minimum_count = $minimum_count;
     $left_selectable_values = range(0,$left_maximum_count,round($left_maximum_count/$number_of_choices));
+    $left_selectable_values[count($left_selectable_values) - 1] = $left_maximum_count;
     echo $form->create(false, array('id'=> 'left_refine_form'));
-    $x = 0;
-    while($x <= count($left_selectable_values)) {
-        if($left_selectable_values[$x] >= $left_minimum_count){
+    $y = 0;
+    while($y <= count($left_selectable_values)) {
+        if($left_selectable_values[$y] >= $left_minimum_count){
             break;
         }
-        $x++;
+        $y++;
     }
-    echo $form->input("Minimum $titleIsAKeyword size: ", array('options' => $left_selectable_values, 'id' =>'left_min', 'default'=>$x));
+    echo $form->input("Minimum $titleIsAKeyword size: ", array('options' => $left_selectable_values, 'id' =>'left_min', 'default'=>$left_minimum_count));
     echo $form->input("Maximum $titleIsAKeyword size: ", array('options' => array_reverse($left_selectable_values), 'id' =>'left_max'));
     $options = array(
     'type' => 'button',
@@ -53,7 +53,7 @@
         }
         $x++;
     }
-    echo $form->input('Minimum gene family size: ', array('options' => $selectable_values, 'id' =>'min', 'default'=>$x));
+    echo $form->input('Minimum gene family size: ', array('options' => $selectable_values, 'id' =>'min', 'default'=>$minimum_count));
     echo $form->input('Maximum gene family size: ', array('options' => array_reverse($selectable_values), 'id' =>'max'));
     //echo '<br />'; Too big find something smaller
     $options = array(

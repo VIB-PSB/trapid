@@ -1573,7 +1573,7 @@ class ToolsController extends AppController{
     $links = array();
     $inflow = array(); // Keeps track of the total size of gf's
     $outflow = array(); // Keeps track of the total size of labels
-    $k = 40; // The number of gfs we initially want to show.
+    $k = 40; // The number of links we initially want to show.
 
     foreach ($rows as $row){
       // Clean up the gf label, from expId_GFId to GFId, expId is assumed to be numerical
@@ -1586,32 +1586,37 @@ class ToolsController extends AppController{
         $right_urls[2] = urlencode($label); //This '2' is because the urls array is semi associative, and the first parameter is the exp_id and the second the id
         $nodes[] = array('name' => $label, 
                          'href' => Router::url($right_urls,true));
-        $outflow[$label] = 0;
+        $outflow[$names[$label]] = 0;
       }
       if(!isset($names[$gf_id])){
         $names[$gf_id] = count($nodes);
         $nodes[] = array('name' => $gf_id, 
                          'href' => Router::url(array("controller"=>"gene_family","action"=>"gene_family",$exp_id,urlencode($row[0])),true));    
  
-        $inflow[$gf_id] = 0;
+        $inflow[$names[$gf_id]] = 0;
       }
       $links[] = array("source" => $names[$label],"target" => $names[$gf_id],"value"=>$count);
       // Keeping track of total inflow in a gene_family
-      $inflow[$gf_id] += $count;
-      $outflow[$label] += $count;
+      $inflow[$names[$gf_id]] += $count;
+      $outflow[$names[$label]] += $count;
     }
 
     $d = array("nodes" => $nodes, 
                "links" => $links);
     arsort($inflow);
-    if(count($inflow) < $k){
-        // There are less than k gfs, display them all.
+    arsort($outflow);
+    if(count($rows) < $k){
+        // There are less than k nodes, display them all.
         $min = 0;
+        $out_min = 0;
     } else {
         $min = reset(array_slice($inflow, $k, 1, true));
+        $out_min = 0;
     }
     $this->set('maximum_count', reset($inflow));
-    $this->set('minimum_count', $min);
+    $this->set('minimum_count', round(sqrt(count($inflow))));
+    $this->set('left_maximum_count', reset($outflow));
+    $this->set('left_minimum_count', round(sqrt(count($outflow))));
 	  $this->set('sankeyData', json_encode($d));
     $this->set('inflow_data', json_encode($inflow));
     $this->set('outflow_data', json_encode($outflow)); 

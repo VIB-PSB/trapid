@@ -20,24 +20,29 @@ document.getElementById('sankey').style.width=real_width.toString()+"px";
 
 ////////// Behaviour of the refine button and fields ////////////
 
-/*  These functions disable the choice of a maximum below the set minimum and vice versa. */
-function min_changed(){    
-    for (var i = 0, len = $('max').options.length; i < len; i++) {
-        $('max').options[i].disabled = i > len - 1 - $('min').value;
-    }
-}
-
-function max_changed(){
-    for (var i = 0, len = $('min').options.length; i < len; i++) {
-        $('min').options[i].disabled = i > len - 1- $('max').value;
-    }
-}
-
 document.observe('dom:loaded', function(){
   draw_sankey();
-  $('min').observe('change', min_changed);
-  $('max').observe('change', max_changed);
+  /*  These functions disable the choice of a maximum below the set minimum and vice versa. */
+  $('min').observe('change', function() {
+    bound_changed('min','max');
+  });
+  $('max').observe('change', function() {
+    bound_changed('max','min');
+  });
+  $('left_min').observe('change', function() {
+    bound_changed('left_min','left_max');
+  });
+  $('left_max').observe('change', function() {
+    bound_changed('left_max','left_min');
+  });
 });
+
+function bound_changed(current, sibling){
+    for (var i = 0, len = $(sibling).options.length; i < len; i++) {
+        $(sibling).options[i].disabled = i > len - 1- $(current).value;
+    }
+}
+
 
 ////////// Sankey vizualization ////////////
 
@@ -61,47 +66,41 @@ function draw_sankey() {
 
 
     var e = document.getElementById("min");
-    var minimal = e.options[e.selectedIndex].text;
+    var minimal_inflow = e.options[e.selectedIndex].text;
     var ma = document.getElementById("max");
-    var maximal = ma.options[ma.selectedIndex].text; 
-    
-    //var sankey_data_copy = JSON.parse(JSON.stringify(sankeyData)); 
+    var maximal_inflow = ma.options[ma.selectedIndex].text; 
+
+    var e_o = document.getElementById("left_min");
+    var minimal_outflow = e_o.options[e_o.selectedIndex].text;
+    var ma_o = document.getElementById("left_max");
+    var maximal_outflow = ma_o.options[ma_o.selectedIndex].text; 
     var sankey_data_copy = {nodes : [], links : []};
 
-    // 1. get a list of all gfs we need to remove from the viz
-    var bad_gfs = [];
+    // 1. create a list of all nodes we need to remove from the viz
+    var bad_indices = {};
     for (var key in inflow_data) {
       if (inflow_data.hasOwnProperty(key)) {
-            if(inflow_data[key] < minimal || inflow_data[key] > maximal){
-                bad_gfs.push(key);
+            if(inflow_data[key] < minimal_inflow || inflow_data[key] > maximal_inflow){
+                bad_indices[key] = true;
+            }
+        }
+    }    
+
+    for (var key in outflow_data) {
+        if (outflow_data.hasOwnProperty(key)) {
+            if(outflow_data[key] < minimal_outflow || outflow_data[key] > maximal_outflow){
+                bad_indices[key] = true;
             }
         }
     }
-    console.log(bad_gfs);
-    // 2. Get the indices of these gfs
-    var bad_indices = [];
-    for(var j = 0; j < sankeyData.nodes.length; j++) {
-        // If the name appears in the list of bad gf names, add the index
-        // BUG: if a label has the same name as a GF, it will be added to the bad_gfs
-        if(bad_gfs.indexOf(sankeyData.nodes[j].name) > -1){
-            bad_indices.push(j);
-        }
-        else {
-            //var w = {name:sankeyData.nodes[j].name,
-            //         href:sankeyData.nodes[j].href};
-            //sankey_data_copy.nodes.push(w); 
-        }
-    }
 
-    // 2.5 If the removed targets orphan a source node, we must remove that orphan.
+    // 2 We check for possible orphans either on the source or target side
     // We check for this in one pass.
-    // First go over all links, if the link goes to a good target(Meaning the target isn't a bad index) add it to the good_nodes array
-    // In the same pass, add the indices of all good targets to the list, in the end we only have good indices, we then copy these
-    // Good_nodes acts as a set here.
+    // Go over all links, if the link is good, meaning both source and target aren't bad, the involved nodes are added to the good node set
     var good_nodes = {};
     for(var j = 0; j < sankeyData.links.length; j++) {
         // If the target isn't in the list of the bad_indices add it.
-        if(!(bad_indices.indexOf(sankeyData.links[j].target) > -1)){
+        if(!(sankeyData.links[j].target in bad_indices) && !(sankeyData.links[j].source in bad_indices)){
             good_nodes[sankeyData.links[j].source] = true;
             good_nodes[sankeyData.links[j].target] = true;
         }
@@ -114,10 +113,10 @@ function draw_sankey() {
     } 
     
     
-    // 3. Remove all links with a target gf in the list.
+    // 3. Remove all links with a bad index as source or target.
     for(var j = 0; j < sankeyData.links.length; j++) {
         // If the target isn't bad, add the link
-        if(!(bad_gfs.indexOf(sankeyData.links[j].target.name) > -1)){
+        if(!(sankeyData.links[j].target in bad_indices) && !(sankeyData.links[j].source in bad_indices)){
             
             // indices might have changed with the removal of nodes.
             link = {"value":sankeyData.links[j].value};
@@ -140,7 +139,6 @@ function draw_sankey() {
                 sankey_data_copy.links.push(link);
         }
     }    
-    //console.log(sankey_data_copy);
 
 var sankey = d3.sankey()
 	.size([width, height])
