@@ -2,7 +2,15 @@
   overflow:auto
 }
 
-#refine_form {
+#right_refine_form {
+  float:right;
+  justify-content: center;
+  text-align: center;
+  margin: 10px 0px;
+}
+
+#left_refine_form {
+  float:left;
   justify-content: center;
   text-align: center;
   margin: 10px 0px;

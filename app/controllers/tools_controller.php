@@ -1568,17 +1568,17 @@ class ToolsController extends AppController{
   // What we get from the DB: [[A,B,124]]
 
 
-    $names = array(); // Helper array because searching in the associative $nodes array is slower
+    $names = array(); // Helper array of the form 'name' => index. Optimization
     $nodes = array();
     $links = array();
     $inflow = array(); // Keeps track of the total size of gf's
+    $outflow = array(); // Keeps track of the total size of labels
     $k = 40; // The number of gfs we initially want to show.
 
     foreach ($rows as $row){
-      //$start = microtime(true); 
       // Clean up the gf label, from expId_GFId to GFId, expId is assumed to be numerical
       $gf_id = preg_replace("/\d*_/","",$row[0],1);
-      $label = $row[1];
+      $label = $row[1] === null ? 'no label' :$row[1];
       $count = $row[2];
       
       if(!isset($names[$label])){
@@ -1586,6 +1586,7 @@ class ToolsController extends AppController{
         $right_urls[2] = urlencode($label); //This '2' is because the urls array is semi associative, and the first parameter is the exp_id and the second the id
         $nodes[] = array('name' => $label, 
                          'href' => Router::url($right_urls,true));
+        $outflow[$label] = 0;
       }
       if(!isset($names[$gf_id])){
         $names[$gf_id] = count($nodes);
@@ -1597,6 +1598,7 @@ class ToolsController extends AppController{
       $links[] = array("source" => $names[$label],"target" => $names[$gf_id],"value"=>$count);
       // Keeping track of total inflow in a gene_family
       $inflow[$gf_id] += $count;
+      $outflow[$label] += $count;
     }
 
     $d = array("nodes" => $nodes, 
@@ -1606,12 +1608,13 @@ class ToolsController extends AppController{
         // There are less than k gfs, display them all.
         $min = 0;
     } else {
-        $min = reset(array_slice ($inflow, $k, 1, true));
+        $min = reset(array_slice($inflow, $k, 1, true));
     }
     $this->set('maximum_count', reset($inflow));
     $this->set('minimum_count', $min);
 	  $this->set('sankeyData', json_encode($d));
-    $this->set('inflow_data', json_encode($inflow)); 
+    $this->set('inflow_data', json_encode($inflow));
+    $this->set('outflow_data', json_encode($outflow)); 
     $this->render('sankey');
   }
 
