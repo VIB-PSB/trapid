@@ -1,8 +1,8 @@
 <div>
-<h2>Sankey Diagram</h2>
+<h2><?php echo "".$titleIsAKeyword;?> to gene family</h2>
 <div class="subdiv">
 	<?php echo $this->element("trapid_experiment");?>
-<h3>Sankey Diagram</h3>
+<h3><?php echo $titleIsAKeyword;?> to gene family</h3>
 <div id="sankey" class="subdiv">
 
 <?php
@@ -20,7 +20,7 @@
     $number_of_choices = 31;
     // Generate min and max number of genes
     $selectable_values = range(0,$maximum_count,round($maximum_count/$number_of_choices));
-    $selectable_values[$number_of_choices ] = $maximum_count;// The largest family should always be selectable
+    $selectable_values[count($selectable_values) - 1] = $maximum_count;// The largest family should always be selectable
     echo $form->create(false, array('id'=> 'refine_form', 'style' => 'float:right;'));
     $x = 0;
     while($x <= count($selectable_values)) {
@@ -29,8 +29,8 @@
         }
         $x++;
     }
-    echo $form->input('Minimum gene family size: ', array('options' => $selectable_values, 'id' =>'min', 'default'=>$x)); //,'empty' => '0'
-    echo $form->input('Maximum gene family size: ', array('options' => array_reverse($selectable_values), 'id' =>'max')); //'empty' => $maximum_count,
+    echo $form->input('Minimum gene family size: ', array('options' => $selectable_values, 'id' =>'min', 'default'=>$x));
+    echo $form->input('Maximum gene family size: ', array('options' => array_reverse($selectable_values), 'id' =>'max'));
     //echo '<br />'; Too big find something smaller
     $options = array(
     'type' => 'button',

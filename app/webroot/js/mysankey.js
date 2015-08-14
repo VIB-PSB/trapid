@@ -80,7 +80,6 @@ function draw_sankey() {
     console.log(bad_gfs);
     // 2. Get the indices of these gfs
     var bad_indices = [];
-    var good_nodes = [];
     for(var j = 0; j < sankeyData.nodes.length; j++) {
         // If the name appears in the list of bad gf names, add the index
         // BUG: if a label has the same name as a GF, it will be added to the bad_gfs
@@ -88,15 +87,36 @@ function draw_sankey() {
             bad_indices.push(j);
         }
         else {
-            var w = {name:sankeyData.nodes[j].name,
-                     href:sankeyData.nodes[j].href};
-            sankey_data_copy.nodes.push(w);
+            //var w = {name:sankeyData.nodes[j].name,
+            //         href:sankeyData.nodes[j].href};
+            //sankey_data_copy.nodes.push(w); 
         }
-    }    
+    }
 
+    // 2.5 If the removed targets orphan a source node, we must remove that orphan.
+    // We check for this in one pass.
+    // First go over all links, if the link goes to a good target(Meaning the target isn't a bad index) add it to the good_nodes array
+    // In the same pass, add the indices of all good targets to the list, in the end we only have good indices, we then copy these
+    // Good_nodes acts as a set here.
+    var good_nodes = {};
+    for(var j = 0; j < sankeyData.links.length; j++) {
+        // If the target isn't in the list of the bad_indices add it.
+        if(!(bad_indices.indexOf(sankeyData.links[j].target) > -1)){
+            good_nodes[sankeyData.links[j].source] = true;
+            good_nodes[sankeyData.links[j].target] = true;
+        }
+    }
+    
+    for(index in good_nodes){
+        var w = {name:sankeyData.nodes[index].name,
+                     href:sankeyData.nodes[index].href};
+        sankey_data_copy.nodes.push(w);
+    } 
+    
+    
     // 3. Remove all links with a target gf in the list.
     for(var j = 0; j < sankeyData.links.length; j++) {
-        // If the target isn't bad, add the node
+        // If the target isn't bad, add the link
         if(!(bad_gfs.indexOf(sankeyData.links[j].target.name) > -1)){
             
             // indices might have changed with the removal of nodes.
@@ -120,7 +140,7 @@ function draw_sankey() {
                 sankey_data_copy.links.push(link);
         }
     }    
-    console.log(sankey_data_copy);
+    //console.log(sankey_data_copy);
 
 var sankey = d3.sankey()
 	.size([width, height])
@@ -162,6 +182,7 @@ var node = svg.append("g").selectAll(".node")
 function click(d) {
   if (d3.event.defaultPrevented)
     { return;}
+//console.log(d.href);
   location.href = d.href;
 }
 

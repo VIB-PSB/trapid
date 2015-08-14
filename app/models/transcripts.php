@@ -171,6 +171,46 @@ class Transcripts extends AppModel{
     return $result;
   }
 
+  function getGOToGFMapping($exp_id){
+    $query	= "SELECT COUNT( * ) , transcripts.`gf_id` , transcripts_go.`go` 
+               FROM transcripts
+               LEFT JOIN transcripts_go ON ( transcripts_go.`transcript_id` = transcripts.`transcript_id` 
+                                             AND transcripts_go.`experiment_id` = transcripts.`experiment_id` ) 
+               WHERE transcripts.`experiment_id` = ".$exp_id."
+               AND transcripts.`gf_id` IS NOT NULL 
+               GROUP BY transcripts.`gf_id` , transcripts_go.`go` 
+               ORDER BY COUNT( * ) DESC ";
+    $res	= $this->query($query);
+    $result	= array();
+    foreach($res as $r){
+      $gf_id    = $r['transcripts']['gf_id'];
+      $GO    = $r['transcripts_go']['go'];
+      $count    = reset($r[0]);
+      $result[] = array($gf_id,$GO,$count);
+    }
+    return $result;
+  }
+
+  function getinterproToGFMapping($exp_id){
+    $query	= "SELECT COUNT( * ) , transcripts.`gf_id` , transcripts_interpro.`interpro` 
+               FROM transcripts
+               LEFT JOIN transcripts_interpro ON ( transcripts_interpro.`transcript_id` = transcripts.`transcript_id` 
+                                             AND transcripts_interpro.`experiment_id` = transcripts.`experiment_id` ) 
+               WHERE transcripts.`experiment_id` = ".$exp_id."
+               AND transcripts.`gf_id` IS NOT NULL 
+               GROUP BY transcripts.`gf_id` , transcripts_interpro.`interpro` 
+               ORDER BY COUNT( * ) DESC ";
+    $res	= $this->query($query);
+    $result	= array();
+    foreach($res as $r){
+      $gf_id    = $r['transcripts']['gf_id'];
+      $interpro    = $r['transcripts_interpro']['interpro'];
+      $count    = reset($r[0]);
+      $result[] = array($gf_id,$interpro,$count);
+    }
+    return $result;
+  }
+
 }
 
 

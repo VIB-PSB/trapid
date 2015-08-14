@@ -1545,23 +1545,14 @@ class ToolsController extends AppController{
 
   }
 
-
   function comparative_statistics($exp_id=null){
 
   }
 
-  /*
+   /*
    * Extract the necessary datastructs to generate a Sankey diagram
    */
-  function sankey($exp_id=null){
-    $exp_id	= mysql_real_escape_string($exp_id);
-    parent::check_user_exp($exp_id);	
-    $exp_info	= $this->Experiments->getDefaultInformation($exp_id); 
-    //$this->TrapidUtils->checkPageAccess($exp_info['title'],$exp_info["process_state"],$this->process_states["default"]);       
-    $this->set("exp_info",$exp_info);
-    $this->set("exp_id",$exp_id);  
-
-    $rows	= $this->Transcripts->getLabelToGFMapping($exp_id);
+    function generateSankeyDiagram($rows=null,$exp_id=null,$right_urls=null){
     // transform the data to the format expected by d3
     // Expected format:
 	  /*$d = array(
@@ -1582,25 +1573,28 @@ class ToolsController extends AppController{
     $links = array();
     $inflow = array(); // Keeps track of the total size of gf's
     $k = 40; // The number of gfs we initially want to show.
-    
+
     foreach ($rows as $row){
-      // Clean up the label, from expId_GFId to GFId, expId is assumed to be numerical
+      //$start = microtime(true); 
+      // Clean up the gf label, from expId_GFId to GFId, expId is assumed to be numerical
       $gf_id = preg_replace("/\d*_/","",$row[0],1);
       $label = $row[1];
       $count = $row[2];
-      if(!in_array($label, $names)){
-        $names[] = $label;
+      
+      if(!isset($names[$label])){
+        $names[$label] = count($nodes);
+        $right_urls[2] = urlencode($label); //This '2' is because the urls array is semi associative, and the first parameter is the exp_id and the second the id
         $nodes[] = array('name' => $label, 
-                         'href' => Router::url(array("controller"=>"labels","action"=>"view",$exp_id,urlencode($label)),true));
+                         'href' => Router::url($right_urls,true));
       }
-      if(!in_array($gf_id, $names)){
-        $names[] = $gf_id;
+      if(!isset($names[$gf_id])){
+        $names[$gf_id] = count($nodes);
         $nodes[] = array('name' => $gf_id, 
-                         'href' => Router::url(array("controller"=>"gene_family","action"=>"gene_family",$exp_id,urlencode($row[0])),true));
+                         'href' => Router::url(array("controller"=>"gene_family","action"=>"gene_family",$exp_id,urlencode($row[0])),true));    
+ 
         $inflow[$gf_id] = 0;
       }
-  
-      $links[] = array("source" => array_search($label,$names),"target" => array_search($gf_id,$names),"value"=>$count);
+      $links[] = array("source" => $names[$label],"target" => $names[$gf_id],"value"=>$count);
       // Keeping track of total inflow in a gene_family
       $inflow[$gf_id] += $count;
     }
@@ -1614,18 +1608,55 @@ class ToolsController extends AppController{
     } else {
         $min = reset(array_slice ($inflow, $k, 1, true));
     }
-    //$this->set('maximum_count', $max_count);
     $this->set('maximum_count', reset($inflow));
     $this->set('minimum_count', $min);
-	$this->set('sankeyData', json_encode($d));
-    $this->set('inflow_data', json_encode($inflow));
+	  $this->set('sankeyData', json_encode($d));
+    $this->set('inflow_data', json_encode($inflow)); 
+    $this->render('sankey');
   }
 
-function cmp($a, $b)
-{
-    return strcmp($a["title"], $b["title"]);
-}
 
+
+  function GOSankey($exp_id=null){
+    $exp_id	= mysql_real_escape_string($exp_id);
+    parent::check_user_exp($exp_id);	
+    $exp_info	= $this->Experiments->getDefaultInformation($exp_id); 
+    $this->TrapidUtils->checkPageAccess($exp_info['title'],$exp_info["process_state"],$this->process_states["default"]);       
+    $this->set("exp_info",$exp_info);
+    $this->set("exp_id",$exp_id);  
+    $this->set("titleIsAKeyword", 'GO');
+    $start = microtime(true); 
+    $rows	= $this->Transcripts->getGOToGFMapping($exp_id);
+    echo 'Getting data takes :'.(microtime(true) - $start);
+    $this->generateSankeyDiagram($rows,$exp_id,array("controller"=>"functional_annotation","action"=>"go",$exp_id));    
+  }
+
+  function interproSankey($exp_id=null){
+    $exp_id	= mysql_real_escape_string($exp_id);
+    parent::check_user_exp($exp_id);	
+    $exp_info	= $this->Experiments->getDefaultInformation($exp_id); 
+    $this->TrapidUtils->checkPageAccess($exp_info['title'],$exp_info["process_state"],$this->process_states["default"]);       
+    $this->set("exp_info",$exp_info);
+    $this->set("exp_id",$exp_id);  
+    $this->set('titleIsAKeyword', 'Interpro');
+
+    $rows	= $this->Transcripts->getInterproToGFMapping($exp_id);
+    $this->generateSankeyDiagram($rows,$exp_id,array("controller"=>"functional_annotation","action"=>"interpro",$exp_id));
+  }
+
+
+  function labelSankey($exp_id=null){
+    $exp_id	= mysql_real_escape_string($exp_id);
+    parent::check_user_exp($exp_id);	
+    $exp_info	= $this->Experiments->getDefaultInformation($exp_id); 
+    $this->TrapidUtils->checkPageAccess($exp_info['title'],$exp_info["process_state"],$this->process_states["default"]);       
+    $this->set("exp_info",$exp_info);
+    $this->set("exp_id",$exp_id);  
+    $this->set("titleIsAKeyword", "Label");
+    
+    $rows	= $this->Transcripts->getLabelToGFMapping($exp_id);
+    $this->generateSankeyDiagram($rows,$exp_id,array("controller"=>"labels","action"=>"view",$exp_id));
+  }
 
 
 

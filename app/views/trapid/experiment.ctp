@@ -231,8 +231,20 @@
 						$subset2
 					),					
 					array(
-						"Sankey diagram",
-						$html->url(array("controller"=>"tools","action"=>"sankey",$exp_id)),
+						"Label to gene family sankey",
+						$html->url(array("controller"=>"tools","action"=>"labelSankey",$exp_id)),
+						"some_image.png",
+						$subset1
+					),					
+					array(
+						"Interpro to gene family sankey",
+						$html->url(array("controller"=>"tools","action"=>"interproSankey",$exp_id)),
+						"some_image.png",
+						$subset1
+					),					
+					array(
+						"GO to gene family sankey",
+						$html->url(array("controller"=>"tools","action"=>"GOSankey",$exp_id)),
 						"some_image.png",
 						$subset1
 					),					
