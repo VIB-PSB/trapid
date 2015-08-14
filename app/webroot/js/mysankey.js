@@ -108,7 +108,8 @@ function draw_sankey() {
     
     for(index in good_nodes){
         var w = {name:sankeyData.nodes[index].name,
-                     href:sankeyData.nodes[index].href};
+                     href:sankeyData.nodes[index].href,
+                     original_outflow:outflow_data[index]};
         sankey_data_copy.nodes.push(w);
     } 
     
@@ -180,7 +181,6 @@ var node = svg.append("g").selectAll(".node")
 function click(d) {
   if (d3.event.defaultPrevented)
     { return;}
-//console.log(d.href);
   window.open(d.href,'_blank');
 }
 
@@ -190,7 +190,7 @@ node.append("rect")
 	.style("fill", function(d) { return d.color = color(d.name); })
 	.style("stroke", function(d) { return d3.rgb(d.color).darker(2); })
 	.append("title")
-	.text(function(d) { return d.name + "\n" + format(d.value); });
+	.text(function(d) { return d.name + "\n" + format(d.value) + " / " + format(d.original_outflow); });
 
 node.append("text")
 	.attr("x", -6)
@@ -202,7 +202,7 @@ node.append("text")
 	.filter(function(d) { return d.x < width / 2; })
 	.attr("x", 6 + sankey.nodeWidth())
 	.attr("text-anchor", "start");
-
+console.log(sankey_data_copy);
     function dragmove(d) {
 	    d3.select(this).attr("transform", "translate(" + d.x + "," + (d.y = Math.max(0, Math.min(height - d.dy, d3.event.y))) + ")");
 	    sankey.relayout();
