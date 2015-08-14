@@ -35,6 +35,13 @@ document.observe('dom:loaded', function(){
   $('left_max').observe('change', function() {
     bound_changed('left_max','left_min');
   });
+  $('middle_min').observe('change', function() {
+    bound_changed('middle_min','middle_max');
+  });
+  $('middle_max').observe('change', function() {
+    bound_changed('middle_max','middle_min');
+  });
+
 });
 
 function bound_changed(current, sibling){
