@@ -249,6 +249,12 @@
 						$subset1
 					),					
 					array(
+						"label to GO to gene family sankey",
+						$html->url(array("controller"=>"tools","action"=>"multiSankey",$exp_id)),
+						"some_image.png",
+						$subset1
+					),					
+					array(
 						"Different subsets",
 						$html->url(array("controller"=>"labels","action"=>"subset_overview",$exp_id)),
 						"some_image.png",

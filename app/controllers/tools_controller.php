@@ -1635,7 +1635,7 @@ class ToolsController extends AppController{
     $this->set("titleIsAKeyword", 'GO');
     $start = microtime(true); 
     $rows	= $this->Transcripts->getGOToGFMapping($exp_id);
-    echo 'Getting data takes :'.(microtime(true) - $start);
+    //echo 'Getting data takes :'.(microtime(true) - $start);
     $this->generateSankeyDiagram($rows,$exp_id,array("controller"=>"functional_annotation","action"=>"go",$exp_id));    
   }
 
@@ -1664,6 +1664,32 @@ class ToolsController extends AppController{
     
     $rows	= $this->Transcripts->getLabelToGFMapping($exp_id);
     $this->generateSankeyDiagram($rows,$exp_id,array("controller"=>"labels","action"=>"view",$exp_id));
+  }
+
+  function multiSankey($exp_id=null){
+    $exp_id	= mysql_real_escape_string($exp_id);
+    parent::check_user_exp($exp_id);	
+    $exp_info	= $this->Experiments->getDefaultInformation($exp_id); 
+    $this->TrapidUtils->checkPageAccess($exp_info['title'],$exp_info["process_state"],$this->process_states["default"]);       
+    $this->set("exp_info",$exp_info);
+    $this->set("exp_id",$exp_id);  
+    $this->set("titleIsAKeyword", 'Label to GO');
+    $this->set("first_col", 'Label');
+    $this->set("second_col", 'GO');
+    $start = microtime(true); 
+
+    $labelRows	= $this->TranscriptsLabels->getLabeltoGOMapping($exp_id);
+    $GORows	= $this->Transcripts->getGOToGFMapping($exp_id); 
+    $stop =    microtime(true);
+    echo 'Getting data takes :'.($stop - $start);
+
+    $this->generateMultiSankeyDiagram($GORows,$exp_id,array("controller"=>"functional_annotation","action"=>"go",$exp_id));  
+    echo 'render took :'.(microtime(true) - $stop);  
+  }
+
+  function generateMultiSankeyDiagram($rows=null,$exp_id=null,$right_urls=null){
+  $this->render("multi_sankey");
+  
   }
 
 

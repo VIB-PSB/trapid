@@ -60,6 +60,25 @@ class TranscriptsLabels extends AppModel{
     return $result;
   }
 
+
+  function getLabeltoGOMapping($exp_id){
+    $query	= "SELECT COUNT(*), label, go
+                FROM `transcripts_labels` 
+                JOIN `transcripts_go` USING (experiment_id,transcript_id)
+                WHERE experiment_id = ".$exp_id."
+                GROUP BY label,go";
+    $res	= $this->query($query);
+    $result	= array();
+    foreach($res as $r){
+      $gf_id    = $r['transcripts_labels']['label'];
+      $GO    = $r['transcripts_go']['go'];
+      $count    = reset($r[0]);
+      $result[] = array($GO,$gf_id,$count);
+    }
+    return $result;
+  }
+
+
 }
 
 

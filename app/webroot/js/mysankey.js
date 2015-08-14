@@ -102,14 +102,15 @@ function draw_sankey() {
         // If the target isn't in the list of the bad_indices add it.
         if(!(sankeyData.links[j].target in bad_indices) && !(sankeyData.links[j].source in bad_indices)){
             good_nodes[sankeyData.links[j].source] = true;
-            good_nodes[sankeyData.links[j].target] = true;
+            good_nodes[sankeyData.links[j].target] = false;
         }
     }
     
     for(index in good_nodes){
+        console
         var w = {name:sankeyData.nodes[index].name,
                      href:sankeyData.nodes[index].href,
-                     original_outflow:outflow_data[index]};
+                     original_flow:good_nodes[index]?outflow_data[index]:inflow_data[index]};
         sankey_data_copy.nodes.push(w);
     } 
     
@@ -190,7 +191,7 @@ node.append("rect")
 	.style("fill", function(d) { return d.color = color(d.name); })
 	.style("stroke", function(d) { return d3.rgb(d.color).darker(2); })
 	.append("title")
-	.text(function(d) { return d.name + "\n" + format(d.value) + " / " + format(d.original_outflow); });
+	.text(function(d) { return d.name + "\n" + format(d.value) + " / " + format(d.original_flow); });
 
 node.append("text")
 	.attr("x", -6)
@@ -202,16 +203,12 @@ node.append("text")
 	.filter(function(d) { return d.x < width / 2; })
 	.attr("x", 6 + sankey.nodeWidth())
 	.attr("text-anchor", "start");
-console.log(sankey_data_copy);
+//console.log(sankey_data_copy);
     function dragmove(d) {
 	    d3.select(this).attr("transform", "translate(" + d.x + "," + (d.y = Math.max(0, Math.min(height - d.dy, d3.event.y))) + ")");
 	    sankey.relayout();
 	    link.attr("d", path);
-    }
-
- 
-
-    
+    }   
 
 }
 
