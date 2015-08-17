@@ -171,13 +171,13 @@ class Transcripts extends AppModel{
     return $result;
   }
 
-  function getGOToGFMapping($exp_id){
+  function getGOToGFMapping($exp_id,$reverse=false){
     $query	= "SELECT COUNT( * ) , transcripts.`gf_id` , transcripts_go.`go` 
                FROM transcripts
                LEFT JOIN transcripts_go ON ( transcripts_go.`transcript_id` = transcripts.`transcript_id` 
                                              AND transcripts_go.`experiment_id` = transcripts.`experiment_id` ) 
                WHERE transcripts.`experiment_id` = ".$exp_id."
-               AND transcripts.`gf_id` IS NOT NULL 
+               AND transcripts.`gf_id` IS NOT NULL AND transcripts_go.`go` IS NOT NULL
                GROUP BY transcripts.`gf_id` , transcripts_go.`go` 
                ORDER BY COUNT( * ) DESC ";
     $res	= $this->query($query);
@@ -186,7 +186,11 @@ class Transcripts extends AppModel{
       $gf_id    = $r['transcripts']['gf_id'];
       $GO    = $r['transcripts_go']['go'];
       $count    = reset($r[0]);
-      $result[] = array($gf_id,$GO,$count);
+      if(!$reverse){
+        $result[] = array($gf_id,$GO,$count);
+      } else {
+        $result[] = array($GO,$gf_id,$count);
+      }
     }
     return $result;
   }

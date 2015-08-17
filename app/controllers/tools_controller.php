@@ -1633,9 +1633,9 @@ class ToolsController extends AppController{
     $this->set("exp_info",$exp_info);
     $this->set("exp_id",$exp_id);  
     $this->set("titleIsAKeyword", 'GO');
-    $start = microtime(true); 
+
     $rows	= $this->Transcripts->getGOToGFMapping($exp_id);
-    //echo 'Getting data takes :'.(microtime(true) - $start);
+
     $this->generateSankeyDiagram($rows,$exp_id,array("controller"=>"functional_annotation","action"=>"go",$exp_id));    
   }
 
@@ -1676,20 +1676,22 @@ class ToolsController extends AppController{
     $this->set("titleIsAKeyword", 'Label to GO');
     $this->set("first_col", 'Label');
     $this->set("second_col", 'GO');
+    $this->set("third_col", 'Gene family');
     $start = microtime(true); 
 
     $labelRows	= $this->TranscriptsLabels->getLabeltoGOMapping($exp_id);
-    $GORows	= $this->Transcripts->getGOToGFMapping($exp_id); 
+    $GORows	= $this->Transcripts->getGOToGFMapping($exp_id,true); 
     $stop =    microtime(true);
     echo 'Getting data takes :'.($stop - $start);
 
-    $this->generateMultiSankeyDiagram($GORows,$exp_id,array("controller"=>"functional_annotation","action"=>"go",$exp_id));  
-    echo 'render took :'.(microtime(true) - $stop);  
+    $this->generateMultiSankeyDiagram($labelRows,$GORows,$exp_id,array("controller"=>"functional_annotation","action"=>"go",$exp_id));  
   }
 
-  function generateMultiSankeyDiagram($rows=null,$exp_id=null,$right_urls=null){
-  $this->render("multi_sankey");
-  
+  function generateMultiSankeyDiagram($first_rows=null,$second_rows=null,$exp_id=null,$right_urls=null){
+    $this->set('first_mapping', $first_rows);
+    $this->set('second_mapping', $second_rows);
+    
+    $this->render('multi_sankey');  
   }
 
 

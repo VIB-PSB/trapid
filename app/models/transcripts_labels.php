@@ -70,10 +70,10 @@ class TranscriptsLabels extends AppModel{
     $res	= $this->query($query);
     $result	= array();
     foreach($res as $r){
-      $gf_id    = $r['transcripts_labels']['label'];
+      $label   = $r['transcripts_labels']['label'];
       $GO    = $r['transcripts_go']['go'];
       $count    = reset($r[0]);
-      $result[] = array($GO,$gf_id,$count);
+      $result[] = array($label,$GO,$count);
     }
     return $result;
   }
