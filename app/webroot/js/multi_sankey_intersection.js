@@ -6,11 +6,11 @@ var margin = {top: 1, right: 1, bottom: 6, left: 1},
     height = calculate_good_height() - margin.top - margin.bottom;
 
 function calculate_good_height(){
-    return Math.min(window.innerHeight - 200, Math.log2(first_mapping.length + second_mapping.length)* 200);   
+    return Math.min(window.innerHeight - 200, Math.log2(mapping.length + second_mapping.length)* 200);   
 }
 
 function calculate_good_width(){
-    return Math.min(window.innerWidth - margin.left - margin.right - 80,Math.log2(first_mapping.length + second_mapping.length)* 200);
+    return Math.min(window.innerWidth - margin.left - margin.right - 80,Math.log2(2*mapping.length)* 200);
 }
 
 // Set the width of the div, so the buttons can float right.
@@ -19,10 +19,11 @@ document.getElementById('sankey').style.width=real_width.toString()+"px";
 
 
 ////////// Behaviour of the refine button and fields ////////////
-var min_names = ['left_min','middle_min','right_min'];
-var max_names = ['left_max','middle_max','right_max'];
+var min_names = ['middle_min'];
+var max_names = ['middle_max'];
 
 document.observe('dom:loaded', function(){
+  return;
   process_data();
   fill_in_dropdown_bounds();
   draw_sankey();
@@ -177,7 +178,7 @@ var svg = d3.select("#sankey").append("svg")
 var graph;
  // (Re)draw the sankey diagram
 function draw_sankey() {
-
+    
     // Remove the old svg if it exists
     d3.select("svg").text('');
 

@@ -1699,6 +1699,31 @@ class ToolsController extends AppController{
     $this->render('multi_sankey');  
   }
 
+function multiSankeyIntersection($exp_id=null){
+    $exp_id	= mysql_real_escape_string($exp_id);
+    parent::check_user_exp($exp_id);	
+    $exp_info	= $this->Experiments->getDefaultInformation($exp_id); 
+    $this->TrapidUtils->checkPageAccess($exp_info['title'],$exp_info["process_state"],$this->process_states["default"]);       
+    $this->set("exp_info",$exp_info);
+    $this->set("exp_id",$exp_id);  
+    $this->set("col_names", array('Label','Gene family','Label'));
+    $place_holder = '###';
+    $this->set("place_holder", $place_holder);    
+    $start = microtime(true); 
+
+    $label_rows	= $this->TranscriptsLabels->getLabelToGFMapping($exp_id);
+    $stop =    microtime(true);
+    echo 'Getting data takes :'.($stop - $start);
+    $this->set('mapping', $label_rows);
+
+    $urls = array(Router::url(array("controller"=>"labels","action"=>"view",$exp_id,$place_holder)),                  
+                  Router::url(array("controller"=>"gene_family","action"=>"gene_family",$exp_id,$place_holder)) 
+    );
+    $this->set('urls', $urls);    
+    
+    
+    $this->render('multi_sankey_intersection'); 
+  }
 
 
   /*

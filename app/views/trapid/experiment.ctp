@@ -255,6 +255,12 @@
 						$subset1
 					),					
 					array(
+						"Label GF intersection",
+						$html->url(array("controller"=>"tools","action"=>"multiSankeyIntersection",$exp_id)),
+						"some_image.png",
+						$subset1
+					),					
+					array(
 						"Different subsets",
 						$html->url(array("controller"=>"labels","action"=>"subset_overview",$exp_id)),
 						"some_image.png",
