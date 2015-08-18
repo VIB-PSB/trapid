@@ -19,34 +19,26 @@ document.getElementById('sankey').style.width=real_width.toString()+"px";
 
 
 ////////// Behaviour of the refine button and fields ////////////
+var min_names = ['left_min','middle_min','right_min'];
+var max_names = ['left_max','middle_max','right_max'];
 
 document.observe('dom:loaded', function(){
   process_data();
   fill_in_dropdown_bounds();
   draw_sankey();
   /*  These functions disable the choice of a maximum below the set minimum and vice versa. */
-  $('right_min').observe('change', function() {
-    bound_changed('right_min','right_max');
-  });
-  $('right_max').observe('change', function() {
-    bound_changed('right_max','right_min');
-  });
-  $('left_min').observe('change', function() {
-    bound_changed('left_min','left_max');
-  });
-  $('left_max').observe('change', function() {
-    bound_changed('left_max','left_min');
-  });
-  $('middle_min').observe('change', function() {
-    bound_changed('middle_min','middle_max');
-  });
-  $('middle_max').observe('change', function() {
-    bound_changed('middle_max','middle_min');
-  });
-
+  for (var i = 0, len = min_names.length; i < len; i++) {
+      // .bindAsEventListener is necessary to pass the arguments
+      $(min_names[i]).observe('change', 
+        bound_changed.bindAsEventListener(this, min_names[i],max_names[i])
+        );        
+      $(max_names[i]).observe('change', 
+        bound_changed.bindAsEventListener(this, max_names[i],min_names[i])
+       );
+  }
 });
 
-function bound_changed(current, sibling){
+function bound_changed(event, current, sibling){
     for (var i = 0, len = $(sibling).options.length; i < len; i++) {
         $(sibling).options[i].disabled = i > len - 1- $(current).value;
     }
@@ -101,9 +93,6 @@ function process_data(){
     }   
 }
 
-
-var min_names = ['left_min','middle_min','right_min'];
-var max_names = ['left_max','middle_max','right_max'];
 // Dropdowns offer number_of_choices choices, step_size between them
 function fill_in_dropdown_bounds(){
 
