@@ -1676,6 +1676,8 @@ class ToolsController extends AppController{
     $this->set("titleIsAKeyword", 'Label to GO');
     $this->set("first_col", 'Label');
     $this->set("second_col", 'GO');
+    $place_holder = '###';
+    $this->set("place_holder", $place_holder);
     $this->set("third_col", 'Gene family');
     $start = microtime(true); 
 
@@ -1683,14 +1685,17 @@ class ToolsController extends AppController{
     $GORows	= $this->Transcripts->getGOToGFMapping($exp_id,true); 
     $stop =    microtime(true);
     echo 'Getting data takes :'.($stop - $start);
-
-    $this->generateMultiSankeyDiagram($labelRows,$GORows,$exp_id,array("controller"=>"functional_annotation","action"=>"go",$exp_id));  
+    $urls = array(Router::url(array("controller"=>"labels","action"=>"view",$exp_id,$place_holder)),
+                  Router::url(array("controller"=>"functional_annotation","action"=>"go",$exp_id,$place_holder)),
+                  Router::url(array("controller"=>"gene_family","action"=>"gene_family",$exp_id,$place_holder)) 
+    );
+    $this->generateMultiSankeyDiagram($labelRows,$GORows,$exp_id,$urls);  
   }
 
-  function generateMultiSankeyDiagram($first_rows=null,$second_rows=null,$exp_id=null,$right_urls=null){
+  function generateMultiSankeyDiagram($first_rows=null,$second_rows=null,$exp_id=null,$urls=null){
     $this->set('first_mapping', $first_rows);
     $this->set('second_mapping', $second_rows);
-    
+    $this->set('urls', $urls);
     $this->render('multi_sankey');  
   }
 
