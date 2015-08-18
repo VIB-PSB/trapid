@@ -13,10 +13,6 @@ function calculate_good_width(){
     return Math.min(window.innerWidth - margin.left - margin.right - 80,Math.log2(2*mapping.length)* 200);
 }
 
-// Set the width of the div, so the buttons can float right.
-document.getElementById('sankey').setAttribute("style","display:block;width:"+ real_width.toString()+"px");
-document.getElementById('sankey').style.width=real_width.toString()+"px";
-
 
 ////////// Behaviour of the refine button and fields ////////////
 var min_names = ['middle_min'];

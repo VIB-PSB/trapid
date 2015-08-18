@@ -7,6 +7,10 @@
     justify-content: space-between;
 }
 
+#choices:last-child  {
+    margin-right:50px;
+}
+
 .node rect {
   cursor: move;
   fill-opacity: .9;
