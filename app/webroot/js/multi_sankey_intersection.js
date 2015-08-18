@@ -1,45 +1,64 @@
 "use strict";
-// real_width is used for layout purposes
-var margin = {top: 1, right: 1, bottom: 6, left: 1},
-    real_width = calculate_good_width(),    
-    width = real_width - margin.left - margin.right,
-    height = calculate_good_height() - margin.top - margin.bottom;
-
-function calculate_good_height(){
-    return Math.min(window.innerHeight - 200, Math.log2(mapping.length + second_mapping.length)* 200);   
-}
-
-function calculate_good_width(){
-    return Math.min(window.innerWidth - margin.left - margin.right - 80,Math.log2(2*mapping.length)* 200);
-}
-
 
 ////////// Behaviour of the refine button and fields ////////////
 var min_names = ['middle_min'];
 var max_names = ['middle_max'];
 
 document.observe('dom:loaded', function(){
-  return;
   process_data();
   fill_in_dropdown_bounds();
+  add_bound_checking_dropdown();
+  add_checkboxes();
   draw_sankey();
-  
-  /*  These functions disable the choice of a maximum below the set minimum and vice versa. */
-  for (var i = 0, len = min_names.length; i < len; i++) {
-      // .bindAsEventListener is necessary to pass the arguments
-      $(min_names[i]).observe('change', 
-        bound_changed.bindAsEventListener(this, min_names[i],max_names[i])
-        );        
-      $(max_names[i]).observe('change', 
-        bound_changed.bindAsEventListener(this, max_names[i],min_names[i])
-       );
-  }
 });
 
 function bound_changed(event, current, sibling){
-    for (var i = 0, len = $(sibling).options.length; i < len; i++) {
+    for(var i = 0, len = $(sibling).options.length; i < len; i++) {
         $(sibling).options[i].disabled = i > len - 1- $(current).value;
     }
+}
+
+function add_bound_checking_dropdown(){
+  /* These functions disable the choice of a maximum below the set minimum and vice versa. */
+  for(var i = 0, len = min_names.length; i < len; i++) {
+      // .bindAsEventListener is necessary to pass the arguments
+      $(min_names[i]).observe('change', 
+        bound_changed.bindAsEventListener(this, min_names[i],max_names[i])
+      );
+      $(max_names[i]).observe('change',
+        bound_changed.bindAsEventListener(this, max_names[i],min_names[i])
+      );
+  }
+}
+
+var boxes_ids = ['left_boxes','right_boxes'];
+function add_checkboxes(){
+    names_list.sort();
+    boxes_ids.forEach(function(boxes){
+        for (var i = 0, len = names_list.length; i < len; ++i) {
+            var n = names_list[i];
+            var checkbox = document.createElement('input');
+            checkbox.type = "checkbox";
+            checkbox.name = n;
+            checkbox.value = n;
+            checkbox.id = boxes + n;            
+
+            var label = document.createElement('label')
+            label.htmlFor = checkbox.id;
+            label.appendChild(document.createTextNode(' ' + n));
+            
+            var container = $(boxes);
+            container.appendChild(checkbox);
+            checkbox.checked = true; // Fix for IE browsers
+            container.appendChild(label);
+            container.appendChild(document.createElement('br'));
+            
+
+        }
+        // Move the button to the bottom
+        var button = $(boxes + '_button');
+        button.parentNode.appendChild(button);
+    });
 }
 
 
@@ -47,112 +66,95 @@ function bound_changed(event, current, sibling){
 
 // Data Processing 
 // The mappings contain their data as [[source1,target1,value1],[source2,target1,value2],...]
+// The processed data is put into global variables so other functions can read the computed values
 
-// The flow variable contains a with the in/outflow of each node
-var flow = [Object.create(null),Object.create(null),Object.create(null)];
-var maxes = [];
-var collumn = {};
+var collumn = Object.create(null);
+var names = Object.create(null); // Set of different labels
+var name_list = [];
+var flow = Object.create(null); // a set with the in/outflow of each node
+var max_flow = 0; //
+var reverse_mapping = [];
+
 function process_data(){
     // We assume that the the in/outflow for the middle collum is equal.
-    first_mapping.forEach(function (d) {
-      if(d[0] in flow[0]){
-        flow[0][d[0]] += +d[2];
-      } else {
-        flow[0][d[0]] = +d[2];
-        collumn[d[0]] = 0;
-      }
-      if(d[1] in flow[1]){
-        flow[1][d[1]] += +d[2];
-      }else {
-        flow[1][d[1]] = +d[2];
-        collumn[d[1]] = 1;
-      }        
-    });
-    for(var i=0, len=second_mapping.length; i < len; i++){
-      var d = second_mapping[i];
-      if(d[1] in flow[2]){
-        flow[2][d[1]] += +d[2];
-      } else {
-        flow[2][d[1]] = +d[2];
-        collumn[d[1]] = 2;
-      }
-      
-    }
-
-    // Find the maximum (used in the dropdowns)
-    for(var i=0, len=flow.length; i < len; i++){
-        var current_max = 0;
-        for (var key in flow[i]){
-            if(+flow[i][key] > current_max){            
-                current_max = flow[i][key];
-            }
+    var current_max = 0;
+    mapping.forEach(function (d) {
+        //Fill the list of names
+        if(d[0] === "null"){
+            d[0] = "no_label"   
         }
-        maxes.push(current_max);
-    }   
+        if(!(d[0] in names)){
+            names[d[0]] = 1;
+            name_list.push[d[0]];
+            collumn[d[0]] = 0;
+        }
+        // Generate a list of reverse mappings
+        reverse_mapping.push([d[1],d[0],d[2]]);
+        // Keep track of the flow into each node
+        var current_val = +d[2];
+        if(d[1] in flow){
+            flow[d[1]] += current_val;
+            current_val = flow[d[1]];
+        }else {
+            flow[d[1]] = +d[2];
+            collumn[d[1]] = 1;
+        } 
+
+        if(current_val > current_max){
+            current_max = current_val;
+        }
+    });
+    max_flow = current_max;    
 }
 
-// Dropdowns offer number_of_choices choices, step_size between them
+// Dropdowns offers choices according to x^2
 function fill_in_dropdown_bounds(){
 
-    var number_of_choices = 50;
+    for(var i = 0, len = min_names.length; i < len; i++){     
+        var powers = []
+        for(var j=1; j*j < max_flow; j++){            
+            $(min_names[i]).options.add(new Option(j*j,j));
+            powers.push(j*j);            
+        }
+        powers.reverse();
+         if(Math.pow(Math.round(Math.sqrt(max_flow)),2) !== max_flow){
+            $(max_names[i]).options.add(new Option(max_flow,1));
+            $(min_names[i]).options.add(new Option(max_flow,powers.length));
+        }
+        for(var j=0, len2 = powers.length; j < len2; j++){
+            $(max_names[i]).options.add(new Option(powers[j],j+1))
+        }        
 
-    for(var i=0, len=maxes.length; i < len; i++){
-        var step_size = Math.round(maxes[i]/number_of_choices);
-        for(var j=0; j < number_of_choices - 1; j++){
-            $(min_names[i]).options.add(new Option(j*step_size,j))
-            $(max_names[i]).options.add(new Option(maxes[i] - j*step_size,j))
-        }
-        $(min_names[i]).options.add(new Option(maxes[i],number_of_choices - 1));
-        
-        // Also select a hopefully good value here.
-        switch(i){
-            case 0:
-                $(min_names[i]).value = Math.round(Math.log(first_mapping.length));
-                break;
-            case 1:
-                $(min_names[i]).value = Math.round(Math.log(first_mapping.length + second_mapping.length));
-                break;
-            case 2:
-                $(min_names[i]).value = Math.round(Math.log(second_mapping.length));
-                break;
-             default:
-                $(min_names[i]).value = 0;
-        }
-        $(max_names[i]).options.add(new Option(0,number_of_choices - 1));
-    }
+        // Also select a hopefully good value here.        
+        $(min_names[i]).value = Math.round(Math.log10(mapping.length));
+    }  
 }
 
 
 function filter_links_to_use(){
-    var links = [];
-  
-    var min_out_flow = $(min_names[0]).options[$(min_names[0]).selectedIndex].text;
-    var max_out_flow = $(max_names[0]).options[$(max_names[0]).selectedIndex].text;
-    var min_in_flow = $(min_names[1]).options[$(min_names[1]).selectedIndex].text;
-    var max_in_flow = $(max_names[1]).options[$(max_names[1]).selectedIndex].text;
-    first_mapping.forEach(function(s) { 
-        var out_node_flow = +flow[0][s[0]];
-        var in_node_flow = +flow[1][s[1]];
-        if(out_node_flow >= min_out_flow &&
-           out_node_flow <= max_out_flow &&
-           in_node_flow >= min_in_flow &&
-           in_node_flow <= max_in_flow ){
+    var links = [];   
+    var good_labels = [Object.create(null),Object.create(null)];
+
+    for(var collumn = 0, number_collumns = boxes_ids.length; collumn < number_collumns ; collumn++){
+        $(boxes_ids[collumn]).getInputs('checkbox').forEach(function(chckbx){
+            if(chckbx.checked){
+                good_labels[collumn][chckbx.name] = 1;
+            }
+        });
+    }
+
+    var min_flow = $(min_names[0]).options[$(min_names[0]).selectedIndex].text;
+    var max_flow = $(max_names[0]).options[$(max_names[0]).selectedIndex].text;
+    mapping.forEach(function(s) { 
+        var node_flow = flow[s[1]];
+        if(s[0] in good_labels[0] && node_flow >= min_flow && node_flow <= max_flow ){
             links.push(copy_link(s));
-           }
+        }
     });
-    min_out_flow = $(min_names[2]).options[$(min_names[2]).selectedIndex].text;
-    max_out_flow = $(max_names[2]).options[$(max_names[2]).selectedIndex].text;
-    second_mapping.forEach(function(s) { 
-        var in_node_flow = +flow[1][s[0]];
-        var out_node_flow = +flow[2][s[1]];
-        
-        if(out_node_flow >= min_out_flow &&
-           out_node_flow <= max_out_flow &&
-           in_node_flow >= min_in_flow &&
-           in_node_flow <= max_in_flow ){
+
+    reverse_mapping.forEach(function(s) { 
+        if(s[1] in good_labels[1]){
             links.push(copy_link(s));
-           }
-        else{
         }
     });    
     return links;
@@ -168,10 +170,24 @@ var formatNumber = d3.format(",.0f"),
     format = function(d) { return formatNumber(d) + " genes"; },
     color = d3.scale.category20();
 
+// real_width is used for layout purposes
+var margin = {top: 1, right: 1, bottom: 6, left: 1},
+    real_width = calculate_good_width(),
+    width = real_width - margin.left - margin.right,
+    height = calculate_good_height() - margin.top - margin.bottom;
+
+function calculate_good_height(){
+    return Math.min(window.innerHeight - 200, Math.log2(2*mapping.length)* 200);
+}
+
+function calculate_good_width(){
+    return Math.min(window.innerWidth - margin.left - margin.right - 80,Math.log2(2*mapping.length)* 200);
+}
+
 var svg = d3.select("#sankey").append("svg")
 	    .attr("width", width + margin.left + margin.right)
 	    .attr("height", height + margin.top + margin.bottom);
-var graph;
+
  // (Re)draw the sankey diagram
 function draw_sankey() {
     
@@ -183,7 +199,7 @@ function draw_sankey() {
 	    .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
     // Based on http://www.d3noob.org/2013/02/formatting-data-for-sankey-diagrams-in.html
-    graph = {"nodes" : [], "links" : []};
+    var graph = {"nodes" : [], "links" : []};
     
     var good_links = filter_links_to_use();
     good_links.forEach(function (d) {
@@ -211,29 +227,29 @@ function draw_sankey() {
        var col = collumn[d];
        graph.nodes[i] = { name: d.replace(/^\d+_/g,''),
                           href: urls[col].replace(place_holder,d),
-                          original_flow:flow[col][d] };
+                          original_flow:flow[col]};
      });
 
- 
+
     var sankey = d3.sankey()
-	    .size([width, height])
-	    .nodeWidth(15)
-	    .nodePadding(10)
-	    .nodes(graph.nodes)
-	    .links(graph.links)
-	    .layout(32);
+        .size([width, height])
+        .nodeWidth(15)
+        .nodePadding(10)
+        .nodes(graph.nodes)
+        .links(graph.links)
+        .layout(32);
 
     var path = sankey.link();
 
     var link = svg.append("g").selectAll(".link")
-	    .data(graph.links)
-	    .enter().append("path")
-	    .attr("class", "link")
-	    .attr("d", path)
-	    .style("stroke-width", function(d) { return Math.max(1, d.dy); })
-	    .sort(function(a, b) { return b.dy - a.dy; });
+        .data(graph.links)
+        .enter().append("path")
+        .attr("class", "link")
+        .attr("d", path)
+        .style("stroke-width", function(d) { return Math.max(1, d.dy); })
+        .sort(function(a, b) { return b.dy - a.dy; });
 
-    link.append("title")
+   link.append("title")
 	    .text(function(d) { return d.source.name + " → " + d.target.name + "\n" + format(d.value); });
       
     // Work around to make something dragable also clickable
@@ -265,7 +281,7 @@ function draw_sankey() {
 	    .style("stroke", function(d) { return d3.rgb(d.color).darker(2); })
 	    .append("title")
 	    .text(function(d) { return d.name + "\n" + format(d.value) + " / " + format(d.original_flow); });
-
+        //TODO put the description in the above line
     node.append("text")
 	    .attr("x", -6)
 	    .attr("y", function(d) { return d.dy / 2; })

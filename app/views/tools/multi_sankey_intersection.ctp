@@ -18,9 +18,10 @@
     $number_of_choices = 31;
     echo '<div id="choices">';
     ///////////////// Left refinement /////////////////
-    echo $form->create(false, array('class'=> 'refine_checkboxes'));
+    echo $form->create(false, array('id' => 'left_boxes', 'class'=> 'refine_checkboxes'));
     $options = array(
     'type' => 'button',
+    'id' => 'left_boxes_button',
     'onclick' => 'draw_sankey()'
     );
     echo $form->button('  Refine  ',$options);
@@ -40,9 +41,10 @@
     echo $form->end();
 
     ///////////////// Right refinement /////////////////
-    echo $form->create(false, array('class'=> 'refine_checkboxes'));
+    echo $form->create(false, array('id' => 'right_boxes', 'class'=> 'refine_checkboxes'));
     $options = array(
     'type' => 'button',
+    'id' => 'right_boxes_button',
     'onclick' => 'draw_sankey()'
     );
     echo $form->button('  Refine  ',$options);

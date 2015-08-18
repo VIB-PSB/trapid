@@ -152,7 +152,7 @@ class Transcripts extends AppModel{
   }
 
 
-  function getLabelToGFMapping($exp_id){
+  function getLabelToGFMapping($exp_id,$reverse=false){
     $query	= "SELECT COUNT(*), transcripts.`gf_id`,transcripts_labels.`label`
                FROM transcripts LEFT JOIN transcripts_labels ON 
                   (transcripts_labels.`transcript_id`=transcripts.`transcript_id` 
@@ -166,7 +166,11 @@ class Transcripts extends AppModel{
       $gf_id    = $r['transcripts']['gf_id'];
       $label    = $r['transcripts_labels']['label'];
       $count    = reset($r[0]);
-      $result[] = array($gf_id,$label,$count);
+      if(!$reverse){
+        $result[] = array($gf_id,$label,$count);
+      } else {
+        $result[] = array($label,$gf_id,$count);
+      }
     }
     return $result;
   }
@@ -184,7 +188,7 @@ class Transcripts extends AppModel{
     $result	= array();
     foreach($res as $r){
       $gf_id    = $r['transcripts']['gf_id'];
-      $GO    = $r['transcripts_go']['go'];
+      $GO       = $r['transcripts_go']['go'];
       $count    = reset($r[0]);
       if(!$reverse){
         $result[] = array($gf_id,$GO,$count);
@@ -202,13 +206,14 @@ class Transcripts extends AppModel{
                                              AND transcripts_interpro.`experiment_id` = transcripts.`experiment_id` ) 
                WHERE transcripts.`experiment_id` = ".$exp_id."
                AND transcripts.`gf_id` IS NOT NULL 
+               AND transcripts_interpro.`interpro` IS NOT NULL 
                GROUP BY transcripts.`gf_id` , transcripts_interpro.`interpro` 
                ORDER BY COUNT( * ) DESC ";
     $res	= $this->query($query);
     $result	= array();
     foreach($res as $r){
       $gf_id    = $r['transcripts']['gf_id'];
-      $interpro    = $r['transcripts_interpro']['interpro'];
+      $interpro = $r['transcripts_interpro']['interpro'];
       $count    = reset($r[0]);
       $result[] = array($gf_id,$interpro,$count);
     }

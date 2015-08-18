@@ -1711,8 +1711,8 @@ function multiSankeyIntersection($exp_id=null){
     $this->set("place_holder", $place_holder);    
     $start = microtime(true); 
 
-    $label_rows	= $this->TranscriptsLabels->getLabelToGFMapping($exp_id);
-    $stop =    microtime(true);
+    $label_rows	= $this->Transcripts->getLabelToGFMapping($exp_id,true);
+      $stop =    microtime(true);
     echo 'Getting data takes :'.($stop - $start);
     $this->set('mapping', $label_rows);
 
