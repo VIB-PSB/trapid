@@ -78,6 +78,23 @@ class TranscriptsLabels extends AppModel{
     return $result;
   }
 
+  function getLabeltoInterproMapping($exp_id){
+    $query	= "SELECT COUNT(*), label, interpro
+                FROM `transcripts_interpro` 
+                LEFT JOIN `transcripts_labels` USING (experiment_id,transcript_id)
+                WHERE experiment_id = ".$exp_id."
+                GROUP BY label,interpro";
+    $res	= $this->query($query);
+    $result	= array();
+    foreach($res as $r){
+      $label   = $r['transcripts_labels']['label'];
+      $interpro    = $r['transcripts_interpro']['interpro'];
+      $count    = reset($r[0]);
+      $result[] = array($label,$interpro,$count);
+    }
+    return $result;
+  }
+
 
 }
 

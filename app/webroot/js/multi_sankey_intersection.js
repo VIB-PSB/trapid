@@ -1,23 +1,41 @@
 "use strict";
 
-////////// Behaviour of the refine button and fields ////////////
-var min_names = ['middle_min'];
-var max_names = ['middle_max'];
-
 document.observe('dom:loaded', function(){
   process_data();
-  fill_in_dropdown_bounds();
-  add_bound_checking_dropdown();
+  calculate_and_fill_distribution(); 
+  //fill_in_dropdown_bounds();
+  //add_bound_checking_dropdown();
   add_checkboxes();
   draw_sankey();
 });
 
-function bound_changed(event, current, sibling){
-    for(var i = 0, len = $(sibling).options.length; i < len; i++) {
-        $(sibling).options[i].disabled = i > len - 1- $(current).value;
-    }
+////////// Behaviour of the refine button and fields ////////////
+
+// Dropdowns offers choices according to x^2
+function fill_in_dropdown_bounds(){
+    for(var i = 0, len = min_names.length; i < len; i++){     
+        var powers = []
+        for(var j=1; j*j < max_flow; j++){            
+            $(min_names[i]).options.add(new Option(j*j,j));
+            powers.push(j*j);
+        }
+        powers.reverse();
+         if(Math.pow(Math.round(Math.sqrt(max_flow)),2) !== max_flow){
+            $(max_names[i]).options.add(new Option(max_flow,1));
+            $(min_names[i]).options.add(new Option(max_flow,powers.length));
+        }
+        for(var j=0, len2 = powers.length; j < len2; j++){
+            $(max_names[i]).options.add(new Option(powers[j],j+1))
+        }        
+
+        // Also select a hopefully good value here.
+        // Currently we filter out the lower fourth of the nodes        
+        $(min_names[i]).value = Math.round(Math.sqrt(max_flow/4));
+    }  
 }
 
+var min_names = ['middle_min'];
+var max_names = ['middle_max'];
 function add_bound_checking_dropdown(){
   /* These functions disable the choice of a maximum below the set minimum and vice versa. */
   for(var i = 0, len = min_names.length; i < len; i++) {
@@ -31,34 +49,62 @@ function add_bound_checking_dropdown(){
   }
 }
 
+function bound_changed(event, current, sibling){
+    for(var i = 0, len = $(sibling).options.length; i < len; i++) {
+        $(sibling).options[i].disabled = i > len - 1- $(current).value;
+    }
+}
+
 var boxes_ids = ['left_boxes','right_boxes'];
 function add_checkboxes(){
     names_list.sort();
-    boxes_ids.forEach(function(boxes){
-        for (var i = 0, len = names_list.length; i < len; ++i) {
+
+    boxes_ids.forEach(function(boxes,hack){
+        for (var i = 0, len2 = names_list.length; i < len2; ++i) {
             var n = names_list[i];
             var checkbox = document.createElement('input');
             checkbox.type = "checkbox";
             checkbox.name = n;
             checkbox.value = n;
-            checkbox.id = boxes + n;            
+            checkbox.id = boxes + n;
+            checkbox.onchange = function(event){
+                var chckbx = event.target;
+                // Check if it starts with left_
+                var sibling_id;
+                if(chckbx.id.lastIndexOf('left',0) === 0){
+                    // By default javascript only replaces the first occurence, which is what we want.
+                    sibling_id = chckbx.id.replace('left','right');
+                } else {
+                    sibling_id = chckbx.id.replace('right','left');
+                }
+                //Dis/enable the other based on the checkedness
+                $(sibling_id).disabled = chckbx.checked;
+                // Other groupings, other options.
+                calculate_and_fill_distribution();                
+            }// onchange
 
             var label = document.createElement('label')
             label.htmlFor = checkbox.id;
-            label.appendChild(document.createTextNode(' ' + n));
+            label.appendChild(document.createTextNode(' ' + n + ' '));
             
             var container = $(boxes);
-            container.appendChild(checkbox);
-            checkbox.checked = true; // Fix for IE browsers
+            container.appendChild(checkbox);// Fix for IE browsers, first append, then check.
+            if((i + hack) % 2 === 1){
+                checkbox.checked = true;
+            } else {
+                checkbox.disabled = true;
+            }
             container.appendChild(label);
-            container.appendChild(document.createElement('br'));
-            
-
+            if (i % 2 === 1 ){
+                container.appendChild(document.createElement('br'));
+            }
         }
+        // Add a break after the last element so the refine button 
+        $(boxes).appendChild(document.createElement('br')); 
         // Move the button to the bottom
         var button = $(boxes + '_button');
         button.parentNode.appendChild(button);
-    });
+    });  
 }
 
 
@@ -69,35 +115,47 @@ function add_checkboxes(){
 // The processed data is put into global variables so other functions can read the computed values
 
 var collumn = Object.create(null);
-var names = Object.create(null); // Set of different labels
-var name_list = [];
-var flow = Object.create(null); // a set with the in/outflow of each node
+var names = Object.create(null); // set of different labels
+var names_list = [];
+var flow = [Object.create(null),Object.create(null)]; // a set with the in/outflow of each node
+
 var max_flow = 0; //
 var reverse_mapping = [];
+var intersection_lists = Object.create(null); // to keep track of nodes in the middle collumn that aren't in both the right and left cluster
 
 function process_data(){
     // We assume that the the in/outflow for the middle collum is equal.
     var current_max = 0;
     mapping.forEach(function (d) {
+        var source = d[0];
+        var target = d[1];
+        var value = d[2];
+        
+        if(source  === null){
+            d[0] = source = "no label";
+        }
         //Fill the list of names
-        if(d[0] === "null"){
-            d[0] = "no_label"   
-        }
-        if(!(d[0] in names)){
-            names[d[0]] = 1;
-            name_list.push[d[0]];
-            collumn[d[0]] = 0;
-        }
+        if(!(source in names)){
+            names[source] = 1;
+            names_list.push(source);
+            collumn[source] = 0;
+            flow[0][source] = +value;            
+        } else {
+            flow[0][source] += +value;
+        }   
+
         // Generate a list of reverse mappings
-        reverse_mapping.push([d[1],d[0],d[2]]);
-        // Keep track of the flow into each node
-        var current_val = +d[2];
-        if(d[1] in flow){
-            flow[d[1]] += current_val;
-            current_val = flow[d[1]];
+        reverse_mapping.push([target,source,value]);
+        // Keep track of the flow into each node, also update the intersection_lists
+        var current_val = +value;
+        if(target in flow[1]){
+            flow[1][target] += current_val;
+            current_val = flow[1][target];
+            intersection_lists[target].push(source);
         }else {
-            flow[d[1]] = +d[2];
-            collumn[d[1]] = 1;
+            intersection_lists[target] = [source];
+            flow[1][target] = +value;
+            collumn[target] = 1;
         } 
 
         if(current_val > current_max){
@@ -105,29 +163,6 @@ function process_data(){
         }
     });
     max_flow = current_max;    
-}
-
-// Dropdowns offers choices according to x^2
-function fill_in_dropdown_bounds(){
-
-    for(var i = 0, len = min_names.length; i < len; i++){     
-        var powers = []
-        for(var j=1; j*j < max_flow; j++){            
-            $(min_names[i]).options.add(new Option(j*j,j));
-            powers.push(j*j);            
-        }
-        powers.reverse();
-         if(Math.pow(Math.round(Math.sqrt(max_flow)),2) !== max_flow){
-            $(max_names[i]).options.add(new Option(max_flow,1));
-            $(min_names[i]).options.add(new Option(max_flow,powers.length));
-        }
-        for(var j=0, len2 = powers.length; j < len2; j++){
-            $(max_names[i]).options.add(new Option(powers[j],j+1))
-        }        
-
-        // Also select a hopefully good value here.        
-        $(min_names[i]).value = Math.round(Math.log10(mapping.length));
-    }  
 }
 
 
@@ -146,22 +181,35 @@ function filter_links_to_use(){
     var min_flow = $(min_names[0]).options[$(min_names[0]).selectedIndex].text;
     var max_flow = $(max_names[0]).options[$(max_names[0]).selectedIndex].text;
     mapping.forEach(function(s) { 
-        var node_flow = flow[s[1]];
+        var node_flow = flow[1][s[1]];
         if(s[0] in good_labels[0] && node_flow >= min_flow && node_flow <= max_flow ){
-            links.push(copy_link(s));
+            for(var i = 0, len = intersection_lists[s[1]].length; i < len ; i++){
+                // if this node has a target on the other side, add it.
+                if(intersection_lists[s[1]][i] in good_labels[1]){
+                    links.push(copy_link(s));
+                    break;
+                }
+            }            
         }
     });
 
     reverse_mapping.forEach(function(s) { 
-        if(s[1] in good_labels[1]){
-            links.push(copy_link(s));
+        var node_flow = flow[1][s[0]];
+        if(s[1] in good_labels[1] && node_flow >= min_flow && node_flow <= max_flow){
+            for(var i = 0, len = intersection_lists[s[0]].length; i < len ; i++){
+                // if this node has a target on the other side, add it.
+                if(intersection_lists[s[0]][i] in good_labels[0]){
+                    links.push(copy_link(s));
+                    break;
+                }
+            }
         }
-    });    
+    });
     return links;
 }
 
 function copy_link(link,first_mapping){
-    return [link[0],link[1],link[2]];    
+    return [link[0],link[1],link[2]];
 }
 
 
@@ -169,6 +217,7 @@ function copy_link(link,first_mapping){
 var formatNumber = d3.format(",.0f"),
     format = function(d) { return formatNumber(d) + " genes"; },
     color = d3.scale.category20();
+
 
 // real_width is used for layout purposes
 var margin = {top: 1, right: 1, bottom: 6, left: 1},
@@ -184,13 +233,15 @@ function calculate_good_width(){
     return Math.min(window.innerWidth - margin.left - margin.right - 80,Math.log2(2*mapping.length)* 200);
 }
 
+// Create an empty svg as a placeholder
 var svg = d3.select("#sankey").append("svg")
 	    .attr("width", width + margin.left + margin.right)
 	    .attr("height", height + margin.top + margin.bottom);
 
- // (Re)draw the sankey diagram
+
+/////////////// (Re)draw the sankey diagram /////////////////
 function draw_sankey() {
-    
+
     // Remove the old svg if it exists
     d3.select("svg").text('');
 
@@ -209,6 +260,7 @@ function draw_sankey() {
                          "target": d[1],
                          "value": +d[2]});
      });
+    //console.log(good_links);
 
      // return only the distinct / unique nodes
      graph.nodes = d3.keys(d3.nest()
@@ -227,9 +279,8 @@ function draw_sankey() {
        var col = collumn[d];
        graph.nodes[i] = { name: d.replace(/^\d+_/g,''),
                           href: urls[col].replace(place_holder,d),
-                          original_flow:flow[col]};
+                          original_flow:flow[col][d]};
      });
-
 
     var sankey = d3.sankey()
         .size([width, height])
@@ -250,7 +301,7 @@ function draw_sankey() {
         .sort(function(a, b) { return b.dy - a.dy; });
 
    link.append("title")
-	    .text(function(d) { return d.source.name + " → " + d.target.name + "\n" + format(d.value); });
+	    .text(function(d) { return d.source.name + (d.source.name in names ? " → " : " ← " ) + d.target.name + "\n" + format(d.value); });
       
     // Work around to make something dragable also clickable
     // From http://jsfiddle.net/2EqA3/3/
@@ -280,8 +331,7 @@ function draw_sankey() {
 	    .style("fill", function(d) { return d.color = color(d.name); })
 	    .style("stroke", function(d) { return d3.rgb(d.color).darker(2); })
 	    .append("title")
-	    .text(function(d) { return d.name + "\n" + format(d.value) + " / " + format(d.original_flow); });
-        //TODO put the description in the above line
+	    .text(function(d) { return (d.name in descriptions? descriptions[d.name].desc : d.name)+ "\n" + format(d.value) + " / " + format(d.original_flow); });
     node.append("text")
 	    .attr("x", -6)
 	    .attr("y", function(d) { return d.dy / 2; })

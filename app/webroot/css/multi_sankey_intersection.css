@@ -11,6 +11,10 @@
     margin-right:50px;
 }
 
+.refine_box{
+    text-align: center;
+}
+
 .node rect {
   cursor: move;
   fill-opacity: .9;

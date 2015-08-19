@@ -1699,31 +1699,66 @@ class ToolsController extends AppController{
     $this->render('multi_sankey');  
   }
 
-function multiSankeyIntersection($exp_id=null){
+  function general_set_up($exp_id=null){
     $exp_id	= mysql_real_escape_string($exp_id);
     parent::check_user_exp($exp_id);	
     $exp_info	= $this->Experiments->getDefaultInformation($exp_id); 
     $this->TrapidUtils->checkPageAccess($exp_info['title'],$exp_info["process_state"],$this->process_states["default"]);       
     $this->set("exp_info",$exp_info);
-    $this->set("exp_id",$exp_id);  
+    $this->set("exp_id",$exp_id);
+
+  }
+
+  function multiSankeyIntersection($exp_id=null){
+    $this->general_set_up($exp_id);
+    
     $this->set("col_names", array('Label','Gene family','Label'));
-    $place_holder = '###';
-    $this->set("place_holder", $place_holder);    
-    $start = microtime(true); 
+ 
+$start = microtime(true); 
 
     $label_rows	= $this->Transcripts->getLabelToGFMapping($exp_id,true);
-      $stop =    microtime(true);
-    echo 'Getting data takes :'.($stop - $start);
+    $stop = microtime(true);
+//echo 'Getting data takes :'.($stop - $start);
     $this->set('mapping', $label_rows);
-
+    $this->set('descriptions', array());
+    $place_holder = '###';
+    $this->set("place_holder", $place_holder); 
     $urls = array(Router::url(array("controller"=>"labels","action"=>"view",$exp_id,$place_holder)),                  
                   Router::url(array("controller"=>"gene_family","action"=>"gene_family",$exp_id,$place_holder)) 
     );
-    $this->set('urls', $urls);    
+    $this->set('urls', $urls);
     
     
     $this->render('multi_sankey_intersection'); 
   }
+
+  function label_interpro_intersection($exp_id=null){
+    $this->general_set_up($exp_id);
+    
+    $this->set("col_names", array('Label','Interpro','Label'));
+$start = microtime(true); 
+
+    $label_rows	= $this->TranscriptsLabels->getLabelToInterproMapping($exp_id,true);
+    $interpros = array();
+    foreach ($label_rows as $row){
+        $interpros[] = $row[1];
+    }
+    $interpro_info	= $this->ProteinMotifs->retrieveInterproInformation($interpros);
+$stop = microtime(true);
+//echo 'Getting data takes :'.($stop - $start);
+    $this->set('mapping', $label_rows);
+    $this->set('descriptions', $interpro_info);
+    $place_holder = '###';
+    $this->set("place_holder", $place_holder); 
+    $urls = array(Router::url(array("controller"=>"labels","action"=>"view",$exp_id,$place_holder)),                  
+                  Router::url(array("controller"=>"functional_annotation","action"=>"interpro",$exp_id,$place_holder)) 
+    );
+    $this->set('urls', $urls);
+    
+    
+    $this->render('multi_sankey_intersection');
+  }
+
 
 
   /*

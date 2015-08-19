@@ -8,6 +8,7 @@
 <?php
     echo '<script type="text/javascript">';
     echo "var mapping = " . json_encode($mapping) .";";
+    echo "var descriptions = " . json_encode($descriptions) .";";
     echo "var urls = " . json_encode($urls) .";";
     echo "var place_holder = '" . $place_holder ."';";
     echo '</script>';
@@ -18,7 +19,7 @@
     $number_of_choices = 31;
     echo '<div id="choices">';
     ///////////////// Left refinement /////////////////
-    echo $form->create(false, array('id' => 'left_boxes', 'class'=> 'refine_checkboxes'));
+    echo $form->create(false, array('id' => 'left_boxes', 'class'=> 'refine_box'));
     $options = array(
     'type' => 'button',
     'id' => 'left_boxes_button',
@@ -29,9 +30,8 @@
 
     ///////////////// Middle refinement /////////////////
 
-    echo $form->create(false, array('id'=> 'middle_refine_form'));
+    echo $form->create(false, array('id'=> 'middle_refine_form', 'class'=> 'refine_box'));
     echo $form->input("Minimum $col_names[1] size: ", array('options' => array(), 'id' =>'middle_min'));
-    echo $form->input("Maximum $col_names[1]  size: ", array('options' => array(), 'id' =>'middle_max'));
     $options = array(
     'type' => 'button',
     'id' => 'middle_refine',
@@ -41,7 +41,7 @@
     echo $form->end();
 
     ///////////////// Right refinement /////////////////
-    echo $form->create(false, array('id' => 'right_boxes', 'class'=> 'refine_checkboxes'));
+    echo $form->create(false, array('id' => 'right_boxes', 'class'=> 'refine_box'));
     $options = array(
     'type' => 'button',
     'id' => 'right_boxes_button',
