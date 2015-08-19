@@ -2,19 +2,40 @@
 
 document.observe('dom:loaded', function(){
   process_data();
-  calculate_and_fill_distribution(); 
-  //fill_in_dropdown_bounds();
-  //add_bound_checking_dropdown();
   add_checkboxes();
+  get_checked_labels();
+  calculate_current_flow();
+  fill_in_dropdown();
+  return;
   draw_sankey();
 });
 
 ////////// Behaviour of the refine button and fields ////////////
 
-// Dropdowns offers choices according to x^2
-function fill_in_dropdown_bounds(){
-    for(var i = 0, len = min_names.length; i < len; i++){     
-        var powers = []
+var dropdown_name = 'middle_min';
+var total = 0;
+function fill_in_dropdown(){
+    var choice = -1;
+    var options = [];
+    for(var i = distribution.length - 1; i > 0; i--){
+        if(typeof distribution[i] != 'undefined' && distribution[i] !== 0){
+
+            total += distribution[i];
+            if(total >= 25){
+                choice = options[options.length - 1][0];
+            }
+            options.push([i,total]);
+            
+        }
+    }
+    options.reverse();
+    for(var i = 0,len = options.length; i < len; i++){
+        $(dropdown_name).options.add(new Option(">=" + options[i][0] + " [" + options[i][1] + " IPR families]" ,options[i][0]));
+    }
+    $(dropdown_name).value = options.length - choice;
+    
+/*
+var powers = []
         for(var j=1; j*j < max_flow; j++){            
             $(min_names[i]).options.add(new Option(j*j,j));
             powers.push(j*j);
@@ -31,7 +52,7 @@ function fill_in_dropdown_bounds(){
         // Also select a hopefully good value here.
         // Currently we filter out the lower fourth of the nodes        
         $(min_names[i]).value = Math.round(Math.sqrt(max_flow/4));
-    }  
+    }  */
 }
 
 var min_names = ['middle_min'];
@@ -59,7 +80,7 @@ var boxes_ids = ['left_boxes','right_boxes'];
 function add_checkboxes(){
     names_list.sort();
 
-    boxes_ids.forEach(function(boxes,hack){
+    boxes_ids.forEach(function(boxes,column){
         for (var i = 0, len2 = names_list.length; i < len2; ++i) {
             var n = names_list[i];
             var checkbox = document.createElement('input');
@@ -80,7 +101,7 @@ function add_checkboxes(){
                 //Dis/enable the other based on the checkedness
                 $(sibling_id).disabled = chckbx.checked;
                 // Other groupings, other options.
-                calculate_and_fill_distribution();                
+                update_current_flow(n,column,chckbx.checked);                
             }// onchange
 
             var label = document.createElement('label')
@@ -89,7 +110,7 @@ function add_checkboxes(){
             
             var container = $(boxes);
             container.appendChild(checkbox);// Fix for IE browsers, first append, then check.
-            if((i + hack) % 2 === 1){
+            if((i + column) % 2 === 1){
                 checkbox.checked = true;
             } else {
                 checkbox.disabled = true;
@@ -107,6 +128,68 @@ function add_checkboxes(){
     });  
 }
 
+var distribution = [];
+// Current flow maps middle columns to a pair of values giving the left and right flow
+// {'IPR01':[4,8],'IPR02':[8,0]...}
+var current_flow = Object.create(null);
+function calculate_current_flow(){
+    checked_labels.forEach(function(labels,column){
+        for(var label in labels){
+            var map = per_label_mapping[label];
+            for(var target in map){
+                if(! (target in current_flow)){
+                    current_flow[target] = [0,0];
+                }
+                current_flow[target][column] += map[target];
+            }
+        }
+    });
+
+    // Fill the initial distribution array
+    for(var target in current_flow){
+        var biggest = Math.max(current_flow[target][0],current_flow[target][1]);
+        if(!distribution[biggest]) {
+            distribution[biggest] = 1;
+        } else {
+            distribution[biggest]++;
+        }
+    }
+}
+
+function update_current_flow(name, column, selected){
+    var map = per_label_mapping[name];
+    for(var target in map){
+        // The target might not have been added yet
+        if(! (target in current_flow)){
+            current_flow[target] = [0,0];
+        }
+        var before = Math.max(current_flow[target][0],current_flow[target][1]);
+        if(selected){   
+            // Add the flow when something new is checked
+            current_flow[target][column] += map[target];
+        } else {
+            // Remove it when the label is deselected
+            current_flow[target][column] -= map[target];
+        }
+        var after = Math.max(current_flow[target][0],current_flow[target][1]);
+        // Update the distribution if it changed
+        if(before !== after){
+            distribution[before]--;
+            if(!distribution[after]) {
+                distribution[after] = 1;
+            } else {
+                distribution[after]++;
+            }
+        }
+        
+    }
+    
+}
+
+function getMaxOfArray(numArray) {
+  return Math.max.apply(null, numArray);
+}
+
 
 ////////// Sankey vizualization ////////////
 
@@ -114,14 +197,15 @@ function add_checkboxes(){
 // The mappings contain their data as [[source1,target1,value1],[source2,target1,value2],...]
 // The processed data is put into global variables so other functions can read the computed values
 
-var collumn = Object.create(null);
+var column = Object.create(null); // Indicates which column a name is in
 var names = Object.create(null); // set of different labels
 var names_list = [];
 var flow = [Object.create(null),Object.create(null)]; // a set with the in/outflow of each node
 
 var max_flow = 0; //
 var reverse_mapping = [];
-var intersection_lists = Object.create(null); // to keep track of nodes in the middle collumn that aren't in both the right and left cluster
+var per_label_mapping = Object.create(null); // a practical mapping used to keep track of the distributions
+var intersection_lists = Object.create(null); // to keep track of nodes in the middle column that aren't in both the right and left cluster
 
 function process_data(){
     // We assume that the the in/outflow for the middle collum is equal.
@@ -129,20 +213,22 @@ function process_data(){
     mapping.forEach(function (d) {
         var source = d[0];
         var target = d[1];
-        var value = d[2];
+        var value = +d[2];
         
         if(source  === null){
             d[0] = source = "no label";
         }
         //Fill the list of names
         if(!(source in names)){
+            per_label_mapping[source] = Object.create(null);
             names[source] = 1;
             names_list.push(source);
-            collumn[source] = 0;
+            column[source] = 0;
             flow[0][source] = +value;            
         } else {
             flow[0][source] += +value;
-        }   
+        }
+        per_label_mapping[source][target] = value;
 
         // Generate a list of reverse mappings
         reverse_mapping.push([target,source,value]);
@@ -155,37 +241,39 @@ function process_data(){
         }else {
             intersection_lists[target] = [source];
             flow[1][target] = +value;
-            collumn[target] = 1;
+            column[target] = 1;
         } 
 
         if(current_val > current_max){
             current_max = current_val;
         }
     });
-    max_flow = current_max;    
+    max_flow = current_max;
 }
 
-
-function filter_links_to_use(){
-    var links = [];   
-    var good_labels = [Object.create(null),Object.create(null)];
-
-    for(var collumn = 0, number_collumns = boxes_ids.length; collumn < number_collumns ; collumn++){
-        $(boxes_ids[collumn]).getInputs('checkbox').forEach(function(chckbx){
+// checked_labels contain the names of all checked labels, per column
+var checked_labels = [Object.create(null),Object.create(null)];
+function get_checked_labels(){
+    for(var column = 0, number_columns = boxes_ids.length; column < number_columns ; column++){
+        $(boxes_ids[column]).getInputs('checkbox').forEach(function(chckbx){
             if(chckbx.checked){
-                good_labels[collumn][chckbx.name] = 1;
+                checked_labels[column][chckbx.name] = 1;
             }
         });
     }
+}
+
+function filter_links_to_use(){
+    var links = [];   
 
     var min_flow = $(min_names[0]).options[$(min_names[0]).selectedIndex].text;
     var max_flow = $(max_names[0]).options[$(max_names[0]).selectedIndex].text;
     mapping.forEach(function(s) { 
         var node_flow = flow[1][s[1]];
-        if(s[0] in good_labels[0] && node_flow >= min_flow && node_flow <= max_flow ){
+        if(s[0] in checked_labels[0] && node_flow >= min_flow && node_flow <= max_flow ){
             for(var i = 0, len = intersection_lists[s[1]].length; i < len ; i++){
                 // if this node has a target on the other side, add it.
-                if(intersection_lists[s[1]][i] in good_labels[1]){
+                if(intersection_lists[s[1]][i] in checked_labels[1]){
                     links.push(copy_link(s));
                     break;
                 }
@@ -195,10 +283,10 @@ function filter_links_to_use(){
 
     reverse_mapping.forEach(function(s) { 
         var node_flow = flow[1][s[0]];
-        if(s[1] in good_labels[1] && node_flow >= min_flow && node_flow <= max_flow){
+        if(s[1] in checked_labels[1] && node_flow >= min_flow && node_flow <= max_flow){
             for(var i = 0, len = intersection_lists[s[0]].length; i < len ; i++){
                 // if this node has a target on the other side, add it.
-                if(intersection_lists[s[0]][i] in good_labels[0]){
+                if(intersection_lists[s[0]][i] in checked_labels[0]){
                     links.push(copy_link(s));
                     break;
                 }
@@ -276,7 +364,7 @@ function draw_sankey() {
      //now loop through each nodes to make nodes an array of objects
      // rather than an array of strings
      graph.nodes.forEach(function (d, i) {
-       var col = collumn[d];
+       var col = column[d];
        graph.nodes[i] = { name: d.replace(/^\d+_/g,''),
                           href: urls[col].replace(place_holder,d),
                           original_flow:flow[col][d]};
