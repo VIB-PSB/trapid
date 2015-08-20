@@ -35,6 +35,9 @@ function fill_in_dropdown(){
         $(dropdown_name).options.add(new Option(option_string, options[i][0]));
     }
     // Set a decent minimum value
+    if(!choice && options.length > 0){
+        choice = options[0][0];
+    }
     $(dropdown_name).value = choice;
 }
 
@@ -126,7 +129,7 @@ function enable_everything(){
 
 
 var distribution = [];
-// Current flow maps middle columns to a pair of values giving the left and right flow
+// current_flow maps middle columns to a pair of values giving the left and right flow
 // {'IPR01':[4,8],'IPR02':[8,0]...}
 var current_flow = Object.create(null);
 function calculate_current_flow(){
@@ -163,6 +166,7 @@ function calculate_current_flow(){
 }
 
 function update_current_flow(name, col, selected){
+    console.log(name,col,selected);
     var map = per_label_mapping[name];
     for(var target in map){
         // The target might not have been added yet
@@ -171,6 +175,7 @@ function update_current_flow(name, col, selected){
         }
         var before = Math.max(current_flow[target][0],current_flow[target][1]);
         var in_distr_before = current_flow[target][0] > 0 && current_flow[target][1] > 0;
+        // Update current_flow
         if(selected){
             // Add the flow when something new is checked
             current_flow[target][col] += map[target];
@@ -178,21 +183,39 @@ function update_current_flow(name, col, selected){
             // Remove it when the label is deselected
             current_flow[target][col] -= map[target];
         }
+
         var after = Math.max(current_flow[target][0],current_flow[target][1]);
         var in_distr_now = current_flow[target][0] > 0 && current_flow[target][1] > 0;
         // Update the distribution if it changed
         if(in_distr_before){
-            if(before !== after){
+            if(in_distr_now ){
+                // If the value changed, decrement the previous and increment the current
+                if(before !== after){
+                    distribution[before]--;
+                    // Check if it exists, create the value or increment it
+                    if(!distribution[after]) {
+                       distribution[after] = 1;
+                    } else {
+                        distribution[after]++;
+                    }
+                } else {
+                    // The value stayed the same, so do nothing.
+                }
+            } else {
+                // Was in the distribution before, not anymore, so decrement the previous
                 distribution[before]--;
             }
-        }
-        if(in_distr_now){
-            if(!distribution[after]) {
-                distribution[after] = 1;
-            } else {
-                distribution[after]++;
+        } else {
+             if(in_distr_now){
+                // Check if it exists, create the value or increment it
+                if(!distribution[after]) {
+                   distribution[after] = 1;
+                } else {
+                    distribution[after]++;
+                }
             }
-        }                
+
+        }
     }   
 }
 
