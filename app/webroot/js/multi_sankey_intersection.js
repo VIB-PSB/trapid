@@ -6,57 +6,36 @@ document.observe('dom:loaded', function(){
   get_checked_labels();
   calculate_current_flow();
   fill_in_dropdown();
-  return;
   draw_sankey();
 });
 
 ////////// Behaviour of the refine button and fields ////////////
 
 var dropdown_name = 'middle_min';
-var total = 0;
-var choice ;
-var options ;
-function fill_in_dropdown(){
-    choice = -1;
-    total = 0;
-    options = [];
+function fill_in_dropdown(){    
+    var choice;
+    var total = 0;
+    var options = [];
     for(var i = distribution.length - 1; i > 0; i--){
         if(typeof distribution[i] != 'undefined' && distribution[i] !== 0){
             total += distribution[i];
-            if(choice === -1 && total >= 25){
+            if(!choice && total >= 25){
                 choice = i;
             }
             options.push([i,total]);          
         }
     }
+    // Clear the dropdown before adding new options
+    $(dropdown_name).update();
+    // show options in ascending order
     options.reverse();
+
     for(var i = 0,len = options.length; i < len; i++){
-        $(dropdown_name).options.add(new Option(">=" + options[i][0] + " [" + options[i][1] + " IPR families]" ,options[i][0]));
-
+        var option_string = ">=" + options[i][0] + " [" + options[i][1] + " IPR families]";
+        $(dropdown_name).options.add(new Option(option_string, options[i][0]));
     }
-    console.log(options.length,choice);
+    // Set a decent minimum value
     $(dropdown_name).value = choice;
-}
-    
-var min_names = ['middle_min'];
-var max_names = ['middle_max'];
-function add_bound_checking_dropdown(){
-  /* These functions disable the choice of a maximum below the set minimum and vice versa. */
-  for(var i = 0, len = min_names.length; i < len; i++) {
-      // .bindAsEventListener is necessary to pass the arguments
-      $(min_names[i]).observe('change', 
-        bound_changed.bindAsEventListener(this, min_names[i],max_names[i])
-      );
-      $(max_names[i]).observe('change',
-        bound_changed.bindAsEventListener(this, max_names[i],min_names[i])
-      );
-  }
-}
-
-function bound_changed(event, current, sibling){
-    for(var i = 0, len = $(sibling).options.length; i < len; i++) {
-        $(sibling).options[i].disabled = i > len - 1- $(current).value;
-    }
 }
 
 var boxes_ids = ['left_boxes','right_boxes'];
@@ -65,27 +44,14 @@ function add_checkboxes(){
 
     boxes_ids.forEach(function(boxes,column){
         for (var i = 0, len2 = names_list.length; i < len2; ++i) {
+            // Create the checkboxes and labels for them here.
             var n = names_list[i];
             var checkbox = document.createElement('input');
             checkbox.type = "checkbox";
             checkbox.name = n;
             checkbox.value = n;
             checkbox.id = boxes + n;
-            checkbox.onchange = function(event){
-                var chckbx = event.target;
-                // Check if it starts with left_
-                var sibling_id;
-                if(chckbx.id.lastIndexOf('left',0) === 0){
-                    // By default javascript only replaces the first occurence, which is what we want.
-                    sibling_id = chckbx.id.replace('left','right');
-                } else {
-                    sibling_id = chckbx.id.replace('right','left');
-                }
-                //Dis/enable the other based on the checkedness
-                $(sibling_id).disabled = chckbx.checked;
-                // Other groupings, other options.
-                update_current_flow(n,column,chckbx.checked);                
-            }// onchange
+            checkbox.onchange = function(event){checkbox_changed(event)}
 
             var label = document.createElement('label')
             label.htmlFor = checkbox.id;
@@ -110,6 +76,24 @@ function add_checkboxes(){
         button.parentNode.appendChild(button);
     });  
 }
+
+function checkbox_changed(event){
+    var chckbx = event.target;
+    // Check if it starts with left_
+    var sibling_id;
+    if(chckbx.id.lastIndexOf('left',0) === 0){
+        // By default javascript only replaces the first occurence, which is what we want.
+        sibling_id = chckbx.id.replace('left','right');
+    } else {
+        sibling_id = chckbx.id.replace('right','left');
+    }
+    //Dis/enable the other based on the checkedness
+    $(sibling_id).disabled = chckbx.checked;
+    // Other groupings, other options.
+    update_current_flow(chckbx.name,column,chckbx.checked);
+    fill_in_dropdown();
+}
+
 
 var distribution = [];
 // Current flow maps middle columns to a pair of values giving the left and right flow
@@ -140,6 +124,7 @@ function calculate_current_flow(){
 }
 
 function update_current_flow(name, column, selected){
+    console.log(name,column,selected);
     var map = per_label_mapping[name];
     for(var target in map){
         // The target might not have been added yet
@@ -147,7 +132,7 @@ function update_current_flow(name, column, selected){
             current_flow[target] = [0,0];
         }
         var before = Math.max(current_flow[target][0],current_flow[target][1]);
-        if(selected){   
+        if(selected){
             // Add the flow when something new is checked
             current_flow[target][column] += map[target];
         } else {
@@ -163,14 +148,8 @@ function update_current_flow(name, column, selected){
             } else {
                 distribution[after]++;
             }
-        }
-        
-    }
-    
-}
-
-function getMaxOfArray(numArray) {
-  return Math.max.apply(null, numArray);
+        }        
+    }   
 }
 
 
@@ -249,8 +228,9 @@ function get_checked_labels(){
 function filter_links_to_use(){
     var links = [];   
 
-    var min_flow = $(min_names[0]).options[$(min_names[0]).selectedIndex].text;
-    var max_flow = $(max_names[0]).options[$(max_names[0]).selectedIndex].text;
+    var min_flow = $(dropdown_name).options[$(dropdown_name).selectedIndex].value;
+    console.log(min_flow);
+    return;
     mapping.forEach(function(s) { 
         var node_flow = flow[1][s[1]];
         if(s[0] in checked_labels[0] && node_flow >= min_flow && node_flow <= max_flow ){
@@ -324,6 +304,7 @@ function draw_sankey() {
     var graph = {"nodes" : [], "links" : []};
     
     var good_links = filter_links_to_use();
+    return;
     good_links.forEach(function (d) {
       graph.nodes.push({ "name": d[0] });
       graph.nodes.push({ "name": d[1] });
