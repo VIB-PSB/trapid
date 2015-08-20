@@ -265,6 +265,12 @@
 						$html->url(array("controller"=>"tools","action"=>"label_interpro_intersection",$exp_id)),
 						"some_image.png",
 						$subset1
+					),							
+					array(
+						"Label Go intersection",
+						$html->url(array("controller"=>"tools","action"=>"label_go_intersection",$exp_id)),
+						"some_image.png",
+						$subset1
 					),			
 					array(
 						"Different subsets",

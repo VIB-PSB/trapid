@@ -42,7 +42,7 @@ var boxes_ids = ['left_boxes','right_boxes'];
 function add_checkboxes(){
     names_list.sort();
 
-    boxes_ids.forEach(function(boxes,column){
+    boxes_ids.forEach(function(boxes,col){
         for (var i = 0, len2 = names_list.length; i < len2; ++i) {
             // Create the checkboxes and labels for them here.
             var n = names_list[i];
@@ -51,15 +51,16 @@ function add_checkboxes(){
             checkbox.name = n;
             checkbox.value = n;
             checkbox.id = boxes + n;
-            checkbox.onchange = function(event){checkbox_changed(event)}
+            checkbox.onchange = function(event){checkbox_changed(event,col)}
 
             var label = document.createElement('label')
             label.htmlFor = checkbox.id;
-            label.appendChild(document.createTextNode(' ' + n + ' '));
+            label.appendChild(document.createTextNode(' ' + n + ' [' + flow[0][n] + ' genes] '));
             
             var container = $(boxes);
             container.appendChild(checkbox);// Fix for IE browsers, first append, then check.
-            if((i + column) % 2 === 1){
+            // Make sure other checkboxes are selected in each collumn
+            if((i + col) % 2 === 1){
                 checkbox.checked = true;
             } else {
                 checkbox.disabled = true;
@@ -69,7 +70,7 @@ function add_checkboxes(){
                 container.appendChild(document.createElement('br'));
             }
         }
-        // Add a break after the last element so the refine button 
+        // Add a break after the last element so the refine button is always on a new line
         $(boxes).appendChild(document.createElement('br')); 
         // Move the button to the bottom
         var button = $(boxes + '_button');
@@ -77,7 +78,7 @@ function add_checkboxes(){
     });  
 }
 
-function checkbox_changed(event){
+function checkbox_changed(event,col){
     var chckbx = event.target;
     // Check if it starts with left_
     var sibling_id;
@@ -89,8 +90,15 @@ function checkbox_changed(event){
     }
     //Dis/enable the other based on the checkedness
     $(sibling_id).disabled = chckbx.checked;
+    if(chckbx.checked){
+        checked_labels[col][chckbx.name] = 1;
+    } else {
+        delete checked_labels[col][chckbx.name];
+    }        
+    
     // Other groupings, other options.
-    update_current_flow(chckbx.name,column,chckbx.checked);
+    update_current_flow(chckbx.name,col,chckbx.checked);
+    
     fill_in_dropdown();
 }
 
@@ -100,14 +108,14 @@ var distribution = [];
 // {'IPR01':[4,8],'IPR02':[8,0]...}
 var current_flow = Object.create(null);
 function calculate_current_flow(){
-    checked_labels.forEach(function(labels,column){
+    checked_labels.forEach(function(labels,col){
         for(var label in labels){
             var map = per_label_mapping[label];
             for(var target in map){
                 if(! (target in current_flow)){
                     current_flow[target] = [0,0];
                 }
-                current_flow[target][column] += map[target];
+                current_flow[target][col] += map[target];
             }
         }
     });
@@ -123,8 +131,7 @@ function calculate_current_flow(){
     }
 }
 
-function update_current_flow(name, column, selected){
-    console.log(name,column,selected);
+function update_current_flow(name, col, selected){
     var map = per_label_mapping[name];
     for(var target in map){
         // The target might not have been added yet
@@ -134,10 +141,10 @@ function update_current_flow(name, column, selected){
         var before = Math.max(current_flow[target][0],current_flow[target][1]);
         if(selected){
             // Add the flow when something new is checked
-            current_flow[target][column] += map[target];
+            current_flow[target][col] += map[target];
         } else {
             // Remove it when the label is deselected
-            current_flow[target][column] -= map[target];
+            current_flow[target][col] -= map[target];
         }
         var after = Math.max(current_flow[target][0],current_flow[target][1]);
         // Update the distribution if it changed
@@ -167,7 +174,6 @@ var flow = [Object.create(null),Object.create(null)]; // a set with the in/outfl
 var max_flow = 0; //
 var reverse_mapping = [];
 var per_label_mapping = Object.create(null); // a practical mapping used to keep track of the distributions
-var intersection_lists = Object.create(null); // to keep track of nodes in the middle column that aren't in both the right and left cluster
 
 function process_data(){
     // We assume that the the in/outflow for the middle collum is equal.
@@ -194,14 +200,12 @@ function process_data(){
 
         // Generate a list of reverse mappings
         reverse_mapping.push([target,source,value]);
-        // Keep track of the flow into each node, also update the intersection_lists
+        // Keep track of the flow into each node
         var current_val = +value;
         if(target in flow[1]){
             flow[1][target] += current_val;
             current_val = flow[1][target];
-            intersection_lists[target].push(source);
         }else {
-            intersection_lists[target] = [source];
             flow[1][target] = +value;
             column[target] = 1;
         } 
@@ -216,10 +220,10 @@ function process_data(){
 // checked_labels contain the names of all checked labels, per column
 var checked_labels = [Object.create(null),Object.create(null)];
 function get_checked_labels(){
-    for(var column = 0, number_columns = boxes_ids.length; column < number_columns ; column++){
-        $(boxes_ids[column]).getInputs('checkbox').forEach(function(chckbx){
+    for(var col = 0, number_columns = boxes_ids.length; col < number_columns ; col++){
+        $(boxes_ids[col]).getInputs('checkbox').forEach(function(chckbx){
             if(chckbx.checked){
-                checked_labels[column][chckbx.name] = 1;
+                checked_labels[col][chckbx.name] = 1;
             }
         });
     }
@@ -229,32 +233,23 @@ function filter_links_to_use(){
     var links = [];   
 
     var min_flow = $(dropdown_name).options[$(dropdown_name).selectedIndex].value;
-    console.log(min_flow);
-    return;
-    mapping.forEach(function(s) { 
-        var node_flow = flow[1][s[1]];
-        if(s[0] in checked_labels[0] && node_flow >= min_flow && node_flow <= max_flow ){
-            for(var i = 0, len = intersection_lists[s[1]].length; i < len ; i++){
-                // if this node has a target on the other side, add it.
-                if(intersection_lists[s[1]][i] in checked_labels[1]){
-                    links.push(copy_link(s));
-                    break;
-                }
-            }            
+
+    mapping.forEach(function(s) {
+        var left_flow = current_flow[s[1]][0];
+        var right_flow = current_flow[s[1]][1];  
+        if(s[0] in checked_labels[0] && 
+          ((right_flow >= min_flow && left_flow > 0) || (left_flow >= min_flow && right_flow > 0))){
+              links.push(copy_link(s));
         }
     });
 
     reverse_mapping.forEach(function(s) { 
-        var node_flow = flow[1][s[0]];
-        if(s[1] in checked_labels[1] && node_flow >= min_flow && node_flow <= max_flow){
-            for(var i = 0, len = intersection_lists[s[0]].length; i < len ; i++){
-                // if this node has a target on the other side, add it.
-                if(intersection_lists[s[0]][i] in checked_labels[0]){
-                    links.push(copy_link(s));
-                    break;
-                }
-            }
-        }
+        var left_flow = current_flow[s[0]][0];
+        var right_flow = current_flow[s[0]][1];  
+        if(s[1] in checked_labels[1] && 
+          ((right_flow >= min_flow && left_flow > 0) || (left_flow >= min_flow && right_flow > 0))){
+              links.push(copy_link(s));
+        }        
     });
     return links;
 }
@@ -304,7 +299,7 @@ function draw_sankey() {
     var graph = {"nodes" : [], "links" : []};
     
     var good_links = filter_links_to_use();
-    return;
+//console.log(good_links);
     good_links.forEach(function (d) {
       graph.nodes.push({ "name": d[0] });
       graph.nodes.push({ "name": d[1] });
@@ -312,7 +307,7 @@ function draw_sankey() {
                          "target": d[1],
                          "value": +d[2]});
      });
-    //console.log(good_links);
+    
 
      // return only the distinct / unique nodes
      graph.nodes = d3.keys(d3.nest()
@@ -330,7 +325,7 @@ function draw_sankey() {
      graph.nodes.forEach(function (d, i) {
        var col = column[d];
        graph.nodes[i] = { name: d.replace(/^\d+_/g,''),
-                          href: urls[col].replace(place_holder,d),
+                          href: urls[col].replace(place_holder,d).replace('GO:','GO-'),
                           original_flow:flow[col][d]};
      });
 

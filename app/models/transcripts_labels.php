@@ -63,8 +63,8 @@ class TranscriptsLabels extends AppModel{
 
   function getLabeltoGOMapping($exp_id){
     $query	= "SELECT COUNT(*), label, go
-                FROM `transcripts_labels` 
-                JOIN `transcripts_go` USING (experiment_id,transcript_id)
+                FROM `transcripts_go` 
+                LEFT JOIN `transcripts_labels` USING (experiment_id,transcript_id)
                 WHERE experiment_id = ".$exp_id."
                 GROUP BY label,go";
     $res	= $this->query($query);

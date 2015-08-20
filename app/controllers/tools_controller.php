@@ -1759,6 +1759,32 @@ $stop = microtime(true);
     $this->render('multi_sankey_intersection');
   }
 
+function label_go_intersection($exp_id=null){
+    $this->general_set_up($exp_id);
+    
+    $this->set("col_names", array('Label','Interpro','Label'));
+$start = microtime(true); 
+
+    $label_rows	= $this->TranscriptsLabels->getLabelToGOMapping($exp_id,true);
+    $interpros = array();
+    foreach ($label_rows as $row){
+        $go_ids[] = $row[1];
+    }
+    $go_info	= $this->ExtendedGo->retrieveGoInformation($go_ids);
+$stop = microtime(true);
+echo 'Getting data takes :'.($stop - $start);
+    $this->set('mapping', $label_rows);
+    $this->set('descriptions', $go_info);
+    $place_holder = '###';
+    $this->set("place_holder", $place_holder); 
+    $urls = array(Router::url(array("controller"=>"labels","action"=>"view",$exp_id,$place_holder)),                  
+                  Router::url(array("controller"=>"functional_annotation","action"=>"go",$exp_id,$place_holder)) 
+    );
+    $this->set('urls', $urls);    
+    
+    $this->render('multi_sankey_intersection');
+  }
+
 
 
   /*
