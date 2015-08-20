@@ -14,47 +14,30 @@ document.observe('dom:loaded', function(){
 
 var dropdown_name = 'middle_min';
 var total = 0;
+var choice ;
+var options ;
 function fill_in_dropdown(){
-    var choice = -1;
-    var options = [];
+    choice = -1;
+    total = 0;
+    options = [];
     for(var i = distribution.length - 1; i > 0; i--){
         if(typeof distribution[i] != 'undefined' && distribution[i] !== 0){
-
             total += distribution[i];
-            if(total >= 25){
-                choice = options[options.length - 1][0];
+            if(choice === -1 && total >= 25){
+                choice = i;
             }
-            options.push([i,total]);
-            
+            options.push([i,total]);          
         }
     }
     options.reverse();
     for(var i = 0,len = options.length; i < len; i++){
         $(dropdown_name).options.add(new Option(">=" + options[i][0] + " [" + options[i][1] + " IPR families]" ,options[i][0]));
+
     }
-    $(dropdown_name).value = options.length - choice;
-    
-/*
-var powers = []
-        for(var j=1; j*j < max_flow; j++){            
-            $(min_names[i]).options.add(new Option(j*j,j));
-            powers.push(j*j);
-        }
-        powers.reverse();
-         if(Math.pow(Math.round(Math.sqrt(max_flow)),2) !== max_flow){
-            $(max_names[i]).options.add(new Option(max_flow,1));
-            $(min_names[i]).options.add(new Option(max_flow,powers.length));
-        }
-        for(var j=0, len2 = powers.length; j < len2; j++){
-            $(max_names[i]).options.add(new Option(powers[j],j+1))
-        }        
-
-        // Also select a hopefully good value here.
-        // Currently we filter out the lower fourth of the nodes        
-        $(min_names[i]).value = Math.round(Math.sqrt(max_flow/4));
-    }  */
+    console.log(options.length,choice);
+    $(dropdown_name).value = choice;
 }
-
+    
 var min_names = ['middle_min'];
 var max_names = ['middle_max'];
 function add_bound_checking_dropdown(){
