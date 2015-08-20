@@ -256,7 +256,7 @@
 					),					
 					array(
 						"Label GF intersection",
-						$html->url(array("controller"=>"tools","action"=>"multiSankeyIntersection",$exp_id)),
+						$html->url(array("controller"=>"tools","action"=>"label_gf_intersection",$exp_id)),
 						"some_image.png",
 						$subset1
 					),							

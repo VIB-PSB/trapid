@@ -151,7 +151,6 @@ class Transcripts extends AppModel{
     return $result;
   }
 
-
   function getLabelToGFMapping($exp_id,$reverse=false){
     $query	= "SELECT COUNT(*), transcripts.`gf_id`,transcripts_labels.`label`
                FROM transcripts LEFT JOIN transcripts_labels ON 

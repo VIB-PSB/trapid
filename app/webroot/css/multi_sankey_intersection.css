@@ -15,6 +15,10 @@
     text-align: justify;
 }
 
+.left_col, .right_col{
+    display: inline-block;
+}
+
 .node rect {
   cursor: move;
   fill-opacity: .9;

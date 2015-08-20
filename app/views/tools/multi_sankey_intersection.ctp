@@ -8,18 +8,20 @@
 <?php
     echo '<script type="text/javascript">';
     echo "var mapping = " . json_encode($mapping) .";";
-    echo "var descriptions = " . json_encode($descriptions) .";";
-    echo "var urls = " . json_encode($urls) .";";
-    echo "var place_holder = '" . $place_holder ."';";
+    echo "\nvar descriptions = " . json_encode($descriptions) .";";
+    echo "\nvar label_counts = " . json_encode($counts) .";";
+    echo "\nvar total_count = " .   $exp_info['transcript_count'] .";";
+    echo 'var dropdown_filter_name = "' . $dropdown_name .'";';
+    echo "\nvar urls = " . json_encode($urls) .";";
+    echo "\nvar place_holder = '" . $place_holder ."';";
     echo '</script>';
 
 	echo $html->css('multi_sankey_intersection');
 	echo $javascript->link(array('d3-3.5.6.min','sankey','multi_sankey_intersection'));	
-
-    $number_of_choices = 31;
     echo '<div id="choices">';
     ///////////////// Left refinement /////////////////
     echo $form->create(false, array('id' => 'left_boxes', 'class'=> 'refine_box'));
+    echo '<div class="left_col"></div><div class="right_col"></div><br>';
     $options = array(
     'type' => 'button',
     'id' => 'left_boxes_button',
@@ -42,6 +44,7 @@
 
     ///////////////// Right refinement /////////////////
     echo $form->create(false, array('id' => 'right_boxes', 'class'=> 'refine_box'));
+    echo '<div class="left_col"></div><div class="right_col"></div><br>';
     $options = array(
     'type' => 'button',
     'id' => 'right_boxes_button',

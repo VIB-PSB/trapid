@@ -19,7 +19,7 @@ function fill_in_dropdown(){
     for(var i = distribution.length - 1; i > 0; i--){
         if(typeof distribution[i] != 'undefined' && distribution[i] !== 0){
             total += distribution[i];
-            if(!choice && total >= 25){
+            if(!choice && total >= 20){
                 choice = i;
             }
             options.push([i,total]);          
@@ -31,7 +31,7 @@ function fill_in_dropdown(){
     options.reverse();
 
     for(var i = 0,len = options.length; i < len; i++){
-        var option_string = ">=" + options[i][0] + " [" + options[i][1] + " IPR families]";
+        var option_string = ">=" + options[i][0] + " [" + options[i][1] + " " + dropdown_filter_name+ "]";
         $(dropdown_name).options.add(new Option(option_string, options[i][0]));
     }
     // Set a decent minimum value
@@ -39,6 +39,7 @@ function fill_in_dropdown(){
 }
 
 var boxes_ids = ['left_boxes','right_boxes'];
+var col_classes = ['left_col','right_col'];
 function add_checkboxes(){
     names_list.sort();
 
@@ -55,30 +56,24 @@ function add_checkboxes(){
 
             var label = document.createElement('label')
             label.htmlFor = checkbox.id;
-            label.appendChild(document.createTextNode(' ' + n + ' [' + flow[0][n] + ' genes] '));
+            label.appendChild(document.createTextNode(' ' + n + ' [' + label_counts[n] + ' genes] '));
             
-            var container = $(boxes);
+            var container = $(boxes).select('.' + col_classes[i % 2])[0];
             container.appendChild(checkbox);// Fix for IE browsers, first append, then check.
+            container.appendChild(label);
+            container.appendChild(document.createElement('br'));
             // Make sure other checkboxes are selected in each collumn
             if((i + col) % 2 === 1){
                 checkbox.checked = true;
             } else {
                 checkbox.disabled = true;
             }
-            container.appendChild(label);
-            if (i % 2 === 1 ){
-                container.appendChild(document.createElement('br'));
-            }
         }
-        // Add a break after the last element so the refine button is always on a new line
-        $(boxes).appendChild(document.createElement('br')); 
-        // Move the button to the bottom
-        var button = $(boxes + '_button');
-        button.parentNode.appendChild(button);
     });  
 }
 
 function checkbox_changed(event,col){
+    disable_everything();
     var chckbx = event.target;
     // Check if it starts with left_
     var sibling_id;
@@ -100,6 +95,33 @@ function checkbox_changed(event,col){
     update_current_flow(chckbx.name,col,chckbx.checked);
     
     fill_in_dropdown();
+    enable_everything();
+}
+
+function disable_everything(){
+    var input_elements = document.getElementsByTagName('input');
+    for(var i = 0, len = input_elements.length; i < len ; i++){
+        input_elements[i].disabled = true;
+    }
+}
+
+
+function enable_everything(){
+    var input_elements = document.getElementsByTagName('input');
+    for(var i = 0, len = input_elements.length; i < len ; i++){
+       var element = input_elements[i];
+       if(element.type === 'checkbox'){
+           var sibling_id;
+           if(element.id.lastIndexOf('left',0) === 0){
+                sibling_id = element.id.replace('left','right');
+            } else {
+                sibling_id = element.id.replace('right','left');
+            }
+            element.disabled = $(sibling_id).checked;
+        } else {
+            element.disabled = false;
+       }
+    }
 }
 
 
@@ -122,11 +144,20 @@ function calculate_current_flow(){
 
     // Fill the initial distribution array
     for(var target in current_flow){
-        var biggest = Math.max(current_flow[target][0],current_flow[target][1]);
-        if(!distribution[biggest]) {
-            distribution[biggest] = 1;
-        } else {
-            distribution[biggest]++;
+        var big = current_flow[target][0];
+        var small = current_flow[target][1];
+        if( small > big ){
+            var temp = big;
+            big = small;
+            small = temp;
+        }
+        // Only take into account the elements that will be shown
+        if(small > 0){
+            if(!distribution[big]) {
+                distribution[big] = 1;
+            } else {
+                distribution[big]++;
+            }
         }
     }
 }
@@ -139,6 +170,7 @@ function update_current_flow(name, col, selected){
             current_flow[target] = [0,0];
         }
         var before = Math.max(current_flow[target][0],current_flow[target][1]);
+        var in_distr_before = current_flow[target][0] > 0 && current_flow[target][1] > 0;
         if(selected){
             // Add the flow when something new is checked
             current_flow[target][col] += map[target];
@@ -147,15 +179,20 @@ function update_current_flow(name, col, selected){
             current_flow[target][col] -= map[target];
         }
         var after = Math.max(current_flow[target][0],current_flow[target][1]);
+        var in_distr_now = current_flow[target][0] > 0 && current_flow[target][1] > 0;
         // Update the distribution if it changed
-        if(before !== after){
-            distribution[before]--;
+        if(in_distr_before){
+            if(before !== after){
+                distribution[before]--;
+            }
+        }
+        if(in_distr_now){
             if(!distribution[after]) {
                 distribution[after] = 1;
             } else {
                 distribution[after]++;
             }
-        }        
+        }                
     }   
 }
 
@@ -215,6 +252,12 @@ function process_data(){
         }
     });
     max_flow = current_max;
+
+    var gene_count = 0;
+    for(var label in label_counts){
+        gene_count += +label_counts[label];
+    }
+    label_counts['no label'] = total_count - gene_count;
 }
 
 // checked_labels contain the names of all checked labels, per column
@@ -378,7 +421,7 @@ function draw_sankey() {
 	    .style("fill", function(d) { return d.color = color(d.name); })
 	    .style("stroke", function(d) { return d3.rgb(d.color).darker(2); })
 	    .append("title")
-	    .text(function(d) { return (d.name in descriptions? descriptions[d.name].desc : d.name)+ "\n" + format(d.value) + " / " + format(d.original_flow); });
+	    .text(function(d) { return create_hovertext(d)});
     node.append("text")
 	    .attr("x", -6)
 	    .attr("y", function(d) { return d.dy / 2; })
@@ -394,6 +437,17 @@ function draw_sankey() {
 	        d3.select(this).attr("transform", "translate(" + d.x + "," + (d.y = Math.max(0, Math.min(height - d.dy, d3.event.y))) + ")");
 	        sankey.relayout();
 	        link.attr("d", path);
+        }
+
+        function create_hovertext(d){
+            if(d.name in descriptions){
+               return descriptions[d.name].desc;
+            } 
+            if(d.name in label_counts ) {
+                return d.name + "\n" + label_counts[d.name] + " genes";
+            } else {
+                return d.name;
+            }  //format(d.value) + " / " + format(d.original_flow); 
         }
 
 }
