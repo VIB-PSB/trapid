@@ -55,16 +55,27 @@ function add_checkboxes(){
             checkbox.name = n;
             checkbox.value = n;
             checkbox.id = boxes + n;
-            checkbox.onchange = function(event){checkbox_changed(event,col)}
+            checkbox.onchange = function(event){checkbox_changed(event,col)};
 
-            var label = document.createElement('label')
+            var label = document.createElement('label');
+
             label.htmlFor = checkbox.id;
-            label.appendChild(document.createTextNode(' ' + n + ' [' + label_counts[n] + ' genes] '));
+            
+            if(n !== 'no label'){
+                label.appendChild(document.createTextNode(' ' + n + ' [' + label_counts[n] + ' genes] '));
+             } else {
+                label.appendChild(document.createTextNode(""));
+                label.innerHTML = ' <span class="bad_label">' + n + '</span> [' + label_counts[n] + ' genes] ';                
+            }
+            
             
             var container = $(boxes).select('.' + col_classes[i % 2])[0];
             container.appendChild(checkbox);// Fix for IE browsers, first append, then check.
             container.appendChild(label);
             container.appendChild(document.createElement('br'));
+            if(n === 'no label'){
+                continue;
+            }
             // Make sure other checkboxes are selected in each collumn
             if((i + col) % 2 === 1){
                 checkbox.checked = true;
@@ -166,7 +177,6 @@ function calculate_current_flow(){
 }
 
 function update_current_flow(name, col, selected){
-    console.log(name,col,selected);
     var map = per_label_mapping[name];
     for(var target in map){
         // The target might not have been added yet
@@ -306,8 +316,8 @@ function filter_links_to_use(){
     var min_flow = $(dropdown_name).options[$(dropdown_name).selectedIndex].value;
 
     mapping.forEach(function(s) {
-        var left_flow = current_flow[s[1]][0];
-        var right_flow = current_flow[s[1]][1];  
+        var left_flow = current_flow[s[1]] ? current_flow[s[1]][0]: 0;
+        var right_flow = current_flow[s[1]]? current_flow[s[1]][1]: 0;  
         if(s[0] in checked_labels[0] && 
           ((right_flow >= min_flow && left_flow > 0) || (left_flow >= min_flow && right_flow > 0))){
               links.push(copy_link(s));
@@ -315,8 +325,8 @@ function filter_links_to_use(){
     });
 
     reverse_mapping.forEach(function(s) { 
-        var left_flow = current_flow[s[0]][0];
-        var right_flow = current_flow[s[0]][1];  
+        var left_flow = current_flow[s[0]]? current_flow[s[0]][0]: 0;
+        var right_flow = current_flow[s[0]]? current_flow[s[0]][1]: 0;  
         if(s[1] in checked_labels[1] && 
           ((right_flow >= min_flow && left_flow > 0) || (left_flow >= min_flow && right_flow > 0))){
               links.push(copy_link(s));
@@ -505,8 +515,17 @@ function draw_sankey() {
 
         // The hovertext varies depending on the normalization used
         function create_link_hovertext(d){
-            //TODO fix this right here
-            var hover_string = d.source.name + (d.source.name in names ? " → " : " ← " ) + d.target.name + "\n";
+            var label_node, target_node, arrow;
+            if( d.source.name in names){
+                label_node = d.source;
+                target_node = d.target;
+                arrow = " → ";
+            } else {
+                label_node = d.target;
+                target_node = d.source;
+                arrow = " ← ";
+            } 
+            var hover_string = label_node.name + arrow + target_node.name + "\n";
             var option = $('normalization').selectedIndex;
             switch(option){
                 case 0:
@@ -516,21 +535,14 @@ function draw_sankey() {
                     hover_string += parseFloat(d.value).toFixed(2) + '% of genes in intersection';
                 break;
                 case 2:
-                    hover_string += parseFloat(d.value).toFixed(2) + '% of genes in ' + d.source.name;
+                    hover_string += parseFloat(d.value).toFixed(2) + '% of genes in ' + label_node.name;
                 break;
                 default:
-                return;
+                return hover_string;
 
             }
             return  hover_string ;
-            /*if(d.name in descriptions){
-               return descriptions[d.name].desc;
-            } 
-            if(d.name in label_counts ) {
-                return d.name + "\n" + label_counts[d.name] + " genes";
-            } else {
-                return d.name;
-            } */
+ 
         }
 
 }
