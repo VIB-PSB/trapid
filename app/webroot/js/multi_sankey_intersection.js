@@ -361,7 +361,7 @@ function normalize_links(links){
                 if(link[0] in divisors){
                     divisors[link[0]] += +link[2];
                 } else {
-                    divisors[link[1]] += link[2];
+                    divisors[link[1]] += +link[2];
                 }                                         
             });
             // Divide by the calculated divisor
