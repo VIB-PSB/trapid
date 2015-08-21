@@ -1652,7 +1652,7 @@ class ToolsController extends AppController{
     $this->generateSankeyDiagram($rows,$exp_id,array("controller"=>"functional_annotation","action"=>"interpro",$exp_id));
   }
 
-
+  // Obsolete
   function labelSankey($exp_id=null){
     $exp_id	= mysql_real_escape_string($exp_id);
     parent::check_user_exp($exp_id);	

@@ -229,13 +229,7 @@
 						$html->url(array("controller"=>"tools","action"=>"compare_ratios",$exp_id,"ipr")),
 						"other_image.png",
 						$subset2
-					),					
-					array(
-						"Label to gene family sankey",
-						$html->url(array("controller"=>"tools","action"=>"labelSankey",$exp_id)),
-						"some_image.png",
-						$subset1
-					),					
+					),			
 					array(
 						"Interpro to gene family sankey",
 						$html->url(array("controller"=>"tools","action"=>"interproSankey",$exp_id)),

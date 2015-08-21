@@ -573,15 +573,13 @@ function draw_sankey() {
 
         // The hovertext varies depending on the normalization used
         function create_link_hovertext(d){
-            var label_node, target_node, arrow;
+            var label_node, target_node, arrow = " → ";
             if( d.source.name in names){
                 label_node = d.source;
                 target_node = d.target;
-                arrow = " → ";
             } else {
                 label_node = d.target;
                 target_node = d.source;
-                arrow = " ← ";
             } 
             var hover_string = label_node.name + arrow + target_node.name + "\n";
             var option = $('normalization').selectedIndex;
@@ -596,12 +594,8 @@ function draw_sankey() {
                     hover_string += parseFloat(d.value).toFixed(2) + '% of genes in ' + label_node.name;
                 break;
                 default:
-                return hover_string;
-
             }
-            return  hover_string ;
- 
+            return  hover_string ; 
         }
-
 }
 
