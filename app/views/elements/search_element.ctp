@@ -11,7 +11,7 @@ foreach($search_types as $k=>$v){
 }
 echo "</select>\n";
 echo "<span id='search_content'>\n";
-if(!$mvc){
+if(!isset($mvc) || !$mvc){
 	echo "<input type='text' name='search_value' style='width:200px;margin-right:20px;' maxlength='50' ";
 	if(isset($search_value)){echo " value='".$search_value."' ";}
 	echo "/>\n";
@@ -24,7 +24,7 @@ else{
 echo "</span>\n";
 if((isset($search_type) && ($search_type=="transcript" || $search_type=="gene")) || !isset($search_type)){
 	$checked = null;
-	if($mvc){$checked=" checked='checked' ";}
+	if(isset($mvc) && $mvc){$checked=" checked='checked' ";}
 	echo "<input type='checkbox' name='multiple_values_check' id='multiple_values_check' style='margin-right:5px;' ".$checked."/>";
 	echo "<span style='margin-right:20px;' id='mvs_txt'>Multiple values</span>";
 }
