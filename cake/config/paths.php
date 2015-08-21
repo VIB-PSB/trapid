@@ -148,14 +148,14 @@ if(!defined('WEBSITE_TITLE')){
 /**
  * Path/URL to the temporary files directory 
  */
-if (!defined('TMP')) {define('TMP', '/www/bioapp/trapid/');}
-if(!defined('TMP_WEB')){define('TMP_WEB','http://bioinformatics.psb.ugent.be/readwrite/trapid/');}
+if (!defined('TMP')) {define('TMP', '/www/bioapp/trapid2/');}
+if(!defined('TMP_WEB')){define('TMP_WEB','http://bioinformatics.psb.ugent.be/readwrite/trapid2/');}
 
 /**
  * TRAPID database information
  */
 if(!defined('TRAPID_DB_SERVER')){define('TRAPID_DB_SERVER',"psbsql03");}
-if(!defined('TRAPID_DB_NAME')){define('TRAPID_DB_NAME',"db_trapid_01");}
+if(!defined('TRAPID_DB_NAME')){define('TRAPID_DB_NAME',"db_trapid_02");}
 if(!defined('TRAPID_DB_PORT')){define('TRAPID_DB_PORT',"3306");}
 if(!defined('TRAPID_DB_USER')){define('TRAPID_DB_USER',"trapid_website");}
 if(!defined('TRAPID_DB_PASSWORD')){define('TRAPID_DB_PASSWORD',"trapid_webaccess");}

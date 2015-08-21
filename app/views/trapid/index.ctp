@@ -24,7 +24,11 @@
 			<li>Extensive editing and export capabilities</li>	
 			<li>Free of charge for academic use</li>
 		    </ul>
-		</div>		
+		</div>	
+		<br/>
+		<p>In case you publish results generated using TRAPID, please cite this paper:</p>
+<p><strong>TRAPID, an efficient online tool for the functional and comparative analysis of de novo RNA-Seq transcriptomes.</strong> Michiel Van Bel, Sebastian Proost, Christophe Van Neste, Dieter Deforce, Yves Van de Peer and Klaas Vandepoele. <em>Genome Biol.(2013) 14:R134</em></p>	
+	
 		<br/>
 		<div class="subdiv" style="width:800px;margin-top:200px;">
 			<center>
@@ -46,7 +50,7 @@
 			</center>
 		</div>
 		
-				
+			
 
 	    	<!--
 		<h4>Authentication</h4>
