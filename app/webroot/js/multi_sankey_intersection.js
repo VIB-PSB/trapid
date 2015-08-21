@@ -9,6 +9,9 @@ document.observe('dom:loaded', function(){
   draw_sankey();
 });
 
+// This defines if we're comparing 2 groups or just viewing a single side of the diagram
+var single_mode = false;
+
 ////////// Behaviour of the refine button and fields ////////////
 
 var dropdown_name = 'middle_min';
@@ -16,17 +19,24 @@ function fill_in_dropdown(){
     var choice;
     var total = 0;
     var options = [];
-    for(var i = distribution.length - 1; i > 0; i--){
-        if(typeof distribution[i] != 'undefined' && distribution[i] !== 0){
-            total += distribution[i];
-            if(!choice && total >= 20){
-                choice = i;
+    var used_distribution = single_mode? single_distribution : distribution;
+    for(var i = used_distribution.length - 1; i > 0; i--){
+        if(typeof used_distribution[i] != 'undefined' && used_distribution[i] !== 0){
+            total += used_distribution[i];
+            if(!choice && total >= 24){
+                choice = options[options.length - 1][0];
             }
-            options.push([i,total]);          
+            options.push([i,total]);
         }
     }
     // Clear the dropdown before adding new options
     $(dropdown_name).update();
+    
+    // If there are no options, ask the user to select something
+    if(options.length === 0){
+        $(dropdown_name).options.add(new Option("Please select labels.", 0));
+        return;
+    }
     // show options in ascending order
     options.reverse();
 
@@ -34,7 +44,7 @@ function fill_in_dropdown(){
         var option_string = ">=" + options[i][0] + " [" + options[i][1] + " " + dropdown_filter_name+ "]";
         $(dropdown_name).options.add(new Option(option_string, options[i][0]));
     }
-    // Set a decent minimum value
+    // Set a decent minimum value, if choice was never set, there aren't that many  choices so pick the first value.
     if(!choice && options.length > 0){
         choice = options[0][0];
     }
@@ -103,9 +113,9 @@ function checkbox_changed(event,col){
     if(chckbx.checked){
         checked_labels[col][chckbx.name] = 1;
     } else {
-        delete checked_labels[col][chckbx.name];
+        delete checked_labels[col][chckbx.name];        
     }        
-    
+    single_mode = Object.keys(checked_labels[col]).length === 0 || Object.keys(checked_labels[1 - col]).length === 0;
     // Other groupings, other options.
     update_current_flow(chckbx.name,col,chckbx.checked);
     
@@ -141,6 +151,7 @@ function enable_everything(){
 
 
 var distribution = [];
+var single_distribution = [];
 // current_flow maps middle columns to a pair of values giving the left and right flow
 // {'IPR01':[4,8],'IPR02':[8,0]...}
 var current_flow = Object.create(null);
@@ -173,6 +184,11 @@ function calculate_current_flow(){
             } else {
                 distribution[big]++;
             }
+        }
+        if(!single_distribution[big]) {
+                single_distribution[big] = 1;
+        } else {
+                single_distribution[big]++;
         }
     }
 }
@@ -232,6 +248,15 @@ function update_current_flow(name, col, selected){
                 }
             }
         }
+        // Also update the single_distribution
+        if(before !== after){
+            single_distribution[before]--;
+            if(!single_distribution[after]) {
+               single_distribution[after] = 1;
+            } else {
+               single_distribution[after]++;
+            }   
+        } 
     }   
 }
 
@@ -292,6 +317,8 @@ function process_data(){
     });
     max_flow = current_max;
 
+    // Counting the number of unlabeled genes
+    // Since label_counts only contains the (label -> count) numbers, we substract the sum of labeled counts from the total transcript count
     var gene_count = 0;
     for(var label in label_counts){
         gene_count += +label_counts[label];
@@ -313,26 +340,37 @@ function get_checked_labels(){
 
 function filter_links_to_use(){
     var links = [];   
-
     var min_flow = $(dropdown_name).options[$(dropdown_name).selectedIndex].value;
 
-    mapping.forEach(function(s) {
-        var left_flow = current_flow[s[1]] ? current_flow[s[1]][0]: 0;
-        var right_flow = current_flow[s[1]]? current_flow[s[1]][1]: 0;  
-        if(s[0] in checked_labels[0] && 
-          ((right_flow >= min_flow && left_flow > 0) || (left_flow >= min_flow && right_flow > 0))){
-              links.push(copy_link(s));
-        }
-    });
+    if(!single_mode){
+        mapping.forEach(function(s) {
+            var left_flow = current_flow[s[1]] ? current_flow[s[1]][0]: 0;
+            var right_flow = current_flow[s[1]]? current_flow[s[1]][1]: 0;  
+            if(s[0] in checked_labels[0] && 
+              ((right_flow >= min_flow && left_flow > 0) || (left_flow >= min_flow && right_flow > 0))){
+                  links.push(copy_link(s));
+            }
+        });
 
-    reverse_mapping.forEach(function(s) { 
-        var left_flow = current_flow[s[0]]? current_flow[s[0]][0]: 0;
-        var right_flow = current_flow[s[0]]? current_flow[s[0]][1]: 0;  
-        if(s[1] in checked_labels[1] && 
-          ((right_flow >= min_flow && left_flow > 0) || (left_flow >= min_flow && right_flow > 0))){
-              links.push(copy_link(s));
-        }        
-    });
+        reverse_mapping.forEach(function(s) { 
+            var left_flow = current_flow[s[0]]? current_flow[s[0]][0]: 0;
+            var right_flow = current_flow[s[0]]? current_flow[s[0]][1]: 0;  
+            if(s[1] in checked_labels[1] && 
+              ((right_flow >= min_flow && left_flow > 0) || (left_flow >= min_flow && right_flow > 0))){
+                  links.push(copy_link(s));
+            }        
+        });
+    } else {
+        var other_col = Object.keys(checked_labels[0]).length === 0 ? 0:1;
+        var label_col = 1 - other_col;
+        var mapping_to_use = other_col === 0 ? reverse_mapping : mapping;
+        mapping_to_use.forEach(function(s) {
+            var flow = current_flow[s[other_col]]? current_flow[s[other_col]][label_col]: 0;
+            if(s[label_col] in checked_labels[label_col] && flow >= min_flow){
+                links.push(copy_link(s));
+            }
+        });
+    }
     return links;
 }
 
