@@ -162,6 +162,22 @@
 		}
 	?>
 
+	<?php
+		/*
+		 * Here we add a (pre)processing link which will initiate a precomputation of the GO enrichments for all defined labels.
+		 * This should only be visible on 3 conditions:
+		 * 1) The experiment is in 'finished' state 
+		 * 2) There is at least 1 label defined (--> should be smaller than total dataset, but we won't check for that here).
+		 * 3) The last_edit_date is younger than the go_enrichment_date (or go_enrichment_date is default).
+		 * 4) The variable go_enrichment_state is not set to 'processing' or 'finished'
+		 *	
+		 * The GO enrichment is stored in 1 table, but extra info (go_enrichment_date and go_enrichment_state) are stored in the experiments table.
+		 */ 
+		
+		
+
+	?>
+
 	<h3>Toolbox</h3>
 	<div class="subdiv">	
 	<?php 
