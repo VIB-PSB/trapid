@@ -186,7 +186,13 @@ function update_current_flow(name, col, selected){
 
         var after = Math.max(current_flow[target][0],current_flow[target][1]);
         var in_distr_now = current_flow[target][0] > 0 && current_flow[target][1] > 0;
-        // Update the distribution if it changed
+        /* Update the distribution if it changed
+         * if this node wasn't part of the distribution and still isn't, or it was and the value didn't change the distribution stays the same
+         *  The distribution changes in 3 cases
+         *  - Node was in the distribution and isn't anymore -> The previous value is decremented
+         *  - Node was in the distribution and still is, with a different value, the previous gets decremented, the current one incremented
+         *  - Node wasn't in the distribution and now is, increment the new value 
+         */
         if(in_distr_before){
             if(in_distr_now ){
                 // If the value changed, decrement the previous and increment the current
@@ -214,7 +220,6 @@ function update_current_flow(name, col, selected){
                     distribution[after]++;
                 }
             }
-
         }
     }   
 }
@@ -320,8 +325,33 @@ function filter_links_to_use(){
     return links;
 }
 
-function copy_link(link,first_mapping){
+function copy_link(link){
     return [link[0],link[1],link[2]];
+}
+
+/* Normalize links according to the normalization setting
+ * 0: do nothing
+ * 1: Every block has width 100, divide by the sum of outgoing links
+ * 2: Every links is divided by the total number of genes belonging to a label
+ */
+function normalize_links(links){
+    var option = $('normalization').selectedIndex;
+    switch(option){
+        case 0:
+            return;
+        break;
+        case 1:
+
+        break;
+        case 2:
+            links.forEach(function(link){
+                var divisor = link[0] in names? label_counts[link[0]] :label_counts[link[1]];
+                link[2] = link[2]*100/divisor;                            
+            });
+        break;
+        default:
+        return;
+    }
 }
 
 
@@ -365,7 +395,7 @@ function draw_sankey() {
     var graph = {"nodes" : [], "links" : []};
     
     var good_links = filter_links_to_use();
-//console.log(good_links);
+    normalize_links(good_links);
     good_links.forEach(function (d) {
       graph.nodes.push({ "name": d[0] });
       graph.nodes.push({ "name": d[1] });
@@ -414,7 +444,7 @@ function draw_sankey() {
         .sort(function(a, b) { return b.dy - a.dy; });
 
    link.append("title")
-	    .text(function(d) { return d.source.name + (d.source.name in names ? " → " : " ← " ) + d.target.name + "\n" + format(d.value); });
+	    .text(function(d) { return create_link_hovertext(d)});
       
     // Work around to make something dragable also clickable
     // From http://jsfiddle.net/2EqA3/3/
@@ -470,7 +500,37 @@ function draw_sankey() {
                 return d.name + "\n" + label_counts[d.name] + " genes";
             } else {
                 return d.name;
-            }  //format(d.value) + " / " + format(d.original_flow); 
+            }
+        }
+
+        // The hovertext varies depending on the normalization used
+        function create_link_hovertext(d){
+            //TODO fix this right here
+            var hover_string = d.source.name + (d.source.name in names ? " → " : " ← " ) + d.target.name + "\n";
+            var option = $('normalization').selectedIndex;
+            switch(option){
+                case 0:
+                    hover_string += d.value + ' genes';
+                break;
+                case 1:
+                    hover_string += parseFloat(d.value).toFixed(2) + '% of genes in intersection';
+                break;
+                case 2:
+                    hover_string += parseFloat(d.value).toFixed(2) + '% of genes in ' + d.source.name;
+                break;
+                default:
+                return;
+
+            }
+            return  hover_string ;
+            /*if(d.name in descriptions){
+               return descriptions[d.name].desc;
+            } 
+            if(d.name in label_counts ) {
+                return d.name + "\n" + label_counts[d.name] + " genes";
+            } else {
+                return d.name;
+            } */
         }
 
 }

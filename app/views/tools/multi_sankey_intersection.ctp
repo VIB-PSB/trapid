@@ -34,6 +34,7 @@
 
     echo $form->create(false, array('id'=> 'middle_refine_form', 'class'=> 'refine_box'));
     echo $form->input("Minimum $col_names[1] size: ", array('options' => array(), 'id' =>'middle_min'));
+    echo $form->input("Normalization: ", array('options' => array('None','Intersection','Cluster'), 'id' =>'normalization'));
     $options = array(
     'type' => 'button',
     'id' => 'middle_refine',
