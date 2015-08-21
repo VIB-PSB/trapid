@@ -64,6 +64,7 @@ function add_checkboxes(){
             if(n !== 'no label'){
                 label.appendChild(document.createTextNode(' ' + n + ' [' + label_counts[n] + ' genes] '));
              } else {
+                // To make only part of the label red & bold, otherwise the span tags are displayed.
                 label.appendChild(document.createTextNode(""));
                 label.innerHTML = ' <span class="bad_label">' + n + '</span> [' + label_counts[n] + ' genes] ';                
             }
@@ -338,7 +339,7 @@ function filter_links_to_use(){
 function copy_link(link){
     return [link[0],link[1],link[2]];
 }
-
+var divisors;
 /* Normalize links according to the normalization setting
  * 0: do nothing
  * 1: Every block has width 100, divide by the sum of outgoing links
@@ -351,7 +352,26 @@ function normalize_links(links){
             return;
         break;
         case 1:
-
+            // First we calculate the current divisor
+            divisors = Object.create(null);
+            for(name in names){
+                divisors[name] = 0;
+            }
+            links.forEach(function(link){
+                if(link[0] in divisors){
+                    divisors[link[0]] += +link[2];
+                } else {
+                    divisors[link[1]] += link[2];
+                }                                         
+            });
+            // Divide by the calculated divisor
+            links.forEach(function(link){
+                if(link[0] in divisors){
+                    link[2] = link[2]*100/divisors[link[0]];
+                } else {
+                    link[2] = link[2]*100/divisors[link[1]];
+                }                                         
+            });
         break;
         case 2:
             links.forEach(function(link){
