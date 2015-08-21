@@ -1,5 +1,10 @@
 "use strict";
-
+/* 
+ * TODO: first just filter on the labels and middle amount
+ * Stage 2 : create a second distribution to use as the second filter
+ * Stage 3 : Get single mode working
+ * If logging in doesn't work, change cookie path back!
+ */
 
 var null_label = 'no label';
 // When no labels are checked we fall back to comparing the last mapping
@@ -8,8 +13,10 @@ var single_mode = false;
 document.observe('dom:loaded', function(){
   process_data();
   add_checkboxes();
+  calculate_current_flow();
   fill_in_dropdown_bounds();
-  add_dropdown_limits()
+  add_dropdown_limits();
+  
   
   draw_sankey(); 
   
@@ -147,6 +154,7 @@ var collumn = {};
 var names_list = [];
 
 function process_data(){
+    //TODO update to current situation
     // We assume that the the in/outflow for the middle collum is equal.
     first_mapping.forEach(function (d) {
         var source = d[0];
@@ -181,18 +189,117 @@ function process_data(){
       }
       
     }
+}
 
-    // Find the maximum (used in the dropdowns)
-    for(var i=0, len=flow.length; i < len; i++){
-        var current_max = 0;
-        for (var key in flow[i]){
-            if(+flow[i][key] > current_max){            
-                current_max = flow[i][key];
+var distribution = [];
+var single_distribution = [];
+// current_flow maps names to the current inflow, twice
+// [{'IPR01':4,'IPR02':8,...},{'HOM02':4,'HOM03':8,...}]
+
+var first_flow = Object.create(null);
+var second_flow = Object.create(null);
+function calculate_current_flow(){
+    /* caculate the current flow in a waterfall fashion (pun not intended)
+     * First the flow into the first column is determined, we already know the cutoff point
+     * So then the second flow is calculated according to the nodes we show at first.
+     */
+    
+    // Label to first col flow
+    for(var label in checked_labels){
+        var map = per_label_mapping[label];
+        for(var target in map){
+            if(!(target in current_flow)){
+                first_flow[target] = 0;
+            }
+            first_flow[target] += map[target];
+        }
+    }
+
+    // Fill the first distribution array
+    for(var target in first_flow){
+        // Only take into account the elements that will be shown
+        var flow = first_flow[target];
+            if(!distribution[flow]) {
+                distribution[flow] = 1;
+            } else {
+                distribution[flow]++;
             }
         }
-        maxes.push(current_max);
+    }   
+
+
+}
+
+function update_current_flow(name, col, selected){
+//TODO update to current situation
+    var map = per_label_mapping[name];
+    for(var target in map){
+        // The target might not have been added yet
+        if(! (target in current_flow)){
+            current_flow[target] = [0,0];
+        }
+        var before = Math.max(current_flow[target][0],current_flow[target][1]);
+        var in_distr_before = current_flow[target][0] > 0 && current_flow[target][1] > 0;
+        // Update current_flow
+        if(selected){
+            // Add the flow when something new is checked
+            current_flow[target][col] += map[target];
+        } else {
+            // Remove it when the label is deselected
+            current_flow[target][col] -= map[target];
+        }
+
+        var after = Math.max(current_flow[target][0],current_flow[target][1]);
+        var in_distr_now = current_flow[target][0] > 0 && current_flow[target][1] > 0;
+        /* Update the distribution if it changed
+         * if this node wasn't part of the distribution and still isn't, or it was and the value didn't change the distribution stays the same
+         *  The distribution changes in 3 cases
+         *  - Node was in the distribution and isn't anymore -> The previous value is decremented
+         *  - Node was in the distribution and still is, with a different value, the previous gets decremented, the current one incremented
+         *  - Node wasn't in the distribution and now is, increment the new value 
+         */
+        if(in_distr_before){
+            if(in_distr_now ){
+                // If the value changed, decrement the previous and increment the current
+                if(before !== after){
+                    distribution[before]--;
+                    // Check if it exists, create the value or increment it
+                    if(!distribution[after]) {
+                       distribution[after] = 1;
+                    } else {
+                        distribution[after]++;
+                    }
+                } else {
+                    // The value stayed the same, so do nothing.
+                }
+            } else {
+                // Was in the distribution before, not anymore, so decrement the previous
+                distribution[before]--;
+            }
+        } else {
+             if(in_distr_now){
+                // Check if it exists, create the value or increment it
+                if(!distribution[after]) {
+                   distribution[after] = 1;
+                } else {
+                    distribution[after]++;
+                }
+            }
+        }
+        // Also update the single_distribution
+        if(before !== after){
+            single_distribution[before]--;
+            if(!single_distribution[after]) {
+               single_distribution[after] = 1;
+            } else {
+               single_distribution[after]++;
+            }   
+        } 
     }   
 }
+
+
+
 //TODO use distributions here
 // Dropdowns offer number_of_choices choices, step_size between them
 function fill_in_dropdown_bounds(){
