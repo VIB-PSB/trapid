@@ -231,20 +231,35 @@
 						$subset2
 					),			
 					array(
-						"Interpro to gene family sankey",
+						"Different subsets",
+						$html->url(array("controller"=>"labels","action"=>"subset_overview",$exp_id)),
+						"some_image.png",
+						$subset1
+					)												
+				),				
+				"Browse"=>array(
+					array(
+						"Gene families",
+						$html->url(array("controller"=>"gene_family","action"=>"index",$exp_id)),
+						"other_image.png"
+					)					
+				),				
+				"Sankeys"=>array(	
+					array(
+						"Interpro →  gene family",
 						$html->url(array("controller"=>"tools","action"=>"interproSankey",$exp_id)),
 						"some_image.png",
 						$subset1
 					),					
 					array(
-						"GO to gene family sankey",
+						"GO →  gene family",
 						$html->url(array("controller"=>"tools","action"=>"GOSankey",$exp_id)),
 						"some_image.png",
 						$subset1
 					),					
 					array(
-						"label to GO to gene family sankey",
-						$html->url(array("controller"=>"tools","action"=>"multiSankey",$exp_id)),
+						"Label →  GO →  gene family",
+						$html->url(array("controller"=>"tools","action"=>"label_go_gf",$exp_id)),
 						"some_image.png",
 						$subset1
 					),					
@@ -261,23 +276,10 @@
 						$subset1
 					),							
 					array(
-						"Label Go intersection",
+						"Label GO intersection",
 						$html->url(array("controller"=>"tools","action"=>"label_go_intersection",$exp_id)),
 						"some_image.png",
-						$subset1
-					),			
-					array(
-						"Different subsets",
-						$html->url(array("controller"=>"labels","action"=>"subset_overview",$exp_id)),
-						"some_image.png",
-						$subset1
-					)												
-				),				
-				"Browse"=>array(
-					array(
-						"Gene families",
-						$html->url(array("controller"=>"gene_family","action"=>"index",$exp_id)),
-						"other_image.png"
+						$subset1					
 					)					
 				),
 				"Find"=>array(

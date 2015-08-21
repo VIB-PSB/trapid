@@ -3,7 +3,6 @@
 document.observe('dom:loaded', function(){
   process_data();
   add_checkboxes();
-  get_checked_labels();
   calculate_current_flow();
   fill_in_dropdown();
   draw_sankey();
@@ -11,6 +10,7 @@ document.observe('dom:loaded', function(){
 
 // This defines if we're comparing 2 groups or just viewing a single side of the diagram
 var single_mode = false;
+var null_label = 'no label'
 
 ////////// Behaviour of the refine button and fields ////////////
 
@@ -23,7 +23,7 @@ function fill_in_dropdown(){
     for(var i = used_distribution.length - 1; i > 0; i--){
         if(typeof used_distribution[i] != 'undefined' && used_distribution[i] !== 0){
             total += used_distribution[i];
-            if(!choice && total >= 24){
+            if(!choice && total > 20){
                 choice = options[options.length - 1][0];
             }
             options.push([i,total]);
@@ -51,6 +51,8 @@ function fill_in_dropdown(){
     $(dropdown_name).value = choice;
 }
 
+// checked_labels contain the names of all checked labels, per column
+var checked_labels = [Object.create(null),Object.create(null)];
 var boxes_ids = ['left_boxes','right_boxes'];
 var col_classes = ['left_col','right_col'];
 function add_checkboxes(){
@@ -71,7 +73,7 @@ function add_checkboxes(){
 
             label.htmlFor = checkbox.id;
             
-            if(n !== 'no label'){
+            if(n !== null_label){
                 label.appendChild(document.createTextNode(' ' + n + ' [' + label_counts[n] + ' genes] '));
              } else {
                 // To make only part of the label red & bold, otherwise the span tags are displayed.
@@ -84,12 +86,13 @@ function add_checkboxes(){
             container.appendChild(checkbox);// Fix for IE browsers, first append, then check.
             container.appendChild(label);
             container.appendChild(document.createElement('br'));
-            if(n === 'no label'){
+            if(n === null_label){
                 continue;
             }
             // Make sure other checkboxes are selected in each collumn
             if((i + col) % 2 === 1){
                 checkbox.checked = true;
+                checked_labels[col][n] = 1;
             } else {
                 checkbox.disabled = true;
             }
@@ -270,9 +273,9 @@ function update_current_flow(name, col, selected){
 var column = Object.create(null); // Indicates which column a name is in
 var names = Object.create(null); // set of different labels
 var names_list = [];
-var flow = [Object.create(null),Object.create(null)]; // a set with the in/outflow of each node
+//var flow = [Object.create(null),Object.create(null)]; // a set with the in/outflow of each node
 
-var max_flow = 0; //
+
 var reverse_mapping = [];
 var per_label_mapping = Object.create(null); // a practical mapping used to keep track of the distributions
 
@@ -285,7 +288,7 @@ function process_data(){
         var value = +d[2];
         
         if(source  === null){
-            d[0] = source = "no label";
+            d[0] = source = null_label;
         }
         //Fill the list of names
         if(!(source in names)){
@@ -293,29 +296,15 @@ function process_data(){
             names[source] = 1;
             names_list.push(source);
             column[source] = 0;
-            flow[0][source] = +value;            
-        } else {
-            flow[0][source] += +value;
-        }
+        } 
         per_label_mapping[source][target] = value;
 
         // Generate a list of reverse mappings
         reverse_mapping.push([target,source,value]);
-        // Keep track of the flow into each node
-        var current_val = +value;
-        if(target in flow[1]){
-            flow[1][target] += current_val;
-            current_val = flow[1][target];
-        }else {
-            flow[1][target] = +value;
-            column[target] = 1;
-        } 
+        column[target] = 1;
 
-        if(current_val > current_max){
-            current_max = current_val;
-        }
     });
-    max_flow = current_max;
+
 
     // Counting the number of unlabeled genes
     // Since label_counts only contains the (label -> count) numbers, we substract the sum of labeled counts from the total transcript count
@@ -323,19 +312,7 @@ function process_data(){
     for(var label in label_counts){
         gene_count += +label_counts[label];
     }
-    label_counts['no label'] = total_count - gene_count;
-}
-
-// checked_labels contain the names of all checked labels, per column
-var checked_labels = [Object.create(null),Object.create(null)];
-function get_checked_labels(){
-    for(var col = 0, number_columns = boxes_ids.length; col < number_columns ; col++){
-        $(boxes_ids[col]).getInputs('checkbox').forEach(function(chckbx){
-            if(chckbx.checked){
-                checked_labels[col][chckbx.name] = 1;
-            }
-        });
-    }
+    label_counts[null_label] = total_count - gene_count;
 }
 
 function filter_links_to_use(){
@@ -489,8 +466,8 @@ function draw_sankey() {
      graph.nodes.forEach(function (d, i) {
        var col = column[d];
        graph.nodes[i] = { name: d.replace(/^\d+_/g,''),
-                          href: urls[col].replace(place_holder,d).replace('GO:','GO-'),
-                          original_flow:flow[col][d]};
+                          href: urls[col].replace(place_holder,d).replace('GO:','GO-')}//,
+                          //original_flow:flow[col][d]};
      });
 
     var sankey = d3.sankey()

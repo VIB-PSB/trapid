@@ -1,4 +1,20 @@
 "use strict";
+
+
+var null_label = 'no label';
+// When no labels are checked we fall back to comparing the last mapping
+var single_mode = false;
+
+document.observe('dom:loaded', function(){
+  process_data();
+  add_checkboxes();
+  fill_in_dropdown_bounds();
+  add_dropdown_limits()
+  
+  draw_sankey(); 
+  
+});
+
 // real_width is used for layout purposes
 var margin = {top: 1, right: 1, bottom: 6, left: 1},
     real_width = calculate_good_width(),    
@@ -13,21 +29,12 @@ function calculate_good_width(){
     return Math.min(window.innerWidth - margin.left - margin.right - 80,Math.log2(first_mapping.length + second_mapping.length)* 200);
 }
 
-// Set the width of the div, so the buttons can float right.
-document.getElementById('sankey').setAttribute("style","display:block;width:"+ real_width.toString()+"px");
-document.getElementById('sankey').style.width=real_width.toString()+"px";
-
 
 ////////// Behaviour of the refine button and fields ////////////
-var min_names = ['left_min','middle_min','right_min'];
-var max_names = ['left_max','middle_max','right_max'];
-
-document.observe('dom:loaded', function(){
-  process_data();
-  fill_in_dropdown_bounds();
-  draw_sankey();
-  
-  /*  These functions disable the choice of a maximum below the set minimum and vice versa. */
+var min_names = ['middle_min','right_min'];
+var max_names = ['middle_max','right_max'];
+function add_dropdown_limits(){
+/*  These functions disable the choice of a maximum below the set minimum and vice versa. */
   for (var i = 0, len = min_names.length; i < len; i++) {
       // .bindAsEventListener is necessary to pass the arguments
       $(min_names[i]).observe('change', 
@@ -37,13 +44,94 @@ document.observe('dom:loaded', function(){
         bound_changed.bindAsEventListener(this, max_names[i],min_names[i])
        );
   }
-});
+}
 
 function bound_changed(event, current, sibling){
     for (var i = 0, len = $(sibling).options.length; i < len; i++) {
         $(sibling).options[i].disabled = i > len - 1- $(current).value;
     }
 }
+
+// checked_labels contain the names of all checked labels
+var checked_labels = Object.create(null);
+var boxes_ids = ['left_boxes'];
+var col_classes = ['left_col','right_col'];
+function add_checkboxes(){
+    names_list.sort();
+
+    boxes_ids.forEach(function(boxes,col){
+        for (var i = 0, len2 = names_list.length; i < len2; ++i) {
+            // Create the checkboxes and labels for them here.
+            var n = names_list[i];
+            var checkbox = document.createElement('input');
+            checkbox.type = "checkbox";
+            checkbox.name = n;
+            checkbox.value = n;
+            checkbox.id = boxes + n;
+            checkbox.onchange = function(event){checkbox_changed(event)};
+
+            var label = document.createElement('label');
+
+            label.htmlFor = checkbox.id;
+            
+            if(n !== null_label){
+                label.appendChild(document.createTextNode(' ' + n + ' [' + label_counts[n] + ' genes] '));
+             } else {
+                // To make only part of the label red & bold, otherwise the span tags are displayed.
+                label.appendChild(document.createTextNode(""));
+                label.innerHTML = ' <span class="bad_label">' + n + '</span> [' + label_counts[n] + ' genes] ';                
+            }
+            
+            
+            var container = $(boxes).select('.' + col_classes[i % 2])[0];
+            container.appendChild(checkbox);// Fix for IE browsers, first append, then check.
+            container.appendChild(label);
+            container.appendChild(document.createElement('br'));
+            if(n === null_label){
+                continue;
+            }
+            // check some values
+            if((i + col) % 2 === 1){
+                checkbox.checked = true;
+                checked_labels[n] = 1
+            } 
+        }
+    });  
+}
+
+
+
+function checkbox_changed(event){
+    disable_everything();
+    var chckbx = event.target;
+   
+    if(chckbx.checked){
+        checked_labels[chckbx.name] = 1;
+    } else {
+        delete checked_labels[chckbx.name];        
+    }        
+    single_mode = Object.keys(checked_labels).length === 0 || Object.keys(checked_labels).length === 0;
+    // Other groupings, other options.
+    update_current_flow(chckbx.name,col,chckbx.checked);
+    
+    fill_in_dropdown();
+    enable_everything();
+}
+
+function disable_everything(){
+    var input_elements = document.getElementsByTagName('input');
+    for(var i = 0, len = input_elements.length; i < len ; i++){
+        input_elements[i].disabled = true;
+    }
+}
+
+function enable_everything(){
+    var input_elements = document.getElementsByTagName('input');
+    for(var i = 0, len = input_elements.length; i < len ; i++){       
+         input_elements[i].disabled = false;       
+    }
+}
+
 
 
 ////////// Sankey vizualization ////////////
@@ -55,12 +143,23 @@ function bound_changed(event, current, sibling){
 var flow = [Object.create(null),Object.create(null),Object.create(null)];
 var maxes = [];
 var collumn = {};
+//var names = Object.create(null); // set of different labels
+var names_list = [];
+
 function process_data(){
     // We assume that the the in/outflow for the middle collum is equal.
     first_mapping.forEach(function (d) {
+        var source = d[0];
+        var target = d[1];
+        var value = +d[2];
+    
+      if(source === null){
+        d[0] = source = null_label;
+      }
       if(d[0] in flow[0]){
         flow[0][d[0]] += +d[2];
       } else {
+        names_list.push(d[0]);
         flow[0][d[0]] = +d[2];
         collumn[d[0]] = 0;
       }
@@ -71,6 +170,7 @@ function process_data(){
         collumn[d[1]] = 1;
       }        
     });
+
     for(var i=0, len=second_mapping.length; i < len; i++){
       var d = second_mapping[i];
       if(d[1] in flow[2]){
@@ -93,13 +193,13 @@ function process_data(){
         maxes.push(current_max);
     }   
 }
-
+//TODO use distributions here
 // Dropdowns offer number_of_choices choices, step_size between them
 function fill_in_dropdown_bounds(){
 
     var number_of_choices = 50;
 
-    for(var i=0, len=maxes.length; i < len; i++){
+    for(var i=0, len=min_names.length; i < len; i++){
         var step_size = Math.round(maxes[i]/number_of_choices);
         for(var j=0; j < number_of_choices - 1; j++){
             $(min_names[i]).options.add(new Option(j*step_size,j))
@@ -129,30 +229,27 @@ function fill_in_dropdown_bounds(){
 function filter_links_to_use(){
     var links = [];
   
-    var min_out_flow = $(min_names[0]).options[$(min_names[0]).selectedIndex].text;
-    var max_out_flow = $(max_names[0]).options[$(max_names[0]).selectedIndex].text;
-    var min_in_flow = $(min_names[1]).options[$(min_names[1]).selectedIndex].text;
-    var max_in_flow = $(max_names[1]).options[$(max_names[1]).selectedIndex].text;
+    var min_in_flow = $(min_names[0]).options[$(min_names[0]).selectedIndex].text;
+    var max_in_flow = $(max_names[0]).options[$(max_names[0]).selectedIndex].text;
     first_mapping.forEach(function(s) { 
         var out_node_flow = +flow[0][s[0]];
         var in_node_flow = +flow[1][s[1]];
-        if(out_node_flow >= min_out_flow &&
-           out_node_flow <= max_out_flow &&
+        if(s[0] in checked_labels &&
            in_node_flow >= min_in_flow &&
            in_node_flow <= max_in_flow ){
             links.push(copy_link(s));
            }
     });
-    min_out_flow = $(min_names[2]).options[$(min_names[2]).selectedIndex].text;
-    max_out_flow = $(max_names[2]).options[$(max_names[2]).selectedIndex].text;
+    var min_out_flow = $(min_names[1]).options[$(min_names[1]).selectedIndex].text;
+    var max_out_flow = $(max_names[1]).options[$(max_names[1]).selectedIndex].text;
     second_mapping.forEach(function(s) { 
         var in_node_flow = +flow[1][s[0]];
         var out_node_flow = +flow[2][s[1]];
         
-        if(out_node_flow >= min_out_flow &&
-           out_node_flow <= max_out_flow &&
-           in_node_flow >= min_in_flow &&
-           in_node_flow <= max_in_flow ){
+        if(out_node_flow >= min_in_flow &&
+           out_node_flow <= max_in_flow &&
+           in_node_flow >= min_out_flow &&
+           in_node_flow <= max_out_flow ){
             links.push(copy_link(s));
            }
         else{
