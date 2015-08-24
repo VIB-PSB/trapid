@@ -1652,7 +1652,7 @@ class ToolsController extends AppController{
     $this->generateSankeyDiagram($rows,$exp_id,array("controller"=>"functional_annotation","action"=>"interpro",$exp_id));
   }
 
-
+  /* Obsolete
   function labelSankey($exp_id=null){
     $exp_id	= mysql_real_escape_string($exp_id);
     parent::check_user_exp($exp_id);	
@@ -1664,37 +1664,29 @@ class ToolsController extends AppController{
     
     $rows	= $this->Transcripts->getLabelToGFMapping($exp_id);
     $this->generateSankeyDiagram($rows,$exp_id,array("controller"=>"labels","action"=>"view",$exp_id));
-  }
+  } */
 
-  function multiSankey($exp_id=null){
-    $exp_id	= mysql_real_escape_string($exp_id);
-    parent::check_user_exp($exp_id);	
-    $exp_info	= $this->Experiments->getDefaultInformation($exp_id); 
-    $this->TrapidUtils->checkPageAccess($exp_info['title'],$exp_info["process_state"],$this->process_states["default"]);       
-    $this->set("exp_info",$exp_info);
-    $this->set("exp_id",$exp_id);  
-    $this->set("titleIsAKeyword", 'Label to GO');
-    $this->set("first_col", 'Label');
-    $this->set("second_col", 'GO');
+  function label_go_gf($exp_id=null){
+    $this->general_set_up($exp_id);
+
+    $this->set("col_names", array('Label','GO','Gene family'));
     $place_holder = '###';
     $this->set("place_holder", $place_holder);
-    $this->set("third_col", 'Gene family');
+    
     $start = microtime(true); 
 
     $labelRows	= $this->TranscriptsLabels->getLabeltoGOMapping($exp_id);
     $GORows	= $this->Transcripts->getGOToGFMapping($exp_id,true); 
+    $this->set('counts',$this->TranscriptsLabels->getLabels($exp_id));
     $stop =    microtime(true);
     echo 'Getting data takes :'.($stop - $start);
+    
     $urls = array(Router::url(array("controller"=>"labels","action"=>"view",$exp_id,$place_holder)),
                   Router::url(array("controller"=>"functional_annotation","action"=>"go",$exp_id,$place_holder)),
                   Router::url(array("controller"=>"gene_family","action"=>"gene_family",$exp_id,$place_holder)) 
     );
-    $this->generateMultiSankeyDiagram($labelRows,$GORows,$exp_id,$urls);  
-  }
-
-  function generateMultiSankeyDiagram($first_rows=null,$second_rows=null,$exp_id=null,$urls=null){
-    $this->set('first_mapping', $first_rows);
-    $this->set('second_mapping', $second_rows);
+    $this->set('first_mapping', $labelRows);
+    $this->set('second_mapping', $GORows);
     $this->set('urls', $urls);
     $this->render('multi_sankey');  
   }
@@ -1714,10 +1706,8 @@ class ToolsController extends AppController{
     
     $this->set("col_names", array('Label','Gene family','Label'));
     $this->set('dropdown_name','Gene families');
-$start = microtime(true); 
 
     $label_rows	= $this->Transcripts->getLabelToGFMapping($exp_id,true);
-    $stop = microtime(true);
     $this->set('mapping', $label_rows);
     $this->set('descriptions', array());
     $this->set('counts',$this->TranscriptsLabels->getLabels($exp_id));

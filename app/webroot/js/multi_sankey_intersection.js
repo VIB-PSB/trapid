@@ -3,11 +3,14 @@
 document.observe('dom:loaded', function(){
   process_data();
   add_checkboxes();
-  get_checked_labels();
   calculate_current_flow();
   fill_in_dropdown();
   draw_sankey();
 });
+
+// This defines if we're comparing 2 groups or just viewing a single side of the diagram
+var single_mode = false;
+var null_label = 'no label'
 
 ////////// Behaviour of the refine button and fields ////////////
 
@@ -16,17 +19,24 @@ function fill_in_dropdown(){
     var choice;
     var total = 0;
     var options = [];
-    for(var i = distribution.length - 1; i > 0; i--){
-        if(typeof distribution[i] != 'undefined' && distribution[i] !== 0){
-            total += distribution[i];
-            if(!choice && total >= 20){
-                choice = i;
+    var used_distribution = single_mode? single_distribution : distribution;
+    for(var i = used_distribution.length - 1; i > 0; i--){
+        if(typeof used_distribution[i] != 'undefined' && used_distribution[i] !== 0){
+            total += used_distribution[i];
+            if(!choice && total > 20){
+                choice = options[options.length - 1][0];
             }
-            options.push([i,total]);          
+            options.push([i,total]);
         }
     }
     // Clear the dropdown before adding new options
     $(dropdown_name).update();
+    
+    // If there are no options, ask the user to select something
+    if(options.length === 0){
+        $(dropdown_name).options.add(new Option("Please select labels.", 0));
+        return;
+    }
     // show options in ascending order
     options.reverse();
 
@@ -34,13 +44,15 @@ function fill_in_dropdown(){
         var option_string = ">=" + options[i][0] + " [" + options[i][1] + " " + dropdown_filter_name+ "]";
         $(dropdown_name).options.add(new Option(option_string, options[i][0]));
     }
-    // Set a decent minimum value
+    // Set a decent minimum value, if choice was never set, there aren't that many  choices so pick the first value.
     if(!choice && options.length > 0){
         choice = options[0][0];
     }
     $(dropdown_name).value = choice;
 }
 
+// checked_labels contain the names of all checked labels, per column
+var checked_labels = [Object.create(null),Object.create(null)];
 var boxes_ids = ['left_boxes','right_boxes'];
 var col_classes = ['left_col','right_col'];
 function add_checkboxes(){
@@ -61,7 +73,7 @@ function add_checkboxes(){
 
             label.htmlFor = checkbox.id;
             
-            if(n !== 'no label'){
+            if(n !== null_label){
                 label.appendChild(document.createTextNode(' ' + n + ' [' + label_counts[n] + ' genes] '));
              } else {
                 // To make only part of the label red & bold, otherwise the span tags are displayed.
@@ -74,12 +86,13 @@ function add_checkboxes(){
             container.appendChild(checkbox);// Fix for IE browsers, first append, then check.
             container.appendChild(label);
             container.appendChild(document.createElement('br'));
-            if(n === 'no label'){
+            if(n === null_label){
                 continue;
             }
             // Make sure other checkboxes are selected in each collumn
             if((i + col) % 2 === 1){
                 checkbox.checked = true;
+                checked_labels[col][n] = 1;
             } else {
                 checkbox.disabled = true;
             }
@@ -103,9 +116,9 @@ function checkbox_changed(event,col){
     if(chckbx.checked){
         checked_labels[col][chckbx.name] = 1;
     } else {
-        delete checked_labels[col][chckbx.name];
+        delete checked_labels[col][chckbx.name];        
     }        
-    
+    single_mode = Object.keys(checked_labels[col]).length === 0 || Object.keys(checked_labels[1 - col]).length === 0;
     // Other groupings, other options.
     update_current_flow(chckbx.name,col,chckbx.checked);
     
@@ -141,6 +154,7 @@ function enable_everything(){
 
 
 var distribution = [];
+var single_distribution = [];
 // current_flow maps middle columns to a pair of values giving the left and right flow
 // {'IPR01':[4,8],'IPR02':[8,0]...}
 var current_flow = Object.create(null);
@@ -173,6 +187,11 @@ function calculate_current_flow(){
             } else {
                 distribution[big]++;
             }
+        }
+        if(!single_distribution[big]) {
+                single_distribution[big] = 1;
+        } else {
+                single_distribution[big]++;
         }
     }
 }
@@ -232,6 +251,15 @@ function update_current_flow(name, col, selected){
                 }
             }
         }
+        // Also update the single_distribution
+        if(before !== after){
+            single_distribution[before]--;
+            if(!single_distribution[after]) {
+               single_distribution[after] = 1;
+            } else {
+               single_distribution[after]++;
+            }   
+        } 
     }   
 }
 
@@ -245,9 +273,9 @@ function update_current_flow(name, col, selected){
 var column = Object.create(null); // Indicates which column a name is in
 var names = Object.create(null); // set of different labels
 var names_list = [];
-var flow = [Object.create(null),Object.create(null)]; // a set with the in/outflow of each node
+//var flow = [Object.create(null),Object.create(null)]; // a set with the in/outflow of each node
 
-var max_flow = 0; //
+
 var reverse_mapping = [];
 var per_label_mapping = Object.create(null); // a practical mapping used to keep track of the distributions
 
@@ -260,7 +288,7 @@ function process_data(){
         var value = +d[2];
         
         if(source  === null){
-            d[0] = source = "no label";
+            d[0] = source = null_label;
         }
         //Fill the list of names
         if(!(source in names)){
@@ -268,71 +296,58 @@ function process_data(){
             names[source] = 1;
             names_list.push(source);
             column[source] = 0;
-            flow[0][source] = +value;            
-        } else {
-            flow[0][source] += +value;
-        }
+        } 
         per_label_mapping[source][target] = value;
 
         // Generate a list of reverse mappings
         reverse_mapping.push([target,source,value]);
-        // Keep track of the flow into each node
-        var current_val = +value;
-        if(target in flow[1]){
-            flow[1][target] += current_val;
-            current_val = flow[1][target];
-        }else {
-            flow[1][target] = +value;
-            column[target] = 1;
-        } 
+        column[target] = 1;
 
-        if(current_val > current_max){
-            current_max = current_val;
-        }
     });
-    max_flow = current_max;
 
+
+    // Counting the number of unlabeled genes
+    // Since label_counts only contains the (label -> count) numbers, we substract the sum of labeled counts from the total transcript count
     var gene_count = 0;
     for(var label in label_counts){
         gene_count += +label_counts[label];
     }
-    label_counts['no label'] = total_count - gene_count;
-}
-
-// checked_labels contain the names of all checked labels, per column
-var checked_labels = [Object.create(null),Object.create(null)];
-function get_checked_labels(){
-    for(var col = 0, number_columns = boxes_ids.length; col < number_columns ; col++){
-        $(boxes_ids[col]).getInputs('checkbox').forEach(function(chckbx){
-            if(chckbx.checked){
-                checked_labels[col][chckbx.name] = 1;
-            }
-        });
-    }
+    label_counts[null_label] = total_count - gene_count;
 }
 
 function filter_links_to_use(){
     var links = [];   
-
     var min_flow = $(dropdown_name).options[$(dropdown_name).selectedIndex].value;
 
-    mapping.forEach(function(s) {
-        var left_flow = current_flow[s[1]] ? current_flow[s[1]][0]: 0;
-        var right_flow = current_flow[s[1]]? current_flow[s[1]][1]: 0;  
-        if(s[0] in checked_labels[0] && 
-          ((right_flow >= min_flow && left_flow > 0) || (left_flow >= min_flow && right_flow > 0))){
-              links.push(copy_link(s));
-        }
-    });
+    if(!single_mode){
+        mapping.forEach(function(s) {
+            var left_flow = current_flow[s[1]] ? current_flow[s[1]][0]: 0;
+            var right_flow = current_flow[s[1]]? current_flow[s[1]][1]: 0;  
+            if(s[0] in checked_labels[0] && 
+              ((right_flow >= min_flow && left_flow > 0) || (left_flow >= min_flow && right_flow > 0))){
+                  links.push(copy_link(s));
+            }
+        });
 
-    reverse_mapping.forEach(function(s) { 
-        var left_flow = current_flow[s[0]]? current_flow[s[0]][0]: 0;
-        var right_flow = current_flow[s[0]]? current_flow[s[0]][1]: 0;  
-        if(s[1] in checked_labels[1] && 
-          ((right_flow >= min_flow && left_flow > 0) || (left_flow >= min_flow && right_flow > 0))){
-              links.push(copy_link(s));
-        }        
-    });
+        reverse_mapping.forEach(function(s) { 
+            var left_flow = current_flow[s[0]]? current_flow[s[0]][0]: 0;
+            var right_flow = current_flow[s[0]]? current_flow[s[0]][1]: 0;  
+            if(s[1] in checked_labels[1] && 
+              ((right_flow >= min_flow && left_flow > 0) || (left_flow >= min_flow && right_flow > 0))){
+                  links.push(copy_link(s));
+            }        
+        });
+    } else {
+        var other_col = Object.keys(checked_labels[0]).length === 0 ? 0:1;
+        var label_col = 1 - other_col;
+        var mapping_to_use = other_col === 0 ? reverse_mapping : mapping;
+        mapping_to_use.forEach(function(s) {
+            var flow = current_flow[s[other_col]]? current_flow[s[other_col]][label_col]: 0;
+            if(s[label_col] in checked_labels[label_col] && flow >= min_flow){
+                links.push(copy_link(s));
+            }
+        });
+    }
     return links;
 }
 
@@ -361,7 +376,7 @@ function normalize_links(links){
                 if(link[0] in divisors){
                     divisors[link[0]] += +link[2];
                 } else {
-                    divisors[link[1]] += link[2];
+                    divisors[link[1]] += +link[2];
                 }                                         
             });
             // Divide by the calculated divisor
@@ -451,8 +466,8 @@ function draw_sankey() {
      graph.nodes.forEach(function (d, i) {
        var col = column[d];
        graph.nodes[i] = { name: d.replace(/^\d+_/g,''),
-                          href: urls[col].replace(place_holder,d).replace('GO:','GO-'),
-                          original_flow:flow[col][d]};
+                          href: urls[col].replace(place_holder,d).replace('GO:','GO-')}//,
+                          //original_flow:flow[col][d]};
      });
 
     var sankey = d3.sankey()
@@ -535,15 +550,13 @@ function draw_sankey() {
 
         // The hovertext varies depending on the normalization used
         function create_link_hovertext(d){
-            var label_node, target_node, arrow;
+            var label_node, target_node, arrow = " → ";
             if( d.source.name in names){
                 label_node = d.source;
                 target_node = d.target;
-                arrow = " → ";
             } else {
                 label_node = d.target;
                 target_node = d.source;
-                arrow = " ← ";
             } 
             var hover_string = label_node.name + arrow + target_node.name + "\n";
             var option = $('normalization').selectedIndex;
@@ -558,12 +571,8 @@ function draw_sankey() {
                     hover_string += parseFloat(d.value).toFixed(2) + '% of genes in ' + label_node.name;
                 break;
                 default:
-                return hover_string;
-
             }
-            return  hover_string ;
- 
+            return  hover_string ; 
         }
-
 }
 
