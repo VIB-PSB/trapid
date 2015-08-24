@@ -2,12 +2,6 @@
 <h2>Experiment</h2>
 <div class="subdiv">
 
-	<?php
-		//subset defined variables, used throughout the code to allow/disallow certain links.
-		$subset1  = true; if($num_subsets>0){$subset1=false;}
-		$subset2  = true; if($num_subsets>1){$subset2=false;}
-	?>
-
 	<div style="float:left;width:1010px;">
 	<h3>Experiment information</h3>
 	<div class="subdiv">		
@@ -171,7 +165,8 @@
 	<?php
 		/*
 		 * Here we add a (pre)processing link which will initiate a precomputation of the GO enrichments for all defined labels.
-		 * This should only be visible on 3 conditions:
+		 * This should only be visible on several conditions:
+		 * 0) Reference DB is PLAZA (no GO for orthomcldb)
 		 * 1) The experiment is in 'finished' state 
 		 * 2) There is at least 1 label defined (--> should be smaller than total dataset, but we won't check for that here).
 		 * 3) The last_edit_date is younger than the go_enrichment_date (or go_enrichment_date is default). --> not necessary. Yeah, users can overcompensate, but hey.
@@ -179,8 +174,8 @@
 		 *	
 		 * The GO enrichment is stored in 1 table, but extra info (go_enrichment_date and go_enrichment_state) are stored in the experiments table.
 		 */ 
-		if($standard_experiment_info['Experiments']['process_state']=="finished" && $subset1){	//(1) and (2)
-			if($standard_experiment_info['Experiments']['go_enrichment_state'] != 'processing'){	//(4)
+		if($standard_experiment_info['Experiments']['process_state']=="finished" && $num_subsets>0){	//(1) and (2)
+			if($standard_experiment_info['Experiments']['enrichment_state'] != 'processing'){	//(4)
 				//$led	= $standard_experiment_info['Experiments']['last_edit_date'];
 				//$ged	= $standard_experiment_info['Experiments']['go_enrichment_date'];
 				//if($ged=="0000-00-00 00:00:00"){
@@ -190,8 +185,8 @@
 				echo "<dl class='standard'>\n";
 				echo "<dt>Process</dt>\n";
 				echo "<dd>";
-				echo $html->link("Perform GO enrichment preprocessing for ".$num_subsets,
-					array("controller"=>"trapid","action"=>"go_enrichment_preprocessing",$exp_id));
+				echo $html->link("Perform GO enrichment preprocessing for ".$num_subsets." labels",
+					array("controller"=>"trapid","action"=>"enrichment_preprocessing",$exp_id));
 				echo "</dd>\n";
 				echo "</dl>\n";
 				echo "</div>\n";
@@ -204,6 +199,7 @@
 	<h3>Toolbox</h3>
 	<div class="subdiv">	
 	<?php 
+
 	if($num_transcripts==0){
 		echo "<span class='disabled'>Disabled prior to transcripts import and processing</span>\n";
 	}
@@ -212,6 +208,9 @@
 		if(isset($max_number_jobs_reached)){
 			echo "<span class='error'>The maximum number of jobs (".MAX_CLUSTER_JOBS.") you can have queued has been reached for this experiment.<br/>Some tools will be unavailable until the currently scheduled jobs have finished or have been deleted.</span><br/><br/>\n";			$disable_cluster_tools = true;
 		}
+
+		$subset1  = true; if($num_subsets>0){$subset1=false;}
+		$subset2  = true; if($num_subsets>1){$subset2=false;}
 		
 		if($num_subsets==0){
 			echo "<span class='warning'>No subsets have been defined. Several options from the 'Explore' section in the toolbox have been disabled</span><br/><br/>\n";
