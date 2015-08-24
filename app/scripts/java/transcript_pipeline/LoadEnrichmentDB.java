@@ -21,13 +21,14 @@ public class LoadEnrichmentDB {
 			
 			String exp_id						= args[4];
 			String data_type					= args[5];
-			String label						= args[6];			
-			String enriched_file_path			= args[7];
+			String label						= args[6];	
+			String max_pvalue					= args[7];
+			String enriched_file_path			= args[8];
 			
 			//create database connection
 			Class.forName("com.mysql.jdbc.Driver");	
 			Connection trapid_db_connection		= le.createDbConnection(trapid_server,trapid_name,trapid_login,trapid_password);
-			String sql							= "INSERT INTO `functional_enrichments`(`experiment_id`,`label`,`data_type`,`identifier`,`is_hidden`,`p_value`,`log_enrichment`,`subset_ratio`) VALUES (?,?,?,?,?,?,?,?) ;";
+			String sql							= "INSERT INTO `functional_enrichments`(`experiment_id`,`label`,`data_type`,`max_p_value`,`identifier`,`is_hidden`,`p_value`,`log_enrichment`,`subset_ratio`) VALUES (?,?,?,?,?,?,?,?) ;";
 			PreparedStatement stmt				= trapid_db_connection.prepareStatement(sql); 			
 			BufferedReader reader				= new BufferedReader(new FileReader(new File(enriched_file_path)));			
 			String s							= reader.readLine();
@@ -41,11 +42,12 @@ public class LoadEnrichmentDB {
 				stmt.setString(1, exp_id);
 				stmt.setString(2, label);
 				stmt.setString(3, data_type);
-				stmt.setString(4, identifier);
-				stmt.setString(5, is_hidden);
-				stmt.setString(6, pvalue);
-				stmt.setString(7, logenrichment);
-				stmt.setString(8, subsetratio);				
+				stmt.setString(4, max_pvalue);	
+				stmt.setString(5, identifier);
+				stmt.setString(6, is_hidden);
+				stmt.setString(7, pvalue);
+				stmt.setString(8, logenrichment);
+				stmt.setString(9, subsetratio);				
 				stmt.execute();				
 				s								= reader.readLine();
 			}			

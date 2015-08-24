@@ -103,13 +103,14 @@ elsif($ARGV[0] eq "delete_previous_results"){
     #extra data
     $par{"data_type"}           = $ARGV[7];
     $par{"label"}               = $ARGV[8];
+    $par{"max_pvalue"}          = $ARGV[9];
 
     #now delete all the entries in the database which correspond with the passed parameters
     my $dsn = qq{DBI:mysql:$par{"trapid_db_name"}:$par{"trapid_db_server"}:$par{"trapid_db_port"}};
     my $dbh = DBI->connect($dsn,$par{"trapid_db_user"},$par{"trapid_db_password"},{RaiseError=>1,AutoCommit=>1});
     if($dbh->err){print STDERR "Cannot create database connection during database delete enrichment procedure.";exit;}	
-    my $dbq			= $dbh->prepare("DELETE FROM `functional_enrichments` WHERE `experiment_id`=? AND `label`=? AND `data_type`=? ");
-    $dbq->execute($par{"experiment_id"},$par{"label"},$par{"data_type"});
+    my $dbq			= $dbh->prepare("DELETE FROM `functional_enrichments` WHERE `experiment_id`=? AND `label`=? AND `data_type`=? AND `max_p_value`=? ");
+    $dbq->execute($par{"experiment_id"},$par{"label"},$par{"data_type"},$par{"max_pvalue"});
     $dbq->finish();
     $dbh->disconnect();
 }
