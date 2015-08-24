@@ -23,10 +23,11 @@ function fill_in_dropdown(){
     for(var i = used_distribution.length - 1; i > 0; i--){
         if(typeof used_distribution[i] != 'undefined' && used_distribution[i] !== 0){
             total += used_distribution[i];
-            if(!choice && total > 20){
-                choice = options[options.length - 1][0];
-            }
             options.push([i,total]);
+            if(!choice && total > 20){
+                choice = options[Math.max(0,options.length - 2)][0];
+            }
+            
         }
     }
     // Clear the dropdown before adding new options

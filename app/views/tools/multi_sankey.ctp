@@ -11,6 +11,7 @@
     echo "\nvar second_mapping = " . json_encode($second_mapping) .";";
     echo "\nvar label_counts = " . json_encode($counts) .";";
     echo "\nvar total_count = " .   $exp_info['transcript_count'] .";";
+    echo "var dropdown_filter_name = " . json_encode($dropdown_names) .';';
     echo "\nvar urls = " . json_encode($urls) .";";
     echo "\nvar place_holder = '" . $place_holder ."';";
     echo '</script>';
@@ -35,7 +36,6 @@
 
     echo $form->create(false, array('id'=> 'middle_refine_form','class'=> 'refine_box'));
     echo $form->input("Minimum $col_names[1] size: ", array('options' => array(), 'id' =>'middle_min'));
-    echo $form->input("Maximum $col_names[1] size: ", array('options' => array(), 'id' =>'middle_max'));
     $options = array(
     'type' => 'button',
     'id' => 'middle_refine',
@@ -47,13 +47,13 @@
     ///////////////// Right refinement /////////////////
     echo $form->create(false, array('id'=> 'right_refine_form','class'=> 'refine_box'));
     echo $form->input("Minimum $col_names[2] size: ", array('options' => array(), 'id' =>'right_min'));
-    echo $form->input("Maximum $col_names[2] size: ", array('options' => array(), 'id' =>'right_max'));
     $options = array(
     'type' => 'button',
     'id' => 'right_refine',
     'onclick' => 'draw_sankey()'
     );
     echo $form->button('  Refine  ',$options);
+    echo $form->input(' normalize links', array('type' => 'checkbox','before' => '<br>'));
     echo $form->end();
 
 

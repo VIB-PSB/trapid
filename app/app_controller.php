@@ -63,7 +63,7 @@ class AppController extends Controller {
     $this->Cookie->name		= "trapid_cookie";
     $this->Cookie->time		= "20000";//should become 7200 after debugging
     //$this->Cookie->path		= "/webtools/trapid/";
-    $this->Cookie->path         = "/testix/trapid_mibel/";
+    $this->Cookie->path         = "/testix/trapid_lagra/";
     $this->Cookie->domain	= "bioinformatics.psb.ugent.be";
     $this->Cookie->key		= "JsjdKO09DJfdfjODWSkdW89Sd";
     $this->Cookie->secure	= false;
