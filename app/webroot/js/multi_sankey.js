@@ -3,20 +3,20 @@
  * TODO: first just filter on the labels and middle amount
  * Stage 2 : create a second distribution to use as the second filter
  * Stage 3 : Get single mode working
- * If logging in doesn't work, change cookie path back!
  */
 
+// label to display instead of null.
 var null_label = 'no label';
-// When no labels are checked we fall back to comparing the last mapping
+// When no labels are checked we fall back to comparing the second mapping
 var single_mode = false;
+// The initial amout of nodes to show
+var nodes_to_show = 20;
 
 document.observe('dom:loaded', function(){
   process_data();
   add_checkboxes();
   calculate_current_flow();
-  fill_in_dropdown_bounds();
-  add_dropdown_limits();
-  
+  fill_in_dropdown();
   
   draw_sankey(); 
   
@@ -38,26 +38,95 @@ function calculate_good_width(){
 
 
 ////////// Behaviour of the refine button and fields ////////////
-var min_names = ['middle_min','right_min'];
-var max_names = ['middle_max','right_max'];
-function add_dropdown_limits(){
-/*  These functions disable the choice of a maximum below the set minimum and vice versa. */
-  for (var i = 0, len = min_names.length; i < len; i++) {
-      // .bindAsEventListener is necessary to pass the arguments
-      $(min_names[i]).observe('change', 
-        bound_changed.bindAsEventListener(this, min_names[i],max_names[i])
-        );        
-      $(max_names[i]).observe('change', 
-        bound_changed.bindAsEventListener(this, max_names[i],min_names[i])
-       );
-  }
+
+var first_dropdown = 'middle_min';
+var second_dropdown = 'right_min';
+function fill_in_dropdown(){
+
+    // Clear the dropdown before adding new options
+    $(first_dropdown).update();
+    
+    // If there are no options, ask the user to select something
+    if(first_options.length === 0){
+        $(first_dropdown).options.add(new Option('Please select labels', 0));
+        return;
+    }
+    // Fill in the dropdown
+    for(var i = 0,len = first_options.length; i < len; i++){
+        var option_string = '>=' + first_options[i][0] + ' [' + first_options[i][1] + ' ' + dropdown_filter_name[0]+ ']';
+        $(first_dropdown).options.add(new Option(option_string, first_options[i][0]));
+    }
+
+    $(first_dropdown).value = first_minimum_size;
+
+
+    // TODO: put first and second in arrays
+
+    // Clear the dropdown before adding new options
+    $(second_dropdown).update();
+    
+    // If there are no options, ask the user to select something
+    if(second_options.length === 0){
+        $(second_dropdown).options.add(new Option('Please select labels', 0));
+        return;
+    }
+    // Fill in the dropdown
+    for(var i = 0,len = second_options.length; i < len; i++){
+        var option_string = '>=' + second_options[i][0] + ' [' + second_options[i][1] + ' ' + dropdown_filter_name[1]+ ']';
+        $(second_dropdown).options.add(new Option(option_string, second_options[i][0]));
+    }
+
+    $(second_dropdown).value = second_minimum_size;
 }
 
-function bound_changed(event, current, sibling){
-    for (var i = 0, len = $(sibling).options.length; i < len; i++) {
-        $(sibling).options[i].disabled = i > len - 1- $(current).value;
+var first_minimum_size;
+var first_options = [];
+function calculate_first_options(){
+    first_options = [];
+    var total = 0;
+
+    var used_distribution = single_mode? single_distribution : distribution;
+    for(var i = used_distribution.length - 1; i > 0; i--){
+        if(typeof used_distribution[i] != 'undefined' && used_distribution[i] !== 0){
+            total += used_distribution[i];
+            if(!first_minimum_size && total > nodes_to_show){
+                first_minimum_size = first_options[first_options.length - 1][0];
+            }
+            first_options.push([i,total]);
+        }
+    }
+    // show options in ascending order
+    first_options.reverse();
+    // Set a decent minimum value, if choice was never set, there aren't that many choices so pick the first value.
+    if(!first_minimum_size && first_options.length > 0){
+        first_minimum_size = first_options[0][0];
     }
 }
+
+var second_minimum_size;
+var second_options = [];
+function calculate_second_options(){
+    second_options = [];
+    var total = 0;
+
+    var used_distribution = second_distribution;
+    for(var i = used_distribution.length - 1; i > 0; i--){
+        if(typeof used_distribution[i] != 'undefined' && used_distribution[i] !== 0){
+            total += used_distribution[i];
+            if(!second_minimum_size && total > nodes_to_show){
+                second_minimum_size = second_options[second_options.length - 1][0];
+            }
+            second_options.push([i,total]);
+        }
+    }
+    // show options in ascending order
+    second_options.reverse();
+    // Set a decent minimum value, if choice was never set, there aren't that many choices so pick the first value.
+    if(!second_minimum_size && second_options.length > 0){
+        second_minimum_size = second_options[0][0];
+    }
+}
+
 
 // checked_labels contain the names of all checked labels
 var checked_labels = Object.create(null);
@@ -71,7 +140,7 @@ function add_checkboxes(){
             // Create the checkboxes and labels for them here.
             var n = names_list[i];
             var checkbox = document.createElement('input');
-            checkbox.type = "checkbox";
+            checkbox.type = 'checkbox';
             checkbox.name = n;
             checkbox.value = n;
             checkbox.id = boxes + n;
@@ -85,27 +154,26 @@ function add_checkboxes(){
                 label.appendChild(document.createTextNode(' ' + n + ' [' + label_counts[n] + ' genes] '));
              } else {
                 // To make only part of the label red & bold, otherwise the span tags are displayed.
-                label.appendChild(document.createTextNode(""));
+                label.appendChild(document.createTextNode(''));
                 label.innerHTML = ' <span class="bad_label">' + n + '</span> [' + label_counts[n] + ' genes] ';                
-            }
-            
+            }            
             
             var container = $(boxes).select('.' + col_classes[i % 2])[0];
             container.appendChild(checkbox);// Fix for IE browsers, first append, then check.
             container.appendChild(label);
             container.appendChild(document.createElement('br'));
+            // Don't check the 'no label' label
             if(n === null_label){
                 continue;
             }
             // check some values
-            if((i + col) % 2 === 1){
+            if((i + col) % 2 === 0){
                 checkbox.checked = true;
                 checked_labels[n] = 1
             } 
         }
     });  
 }
-
 
 
 function checkbox_changed(event){
@@ -125,12 +193,14 @@ function checkbox_changed(event){
     enable_everything();
 }
 
+
 function disable_everything(){
     var input_elements = document.getElementsByTagName('input');
     for(var i = 0, len = input_elements.length; i < len ; i++){
         input_elements[i].disabled = true;
     }
 }
+
 
 function enable_everything(){
     var input_elements = document.getElementsByTagName('input');
@@ -147,51 +217,55 @@ function enable_everything(){
 // The mappings contain their data as [[source1,target1,value1],[source2,target1,value2],...]
 
 // The flow variable contains a with the in/outflow of each node
-var flow = [Object.create(null),Object.create(null),Object.create(null)];
-var maxes = [];
-var collumn = {};
-//var names = Object.create(null); // set of different labels
+var column = {};
+var names = Object.create(null); // set of different labels
 var names_list = [];
+var per_label_mapping = Object.create(null);
+var second_hashmap = Object.create(null);
 
 function process_data(){
-    //TODO update to current situation
     // We assume that the the in/outflow for the middle collum is equal.
     first_mapping.forEach(function (d) {
         var source = d[0];
         var target = d[1];
         var value = +d[2];
     
-      if(source === null){
-        d[0] = source = null_label;
-      }
-      if(d[0] in flow[0]){
-        flow[0][d[0]] += +d[2];
-      } else {
-        names_list.push(d[0]);
-        flow[0][d[0]] = +d[2];
-        collumn[d[0]] = 0;
-      }
-      if(d[1] in flow[1]){
-        flow[1][d[1]] += +d[2];
-      }else {
-        flow[1][d[1]] = +d[2];
-        collumn[d[1]] = 1;
-      }        
+        if(source === null){
+            d[0] = source = null_label;
+        }
+        //Fill the list of names
+        if(!(source in names)){
+            per_label_mapping[source] = Object.create(null);
+            names[source] = 1;
+            names_list.push(source);
+            column[source] = 0;
+        }
+        column[target] = 1;
+        per_label_mapping[source][target] = value;
+    
     });
-
+    var names2 = Object.create(null);
     for(var i=0, len=second_mapping.length; i < len; i++){
-      var d = second_mapping[i];
-      if(d[1] in flow[2]){
-        flow[2][d[1]] += +d[2];
-      } else {
-        flow[2][d[1]] = +d[2];
-        collumn[d[1]] = 2;
-      }
-      
+        var d = second_mapping[i];
+        var source = d[0];
+        var target = d[1];
+        var value = +d[2];
+    
+        if(source === null){
+            d[0] = source = null_label;
+        }
+        //Fill the list of names
+        if(!(source in names2)){
+            second_hashmap[source] = Object.create(null);
+            names2[source] = 1;            
+        } 
+        second_hashmap[source][target] = value; 
+        column[target] = 2;     
     }
 }
 
 var distribution = [];
+var second_distribution = [];
 var single_distribution = [];
 // current_flow maps names to the current inflow, twice
 // [{'IPR01':4,'IPR02':8,...},{'HOM02':4,'HOM03':8,...}]
@@ -199,7 +273,7 @@ var single_distribution = [];
 var first_flow = Object.create(null);
 var second_flow = Object.create(null);
 function calculate_current_flow(){
-    /* caculate the current flow in a waterfall fashion (pun not intended)
+    /* caculate the current flow in a waterfall fashion 
      * First the flow into the first column is determined, we already know the cutoff point
      * So then the second flow is calculated according to the nodes we show at first.
      */
@@ -208,7 +282,7 @@ function calculate_current_flow(){
     for(var label in checked_labels){
         var map = per_label_mapping[label];
         for(var target in map){
-            if(!(target in current_flow)){
+            if(!(target in first_flow)){
                 first_flow[target] = 0;
             }
             first_flow[target] += map[target];
@@ -217,16 +291,39 @@ function calculate_current_flow(){
 
     // Fill the first distribution array
     for(var target in first_flow){
-        // Only take into account the elements that will be shown
         var flow = first_flow[target];
-            if(!distribution[flow]) {
-                distribution[flow] = 1;
-            } else {
-                distribution[flow]++;
+        if(!distribution[flow]) {
+            distribution[flow] = 1;
+        } else {
+            distribution[flow]++;
+        }        
+    }
+    
+    calculate_first_options();
+    
+    // The second flow is calculated here
+    for(var middle_node in first_flow){
+        if(first_flow[middle_node] >= first_minimum_size){
+            var map = second_hashmap[middle_node];
+            for(var target in map){
+                 if(!(target in second_flow)){
+                    second_flow[target] = 0;
+                 }
+                 second_flow[target] += map[target];                    
             }
         }
-    }   
+    }
+    // Fill the second distribution array
+    for(var target in second_flow){
+        var flow = second_flow[target];
+        if(!second_distribution[flow]) {
+            second_distribution[flow] = 1;
+        } else {
+            second_distribution[flow]++;
+        }        
+    }
 
+    calculate_second_options();
 
 }
 
@@ -259,7 +356,7 @@ function update_current_flow(name, col, selected){
          *  - Node wasn't in the distribution and now is, increment the new value 
          */
         if(in_distr_before){
-            if(in_distr_now ){
+            if(in_distr_now){
                 // If the value changed, decrement the previous and increment the current
                 if(before !== after){
                     distribution[before]--;
@@ -293,74 +390,28 @@ function update_current_flow(name, col, selected){
                single_distribution[after] = 1;
             } else {
                single_distribution[after]++;
-            }   
-        } 
-    }   
-}
-
-
-
-//TODO use distributions here
-// Dropdowns offer number_of_choices choices, step_size between them
-function fill_in_dropdown_bounds(){
-
-    var number_of_choices = 50;
-
-    for(var i=0, len=min_names.length; i < len; i++){
-        var step_size = Math.round(maxes[i]/number_of_choices);
-        for(var j=0; j < number_of_choices - 1; j++){
-            $(min_names[i]).options.add(new Option(j*step_size,j))
-            $(max_names[i]).options.add(new Option(maxes[i] - j*step_size,j))
+            }
         }
-        $(min_names[i]).options.add(new Option(maxes[i],number_of_choices - 1));
-        
-        // Also select a hopefully good value here.
-        switch(i){
-            case 0:
-                $(min_names[i]).value = Math.round(Math.log(first_mapping.length));
-                break;
-            case 1:
-                $(min_names[i]).value = Math.round(Math.log(first_mapping.length + second_mapping.length));
-                break;
-            case 2:
-                $(min_names[i]).value = Math.round(Math.log(second_mapping.length));
-                break;
-             default:
-                $(min_names[i]).value = 0;
-        }
-        $(max_names[i]).options.add(new Option(0,number_of_choices - 1));
     }
 }
 
-
 function filter_links_to_use(){
     var links = [];
-  
-    var min_in_flow = $(min_names[0]).options[$(min_names[0]).selectedIndex].text;
-    var max_in_flow = $(max_names[0]).options[$(max_names[0]).selectedIndex].text;
+    var min_flow = $(first_dropdown).options[$(first_dropdown).selectedIndex].value;
+
     first_mapping.forEach(function(s) { 
-        var out_node_flow = +flow[0][s[0]];
-        var in_node_flow = +flow[1][s[1]];
-        if(s[0] in checked_labels &&
-           in_node_flow >= min_in_flow &&
-           in_node_flow <= max_in_flow ){
+        var flow = first_flow[s[1]] ? first_flow[s[1]]: 0;
+        if(s[0] in checked_labels && flow >= min_flow){
             links.push(copy_link(s));
+            console.log(s[0],s[1], flow);
            }
     });
-    var min_out_flow = $(min_names[1]).options[$(min_names[1]).selectedIndex].text;
-    var max_out_flow = $(max_names[1]).options[$(max_names[1]).selectedIndex].text;
+    var second_min_flow = $(second_dropdown).options[$(second_dropdown).selectedIndex].value;
     second_mapping.forEach(function(s) { 
-        var in_node_flow = +flow[1][s[0]];
-        var out_node_flow = +flow[2][s[1]];
-        
-        if(out_node_flow >= min_in_flow &&
-           out_node_flow <= max_in_flow &&
-           in_node_flow >= min_out_flow &&
-           in_node_flow <= max_out_flow ){
+        var flow = second_flow[s[1]] ? second_flow[s[1]]: 0;
+        if(flow >= second_min_flow){
             links.push(copy_link(s));
            }
-        else{
-        }
     });    
     return links;
 }
@@ -415,10 +466,10 @@ function draw_sankey() {
      //now loop through each nodes to make nodes an array of objects
      // rather than an array of strings
      graph.nodes.forEach(function (d, i) {
-       var col = collumn[d];
+       var col = column[d];
        graph.nodes[i] = { name: d.replace(/^\d+_/g,''),
-                          href: urls[col].replace(place_holder,d),
-                          original_flow:flow[col][d] };
+                          href: urls[col].replace(place_holder,d)};//,
+                         // original_flow:flow[col][d] };
      });
 
  
@@ -489,6 +540,5 @@ function draw_sankey() {
 	        sankey.relayout();
 	        link.attr("d", path);
         }
-
 }
 

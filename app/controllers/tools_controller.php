@@ -1670,6 +1670,7 @@ class ToolsController extends AppController{
     $this->general_set_up($exp_id);
 
     $this->set("col_names", array('Label','GO','Gene family'));
+    $this->set('dropdown_names',array('Ontologies', 'Gene families'));
     $place_holder = '###';
     $this->set("place_holder", $place_holder);
     
