@@ -53,6 +53,7 @@
     'onclick' => 'draw_sankey()'
     );
     echo $form->button('  Refine  ',$options);
+    echo $form->input(' normalize links', array('type' => 'checkbox','before' => '<br>'));
     echo $form->end();
 
 

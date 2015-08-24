@@ -83,16 +83,18 @@ var first_minimum_size;
 var first_options = [];
 function calculate_first_options(){
     first_options = [];
+    first_minimum_size = undefined;
     var total = 0;
 
     var used_distribution = single_mode? single_distribution : distribution;
     for(var i = used_distribution.length - 1; i > 0; i--){
         if(typeof used_distribution[i] != 'undefined' && used_distribution[i] !== 0){
             total += used_distribution[i];
-            if(!first_minimum_size && total > nodes_to_show){
-                first_minimum_size = first_options[first_options.length - 1][0];
-            }
             first_options.push([i,total]);
+            if(!first_minimum_size && total > nodes_to_show){
+                first_minimum_size = first_options[Math.max(0,first_options.length - 2)][0];
+            }
+            
         }
     }
     // show options in ascending order
@@ -107,16 +109,18 @@ var second_minimum_size;
 var second_options = [];
 function calculate_second_options(){
     second_options = [];
+    second_minimum_size = undefined;
     var total = 0;
 
     var used_distribution = second_distribution;
     for(var i = used_distribution.length - 1; i > 0; i--){
         if(typeof used_distribution[i] != 'undefined' && used_distribution[i] !== 0){
             total += used_distribution[i];
-            if(!second_minimum_size && total > nodes_to_show){
-                second_minimum_size = second_options[second_options.length - 1][0];
-            }
             second_options.push([i,total]);
+            if(!second_minimum_size && total > nodes_to_show){
+                second_minimum_size = second_options[Math.max(0,second_options.length - 2)][0];
+            }
+            
         }
     }
     // show options in ascending order
@@ -130,49 +134,48 @@ function calculate_second_options(){
 
 // checked_labels contain the names of all checked labels
 var checked_labels = Object.create(null);
-var boxes_ids = ['left_boxes'];
+var boxes = 'left_boxes';
 var col_classes = ['left_col','right_col'];
 function add_checkboxes(){
     names_list.sort();
 
-    boxes_ids.forEach(function(boxes,col){
-        for (var i = 0, len2 = names_list.length; i < len2; ++i) {
-            // Create the checkboxes and labels for them here.
-            var n = names_list[i];
-            var checkbox = document.createElement('input');
-            checkbox.type = 'checkbox';
-            checkbox.name = n;
-            checkbox.value = n;
-            checkbox.id = boxes + n;
-            checkbox.onchange = function(event){checkbox_changed(event)};
+    for (var i = 0, len = names_list.length; i < len; ++i) {
+        // Create the checkboxes and labels for them here.
+        var n = names_list[i];
+        var checkbox = document.createElement('input');
+        checkbox.type = 'checkbox';
+        checkbox.name = n;
+        checkbox.value = n;
+        checkbox.id = boxes + n;
+        checkbox.onchange = function(event){checkbox_changed(event)};
 
-            var label = document.createElement('label');
+        var label = document.createElement('label');
 
-            label.htmlFor = checkbox.id;
-            
-            if(n !== null_label){
-                label.appendChild(document.createTextNode(' ' + n + ' [' + label_counts[n] + ' genes] '));
-             } else {
-                // To make only part of the label red & bold, otherwise the span tags are displayed.
-                label.appendChild(document.createTextNode(''));
-                label.innerHTML = ' <span class="bad_label">' + n + '</span> [' + label_counts[n] + ' genes] ';                
-            }            
-            
-            var container = $(boxes).select('.' + col_classes[i % 2])[0];
-            container.appendChild(checkbox);// Fix for IE browsers, first append, then check.
-            container.appendChild(label);
-            container.appendChild(document.createElement('br'));
-            // Don't check the 'no label' label
-            if(n === null_label){
-                continue;
-            }
-            // check some values
-            if((i + col) % 2 === 0){
-                checkbox.checked = true;
-                checked_labels[n] = 1
-            } 
+        label.htmlFor = checkbox.id;
+        
+        if(n !== null_label){
+            label.appendChild(document.createTextNode(' ' + n + ' [' + label_counts[n] + ' genes] '));
+         } else {
+            // To make only part of the label red & bold
+            label.appendChild(document.createTextNode(''));
+            // We can't just create a textNode with the text we want because this displays the span tags as text
+            label.innerHTML = ' <span class="bad_label">' + n + '</span> [' + label_counts[n] + ' genes] ';                
+        }            
+        
+        var container = $(boxes).select('.' + col_classes[i % 2])[0];
+        container.appendChild(checkbox);// Fix for IE browsers, first append, then check.
+        container.appendChild(label);
+        container.appendChild(document.createElement('br'));
+        // Don't check the 'no label' label
+        if(n === null_label){
+            continue;
         }
-    });  
+        // check some values
+        if(i % 2 === 0){
+            checkbox.checked = true;
+            checked_labels[n] = 1
+        } 
+    }
 }
 
 
@@ -185,9 +188,10 @@ function checkbox_changed(event){
     } else {
         delete checked_labels[chckbx.name];        
     }        
-    single_mode = Object.keys(checked_labels).length === 0 || Object.keys(checked_labels).length === 0;
+    single_mode = Object.keys(checked_labels).length === 0;
     // Other groupings, other options.
-    update_current_flow(chckbx.name,col,chckbx.checked);
+    update_current_flow(chckbx.name,chckbx.checked);
+    
     
     fill_in_dropdown();
     enable_everything();
@@ -208,7 +212,6 @@ function enable_everything(){
          input_elements[i].disabled = false;       
     }
 }
-
 
 
 ////////// Sankey vizualization ////////////
@@ -327,63 +330,43 @@ function calculate_current_flow(){
 
 }
 
-function update_current_flow(name, col, selected){
-//TODO update to current situation
+function update_current_flow(name, selected){
     var map = per_label_mapping[name];
+    var changed_nodes = Object.create(null);
     for(var target in map){
         // The target might not have been added yet
-        if(! (target in current_flow)){
-            current_flow[target] = [0,0];
+        if(! (target in first_flow)){
+            first_flow[target] = 0;
         }
-        var before = Math.max(current_flow[target][0],current_flow[target][1]);
-        var in_distr_before = current_flow[target][0] > 0 && current_flow[target][1] > 0;
-        // Update current_flow
+        var flow_before = first_flow[target];
+        if(flow_before === 0){
+            changed_nodes[target] = 1;
+        }
+        
+        // Update the first flow
         if(selected){
             // Add the flow when something new is checked
-            current_flow[target][col] += map[target];
+            first_flow[target] += map[target];
         } else {
             // Remove it when the label is deselected
-            current_flow[target][col] -= map[target];
+            first_flow[target] -= map[target];
         }
 
-        var after = Math.max(current_flow[target][0],current_flow[target][1]);
-        var in_distr_now = current_flow[target][0] > 0 && current_flow[target][1] > 0;
-        /* Update the distribution if it changed
-         * if this node wasn't part of the distribution and still isn't, or it was and the value didn't change the distribution stays the same
-         *  The distribution changes in 3 cases
-         *  - Node was in the distribution and isn't anymore -> The previous value is decremented
-         *  - Node was in the distribution and still is, with a different value, the previous gets decremented, the current one incremented
-         *  - Node wasn't in the distribution and now is, increment the new value 
-         */
-        if(in_distr_before){
-            if(in_distr_now){
-                // If the value changed, decrement the previous and increment the current
-                if(before !== after){
-                    distribution[before]--;
-                    // Check if it exists, create the value or increment it
-                    if(!distribution[after]) {
-                       distribution[after] = 1;
-                    } else {
-                        distribution[after]++;
-                    }
-                } else {
-                    // The value stayed the same, so do nothing.
-                }
-            } else {
-                // Was in the distribution before, not anymore, so decrement the previous
-                distribution[before]--;
-            }
-        } else {
-             if(in_distr_now){
-                // Check if it exists, create the value or increment it
-                if(!distribution[after]) {
-                   distribution[after] = 1;
-                } else {
-                    distribution[after]++;
-                }
-            }
+        var flow_after = first_flow[target];
+        if(flow_after === 0){
+            changed_nodes[target] = 1;
         }
-        // Also update the single_distribution
+
+        // decrement the previous and increment the current
+        distribution[flow_before]--;
+        // Check if it exists, create the value or increment it
+        if(!distribution[flow_after]) {
+           distribution[flow_after] = 1;
+        } else {
+            distribution[flow_after]++;
+        }
+            
+        /*// Also update the single_distribution
         if(before !== after){
             single_distribution[before]--;
             if(!single_distribution[after]) {
@@ -391,25 +374,57 @@ function update_current_flow(name, col, selected){
             } else {
                single_distribution[after]++;
             }
+        }*/
+    }
+    calculate_first_options();
+    for(var node in changed_nodes){
+        var map = second_hashmap[node];
+        for(var target in map){
+            // The target might not have been added yet
+            if(! (target in second_flow)){
+                second_flow[target] = 0;
+            }
+            var flow_before = first_flow[target];
+              
+            // Update the first flow
+            if(selected){
+                // Add the flow when something new is checked
+                second_flow[target] += map[target];
+            } else {
+                // Remove it when the label is deselected
+                second_flow[target] -= map[target];
+            }
+
+            var flow_after = second_flow[target];
+
+            // decrement the previous and increment the current
+            second_distribution[flow_before]--;
+            // Check if it exists, create the value or increment it
+            if(!second_distribution[flow_after]) {
+               second_distribution[flow_after] = 1;
+            } else {
+                second_distribution[flow_after]++;
+            }
         }
     }
+    calculate_second_options(); 
 }
 
 function filter_links_to_use(){
     var links = [];
     var min_flow = $(first_dropdown).options[$(first_dropdown).selectedIndex].value;
-
+    var good_middle_nodes = Object.create(null);
     first_mapping.forEach(function(s) { 
         var flow = first_flow[s[1]] ? first_flow[s[1]]: 0;
         if(s[0] in checked_labels && flow >= min_flow){
             links.push(copy_link(s));
-            console.log(s[0],s[1], flow);
-           }
+            good_middle_nodes[s[1]] = 1; 
+            }
     });
     var second_min_flow = $(second_dropdown).options[$(second_dropdown).selectedIndex].value;
     second_mapping.forEach(function(s) { 
         var flow = second_flow[s[1]] ? second_flow[s[1]]: 0;
-        if(flow >= second_min_flow){
+        if(s[0] in good_middle_nodes && flow >= second_min_flow){
             links.push(copy_link(s));
            }
     });    
