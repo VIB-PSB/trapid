@@ -82,6 +82,8 @@ class TrapidController extends AppController{
   }
 
 
+
+
   function manage_jobs($exp_id=null){
     if(!$exp_id){$this->redirect(array("controller"=>"trapid","action"=>"experiments"));}
     $exp_id	= mysql_real_escape_string($exp_id);
@@ -1095,6 +1097,75 @@ class TrapidController extends AppController{
    * 
    ********************************************************************************************************/
 
+
+
+  function enrichment_preprocessing($exp_id=null){
+    $exp_id	= mysql_real_escape_string($exp_id);
+    parent::check_user_exp($exp_id);	
+    $exp_info	= $this->Experiments->getDefaultInformation($exp_id); 
+    //important checks: is the experiment in finished state and is the enrichment_state not in 'processing'
+    if($exp_info['process_state']!="finished" || $exp_info['enrichment_state']=='processing'){
+      $this->redirect(array("controller"=>"trapid","action"=>"experiment",$exp_id));
+    }
+    $this->set("exp_info",$exp_info);
+    $this->set("exp_id",$exp_id); 
+    $all_subsets	= $this->TranscriptsLabels->getLabels($exp_id);  
+    $this->set("num_subsets",count($all_subsets));
+
+    //ok, there are no actual settings: the p-value cutoff is set at the lowest, and these results are stored
+    //if other p-values are needed, they can be extracted with filtering.
+    $highest_pvalue	= 0.1;
+    $possible_types	= array("go"=>"GO","ipr"=>"Protein domain");  
+    $this->set("possible_types",$possible_types);
+
+    //continue only after the user has selected the correct data type for which the enrichments need to be computed.
+    if($_POST){      
+      $type		= null;
+      if(array_key_exists("type",$_POST)){$type	= mysql_real_escape_string($_POST['type']);}
+      if(!array_key_exists($type,$possible_types)){$this->redirect(array("controller"=>"trapid","action"=>"enrichment_preprocessing",$exp_id));}
+      //parameters are ok. we can now proceed with the actual pipeline organization.    
+      //create shell file for submission to the web-cluster.
+      //Shell file contains both the necessary module load statements
+
+      $qsub_file 	= $this->TrapidUtils->create_qsub_script($exp_id);
+      $shell_file	= $this->TrapidUtils->create_shell_file_enrichment_preprocessing($exp_id,$type,$exp_info['used_plaza_database'],$highest_pvalue,$all_subsets);
+      if($shell_file == null || $qsub_file == null ){$this->set("error","problem creating program files");return;}
+      
+      //ok, now we submit this program to the web-cluster
+      $tmp_dir	= TMP."experiment_data/".$exp_id."/";
+      $qsub_out	= $tmp_dir."/".$type."_enrichment_preprocessing.out";
+      $qsub_err	= $tmp_dir."/".$type."_enrichment_preprocessing.err";     
+      if(file_exists($qsub_out)){unlink($qsub_out);}
+      if(file_exists($qsub_err)){unlink($qsub_err);}
+
+      $output   = array();
+      $command  = "sh $qsub_file -q medium -o $qsub_out -e $qsub_err $shell_file";
+      exec($command,$output);
+      $job_id	= $this->TrapidUtils->getClusterJobId($output);
+
+      //indicate int the database the new job-id
+      $this->ExperimentJobs->addJob($exp_id,$job_id,"medium","enrichment_preprocessing");
+      
+      //indicate in the database that the current experiments enrichment_state is "processing"
+      $this->Experiments->updateAll(array("enrichment_state"=>"'processing'"),array("experiment_id"=>$exp_id));
+	
+      
+
+      $this->ExperimentLog->addAction($exp_id,"enrichment_preprocessing","");
+      $this->ExperimentLog->addAction($exp_id,"enrichment_preprocessing","options",1);		
+      $this->ExperimentLog->addAction($exp_id,"enrichment_preprocessing","data_type=".$type,2); 
+      $this->ExperimentLog->addAction($exp_id,"enrichment_preprocessing","start",1); 	
+
+      //finally, redirect
+      $this->redirect(array("controller"=>"trapid","action"=>"experiments"));
+    
+
+    }
+
+  }
+
+
+
   function initial_processing($exp_id=null){   
     $exp_id	= mysql_real_escape_string($exp_id);
     parent::check_user_exp($exp_id);	
@@ -1213,7 +1284,7 @@ class TrapidController extends AppController{
       if(file_exists($qsub_err)){unlink($qsub_err);}
       
       $output   = array();
-      $command  = "sh $qsub_file -q medium -o $qsub_out -e $qsub_err $shell_file";
+      $command  = "sh $qsub_file -q long -o $qsub_out -e $qsub_err $shell_file";
       exec($command,$output);
       $job_id	= $this->TrapidUtils->getClusterJobId($output);
       
