@@ -1129,8 +1129,8 @@ class TrapidController extends AppController{
 
       $qsub_file 	= $this->TrapidUtils->create_qsub_script($exp_id);
       $shell_file	= $this->TrapidUtils->create_shell_file_enrichment_preprocessing($exp_id,$type,$exp_info['used_plaza_database'],$possible_pvalues,$all_subsets);
-      if($shell_file == null || $qsub_file == null ){$this->set("error","problem creating program files");return;}
-      
+      if($shell_file == null || $qsub_file == null ){$this->set("error","problem creating program files");return;}          
+
       //ok, now we submit this program to the web-cluster
       $tmp_dir	= TMP."experiment_data/".$exp_id."/";
       $qsub_out	= $tmp_dir."/".$type."_enrichment_preprocessing.out";

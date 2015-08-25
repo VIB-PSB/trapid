@@ -28,7 +28,7 @@ public class LoadEnrichmentDB {
 			//create database connection
 			Class.forName("com.mysql.jdbc.Driver");	
 			Connection trapid_db_connection		= le.createDbConnection(trapid_server,trapid_name,trapid_login,trapid_password);
-			String sql							= "INSERT INTO `functional_enrichments`(`experiment_id`,`label`,`data_type`,`max_p_value`,`identifier`,`is_hidden`,`p_value`,`log_enrichment`,`subset_ratio`) VALUES (?,?,?,?,?,?,?,?) ;";
+			String sql							= "INSERT INTO `functional_enrichments`(`experiment_id`,`label`,`data_type`,`max_p_value`,`identifier`,`is_hidden`,`p_value`,`log_enrichment`,`subset_ratio`) VALUES (?,?,?,?,?,?,?,?,?) ;";
 			PreparedStatement stmt				= trapid_db_connection.prepareStatement(sql); 			
 			BufferedReader reader				= new BufferedReader(new FileReader(new File(enriched_file_path)));			
 			String s							= reader.readLine();

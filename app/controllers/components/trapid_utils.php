@@ -640,16 +640,16 @@ class TrapidUtilsComponent extends Object{
 	    $enrich_file_path_base	= TMP."experiment_data/".$exp_id."/".$data_type."_enrichment_".$exp_id."_".$subset;
 	    $enrich_file_paths		= array();
 	    if(is_array($pvalue)){
-	      foreach($pvalue as $pval){
-		$enrich_file_paths[$pval] = $enrich_file_path_base."_".$pval.".txt";
+	      foreach($pvalue as $pval){	       
+		$enrich_file_paths["".$pval] = $enrich_file_path_base."_".$pval.".txt";
 	      }
 	    }
 	    else{
-	      $enrich_file_paths[$pvalue] = $enrich_file_path_base."_".$pvalue.".txt";
-	    }		
+	      $enrich_file_paths["".$pvalue] = $enrich_file_path_base."_".$pvalue.".txt";
+	    }	   
 	    $subset_filepaths[] 	= array("subset"=>$subset,"data"=>$subset_file_path,"result"=>$enrich_file_paths);
 	  }
-	}
+	}	
 	
         //create the shell file
 	$shell_file		= $tmp_dir.$data_type."_enrichmentpreprocessing_".$exp_id.".sh";
@@ -702,11 +702,11 @@ class TrapidUtilsComponent extends Object{
 	for($i=0;$i<count($subset_filepaths);$i++){
 	  if(is_array($pvalue)){
 	    foreach($pvalue as $pval){
-	      fwrite($fh,"java -cp ".$java_location.".:..:".$java_location."mysql.jar ".$java_program_enrichment." ".implode(" ",$java_params_enrichment)." ".$background_frequency_file_path." ".$subset_filepaths[$i]['data']." ".$subset_filepaths[$i]['result'][$pval]." ".$pval." false \n");
+	      fwrite($fh,"java -cp ".$java_location.".:..:".$java_location."mysql.jar ".$java_program_enrichment." ".implode(" ",$java_params_enrichment)." ".$background_frequency_file_path." ".$subset_filepaths[$i]['data']." ".$subset_filepaths[$i]['result']["".$pval]." ".$pval." false \n");
 	    }
 	  }
 	  else{
-	    fwrite($fh,"java -cp ".$java_location.".:..:".$java_location."mysql.jar ".$java_program_enrichment." ".implode(" ",$java_params_enrichment)." ".$background_frequency_file_path." ".$subset_filepaths[$i]['data']." ".$subset_filepaths[$i]['result'][$pvalue]." ".$pvalue." false \n");
+	    fwrite($fh,"java -cp ".$java_location.".:..:".$java_location."mysql.jar ".$java_program_enrichment." ".implode(" ",$java_params_enrichment)." ".$background_frequency_file_path." ".$subset_filepaths[$i]['data']." ".$subset_filepaths[$i]['result']["".$pvalue]." ".$pvalue." false \n");
 	  }
 	}
 
@@ -715,11 +715,11 @@ class TrapidUtilsComponent extends Object{
 	for($i=0;$i<count($subset_filepaths);$i++){
 	  if(is_array($pvalue)){
 	    foreach($pvalue as $pval){
-	      fwrite($fh,"java -cp ".$java_location.".:..:".$java_location."mysql.jar ".$java_program_loaddb." ".implode(" ",$java_params_loaddb)." ".$subset_filepaths[$i]['subset']." ".$pval." ".$subset_filepaths[$i]['result'][$pval]."\n");
+	      fwrite($fh,"java -cp ".$java_location.".:..:".$java_location."mysql.jar ".$java_program_loaddb." ".implode(" ",$java_params_loaddb)." ".$subset_filepaths[$i]['subset']." ".$pval." ".$subset_filepaths[$i]['result']["".$pval]."\n");
 	    }
 	  }
 	  else{
-	    fwrite($fh,"java -cp ".$java_location.".:..:".$java_location."mysql.jar ".$java_program_loaddb." ".implode(" ",$java_params_loaddb)." ".$subset_filepaths[$i]['subset']." ".$pvalue." ".$subset_filepaths[$i]['result'][$pvalue]."\n");
+	    fwrite($fh,"java -cp ".$java_location.".:..:".$java_location."mysql.jar ".$java_program_loaddb." ".implode(" ",$java_params_loaddb)." ".$subset_filepaths[$i]['subset']." ".$pvalue." ".$subset_filepaths[$i]['result']["".$pvalue]."\n");
 	  }
 	}
 
