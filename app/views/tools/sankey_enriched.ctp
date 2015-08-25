@@ -37,9 +37,9 @@
     ///////////////// Middle refinement /////////////////
 
     echo $form->create(false, array('id'=> 'middle_refine_form','class'=> 'refine_box'));
-    echo $form->input('type: ', array('options' => array('All','MF','BP','CC'), 'id' =>'type','onchange' => 'middle_filter(e)'));
-    echo $form->input('p value: ', array('options' => array(), 'id' => 'pvalue','onchange' => 'middle_filter(e)'));
-    echo $form->input(' show hidden', array('type' => 'checkbox', 'id' => 'hidden','onchange' => 'middle_filter(e)'));
+    echo $form->input('type: ', array('options' => array('All','MF','BP','CC'), 'id' =>'type','onchange' => 'middle_filter()'));
+    echo $form->input('p value: ', array('options' => array(), 'id' => 'pvalue','onchange' => 'middle_filter()'));
+    echo $form->input(' show hidden', array('type' => 'checkbox', 'id' => 'hidden','onchange' => 'middle_filter()'));
     echo $form->input(' normalize links', array('type' => 'checkbox', 'id' => 'normalize'));
 
     $options = array(

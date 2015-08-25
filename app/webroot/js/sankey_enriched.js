@@ -17,6 +17,13 @@ var names = Object.create(null); // set of different labels
 var names_list = [];
 var per_label_mapping = Object.create(null);
 var second_hashmap = Object.create(null);
+
+
+// Set of nodes in the middle collumn, as determined by the left checkboxes and the middle filters
+var middle_nodes = Object.create(null);
+// flow from middle nodes to the right collumn {1_HOM000248: 50, 1_HOM001148: 108, 1_HOM004574: 21, 1_HOM000586: 84, 1_HOM002222: 60…}
+var flow = Object.create(null);
+// set of p values to fill the dropdown with.
 var p_values = Object.create(null);
 var minimum_size;
 var options = [];
@@ -25,7 +32,7 @@ var options = [];
 var hidden_id = 'hidden';
 var type_id = 'type';
 var p_val_id = 'pvalue';
-var dropdown = 'right_min';
+var dropdown_id = 'right_min';
 
 var boxes = 'left_boxes';
 var col_classes = ['left_col','right_col'];
@@ -48,7 +55,7 @@ document.observe('dom:loaded', function(){
   process_data();
   add_checkboxes();
   fill_in_p_values();
-  calculate_current_flow();
+  calculate_initial_flow();
   fill_in_dropdown();
   
   draw_sankey(); 
@@ -80,24 +87,25 @@ function hide_type(){
 
 function fill_in_dropdown(){
     // Clear the dropdown before adding new options
-    $(dropdown).update();
+    $(dropdown_id).update();
     
     // If there are no options, ask the user to select something
-    if(second_options.length === 0){
+    if(options.length === 0){
         $(dropdown_id).options.add(new Option('Please select labels', 0));
         return;
     }
     // Fill in the dropdown
-    for(var i = 0,len = second_options.length; i < len; i++){
-        var option_string = '>=' + second_options[i][0] + ' [' + second_options[i][1] + ' ' + dropdown_filter_name[1]+ ']';
-        $(dropdown_id).options.add(new Option(option_string, second_options[i][0]));
+    for(var i = 0,len = options.length; i < len; i++){
+        var option_string = '>=' + options[i][0] + ' [' + options[i][1] + ' ' + dropdown_filter_name[1]+ ']';
+        $(dropdown_id).options.add(new Option(option_string, options[i][0]));
     }
 
-    $(dropdown_id).value = second_minimum_size;
+    $(dropdown_id).value = minimum_size;
 }
 
 
 function fill_in_p_values(){
+    // TODO test with more p-values
     var list = Object.keys(p_values);
     list.sort();
     for(var i = 0, len = list.length; i < len; i++){
@@ -142,7 +150,7 @@ function add_checkboxes(){
         checkbox.name = n;
         checkbox.value = n;
         checkbox.id = boxes + n;
-        checkbox.onchange = function(event){checkbox_changed(event)};
+        checkbox.onchange = function(event){checkbox_changed(event);};
 
         var label = document.createElement('label');
 
@@ -168,7 +176,7 @@ function add_checkboxes(){
         // check some values
         if(i % 2 === 0){
             checkbox.checked = true;
-            checked_labels[n] = 1
+            checked_labels[n] = 1;
         } 
     }
 }
@@ -185,11 +193,20 @@ function checkbox_changed(event){
     }        
     single_mode = Object.keys(checked_labels).length === 0;
     // Other groupings, other options.
-    update_current_flow(chckbx.name,chckbx.checked);
-    
-    
+    update_middle_nodes();
+
     fill_in_dropdown();
     enable_everything();
+}
+
+function middle_filter(){
+    disable_everything();
+    update_middle_nodes();
+    enable_everything();
+}
+
+function update_middle_nodes(){
+    calculate_initial_flow();
 }
 
 
@@ -226,7 +243,7 @@ function process_data(){
         }
         //Fill the list of names
         if(!(source in names)){
-            per_label_mapping[source] = Object.create(null);
+            per_label_mapping[source] = [];
             names[source] = 1;
             names_list.push(source);
             column[source] = 0;
@@ -235,9 +252,9 @@ function process_data(){
         p_values[p_val] = 1;
 
         column[target] = 1;
-        per_label_mapping[source][target] = value;
-    
+        per_label_mapping[source].push(d);    
     });
+
     var names2 = Object.create(null);
     for(var i=0, len=second_mapping.length; i < len; i++){
         var d = second_mapping[i];
@@ -258,79 +275,68 @@ function process_data(){
     }
 }
 
-var middle_nodes = Object.create(null);
 function determine_middle_nodes(){
-    for(var label in checked_labels){
-        var map = per_label_mapping[label];
-        for(var target in map){
+    middle_nodes = Object.create(null);
+    var p_value = $(p_val_id).options[$(p_val_id).selectedIndex].text;
+    var type = $(type_id).options[$(type_id).selectedIndex].text;
+    var show_hidden = $(hidden_id).checked;
+    first_mapping.forEach(function(s) {
+        if(s[0] in checked_labels && p_value === s[4]){
+            // If it's a hidden link only show it when show hidden is true.
+            if(!show_hidden && s[3] === "1"){
+                return;
+            }
+            // GO can filter on type, it it's not all, it has to match the selected type
+            if(GO && type !== "All" && type !== descriptions[s[1]].type){
+                return;
+            }
+            middle_nodes[s[1]] = 1; 
+        }
+    });
+    console.log(Object.keys(middle_nodes).length);
+}   
+    // Using precomputed mapping is probably faster, if necessary
+    /*for(var label in checked_labels){
+        var targets = per_label_mapping[label];
+        for(var i= 0, len = targets. length; i < len ; i++){
+            s = target
             middle_nodes[target] = 1;
         }
-    }
-}
+    } */
+
 
 var distribution = [];
-var second_distribution = [];
 var single_distribution = [];
 // current_flow maps names to the current inflow, twice
 // [{'IPR01':4,'IPR02':8,...},{'HOM02':4,'HOM03':8,...}]
 
-var first_flow = Object.create(null);
-var second_flow = Object.create(null);
-function calculate_current_flow(){
-    /* caculate the current flow in a waterfall fashion 
-     * First the flow into the first column is determined, we already know the cutoff point
-     * So then the second flow is calculated according to the nodes we show at first.
-     */
-    
-    // Label to first col flow
-    for(var label in checked_labels){
-        var map = per_label_mapping[label];
+
+
+function calculate_initial_flow(){
+    flow = Object.create(null);
+    distribution = [];
+    determine_middle_nodes();
+    for(var node in middle_nodes){
+        var map = second_hashmap[node];
         for(var target in map){
-            if(!(target in first_flow)){
-                first_flow[target] = 0;
-            }
-            first_flow[target] += map[target];
+            if(!(target in flow)){
+                flow[target] = 0;
+             } else {
+                flow[target] += map[target];                    
+             }
         }
     }
 
-    //TODO remove 
-/*
-    // Fill the first distribution array
-    for(var target in first_flow){
-        var flow = first_flow[target];
-        if(!distribution[flow]) {
-            distribution[flow] = 1;
-        } else {
-            distribution[flow]++;
-        }        
-    }
-    
-    calculate_first_options();
-    */
-    // The second flow is calculated here
-    for(var middle_node in first_flow){
-        if(first_flow[middle_node] >= first_minimum_size){
-            var map = second_hashmap[middle_node];
-            for(var target in map){
-                 if(!(target in second_flow)){
-                    second_flow[target] = 0;
-                 }
-                 second_flow[target] += map[target];                    
-            }
-        }
-    }
     // Fill the second distribution array
-    for(var target in second_flow){
-        var flow = second_flow[target];
-        if(!second_distribution[flow]) {
-            second_distribution[flow] = 1;
+    for(var target in flow){
+        var fl = flow[target];
+        if(!distribution[fl]){
+            distribution[fl] = 1;
         } else {
-            second_distribution[flow]++;
-        }        
+            distribution[fl]++;
+        }
     }
-
-    calculate_second_options();
-
+    calculate_options();
 }
 
 function update_current_flow(name, selected){
@@ -403,46 +409,49 @@ function update_current_flow(name, selected){
             // decrement the previous and increment the current
             second_distribution[flow_before]--;
             // Check if it exists, create the value or increment it
-            if(!second_distribution[flow_after]) {
+            if(!second_distribution[flow_after]){
                second_distribution[flow_after] = 1;
             } else {
                 second_distribution[flow_after]++;
             }
         }
     }
-    calculate_second_options(); 
+    calculate_options(); 
 }
 
 function filter_links_to_use(){
     var links = [];
-    //var min_flow = $(first_dropdown).options[$(first_dropdown).selectedIndex].value;
+    var right_middle_nodes = Object.create(null);
+    var second_min_flow = $(dropdown_id).options[$(dropdown_id).selectedIndex].value;
+    second_mapping.forEach(function(s) { 
+        var fl = flow[s[1]] ? flow[s[1]]: 0;
+        if(s[0] in middle_nodes && fl >= second_min_flow){
+            links.push(copy_link(s));
+            right_middle_nodes[s[0]] = 1;
+           }        
+    });
+
     var p_value = $(p_val_id).options[$(p_val_id).selectedIndex].text;
     var type = $(type_id).options[$(type_id).selectedIndex].text;
     var show_hidden = $(hidden_id).checked;
-    var good_middle_nodes = Object.create(null);
     first_mapping.forEach(function(s) {
-        //console.log(s[0], p_value, s[3], show_hidden,);
+
         if(s[0] in checked_labels && p_value === s[4]){
-            // If it4s a hidden link only show it when show hidden is true.
+            // If it's a hidden link only show it when show hidden is true.
             if(!show_hidden && s[3] === "1"){
                 return;
             }
             // GO can filter on type, it it's not all, it has to match the selected type
-            if(GO && type !== "All" && type !== descriptions[s[1]]['type']){
+            if(GO && type !== "All" && type !== descriptions[s[1]].type){
                 return;
             }
+            if(s[1] in right_middle_nodes){
+                links.push(copy_link(s));
+            }
 
-            links.push(copy_link(s));
-            good_middle_nodes[s[1]] = 1; 
         }
     });
-    //var second_min_flow = $(second_dropdown).options[$(second_dropdown).selectedIndex].value;
-    second_mapping.forEach(function(s) { 
-        var flow = second_flow[s[1]] ? second_flow[s[1]]: 0;
-        if(s[0] in good_middle_nodes ){//&& flow >= second_min_flow){
-            links.push(copy_link(s));
-           }
-    });    
+    
     return links;
 }
 
