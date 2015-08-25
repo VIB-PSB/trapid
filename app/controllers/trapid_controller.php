@@ -1114,7 +1114,7 @@ class TrapidController extends AppController{
 
     //ok, there are no actual settings: the p-value cutoff is set at the lowest, and these results are stored
     //if other p-values are needed, they can be extracted with filtering.
-    $highest_pvalue	= 0.1;
+    $possible_pvalues	= array(0.1,0.05,0.01,0.005,0.001,1e-5);
     $possible_types	= array("go"=>"GO","ipr"=>"Protein domain");  
     $this->set("possible_types",$possible_types);
 
@@ -1128,9 +1128,9 @@ class TrapidController extends AppController{
       //Shell file contains both the necessary module load statements
 
       $qsub_file 	= $this->TrapidUtils->create_qsub_script($exp_id);
-      $shell_file	= $this->TrapidUtils->create_shell_file_enrichment_preprocessing($exp_id,$type,$exp_info['used_plaza_database'],$highest_pvalue,$all_subsets);
-      if($shell_file == null || $qsub_file == null ){$this->set("error","problem creating program files");return;}
-      
+      $shell_file	= $this->TrapidUtils->create_shell_file_enrichment_preprocessing($exp_id,$type,$exp_info['used_plaza_database'],$possible_pvalues,$all_subsets);
+      if($shell_file == null || $qsub_file == null ){$this->set("error","problem creating program files");return;}          
+
       //ok, now we submit this program to the web-cluster
       $tmp_dir	= TMP."experiment_data/".$exp_id."/";
       $qsub_out	= $tmp_dir."/".$type."_enrichment_preprocessing.out";
@@ -1148,9 +1148,7 @@ class TrapidController extends AppController{
       
       //indicate in the database that the current experiments enrichment_state is "processing"
       $this->Experiments->updateAll(array("enrichment_state"=>"'processing'"),array("experiment_id"=>$exp_id));
-	
-      
-
+	     
       $this->ExperimentLog->addAction($exp_id,"enrichment_preprocessing","");
       $this->ExperimentLog->addAction($exp_id,"enrichment_preprocessing","options",1);		
       $this->ExperimentLog->addAction($exp_id,"enrichment_preprocessing","data_type=".$type,2); 
@@ -1332,7 +1330,7 @@ class TrapidController extends AppController{
    * For zipped files, we apply some extra tests to see whether we're not dealing with a zip-bomb.
    */
   function import_data($exp_id=null){	
-    //Configure::write("debug",2);
+    Configure::write("debug",1);
     $exp_id	= mysql_real_escape_string($exp_id);
     parent::check_user_exp($exp_id);
     $exp_info	= $this->Experiments->getDefaultInformation($exp_id);
@@ -1343,10 +1341,12 @@ class TrapidController extends AppController{
     //this is a basis location for creating the temp storage for an experiment.
     $tmp_dir	= TMP."experiment_data/".$exp_id."/";	
     if(!file_exists($tmp_dir) || !is_dir($tmp_dir)){mkdir($tmp_dir,0777);}
-    shell_exec("chmod a+w $tmp_dir");    
+    $chmodret = shell_exec("chmod -R a+rwx $tmp_dir");
+    chmod($tmp_dir,0777);    
     $upload_dir = $tmp_dir."upload_files/";
     if(!file_exists($upload_dir) || !is_dir($upload_dir)){mkdir($upload_dir,0777);}
-    shell_exec("chmod a+w $upload_dir");
+    shell_exec("chmod -R a+rwx $upload_dir");
+    chmod($upload_dir,0777);  
     
     //give an overview of the content of the directory, so the user doesn't upload the same file twice
     //$uploaded_files = $this->TrapidUtils->readDir($upload_dir);
@@ -1498,7 +1498,7 @@ class TrapidController extends AppController{
     $tmp_dir	= TMP."experiment_data/".$exp_id."/";	
     if(!file_exists($tmp_dir) || !is_dir($tmp_dir)){
 	mkdir($tmp_dir,0777);
-	shell_exec("chmod a+w $tmp_dir");
+	shell_exec("chmod a+rwx $tmp_dir");
     }
     
     if($_POST){	

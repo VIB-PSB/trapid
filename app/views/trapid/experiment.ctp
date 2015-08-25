@@ -175,17 +175,17 @@
 		 * The GO enrichment is stored in 1 table, but extra info (go_enrichment_date and go_enrichment_state) are stored in the experiments table.
 		 */ 
 		if($standard_experiment_info['Experiments']['process_state']=="finished" && $num_subsets>0){	//(1) and (2)
-			if($standard_experiment_info['Experiments']['enrichment_state'] != 'processing'){	//(4)
-				//$led	= $standard_experiment_info['Experiments']['last_edit_date'];
-				//$ged	= $standard_experiment_info['Experiments']['go_enrichment_date'];
-				//if($ged=="0000-00-00 00:00:00"){
-				//}
+			if($standard_experiment_info['Experiments']['enrichment_state'] != 'processing'){	//(4)			
 				echo "<h3>GO enrichment preprocessing</h3>\n";
 				echo "<div class='subdiv'>\n";
 				echo "<dl class='standard'>\n";
 				echo "<dt>Process</dt>\n";
 				echo "<dd>";
-				echo $html->link("Perform GO enrichment preprocessing for ".$num_subsets." labels",
+				$link_text = "Perform GO enrichment preprocessing for ".$num_subsets." labels";
+				if($standard_experiment_info['Experiments']['enrichment_state'] == "finished"){
+				     $link_text = "Rerun GO enrichment preprocessing for ".$num_subsets." labels";
+				}
+				echo $html->link($link_text,
 					array("controller"=>"trapid","action"=>"enrichment_preprocessing",$exp_id));
 				echo "</dd>\n";
 				echo "</dl>\n";

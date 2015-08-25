@@ -623,7 +623,7 @@ class TrapidUtilsComponent extends Object{
    * @param int $exp_id The experiment identifier 
    * @param string $data_type GO/InterPro 
    * @param string $reference_db The name of the reference database
-   * @param float $pvalue The (high) p-value which is used. Lower p-value results can be filtered from these.
+   * @param float|array $pvalue The p-value(s) which is/are used. Can be either a float or an array of floats.
    * @param array $all_subsets Array containing all subsets present in the experiment
    * @param string $selected_subset Optional, when we need to reprocess only for a given subset.
    */
@@ -636,11 +636,20 @@ class TrapidUtilsComponent extends Object{
 	$subset_filepaths		= array();
 	foreach($all_subsets as $subset=>$subset_count){
 	  if(!$selected_subset || $subset===$selected_subset){
-	    $subset_file_path	= TMP."experiment_data/".$exp_id."/".$data_type."_transcript_".$exp_id."_".$subset.".txt";
-	    $enrich_file_path	= TMP."experiment_data/".$exp_id."/".$data_type."_enrichment_".$exp_id."_".$subset.".txt";
-	    $subset_filepaths[] 	= array("subset"=>$subset,"data"=>$subset_file_path,"result"=>$enrich_file_path);
+	    $subset_file_path		= TMP."experiment_data/".$exp_id."/".$data_type."_transcript_".$exp_id."_".$subset.".txt";
+	    $enrich_file_path_base	= TMP."experiment_data/".$exp_id."/".$data_type."_enrichment_".$exp_id."_".$subset;
+	    $enrich_file_paths		= array();
+	    if(is_array($pvalue)){
+	      foreach($pvalue as $pval){	       
+		$enrich_file_paths["".$pval] = $enrich_file_path_base."_".$pval.".txt";
+	      }
+	    }
+	    else{
+	      $enrich_file_paths["".$pvalue] = $enrich_file_path_base."_".$pvalue.".txt";
+	    }	   
+	    $subset_filepaths[] 	= array("subset"=>$subset,"data"=>$subset_file_path,"result"=>$enrich_file_paths);
 	  }
-	}
+	}	
 	
         //create the shell file
 	$shell_file		= $tmp_dir.$data_type."_enrichmentpreprocessing_".$exp_id.".sh";
@@ -670,28 +679,48 @@ class TrapidUtilsComponent extends Object{
 	//delete the previous enrichments. This is done scriptwise, in order not to block the website.
 	fwrite($fh,"\n#Deleting previous enrichment results from database\n");
 	for($i=0;$i<count($subset_filepaths);$i++){
-	  #fwrite($fh,"perl ".$perl_location."/".$perl_program_utils." delete_previous_results ".$exp_id." ".$data_type." ".$subset_filepaths[$i]['subset']."\n");
-	  fwrite($fh,"perl ".$perl_location."/".$perl_program_utils." delete_previous_results ".implode(" ",$perl_params)." ".$subset_filepaths[$i]['subset']."\n");
+	  if(is_array($pvalue)){
+	    foreach($pvalue as $pval){
+		fwrite($fh,"perl ".$perl_location."/".$perl_program_utils." delete_previous_results ".implode(" ",$perl_params)." ".$subset_filepaths[$i]['subset']." ".$pval."\n");
+	    }
+	  }
+	  else{	 
+	    fwrite($fh,"perl ".$perl_location."/".$perl_program_utils." delete_previous_results ".implode(" ",$perl_params)." ".$subset_filepaths[$i]['subset']." ".$pvalue."\n");
+	  }
 	}
 	
 	//generate files
 	fwrite($fh,"\n#Launching java program for file creation\n");
-	for($i=0;$i<count($subset_filepaths);$i++){
+	for($i=0;$i<count($subset_filepaths);$i++){	 
 	  $print_background 	= "false";
 	  if($i===0){$print_background="true";}
-	  fwrite($fh,"java -cp ".$java_location.".:..:".$java_location."mysql.jar ".$java_program_filedump." ".implode(" ",$java_params_filedump)." ".$background_frequency_file_path." ".$subset_filepaths[$i]['data']." ".$subset_filepaths[$i]['subset']." ".$print_background."\n");
+	  fwrite($fh,"java -cp ".$java_location.".:..:".$java_location."mysql.jar ".$java_program_filedump." ".implode(" ",$java_params_filedump)." ".$background_frequency_file_path." ".$subset_filepaths[$i]['data']." ".$subset_filepaths[$i]['subset']." ".$print_background."\n");	  
 	}
 
 	//compute enrichments
 	fwrite($fh,"\n#Launching java program for enrichments\n");
 	for($i=0;$i<count($subset_filepaths);$i++){
-	  fwrite($fh,"java -cp ".$java_location.".:..:".$java_location."mysql.jar ".$java_program_enrichment." ".implode(" ",$java_params_enrichment)." ".$background_frequency_file_path." ".$subset_filepaths[$i]['data']." ".$subset_filepaths[$i]['result']." ".$pvalue." false \n");
+	  if(is_array($pvalue)){
+	    foreach($pvalue as $pval){
+	      fwrite($fh,"java -cp ".$java_location.".:..:".$java_location."mysql.jar ".$java_program_enrichment." ".implode(" ",$java_params_enrichment)." ".$background_frequency_file_path." ".$subset_filepaths[$i]['data']." ".$subset_filepaths[$i]['result']["".$pval]." ".$pval." false \n");
+	    }
+	  }
+	  else{
+	    fwrite($fh,"java -cp ".$java_location.".:..:".$java_location."mysql.jar ".$java_program_enrichment." ".implode(" ",$java_params_enrichment)." ".$background_frequency_file_path." ".$subset_filepaths[$i]['data']." ".$subset_filepaths[$i]['result']["".$pvalue]." ".$pvalue." false \n");
+	  }
 	}
 
 	//new custom script which will load each of the enrichment files, and put them into the database
 	fwrite($fh,"\n#Launching java program for loading enrichments into DB\n");
 	for($i=0;$i<count($subset_filepaths);$i++){
-	  fwrite($fh,"java -cp ".$java_location.".:..:".$java_location."mysql.jar ".$java_program_loaddb." ".implode(" ",$java_params_loaddb)." ".$subset_filepaths[$i]['subset']." ".$subset_filepaths[$i]['result']."\n");
+	  if(is_array($pvalue)){
+	    foreach($pvalue as $pval){
+	      fwrite($fh,"java -cp ".$java_location.".:..:".$java_location."mysql.jar ".$java_program_loaddb." ".implode(" ",$java_params_loaddb)." ".$subset_filepaths[$i]['subset']." ".$pval." ".$subset_filepaths[$i]['result']["".$pval]."\n");
+	    }
+	  }
+	  else{
+	    fwrite($fh,"java -cp ".$java_location.".:..:".$java_location."mysql.jar ".$java_program_loaddb." ".implode(" ",$java_params_loaddb)." ".$subset_filepaths[$i]['subset']." ".$pvalue." ".$subset_filepaths[$i]['result']["".$pvalue]."\n");
+	  }
 	}
 
 	//clean up:
