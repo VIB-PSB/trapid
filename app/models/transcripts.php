@@ -198,7 +198,7 @@ class Transcripts extends AppModel{
     return $result;
   }
 
-  function getinterproToGFMapping($exp_id){
+  function getinterproToGFMapping($exp_id,$reverse=false){
     $query	= "SELECT COUNT( * ) , transcripts.`gf_id` , transcripts_interpro.`interpro` 
                FROM transcripts
                LEFT JOIN transcripts_interpro ON ( transcripts_interpro.`transcript_id` = transcripts.`transcript_id` 
@@ -214,7 +214,11 @@ class Transcripts extends AppModel{
       $gf_id    = $r['transcripts']['gf_id'];
       $interpro = $r['transcripts_interpro']['interpro'];
       $count    = reset($r[0]);
-      $result[] = array($gf_id,$interpro,$count);
+      if(!$reverse){
+        $result[] = array($gf_id,$interpro,$count);
+      } else {
+        $result[] = array($interpro,$gf_id,$count);
+      }    
     }
     return $result;
   }

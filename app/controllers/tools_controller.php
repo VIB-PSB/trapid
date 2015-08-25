@@ -9,7 +9,7 @@ class ToolsController extends AppController{
 
   var $uses		= array("Authentication","Experiments","DataSources","Transcripts","GeneFamilies",
 				"TranscriptsGo","TranscriptsInterpro","TranscriptsLabels","ExperimentLog",
-				"ExperimentJobs",
+				"ExperimentJobs","FunctionalEnrichments",
 
 				"AnnotSources","Annotation","ExtendedGo","ProteinMotifs","GfData","GoParents",
 
@@ -1652,20 +1652,6 @@ class ToolsController extends AppController{
     $this->generateSankeyDiagram($rows,$exp_id,array("controller"=>"functional_annotation","action"=>"interpro",$exp_id));
   }
 
-  /* Obsolete
-  function labelSankey($exp_id=null){
-    $exp_id	= mysql_real_escape_string($exp_id);
-    parent::check_user_exp($exp_id);	
-    $exp_info	= $this->Experiments->getDefaultInformation($exp_id); 
-    $this->TrapidUtils->checkPageAccess($exp_info['title'],$exp_info["process_state"],$this->process_states["default"]);       
-    $this->set("exp_info",$exp_info);
-    $this->set("exp_id",$exp_id);  
-    $this->set("titleIsAKeyword", "Label");
-    
-    $rows	= $this->Transcripts->getLabelToGFMapping($exp_id);
-    $this->generateSankeyDiagram($rows,$exp_id,array("controller"=>"labels","action"=>"view",$exp_id));
-  } */
-
   function label_go_gf($exp_id=null){
     $this->general_set_up($exp_id);
 
@@ -1691,6 +1677,77 @@ class ToolsController extends AppController{
     $this->set('urls', $urls);
     $this->render('multi_sankey');  
   }
+
+  function label_enrichedinterpro_gf($exp_id=null){
+    $this->general_set_up($exp_id);
+
+    $this->set("col_names", array('Label','Interpro','Gene family'));
+    $this->set('dropdown_names',array('Domains', 'Gene families'));
+    $place_holder = '###';
+    $this->set("place_holder", $place_holder);
+    
+    $start = microtime(true); 
+
+    $label_rows	= $this->FunctionalEnrichments->getLabeltoEnrichedInterproMapping($exp_id);
+    $GORows	= $this->Transcripts->getInterproToGFMapping($exp_id,true);
+    $counts = $this->TranscriptsLabels->getLabels($exp_id);
+    $interpros = array();
+    foreach ($label_rows as &$row){
+        $interpros[] = $row[1];
+        $row[2] = round($counts[$row[0]] * $row[2] / 100);
+     }
+    $interpro_info	= $this->ProteinMotifs->retrieveInterproInformation($interpros);
+    $this->set('counts', $counts);
+    $stop =    microtime(true);
+    echo 'Getting data takes :'.($stop - $start);
+    
+    $urls = array(Router::url(array("controller"=>"labels","action"=>"view",$exp_id,$place_holder)),
+                  Router::url(array("controller"=>"functional_annotation","action"=>"go",$exp_id,$place_holder)),
+                  Router::url(array("controller"=>"gene_family","action"=>"gene_family",$exp_id,$place_holder)) 
+    );
+    $this->set('first_mapping', $label_rows);
+    $this->set('second_mapping', $GORows);
+    $this->set('descriptions', $interpros);
+    $this->set('urls', $urls);
+    $this->render('sankey_enriched');  
+  }
+
+  function label_enrichedgo_gf($exp_id=null){
+    $this->general_set_up($exp_id);
+
+    $this->set("col_names", array('Label','Go','Gene family'));
+    $this->set('dropdown_names',array('Domains', 'Gene families'));
+    $place_holder = '###';
+    $this->set("place_holder", $place_holder);
+    
+$start = microtime(true); 
+
+    $label_rows	= $this->FunctionalEnrichments->getLabeltoEnrichedGOMapping($exp_id);
+    $counts = $this->TranscriptsLabels->getLabels($exp_id);
+
+    $GORows	= $this->Transcripts->getGOToGFMapping($exp_id,true); 
+    $go_ids = array();
+    foreach ($label_rows as &$row){
+        $go_ids[] = $row[1];
+        $row[2] = round($counts[$row[0]] * $row[2] / 100);
+    }
+    $go_info	= $this->ExtendedGo->retrieveGoInformation($go_ids);
+    $this->set('counts',$counts);
+$stop =    microtime(true);
+echo 'Getting data takes :'.($stop - $start);
+    
+    $urls = array(Router::url(array("controller"=>"labels","action"=>"view",$exp_id,$place_holder)),
+                  Router::url(array("controller"=>"functional_annotation","action"=>"go",$exp_id,$place_holder)),
+                  Router::url(array("controller"=>"gene_family","action"=>"gene_family",$exp_id,$place_holder)) 
+    );
+    $this->set('descriptions', $go_info);
+    $this->set('first_mapping', $label_rows);
+    $this->set('second_mapping', $GORows);
+    $this->set('urls', $urls);
+    $this->render('sankey_enriched');  
+  }
+
+
 
   function general_set_up($exp_id=null){
     $exp_id	= mysql_real_escape_string($exp_id);
@@ -1757,7 +1814,7 @@ function label_go_intersection($exp_id=null){
 $start = microtime(true); 
     $this->set('counts',$this->TranscriptsLabels->getLabels($exp_id));
     $label_rows	= $this->TranscriptsLabels->getLabelToGOMapping($exp_id,true);
-    $interpros = array();
+    $go_ids = array();
     foreach ($label_rows as $row){
         $go_ids[] = $row[1];
     }

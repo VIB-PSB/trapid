@@ -10,7 +10,7 @@ document.observe('dom:loaded', function(){
 
 // This defines if we're comparing 2 groups or just viewing a single side of the diagram
 var single_mode = false;
-var null_label = 'no label'
+var null_label = 'no label';
 
 ////////// Behaviour of the refine button and fields ////////////
 
