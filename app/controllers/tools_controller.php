@@ -1709,6 +1709,7 @@ class ToolsController extends AppController{
     $this->set('second_mapping', $GORows);
     $this->set('descriptions', $interpros);
     $this->set('urls', $urls);
+    $this->set('GO', false);
     $this->render('sankey_enriched');  
   }
 
@@ -1744,6 +1745,7 @@ echo 'Getting data takes :'.($stop - $start);
     $this->set('first_mapping', $label_rows);
     $this->set('second_mapping', $GORows);
     $this->set('urls', $urls);
+    $this->set('GO', true);
     $this->render('sankey_enriched');  
   }
 

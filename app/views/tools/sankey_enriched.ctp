@@ -15,6 +15,7 @@
     echo "var dropdown_filter_name = " . json_encode($dropdown_names) .';';
     echo "\nvar urls = " . json_encode($urls) .";";
     echo "\nvar place_holder = '" . $place_holder ."';";
+    echo "\nvar GO = '" . $GO ."';";
     echo '</script>';
 
 	echo $html->css('multi_sankey_intersection');
@@ -36,10 +37,11 @@
     ///////////////// Middle refinement /////////////////
 
     echo $form->create(false, array('id'=> 'middle_refine_form','class'=> 'refine_box'));
-    echo $form->input('type: ', array('options' => array('All','MF','BP','CC'), 'id' =>'type'));
-    echo $form->input('p value: ', array('options' => array(), 'id' => 'pvalue'));
+    echo $form->input('type: ', array('options' => array('All','MF','BP','CC'), 'id' =>'type','onchange' => 'middle_filter(e)'));
+    echo $form->input('p value: ', array('options' => array(), 'id' => 'pvalue','onchange' => 'middle_filter(e)'));
+    echo $form->input(' show hidden', array('type' => 'checkbox', 'id' => 'hidden','onchange' => 'middle_filter(e)'));
     echo $form->input(' normalize links', array('type' => 'checkbox', 'id' => 'normalize'));
-    echo $form->input(' show hidden', array('type' => 'checkbox', 'id' => 'hidden'));
+
     $options = array(
       'type' => 'button',
       'id' => 'middle_refine',
@@ -51,12 +53,7 @@
     ///////////////// Right refinement /////////////////
     echo $form->create(false, array('id'=> 'right_refine_form','class'=> 'refine_box'));
     echo $form->input("Minimum $col_names[2] size: ", array('options' => array(), 'id' =>'right_min'));
-    $options = array(
-      'type' => 'button',
-      'id' => 'right_refine',
-      'onclick' => 'draw_sankey()'
-    );
-    echo $form->button('  Refine  ',$options);    
+    echo $form->button('  Refine  ', array('type' => 'button', 'id' => 'right_refine', 'onclick' => 'draw_sankey()'));    
     echo $form->end();
 
 

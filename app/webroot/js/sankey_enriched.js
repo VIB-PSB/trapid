@@ -1,12 +1,50 @@
 "use strict";
+
+/* Global variables: */
+
 // label to display instead of null.
 var null_label = 'no label';
 // When no labels are checked we fall back to comparing the second mapping
 var single_mode = false;
 // The initial amout of nodes to show
 var nodes_to_show = 20;
+// checked_labels contain the names of all checked labels
+var checked_labels = Object.create(null);
+
+// The flow variable contains a with the in/outflow of each node
+var column = {};
+var names = Object.create(null); // set of different labels
+var names_list = [];
+var per_label_mapping = Object.create(null);
+var second_hashmap = Object.create(null);
+var p_values = Object.create(null);
+var minimum_size;
+var options = [];
+
+/* Html identifiers used to select on */
+var hidden_id = 'hidden';
+var type_id = 'type';
+var p_val_id = 'pvalue';
+var dropdown = 'right_min';
+
+var boxes = 'left_boxes';
+var col_classes = ['left_col','right_col'];
+
+/* Global defined in sankey_enriched 
+    first_mapping :
+    second_mapping : containdata as [[source1,target1,value1],[source2,target1,value2],...]
+    descriptions :
+    label_counts :
+    total_count :
+    dropdown_filter_name : 
+    urls :
+    place_holder : 
+    GO :
+*/
 
 document.observe('dom:loaded', function(){
+  // Hide the option to filter on type when we're not dealing with GO.
+  if(!GO){hide_type();}    
   process_data();
   add_checkboxes();
   fill_in_p_values();
@@ -34,47 +72,31 @@ function calculate_good_width(){
 
 ////////// Behaviour of the refine button and fields ////////////
 
-var first_dropdown = 'middle_min';
-var second_dropdown = 'right_min';
+function hide_type(){
+    // Parent because otherwise the label stays visible.
+    $(type_id).parentElement.style.display = 'none';
+}
+
+
 function fill_in_dropdown(){
-
     // Clear the dropdown before adding new options
-    $(first_dropdown).update();
-    
-    // If there are no options, ask the user to select something
-    if(first_options.length === 0){
-        $(first_dropdown).options.add(new Option('Please select labels', 0));
-        return;
-    }
-    // Fill in the dropdown
-    for(var i = 0,len = first_options.length; i < len; i++){
-        var option_string = '>=' + first_options[i][0] + ' [' + first_options[i][1] + ' ' + dropdown_filter_name[0]+ ']';
-        $(first_dropdown).options.add(new Option(option_string, first_options[i][0]));
-    }
-
-    $(first_dropdown).value = first_minimum_size;
-
-
-    // TODO: put first and second in arrays
-
-    // Clear the dropdown before adding new options
-    $(second_dropdown).update();
+    $(dropdown).update();
     
     // If there are no options, ask the user to select something
     if(second_options.length === 0){
-        $(second_dropdown).options.add(new Option('Please select labels', 0));
+        $(dropdown_id).options.add(new Option('Please select labels', 0));
         return;
     }
     // Fill in the dropdown
     for(var i = 0,len = second_options.length; i < len; i++){
         var option_string = '>=' + second_options[i][0] + ' [' + second_options[i][1] + ' ' + dropdown_filter_name[1]+ ']';
-        $(second_dropdown).options.add(new Option(option_string, second_options[i][0]));
+        $(dropdown_id).options.add(new Option(option_string, second_options[i][0]));
     }
 
-    $(second_dropdown).value = second_minimum_size;
+    $(dropdown_id).value = second_minimum_size;
 }
 
-var p_val_id = 'pvalue';
+
 function fill_in_p_values(){
     var list = Object.keys(p_values);
     list.sort();
@@ -84,63 +106,31 @@ function fill_in_p_values(){
 }
 
 
-var first_minimum_size;
-var first_options = [];
-function calculate_first_options(){
-    first_options = [];
-    first_minimum_size = undefined;
+function calculate_options(){
+    options = [];
+    minimum_size = undefined;
     var total = 0;
 
-    var used_distribution = single_mode? single_distribution : distribution;
+    var used_distribution = distribution;//single_mode? single_distribution : distribution;
     for(var i = used_distribution.length - 1; i > 0; i--){
         if(typeof used_distribution[i] != 'undefined' && used_distribution[i] !== 0){
             total += used_distribution[i];
-            first_options.push([i,total]);
-            if(!first_minimum_size && total > nodes_to_show){
-                first_minimum_size = first_options[Math.max(0,first_options.length - 2)][0];
+            options.push([i,total]);
+            if(!minimum_size && total > nodes_to_show){
+                minimum_size = options[Math.max(0,options.length - 2)][0];
             }
             
         }
     }
     // show options in ascending order
-    first_options.reverse();
+    options.reverse();
     // Set a decent minimum value, if choice was never set, there aren't that many choices so pick the first value.
-    if(!first_minimum_size && first_options.length > 0){
-        first_minimum_size = first_options[0][0];
-    }
-}
-
-var second_minimum_size;
-var second_options = [];
-function calculate_second_options(){
-    second_options = [];
-    second_minimum_size = undefined;
-    var total = 0;
-
-    var used_distribution = second_distribution;
-    for(var i = used_distribution.length - 1; i > 0; i--){
-        if(typeof used_distribution[i] != 'undefined' && used_distribution[i] !== 0){
-            total += used_distribution[i];
-            second_options.push([i,total]);
-            if(!second_minimum_size && total > nodes_to_show){
-                second_minimum_size = second_options[Math.max(0,second_options.length - 2)][0];
-            }
-            
-        }
-    }
-    // show options in ascending order
-    second_options.reverse();
-    // Set a decent minimum value, if choice was never set, there aren't that many choices so pick the first value.
-    if(!second_minimum_size && second_options.length > 0){
-        second_minimum_size = second_options[0][0];
+    if(!minimum_size && options.length > 0){
+        minimum_size = options[0][0];
     }
 }
 
 
-// checked_labels contain the names of all checked labels
-var checked_labels = Object.create(null);
-var boxes = 'left_boxes';
-var col_classes = ['left_col','right_col'];
 function add_checkboxes(){
     names_list.sort();
 
@@ -222,15 +212,6 @@ function enable_everything(){
 ////////// Sankey vizualization ////////////
 
 // Data Processing 
-// The mappings contain their data as [[source1,target1,value1],[source2,target1,value2],...]
-
-// The flow variable contains a with the in/outflow of each node
-var column = {};
-var names = Object.create(null); // set of different labels
-var names_list = [];
-var per_label_mapping = Object.create(null);
-var second_hashmap = Object.create(null);
-var p_values = Object.create(null);
 
 function process_data(){
     // We assume that the the in/outflow for the middle collum is equal.
@@ -277,6 +258,16 @@ function process_data(){
     }
 }
 
+var middle_nodes = Object.create(null);
+function determine_middle_nodes(){
+    for(var label in checked_labels){
+        var map = per_label_mapping[label];
+        for(var target in map){
+            middle_nodes[target] = 1;
+        }
+    }
+}
+
 var distribution = [];
 var second_distribution = [];
 var single_distribution = [];
@@ -302,6 +293,8 @@ function calculate_current_flow(){
         }
     }
 
+    //TODO remove 
+/*
     // Fill the first distribution array
     for(var target in first_flow){
         var flow = first_flow[target];
@@ -313,7 +306,7 @@ function calculate_current_flow(){
     }
     
     calculate_first_options();
-    
+    */
     // The second flow is calculated here
     for(var middle_node in first_flow){
         if(first_flow[middle_node] >= first_minimum_size){
@@ -422,19 +415,31 @@ function update_current_flow(name, selected){
 
 function filter_links_to_use(){
     var links = [];
-    var min_flow = $(first_dropdown).options[$(first_dropdown).selectedIndex].value;
+    //var min_flow = $(first_dropdown).options[$(first_dropdown).selectedIndex].value;
+    var p_value = $(p_val_id).options[$(p_val_id).selectedIndex].text;
+    var type = $(type_id).options[$(type_id).selectedIndex].text;
+    var show_hidden = $(hidden_id).checked;
     var good_middle_nodes = Object.create(null);
-    first_mapping.forEach(function(s) { 
-        var flow = first_flow[s[1]] ? first_flow[s[1]]: 0;
-        if(s[0] in checked_labels && flow >= min_flow){
+    first_mapping.forEach(function(s) {
+        //console.log(s[0], p_value, s[3], show_hidden,);
+        if(s[0] in checked_labels && p_value === s[4]){
+            // If it4s a hidden link only show it when show hidden is true.
+            if(!show_hidden && s[3] === "1"){
+                return;
+            }
+            // GO can filter on type, it it's not all, it has to match the selected type
+            if(GO && type !== "All" && type !== descriptions[s[1]]['type']){
+                return;
+            }
+
             links.push(copy_link(s));
             good_middle_nodes[s[1]] = 1; 
-            }
+        }
     });
-    var second_min_flow = $(second_dropdown).options[$(second_dropdown).selectedIndex].value;
+    //var second_min_flow = $(second_dropdown).options[$(second_dropdown).selectedIndex].value;
     second_mapping.forEach(function(s) { 
         var flow = second_flow[s[1]] ? second_flow[s[1]]: 0;
-        if(s[0] in good_middle_nodes && flow >= second_min_flow){
+        if(s[0] in good_middle_nodes ){//&& flow >= second_min_flow){
             links.push(copy_link(s));
            }
     });    
@@ -454,7 +459,7 @@ var formatNumber = d3.format(",.0f"),
 var svg = d3.select("#sankey").append("svg")
 	    .attr("width", width + margin.left + margin.right)
 	    .attr("height", height + margin.top + margin.bottom);
-var graph;
+
  // (Re)draw the sankey diagram
 function draw_sankey() {
 
@@ -466,9 +471,10 @@ function draw_sankey() {
 	    .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
     // Based on http://www.d3noob.org/2013/02/formatting-data-for-sankey-diagrams-in.html
-    graph = {"nodes" : [], "links" : []};
+    var graph = {"nodes" : [], "links" : []};
     
     var good_links = filter_links_to_use();
+    console.log(good_links);
     good_links.forEach(function (d) {
       graph.nodes.push({ "name": d[0] });
       graph.nodes.push({ "name": d[1] });
