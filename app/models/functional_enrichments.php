@@ -52,6 +52,6 @@ class FunctionalEnrichments extends AppModel{
     return $result;
   }
 
-}
 
+}
 ?>
