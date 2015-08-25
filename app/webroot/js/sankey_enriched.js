@@ -18,6 +18,11 @@ var names_list = [];
 var per_label_mapping = Object.create(null);
 var second_hashmap = Object.create(null);
 
+var distribution = [];
+var single_distribution = [];
+// current_flow maps names to the current inflow, twice
+// [{'IPR01':4,'IPR02':8,...},{'HOM02':4,'HOM03':8,...}]
+
 
 // Set of nodes in the middle collumn, as determined by the left checkboxes and the middle filters
 var middle_nodes = Object.create(null);
@@ -33,6 +38,7 @@ var hidden_id = 'hidden';
 var type_id = 'type';
 var p_val_id = 'pvalue';
 var dropdown_id = 'right_min';
+var normalization_id = 'normalize';
 
 var boxes = 'left_boxes';
 var col_classes = ['left_col','right_col'];
@@ -294,22 +300,7 @@ function determine_middle_nodes(){
             middle_nodes[s[1]] = 1; 
         }
     });
-    console.log(Object.keys(middle_nodes).length);
 }   
-    // Using precomputed mapping is probably faster, if necessary
-    /*for(var label in checked_labels){
-        var targets = per_label_mapping[label];
-        for(var i= 0, len = targets. length; i < len ; i++){
-            s = target
-            middle_nodes[target] = 1;
-        }
-    } */
-
-
-var distribution = [];
-var single_distribution = [];
-// current_flow maps names to the current inflow, twice
-// [{'IPR01':4,'IPR02':8,...},{'HOM02':4,'HOM03':8,...}]
 
 
 function calculate_initial_flow(){
@@ -369,15 +360,32 @@ function filter_links_to_use(){
             if(s[1] in right_middle_nodes){
                 links.push(copy_link(s));
             }
-
         }
-    });
-    
+    });    
     return links;
 }
 
+
 function copy_link(link,first_mapping){
     return [link[0],link[1],link[2]];    
+}
+
+
+// 1: Every block has width 100, divide by the sum of outgoing links
+function normalize_links(links){    
+    // First we calculate the current divisor
+    var divisors = Object.create(null);
+    links.forEach(function(link){
+        if(link[0] in divisors){
+            divisors[link[0]] += +link[2];
+        } else {
+            divisors[link[0]] = +link[2];
+        }                                           
+    });
+    // Divide by the calculated divisor
+    links.forEach(function(link){
+        link[2] = link[2]*100/divisors[link[0]];                                           
+    });        
 }
 
 
@@ -404,7 +412,9 @@ function draw_sankey() {
     var graph = {"nodes" : [], "links" : []};
     
     var good_links = filter_links_to_use();
-    console.log(good_links);
+    if($(normalization_id).checked){
+        normalize_links(good_links);
+    }
     good_links.forEach(function (d) {
       graph.nodes.push({ "name": d[0] });
       graph.nodes.push({ "name": d[1] });
@@ -429,8 +439,7 @@ function draw_sankey() {
      graph.nodes.forEach(function (d, i) {
        var col = column[d];
        graph.nodes[i] = { name: d.replace(/^\d+_/g,''),
-                          href: urls[col].replace(place_holder,d)};//,
-                         // original_flow:flow[col][d] };
+                          href: urls[col].replace(place_holder,d).replace('GO:','GO-')};
      });
 
  
@@ -452,13 +461,13 @@ function draw_sankey() {
 	    .style("stroke-width", function(d) { return Math.max(1, d.dy); })
 	    .sort(function(a, b) { return b.dy - a.dy; });
 
-    link.append("title")
-	    .text(function(d) { return d.source.name + " → " + d.target.name + "\n" + format(d.value); });
+   link.append("title")
+	    .text(function(d) { return create_link_hovertext(d)});
       
     // Work around to make something dragable also clickable
     // From http://jsfiddle.net/2EqA3/3/
 
-    var node = svg.append("g").selectAll(".node")
+       var node = svg.append("g").selectAll(".node")
 	    .data(graph.nodes)
 	    .enter().append("g")
 	    .attr("class", "node")
@@ -483,8 +492,7 @@ function draw_sankey() {
 	    .style("fill", function(d) { return d.color = color(d.name); })
 	    .style("stroke", function(d) { return d3.rgb(d.color).darker(2); })
 	    .append("title")
-	    .text(function(d) { return d.name + "\n" + format(d.value) + " / " + format(d.original_flow); });
-
+	    .text(function(d) { return create_hovertext(d)});
     node.append("text")
 	    .attr("x", -6)
 	    .attr("y", function(d) { return d.dy / 2; })
@@ -500,6 +508,29 @@ function draw_sankey() {
 	        d3.select(this).attr("transform", "translate(" + d.x + "," + (d.y = Math.max(0, Math.min(height - d.dy, d3.event.y))) + ")");
 	        sankey.relayout();
 	        link.attr("d", path);
+        }
+
+        function create_hovertext(d){
+            if(d.name in descriptions){
+               return descriptions[d.name].desc;
+            } 
+            if(d.name in label_counts){
+                return d.name + "\n" + label_counts[d.name] + " genes";
+            } else {
+                return d.name + "\n" + flow[d.name];
+            }
+        }
+
+        // The hovertext varies depending on the normalization used
+        function create_link_hovertext(d){
+            var arrow = " → "; 
+            var hover_string = d.source.name + arrow + d.target.name + "\n";
+            if($(normalization_id).checked){
+                hover_string += parseFloat(d.value).toFixed(2) + '% of genes shown';
+            } else {
+                hover_string += d.value + ' genes';
+            }            
+            return  hover_string ; 
         }
 }
 
