@@ -1617,7 +1617,7 @@ class ToolsController extends AppController{
     $this->set('minimum_count', round(log(count($inflow))));
     $this->set('left_maximum_count', reset($outflow));
     $this->set('left_minimum_count', round(log(count($outflow))));
-	  $this->set('sankeyData', json_encode($d));
+	$this->set('sankeyData', json_encode($d));
     $this->set('inflow_data', json_encode($inflow));
     $this->set('outflow_data', json_encode($outflow)); 
     $this->render('sankey');
@@ -1749,8 +1749,6 @@ echo 'Getting data takes :'.($stop - $start);
     $this->render('sankey_enriched');  
   }
 
-
-
   function general_set_up($exp_id=null){
     $exp_id	= mysql_real_escape_string($exp_id);
     parent::check_user_exp($exp_id);	
@@ -1758,8 +1756,8 @@ echo 'Getting data takes :'.($stop - $start);
     $this->TrapidUtils->checkPageAccess($exp_info['title'],$exp_info["process_state"],$this->process_states["default"]);       
     $this->set("exp_info",$exp_info);
     $this->set("exp_id",$exp_id);
-
   }
+
 
   function label_gf_intersection($exp_id=null){
     $this->general_set_up($exp_id);
@@ -1780,6 +1778,7 @@ echo 'Getting data takes :'.($stop - $start);
     
     $this->render('multi_sankey_intersection'); 
   }
+
 
   function label_interpro_intersection($exp_id=null){
     $this->general_set_up($exp_id);
@@ -1807,6 +1806,7 @@ $stop = microtime(true);
     
     $this->render('multi_sankey_intersection');
   }
+
 
 function label_go_intersection($exp_id=null){
     $this->general_set_up($exp_id);

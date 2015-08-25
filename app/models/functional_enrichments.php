@@ -51,7 +51,13 @@ class FunctionalEnrichments extends AppModel{
     }    
     return $result;
   }
-
+/*SELECT transcript_id, label,gf_id, identifier, is_hidden, subset_ratio
+FROM `transcripts` 
+RIGHT JOIN `transcripts_labels`
+USING (experiment_id, transcript_id)
+JOIN `functional_enrichments`
+USING (experiment_id,label)
+WHERE experiment_id = 1 AND data_type = 'go' */
 
 }
 ?>
