@@ -9,6 +9,7 @@
     echo '<script type="text/javascript">';
     echo "\nvar first_mapping = " . json_encode($first_mapping) .";";
     echo "\nvar second_mapping = " . json_encode($second_mapping) .";";
+    echo "\nvar descriptions = " . json_encode($descriptions) .";";
     echo "\nvar label_counts = " . json_encode($counts) .";";
     echo "\nvar total_count = " .   $exp_info['transcript_count'] .";";
     echo "var dropdown_filter_name = " . json_encode($dropdown_names) .';';
@@ -36,9 +37,9 @@
 
     echo $form->create(false, array('id'=> 'middle_refine_form','class'=> 'refine_box'));
     echo $form->input('type: ', array('options' => array('All','MF','BP','CC'), 'id' =>'type'));
-    echo $form->input('p value: ', array('options' => array(), 'id' =>'pvalue'));
-    echo $form->input(' normalize links', array('type' => 'checkbox'), 'id' =>'normalized');
-    echo $form->input(' show hidden', array('type' => 'checkbox'), 'id' =>'hiddenlinks');
+    echo $form->input('p value: ', array('options' => array(), 'id' => 'pvalue'));
+    echo $form->input(' normalize links', array('type' => 'checkbox', 'id' => 'normalize'));
+    echo $form->input(' show hidden', array('type' => 'checkbox', 'id' => 'hidden'));
     $options = array(
       'type' => 'button',
       'id' => 'middle_refine',

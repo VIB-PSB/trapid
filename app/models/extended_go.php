@@ -31,7 +31,7 @@ class ExtendedGo extends AppModel{
     $res	= $this->query($query);
     foreach($res as $r){
       $s	= $r['extended_go'];
-      $result[$s['go']] = array("desc"=>$s['desc']);
+      $result[$s['go']] = array("desc"=>$s['desc'],"type"=>$s['type']);
     }
     return $result;
   }
