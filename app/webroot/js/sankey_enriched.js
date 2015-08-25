@@ -195,7 +195,7 @@ function checkbox_changed(event){
     // Other groupings, other options.
     update_middle_nodes();
 
-    fill_in_dropdown();
+    
     enable_everything();
 }
 
@@ -207,6 +207,7 @@ function middle_filter(){
 
 function update_middle_nodes(){
     calculate_initial_flow();
+    fill_in_dropdown();
 }
 
 
@@ -311,7 +312,6 @@ var single_distribution = [];
 // [{'IPR01':4,'IPR02':8,...},{'HOM02':4,'HOM03':8,...}]
 
 
-
 function calculate_initial_flow(){
     flow = Object.create(null);
     distribution = [];
@@ -339,85 +339,6 @@ function calculate_initial_flow(){
     calculate_options();
 }
 
-function update_current_flow(name, selected){
-    var map = per_label_mapping[name];
-    var changed_nodes = Object.create(null);
-    for(var target in map){
-        // The target might not have been added yet
-        if(! (target in first_flow)){
-            first_flow[target] = 0;
-        }
-        var flow_before = first_flow[target];
-        if(flow_before === 0){
-            changed_nodes[target] = 1;
-        }
-        
-        // Update the first flow
-        if(selected){
-            // Add the flow when something new is checked
-            first_flow[target] += map[target];
-        } else {
-            // Remove it when the label is deselected
-            first_flow[target] -= map[target];
-        }
-
-        var flow_after = first_flow[target];
-        if(flow_after === 0){
-            changed_nodes[target] = 1;
-        }
-
-        // decrement the previous and increment the current
-        distribution[flow_before]--;
-        // Check if it exists, create the value or increment it
-        if(!distribution[flow_after]) {
-           distribution[flow_after] = 1;
-        } else {
-            distribution[flow_after]++;
-        }
-            
-        /*// Also update the single_distribution
-        if(before !== after){
-            single_distribution[before]--;
-            if(!single_distribution[after]) {
-               single_distribution[after] = 1;
-            } else {
-               single_distribution[after]++;
-            }
-        }*/
-    }
-    calculate_first_options();
-    for(var node in changed_nodes){
-        var map = second_hashmap[node];
-        for(var target in map){
-            // The target might not have been added yet
-            if(! (target in second_flow)){
-                second_flow[target] = 0;
-            }
-            var flow_before = first_flow[target];
-              
-            // Update the first flow
-            if(selected){
-                // Add the flow when something new is checked
-                second_flow[target] += map[target];
-            } else {
-                // Remove it when the label is deselected
-                second_flow[target] -= map[target];
-            }
-
-            var flow_after = second_flow[target];
-
-            // decrement the previous and increment the current
-            second_distribution[flow_before]--;
-            // Check if it exists, create the value or increment it
-            if(!second_distribution[flow_after]){
-               second_distribution[flow_after] = 1;
-            } else {
-                second_distribution[flow_after]++;
-            }
-        }
-    }
-    calculate_options(); 
-}
 
 function filter_links_to_use(){
     var links = [];
