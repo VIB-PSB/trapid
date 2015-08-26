@@ -111,7 +111,7 @@ function fill_in_dropdown(){
 
 
 function fill_in_p_values(){
-    var list = Object.keys(p_values);
+    var list = Object.keys(enriched_gos);
     list.sort(function(a, b) {
         return Number(a) - Number(b);
     }); // Sorts correctly, even with scientific notation
@@ -518,7 +518,8 @@ function draw_sankey() {
             if(d.name in label_counts){
                 return d.name + "\n" + label_counts[d.name] + " genes";
             } else {
-                return d.name + "\n" + flow[d.name];
+                var gf_prefix = exp_id + '_';
+                return d.name + "\n" + flow[gf_prefix + d.name] + " genes";
             }
         }
 

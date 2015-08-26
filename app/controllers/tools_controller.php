@@ -1706,7 +1706,7 @@ echo 'Getting data takes :'.($stop - $start);
     );
     $this->set('first_mapping', $label_rows);
     $this->set('second_mapping', $GORows);
-    $this->set('descriptions', $interpros);
+    $this->set('descriptions', $interpro_info);
     $this->set('urls', $urls);
     $this->set('GO', false);
     $this->render('sankey_enriched');  
@@ -1758,31 +1758,31 @@ echo 'Getting data takes :'.($stop - $start);
     $this->set("place_holder", $place_holder);
     
 $start = microtime(true); 
+    $enriched_gos = $this->FunctionalEnrichments->getEnrichedGO($exp_id);
+    $transcriptLabelGF = $this->FunctionalEnrichments->getTranscriptToLabelAndGF($exp_id);
+    $transcriptGO = $this->FunctionalEnrichments->getTranscriptGOMapping($exp_id);
+    $counts = $this->TranscriptsLabels->getLabels($exp_id);// not necessary anymore
 
-    $label_rows	= $this->FunctionalEnrichments->getLabeltoEnrichedGOMapping($exp_id);
-    $counts = $this->TranscriptsLabels->getLabels($exp_id);
-
-    $GORows	= $this->Transcripts->getGOToGFMapping($exp_id,true); 
     $go_ids = array();
-    foreach ($label_rows as &$row){
-        $go_ids[] = $row[1];
-        $row[2] = round($counts[$row[0]] * $row[2] / 100);
+    foreach ($enriched_gos['0.1'] as $row){
+        $go_ids[] = key($row);
     }
     $go_info	= $this->ExtendedGo->retrieveGoInformation($go_ids);
-    $this->set('counts',$counts);
 $stop =    microtime(true);
 echo 'Getting data takes :'.($stop - $start);
+    $this->set('counts',$counts);
     
     $urls = array(Router::url(array("controller"=>"labels","action"=>"view",$exp_id,$place_holder)),
                   Router::url(array("controller"=>"functional_annotation","action"=>"go",$exp_id,$place_holder)),
                   Router::url(array("controller"=>"gene_family","action"=>"gene_family",$exp_id,$place_holder)) 
     );
     $this->set('descriptions', $go_info);
-    $this->set('first_mapping', $label_rows);
-    $this->set('second_mapping', $GORows);
+    $this->set('enriched_gos',$enriched_gos);
+    $this->set('transcriptGO', $transcriptGO);
+    $this->set('transcriptLabelGF', $transcriptLabelGF);
     $this->set('urls', $urls);
     $this->set('GO', true);
-    $this->render('sankey_enriched');  
+    $this->render('sankey_enriched2');  
   }
 
 

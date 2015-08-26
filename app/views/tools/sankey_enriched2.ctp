@@ -7,8 +7,9 @@
 
 <?php
     echo '<script type="text/javascript">';
-    echo "\nvar first_mapping = " . json_encode($first_mapping) .";";
-    echo "\nvar second_mapping = " . json_encode($second_mapping) .";";
+    echo "\nvar enriched_gos = " . json_encode($enriched_gos) .";";
+    echo "\nvar transcriptGO = " . json_encode($transcriptGO) .";";
+    echo "\nvar transcriptLabelGF = " . json_encode($transcriptLabelGF) .";";
     echo "\nvar descriptions = " . json_encode($descriptions) .";";
     echo "\nvar label_counts = " . json_encode($counts) .";";
     echo "\nvar total_count = " .   $exp_info['transcript_count'] .";";
@@ -19,7 +20,7 @@
     echo '</script>';
 
 	echo $html->css('multi_sankey_intersection');
-	echo $javascript->link(array('d3-3.5.6.min','sankey','sankey_enriched'));	
+	echo $javascript->link(array('d3-3.5.6.min','sankey','sankey_enriched2'));	
 
     $number_of_choices = 31;
     echo '<div id="choices">';

@@ -133,8 +133,7 @@ function calculate_options(){
             options.push([i,total]);
             if(!minimum_size && total > nodes_to_show){
                 minimum_size = options[Math.max(0,options.length - 2)][0];
-            }
-            
+            }            
         }
     }
     // show options in ascending order
@@ -160,7 +159,6 @@ function add_checkboxes(){
         checkbox.onchange = function(event){checkbox_changed(event);};
 
         var label = document.createElement('label');
-
         label.htmlFor = checkbox.id;
         
         if(n !== null_label){
@@ -191,8 +189,8 @@ function add_checkboxes(){
 
 function checkbox_changed(event){
     disable_everything();
+
     var chckbx = event.target;
-   
     if(chckbx.checked){
         checked_labels[chckbx.name] = 1;
     } else {
@@ -202,7 +200,6 @@ function checkbox_changed(event){
     // Other groupings, other options.
     update_middle_nodes();
 
-    
     enable_everything();
 }
 
@@ -518,7 +515,8 @@ function draw_sankey() {
             if(d.name in label_counts){
                 return d.name + "\n" + label_counts[d.name] + " genes";
             } else {
-                return d.name + "\n" + flow[d.name];
+                var gf_prefix = exp_id + '_';
+                return d.name + "\n" + flow[gf_prefix + d.name];
             }
         }
 
