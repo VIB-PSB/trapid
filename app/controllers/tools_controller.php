@@ -1764,8 +1764,8 @@ $start = microtime(true);
     $counts = $this->TranscriptsLabels->getLabels($exp_id);// not necessary anymore
 
     $go_ids = array();
-    foreach ($enriched_gos['0.1'] as $row){
-        $go_ids[] = key($row);
+    foreach ($enriched_gos['0.1'] as $key => $val){
+        $go_ids[] = $key;
     }
     $go_info	= $this->ExtendedGo->retrieveGoInformation($go_ids);
 $stop =    microtime(true);

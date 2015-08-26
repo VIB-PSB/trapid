@@ -28,6 +28,8 @@ var single_distribution = [];
 var middle_nodes = Object.create(null);
 // flow from middle nodes to the right collumn {1_HOM000248: 50, 1_HOM001148: 108, 1_HOM004574: 21, 1_HOM000586: 84, 1_HOM002222: 60…}
 var flow = Object.create(null);
+//
+var first_links = Object.create(null);
 // set of p values to fill the dropdown with.
 var p_values = Object.create(null);
 var minimum_size;
@@ -43,16 +45,21 @@ var normalization_id = 'normalize';
 var boxes = 'left_boxes';
 var col_classes = ['left_col','right_col'];
 
-/* Global defined in sankey_enriched 
-    first_mapping :
-    second_mapping : containdata as [[source1,target1,value1],[source2,target1,value2],...]
-    descriptions :
-    label_counts :
-    total_count :
-    dropdown_filter_name : 
-    urls :
-    place_holder : 
-    GO :
+/* Globals defined in sankey_enriched 
+
+    enrichedIdents : [p_val][identifier] = hidden
+        ['0.1'][GO:0000271] =  "1"
+    transcriptIdent : [transcript][identifier] = 1 
+        [contig00001][GO:0003824] = 1
+    transcriptLabelGF : [label][transcript] = gf_id 
+        [cluster1][contig00001] = "1_HOM005284"
+     descriptions : [identifier] = {desc:'bla bla', type:'CC'}
+    label_counts : [label] = count
+    total_count : int
+    dropdown_filter_name : string used in dropdown
+    urls : [strings]
+    place_holder : '###'
+    GO : bool
 */
 
 document.observe('dom:loaded', function(){
@@ -61,7 +68,8 @@ document.observe('dom:loaded', function(){
   process_data();
   add_checkboxes();
   fill_in_p_values();
-  calculate_initial_flow();
+  determine_current_links();
+  calculate_current_flow();
   fill_in_dropdown();
   
   draw_sankey(); 
@@ -75,11 +83,11 @@ var margin = {top: 1, right: 1, bottom: 6, left: 1},
     height = calculate_good_height() - margin.top - margin.bottom;
 
 function calculate_good_height(){
-    return Math.min(window.innerHeight - 200, Math.log2(first_mapping.length + second_mapping.length)* 200);   
+    return Math.min(window.innerHeight - 200, Math.log2(2*Object.keys(transcriptIdent).length)* 200);   
 }
 
 function calculate_good_width(){
-    return Math.min(window.innerWidth - margin.left - margin.right - 80,Math.log2(first_mapping.length + second_mapping.length)* 200);
+    return Math.min(window.innerWidth - margin.left - margin.right - 80,Math.log2(2*Object.keys(transcriptIdent).length)* 200);
 }
 
 
@@ -111,7 +119,7 @@ function fill_in_dropdown(){
 
 
 function fill_in_p_values(){
-    var list = Object.keys(enriched_gos);
+    var list = Object.keys(enrichedIdents);
     list.sort(function(a, b) {
         return Number(a) - Number(b);
     }); // Sorts correctly, even with scientific notation
@@ -126,15 +134,14 @@ function calculate_options(){
     minimum_size = undefined;
     var total = 0;
 
-    var used_distribution = distribution;//single_mode? single_distribution : distribution;
+    var used_distribution = distribution;
     for(var i = used_distribution.length - 1; i > 0; i--){
         if(typeof used_distribution[i] != 'undefined' && used_distribution[i] !== 0){
             total += used_distribution[i];
             options.push([i,total]);
             if(!minimum_size && total > nodes_to_show){
                 minimum_size = options[Math.max(0,options.length - 2)][0];
-            }
-            
+            }            
         }
     }
     // show options in ascending order
@@ -213,7 +220,7 @@ function middle_filter(){
 }
 
 function update_middle_nodes(){
-    calculate_initial_flow();
+    calculate_current_flow();
     fill_in_dropdown();
 }
 
@@ -237,8 +244,16 @@ function enable_everything(){
 ////////// Sankey vizualization ////////////
 
 // Data Processing 
-
+var gftranscript = Object.create(null);
 function process_data(){
+    names_list = Object.keys(transcriptLabelGF);
+    for(var label in transcriptLabelGF){
+        for(var transcript in transcriptLabelGF[label]){
+            gftranscript[transcriptLabelGF[label][transcript]] = transcript;
+        }
+    }
+
+    return;
     // We assume that the the in/outflow for the middle collum is equal.
     first_mapping.forEach(function (d) {
         var source = d[0];
@@ -253,7 +268,6 @@ function process_data(){
         if(!(source in names)){
             per_label_mapping[source] = [];
             names[source] = 1;
-            names_list.push(source);
             column[source] = 0;
         }
         //Fill the set of p values
@@ -282,35 +296,78 @@ function process_data(){
         column[target] = 2;     
     }
 }
-
-function determine_middle_nodes(){
+var current_links;
+var second_links_temp;
+var first_links_temp;
+function determine_current_links(){
     middle_nodes = Object.create(null);
+    first_links_temp = Object.create(null);
+    second_links_temp = Object.create(null);
+    
+    current_links = [];
+
     var p_value = $(p_val_id).options[$(p_val_id).selectedIndex].text;
     var type = $(type_id).options[$(type_id).selectedIndex].text;
     var show_hidden = $(hidden_id).checked;
-    first_mapping.forEach(function(s) {
-        if(s[0] in checked_labels && p_value === s[4]){
-            // If it's a hidden link only show it when show hidden is true.
-            if(!show_hidden && s[3] === "1"){
-                return;
-            }
-            // GO can filter on type, it it's not all, it has to match the selected type
-            if(GO && type !== "All" && type !== descriptions[s[1]].type){
-                return;
-            }
-            middle_nodes[s[1]] = 1; 
+
+    for(var label in checked_labels){        
+        if(!(label in first_links_temp)){
+            first_links_temp[label] = Object.create(null);
+            column[label] = 0;
         }
-    });
+
+        var transcripts = transcriptLabelGF[label];
+        for(var transcript in transcripts){
+            for(var identifier in transcriptIdent[transcript]){
+                if(!(identifier in enrichedIdents[p_value])){
+                    continue;
+                }
+                if(!show_hidden && enrichedIdents[p_value][identifier] === "1"){
+                    continue;
+                }
+                if(GO && type !== "All" && type !== descriptions[identifier].type){
+                    continue;
+                }
+                //TODO: filter the left side better
+                // create or increment this link.
+                if(!(identifier in first_links_temp[label])){
+                    first_links_temp[label][identifier] = 1;
+                    column[identifier] = 1;
+                } else {
+                    first_links_temp[label][identifier]++;
+                }
+
+                // Keep track of what the middle nodes are made of
+                if(!(identifier in middle_nodes)){
+                    middle_nodes[identifier] = Object.create(null);
+                }
+                middle_nodes[identifier][transcript] = 1;
+
+                // create or increment this link in the second mapping.
+                if(!(identifier in second_links_temp)){
+                    second_links_temp[identifier] = Object.create(null);
+                }
+                var gf = transcripts[transcript];
+                if(! (gf in second_links_temp[identifier])){
+                    second_links_temp[identifier][gf] = 1;
+                    column[gf] = 2;
+                } else {
+                    second_links_temp[identifier][gf]++;
+                }               
+            }                    
+        }
+    }
 }   
 
 
-function calculate_initial_flow(){
+function calculate_current_flow(){
     flow = Object.create(null);
     distribution = [];
-    determine_middle_nodes();
-    for(var node in middle_nodes){
-        var map = second_hashmap[node];
+    determine_current_links();
+    for(var node in second_links_temp){
+        var map = second_links_temp[node];
         for(var target in map){
+            
             if(!(target in flow)){
                 flow[target] = 0;
              } else {
@@ -332,10 +389,35 @@ function calculate_initial_flow(){
 }
 
 
+var links
 function filter_links_to_use(){
-    var links = [];
+    links = [];
     var right_middle_nodes = Object.create(null);
+    var left_nodes = Object.create(null);
     var second_min_flow = $(dropdown_id).options[$(dropdown_id).selectedIndex].value;
+
+    for(var ident in second_links_temp){
+        var idengf = second_links_temp[ident]
+        for(var gf in idengf){
+            var fl = flow[gf];
+             if(fl >=second_min_flow ){
+                links.push([ident, gf, idengf[gf]]);
+                right_middle_nodes[ident] = 1;
+                left_nodes[gftranscript[gf]] = 1;
+            }
+        }
+    }
+
+    for(var lbl in first_links_temp){
+        var lblIden = first_links_temp[lbl]
+        for(var iden in lblIden){
+            if(iden in right_middle_nodes){
+                links.push([lbl, iden, lblIden[iden]]);
+            }
+        }
+    }
+
+/*
     second_mapping.forEach(function(s) { 
         var fl = flow[s[1]] ? flow[s[1]]: 0;
         if(s[0] in middle_nodes && fl >= second_min_flow){
@@ -362,11 +444,11 @@ function filter_links_to_use(){
                 links.push(copy_link(s));
             }
         }
-    });    
+    });    */
     return links;
 }
 
-
+//TODO unused function
 function copy_link(link,first_mapping){
     return [link[0],link[1],link[2]];    
 }
@@ -413,6 +495,7 @@ function draw_sankey() {
     var graph = {"nodes" : [], "links" : []};
     
     var good_links = filter_links_to_use();
+    //var good_links = current_links;
     if($(normalization_id).checked){
         normalize_links(good_links);
     }

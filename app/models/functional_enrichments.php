@@ -111,7 +111,7 @@ class FunctionalEnrichments extends AppModel{
       $hidden	= $r['functional_enrichments']['is_hidden'];
       $p_val	= $r['functional_enrichments']['max_p_value'];
       if(!isset($result[$p_val]))$result[$p_val] = array();
-      $result[$p_val][] = array($GO => $hidden);
+      $result[$p_val][$GO] = $hidden;
     }    
     return $result;
   }

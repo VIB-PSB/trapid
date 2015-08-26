@@ -7,8 +7,8 @@
 
 <?php
     echo '<script type="text/javascript">';
-    echo "\nvar enriched_gos = " . json_encode($enriched_gos) .";";
-    echo "\nvar transcriptGO = " . json_encode($transcriptGO) .";";
+    echo "\nvar enrichedIdents = " . json_encode($enriched_gos) .";";
+    echo "\nvar transcriptIdent = " . json_encode($transcriptGO) .";";
     echo "\nvar transcriptLabelGF = " . json_encode($transcriptLabelGF) .";";
     echo "\nvar descriptions = " . json_encode($descriptions) .";";
     echo "\nvar label_counts = " . json_encode($counts) .";";
@@ -17,6 +17,7 @@
     echo "\nvar urls = " . json_encode($urls) .";";
     echo "\nvar place_holder = '" . $place_holder ."';";
     echo "\nvar GO = '" . $GO ."';";
+    echo "\nvar exp_id = '" . $exp_id ."';";
     echo '</script>';
 
 	echo $html->css('multi_sankey_intersection');
