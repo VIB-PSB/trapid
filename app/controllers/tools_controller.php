@@ -1686,8 +1686,7 @@ class ToolsController extends AppController{
     $place_holder = '###';
     $this->set("place_holder", $place_holder);
     
-    $start = microtime(true); 
-
+$start = microtime(true); 
     $label_rows	= $this->FunctionalEnrichments->getLabeltoEnrichedInterproMapping($exp_id);
     $GORows	= $this->Transcripts->getInterproToGFMapping($exp_id,true);
     $counts = $this->TranscriptsLabels->getLabels($exp_id);
@@ -1698,8 +1697,8 @@ class ToolsController extends AppController{
      }
     $interpro_info	= $this->ProteinMotifs->retrieveInterproInformation($interpros);
     $this->set('counts', $counts);
-    $stop =    microtime(true);
-    echo 'Getting data takes :'.($stop - $start);
+$stop =    microtime(true);
+echo 'Getting data takes :'.($stop - $start);
     
     $urls = array(Router::url(array("controller"=>"labels","action"=>"view",$exp_id,$place_holder)),
                   Router::url(array("controller"=>"functional_annotation","action"=>"go",$exp_id,$place_holder)),
@@ -1748,6 +1747,44 @@ echo 'Getting data takes :'.($stop - $start);
     $this->set('GO', true);
     $this->render('sankey_enriched');  
   }
+
+
+  function label_enrichedgo_gf2($exp_id=null){
+    $this->general_set_up($exp_id);
+
+    $this->set("col_names", array('Label','Go','Gene family'));
+    $this->set('dropdown_names',array('Domains', 'Gene families'));
+    $place_holder = '###';
+    $this->set("place_holder", $place_holder);
+    
+$start = microtime(true); 
+
+    $label_rows	= $this->FunctionalEnrichments->getLabeltoEnrichedGOMapping($exp_id);
+    $counts = $this->TranscriptsLabels->getLabels($exp_id);
+
+    $GORows	= $this->Transcripts->getGOToGFMapping($exp_id,true); 
+    $go_ids = array();
+    foreach ($label_rows as &$row){
+        $go_ids[] = $row[1];
+        $row[2] = round($counts[$row[0]] * $row[2] / 100);
+    }
+    $go_info	= $this->ExtendedGo->retrieveGoInformation($go_ids);
+    $this->set('counts',$counts);
+$stop =    microtime(true);
+echo 'Getting data takes :'.($stop - $start);
+    
+    $urls = array(Router::url(array("controller"=>"labels","action"=>"view",$exp_id,$place_holder)),
+                  Router::url(array("controller"=>"functional_annotation","action"=>"go",$exp_id,$place_holder)),
+                  Router::url(array("controller"=>"gene_family","action"=>"gene_family",$exp_id,$place_holder)) 
+    );
+    $this->set('descriptions', $go_info);
+    $this->set('first_mapping', $label_rows);
+    $this->set('second_mapping', $GORows);
+    $this->set('urls', $urls);
+    $this->set('GO', true);
+    $this->render('sankey_enriched');  
+  }
+
 
   function general_set_up($exp_id=null){
     $exp_id	= mysql_real_escape_string($exp_id);

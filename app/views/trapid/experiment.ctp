@@ -328,7 +328,13 @@
 						$html->url(array("controller"=>"tools","action"=>"label_enrichedinterpro_gf",$exp_id)),
 						"some_image.png",
 						$subset1
-					)					
+					),					
+					array(
+						"Label →  Enriched GO →  gene family [Improved]",
+						$html->url(array("controller"=>"tools","action"=>"label_enrichedgo_gf2",$exp_id)),
+						"some_image.png",
+						$subset1
+					)				
 				),
 				"Find"=>array(
 					array(
