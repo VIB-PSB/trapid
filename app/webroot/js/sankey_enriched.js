@@ -111,9 +111,10 @@ function fill_in_dropdown(){
 
 
 function fill_in_p_values(){
-    // TODO test with more p-values
     var list = Object.keys(p_values);
-    list.sort();
+    list.sort(function(a, b) {
+        return Number(a) - Number(b);
+    }); // Sorts correctly, even with scientific notation
     for(var i = 0, len = list.length; i < len; i++){
       $(p_val_id).options.add(new Option(list[i], i));
     }
