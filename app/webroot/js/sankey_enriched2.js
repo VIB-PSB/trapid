@@ -11,32 +11,25 @@ var single_mode = false;
 var nodes_to_show = 20;
 // checked_labels contain the names of all checked labels
 var checked_labels = Object.create(null);
-
-// The flow variable contains a with the in/outflow of each node
+// Keeps track of which name belongs to which column, used for the urls
 var column = {};
-var names = Object.create(null); // set of different labels
 var names_list = [];
-var per_label_mapping = Object.create(null);
-var second_hashmap = Object.create(null);
+
+var second_links_temp;
+var first_links_temp;
 
 var distribution = [];
 var single_distribution = [];
-// current_flow maps names to the current inflow, twice
-// [{'IPR01':4,'IPR02':8,...},{'HOM02':4,'HOM03':8,...}]
 
-
-// Set of nodes in the middle collumn, as determined by the left checkboxes and the middle filters
-var middle_nodes = Object.create(null);
 // flow from middle nodes to the right collumn {1_HOM000248: 50, 1_HOM001148: 108, 1_HOM004574: 21, 1_HOM000586: 84, 1_HOM002222: 60…}
 var flow = Object.create(null);
-//
-var first_links = Object.create(null);
+
 // set of p values to fill the dropdown with.
 var p_values = Object.create(null);
 var minimum_size;
 var options = [];
 
-/* Html identifiers used to select on */
+/* HTML identifiers used to select on */
 var hidden_id = 'hidden';
 var type_id = 'type';
 var p_val_id = 'pvalue';
@@ -83,9 +76,11 @@ var margin = {top: 1, right: 1, bottom: 6, left: 1},
     width = real_width - margin.left - margin.right,
     height = calculate_good_height() - margin.top - margin.bottom;
 
+
 function calculate_good_height(){
     return Math.min(window.innerHeight - 200, Math.log2(2*Object.keys(transcriptIdent).length)* 200);   
 }
+
 
 function calculate_good_width(){
     return Math.min(window.innerWidth - margin.left - margin.right - 80,Math.log2(2*Object.keys(transcriptIdent).length)* 200);
@@ -214,11 +209,13 @@ function checkbox_changed(event){
     enable_everything();
 }
 
+
 function middle_filter(){
     disable_everything();
     update_middle_nodes();
     enable_everything();
 }
+
 
 function update_middle_nodes(){
     calculate_current_flow();
@@ -248,6 +245,7 @@ function enable_everything(){
 var gftranscript = Object.create(null);
 function process_data(){
     names_list = Object.keys(transcriptLabelGF);
+
     gftranscript[no_gf_label] = [];
     for(var label in transcriptLabelGF){
         for(var transcript in transcriptLabelGF[label]){
@@ -259,60 +257,13 @@ function process_data(){
             }
         }
     }
-
-    return;
-    // We assume that the the in/outflow for the middle collum is equal.
-    first_mapping.forEach(function (d) {
-        var source = d[0];
-        var target = d[1];
-        var value = +d[2];
-        var p_val = d[4];
-    
-        if(source === null){
-            d[0] = source = null_label;
-        }
-        //Fill the list of names
-        if(!(source in names)){
-            per_label_mapping[source] = [];
-            names[source] = 1;
-            column[source] = 0;
-        }
-        //Fill the set of p values
-        p_values[p_val] = 1;
-
-        column[target] = 1;
-        per_label_mapping[source].push(d);    
-    });
-
-    var names2 = Object.create(null);
-    for(var i=0, len=second_mapping.length; i < len; i++){
-        var d = second_mapping[i];
-        var source = d[0];
-        var target = d[1];
-        var value = +d[2];
-    
-        if(source === null){
-            d[0] = source = null_label;
-        }
-        //Fill the list of names
-        if(!(source in names2)){
-            second_hashmap[source] = Object.create(null);
-            names2[source] = 1;            
-        } 
-        second_hashmap[source][target] = value; 
-        column[target] = 2;     
-    }
 }
-var current_links;
-var second_links_temp;
-var first_links_temp;
+
+
 function determine_current_links(){
-    middle_nodes = Object.create(null);
     first_links_temp = Object.create(null);
     second_links_temp = Object.create(null);
     
-    current_links = [];
-
     var p_value = $(p_val_id).options[$(p_val_id).selectedIndex].text;
     var type = $(type_id).options[$(type_id).selectedIndex].text;
     var show_hidden = $(hidden_id).checked;
@@ -331,12 +282,15 @@ function determine_current_links(){
                 if(!(identifier in enrichedIdents[p_value])){
                     continue;
                 }
+                // Is this identifier hidden? We only check this if the checkbox isn't checked
                 if(!show_hidden && enrichedIdents[p_value][identifier] === "1"){
                     continue;
                 }
+                // Is the type correct? We only check this if we're dealing with GO terms
                 if(GO && type !== "All" && type !== descriptions[identifier].type){
                     continue;
                 }
+
                 // create or increment this link.
                 if(!(identifier in first_links_temp[label])){
                     first_links_temp[label][identifier] = 1;
@@ -345,19 +299,12 @@ function determine_current_links(){
                     first_links_temp[label][identifier]++;
                 }
 
-                // Keep track of what the middle nodes are made of
-                if(!(identifier in middle_nodes)){
-                    middle_nodes[identifier] = Object.create(null);
-                }
-                middle_nodes[identifier][transcript] = 1;
-
                 // create or increment this link in the second mapping.
+                var gf = transcriptLabelGF[label][transcript];
                 if(!(identifier in second_links_temp)){
                     second_links_temp[identifier] = Object.create(null);
-                }
-                var gf = transcriptLabelGF[label][transcript];
-                //console.log(gf);
-                if(! (gf in second_links_temp[identifier])){
+                }                
+                if(!(gf in second_links_temp[identifier])){
                     second_links_temp[identifier][gf] = 1;
                     column[gf] = 2;
                 } else {
@@ -376,6 +323,7 @@ function calculate_current_flow(){
 
     determine_current_links();
 
+    // calculate flow into each gf
     for(var node in second_links_temp){        
         var map = second_links_temp[node];
          for(var target in map){
@@ -387,7 +335,7 @@ function calculate_current_flow(){
         }
     }
 
-    // Fill the second distribution array
+    // Fill the distribution array
     for(var trgt in flow){
         var fl = flow[trgt];
         if(!distribution[fl]){
@@ -396,27 +344,25 @@ function calculate_current_flow(){
             distribution[fl]++;
         }
     }
+
     calculate_options();
 }
 
 
-var links;
-var left_nodes;
-var right_middle_nodes;
 function filter_links_to_use(){
-    links = [];
-    right_middle_nodes = Object.create(null);
-    left_nodes = Object.create(null);
+    var links = [];
+    var used_middle_nodes = Object.create(null);
     var second_min_flow = $(dropdown_id).options[$(dropdown_id).selectedIndex].value;
 
+    // First add all links in the second mapping, keeping track of the used middle nodes, 
+    // prevents middle nodes from floating to the right when all it's targets are fiiltered out
     for(var ident in second_links_temp){
         var idengf = second_links_temp[ident]
         for(var gf in idengf){
             var fl = flow[gf];
              if(fl >=second_min_flow ){
                 links.push([ident, gf, idengf[gf]]);
-                right_middle_nodes[ident] = 1;
-                left_nodes[gftranscript[gf]] = 1;
+                used_middle_nodes[ident] = 1;
             }
         }
     }
@@ -424,46 +370,13 @@ function filter_links_to_use(){
     for(var lbl in first_links_temp){
         var lblIden = first_links_temp[lbl]
         for(var iden in lblIden){
-            if(iden in right_middle_nodes){
+            if(iden in used_middle_nodes){
                 links.push([lbl, iden, lblIden[iden]]);
             }
         }
     }
 
-/*
-    second_mapping.forEach(function(s) { 
-        var fl = flow[s[1]] ? flow[s[1]]: 0;
-        if(s[0] in middle_nodes && fl >= second_min_flow){
-            links.push(copy_link(s));
-            right_middle_nodes[s[0]] = 1;
-           }        
-    });
-
-    var p_value = $(p_val_id).options[$(p_val_id).selectedIndex].text;
-    var type = $(type_id).options[$(type_id).selectedIndex].text;
-    var show_hidden = $(hidden_id).checked;
-    first_mapping.forEach(function(s) {
-
-        if(s[0] in checked_labels && p_value === s[4]){
-            // If it's a hidden link only show it when show hidden is true.
-            if(!show_hidden && s[3] === "1"){
-                return;
-            }
-            // GO can filter on type, it it's not all, it has to match the selected type
-            if(GO && type !== "All" && type !== descriptions[s[1]].type){
-                return;
-            }
-            if(s[1] in right_middle_nodes){
-                links.push(copy_link(s));
-            }
-        }
-    });    */
     return links;
-}
-
-//TODO unused function
-function copy_link(link,first_mapping){
-    return [link[0],link[1],link[2]];    
 }
 
 
@@ -508,7 +421,7 @@ function draw_sankey() {
     var graph = {"nodes" : [], "links" : []};
     
     var good_links = filter_links_to_use();
-    //var good_links = current_links;
+
     if($(normalization_id).checked){
         normalize_links(good_links);
     }
@@ -614,7 +527,12 @@ function draw_sankey() {
             if(d.name in label_counts){
                 return d.name + "\n" + label_counts[d.name] + " genes";
             } else {
-                var gf_prefix = exp_id + '_';
+                var gf_prefix;
+                if(d.name === no_gf_label){
+                    gf_prefix = '';
+                } else {
+                    gf_prefix = exp_id + '_';
+                }
                 return d.name + "\n" + flow[gf_prefix + d.name] + " genes";
             }
         }
