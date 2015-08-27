@@ -376,8 +376,7 @@ function calculate_current_flow(){
 
     determine_current_links();
 
-    for(var node in second_links_temp){
-        
+    for(var node in second_links_temp){        
         var map = second_links_temp[node];
          for(var target in map){
             console.log
@@ -401,11 +400,13 @@ function calculate_current_flow(){
 }
 
 
-var links
+var links;
+var left_nodes;
+var right_middle_nodes;
 function filter_links_to_use(){
     links = [];
-    var right_middle_nodes = Object.create(null);
-    var left_nodes = Object.create(null);
+    right_middle_nodes = Object.create(null);
+    left_nodes = Object.create(null);
     var second_min_flow = $(dropdown_id).options[$(dropdown_id).selectedIndex].value;
 
     for(var ident in second_links_temp){
