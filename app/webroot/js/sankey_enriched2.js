@@ -4,6 +4,7 @@
 
 // label to display instead of null.
 var null_label = 'no label';
+var no_gf_label = 'no family';
 // When no labels are checked we fall back to comparing the second mapping
 var single_mode = false;
 // The initial amout of nodes to show
@@ -247,9 +248,15 @@ function enable_everything(){
 var gftranscript = Object.create(null);
 function process_data(){
     names_list = Object.keys(transcriptLabelGF);
+    gftranscript[no_gf_label] = [];
     for(var label in transcriptLabelGF){
         for(var transcript in transcriptLabelGF[label]){
+            if(transcriptLabelGF[label][transcript] ===  null){
+                transcriptLabelGF[label][transcript] = no_gf_label;
+                gftranscript[no_gf_label].push(transcript);                
+            } else {
             gftranscript[transcriptLabelGF[label][transcript]] = transcript;
+            }
         }
     }
 
@@ -316,9 +323,11 @@ function determine_current_links(){
             column[label] = 0;
         }
 
-        var transcripts = transcriptLabelGF[label];
-        for(var transcript in transcripts){
+        //var transcripts = transcriptLabelGF[label];
+        for(var transcript in transcriptLabelGF[label]){
+            //if(!(transcript in transcriptIdent)) These are transcripts with no GO
             for(var identifier in transcriptIdent[transcript]){
+                // Is the GO term enriched for this p_value? (this check is unnecessary, the second if catches this case too)
                 if(!(identifier in enrichedIdents[p_value])){
                     continue;
                 }
@@ -328,7 +337,6 @@ function determine_current_links(){
                 if(GO && type !== "All" && type !== descriptions[identifier].type){
                     continue;
                 }
-                //TODO: filter the left side better
                 // create or increment this link.
                 if(!(identifier in first_links_temp[label])){
                     first_links_temp[label][identifier] = 1;
@@ -347,7 +355,8 @@ function determine_current_links(){
                 if(!(identifier in second_links_temp)){
                     second_links_temp[identifier] = Object.create(null);
                 }
-                var gf = transcripts[transcript];
+                var gf = transcriptLabelGF[label][transcript];
+                //console.log(gf);
                 if(! (gf in second_links_temp[identifier])){
                     second_links_temp[identifier][gf] = 1;
                     column[gf] = 2;
@@ -361,24 +370,27 @@ function determine_current_links(){
 
 
 function calculate_current_flow(){
+    // reset data
     flow = Object.create(null);
     distribution = [];
+
     determine_current_links();
+
     for(var node in second_links_temp){
+        
         var map = second_links_temp[node];
-        for(var target in map){
-            
+         for(var target in map){
+            console.log
             if(!(target in flow)){
                 flow[target] = 0;
-             } else {
-                flow[target] += map[target];                    
-             }
+             } 
+             flow[target] += map[target];
         }
     }
 
     // Fill the second distribution array
-    for(var target in flow){
-        var fl = flow[target];
+    for(var trgt in flow){
+        var fl = flow[trgt];
         if(!distribution[fl]){
             distribution[fl] = 1;
         } else {
