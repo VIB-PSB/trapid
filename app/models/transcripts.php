@@ -223,6 +223,29 @@ class Transcripts extends AppModel{
     return $result;
   }
 
+
+  function getOneInterproToGFMapping($exp_id,$interpro){
+    $query	= "SELECT COUNT( * ) , transcripts.`gf_id` , transcripts_interpro.`interpro` 
+               FROM transcripts
+               LEFT JOIN transcripts_interpro ON ( transcripts_interpro.`transcript_id` = transcripts.`transcript_id` 
+                                             AND transcripts_interpro.`experiment_id` = transcripts.`experiment_id` ) 
+               WHERE transcripts.`experiment_id` = $exp_id
+               AND transcripts.`gf_id` IS NOT NULL 
+               AND transcripts_interpro.`interpro` = '$interpro' 
+               GROUP BY transcripts.`gf_id` , transcripts_interpro.`interpro` 
+               ORDER BY COUNT( * ) DESC ";
+    $res	= $this->query($query);
+    $result	= array();
+    foreach($res as $r){
+      $gf_id    = $r['transcripts']['gf_id'];
+      $interpro = $r['transcripts_interpro']['interpro'];
+      $count    = reset($r[0]);
+      $result[] = array($gf_id,$interpro,$count);
+  
+    }
+    return $result;
+  }
+
 }
 
 

@@ -1639,7 +1639,7 @@ class ToolsController extends AppController{
     $this->generateSankeyDiagram($rows,$exp_id,array("controller"=>"functional_annotation","action"=>"go",$exp_id));    
   }
 
-  function interproSankey($exp_id=null){
+  function interproSankey($exp_id=null,$interpro=null){
     $exp_id	= mysql_real_escape_string($exp_id);
     parent::check_user_exp($exp_id);	
     $exp_info	= $this->Experiments->getDefaultInformation($exp_id); 
@@ -1648,7 +1648,7 @@ class ToolsController extends AppController{
     $this->set("exp_id",$exp_id);  
     $this->set('titleIsAKeyword', 'Interpro');
 
-    $rows	= $this->Transcripts->getInterproToGFMapping($exp_id);
+    $rows	= $this->Transcripts->getOneInterproToGFMapping($exp_id,$interpro);
     $this->generateSankeyDiagram($rows,$exp_id,array("controller"=>"functional_annotation","action"=>"interpro",$exp_id));
   }
 

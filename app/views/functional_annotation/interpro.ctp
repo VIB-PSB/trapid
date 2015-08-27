@@ -29,12 +29,17 @@
 	<h3>Toolbox</h3>		
 	<div class="subdiv">
 	<?php
-	$toolbox	= array("Find"=>array(
+	$toolbox	= array("Associated gene families"=>array(
 					array(
-						"The associated gene families",
+						"Table",
 						$html->url(array("action"=>"assoc_gf",$exp_id,"interpro",$interpro)),
 						"some_image.png"
-					),								
+					),
+                    array(
+						"Visualization",
+						$html->url(array("controller"=>"tools","action"=>"interproSankey",$exp_id,$interpro)),
+						"some_image.png"
+					),                    						
 				)			
 			);
 	$this->set("toolbox",$toolbox);

@@ -81,7 +81,7 @@ function draw_sankey() {
     for (var key in inflow_data) {
       if (inflow_data.hasOwnProperty(key)) {
             if(inflow_data[key] < minimal_inflow || inflow_data[key] > maximal_inflow){
-                bad_indices[key] = true;
+                //bad_indices[key] = true;
             }
         }
     }    
@@ -89,7 +89,7 @@ function draw_sankey() {
     for (var key in outflow_data) {
         if (outflow_data.hasOwnProperty(key)) {
             if(outflow_data[key] < minimal_outflow || outflow_data[key] > maximal_outflow){
-                bad_indices[key] = true;
+                //bad_indices[key] = true;
             }
         }
     }
