@@ -6,43 +6,96 @@ var margin = {top: 1, right: 1, bottom: 6, left: 1},
     height = calculate_good_height() - margin.top - margin.bottom;
 
 function calculate_good_height(){
-    return Math.min(window.innerHeight - 200, Math.log1p(sankeyData.nodes.length)* 150);   
+    return Math.min(window.innerHeight - 200, Math.log2(sankey_data.length)* 200);   
 }
 
 function calculate_good_width(){
-    return Math.min(window.innerWidth - margin.left - margin.right - 80,Math.log2(sankeyData.nodes.length)* 200);
+    return Math.min(window.innerWidth - margin.left - margin.right - 80,Math.log2(sankey_data.length)* 300);
 }
 
-// Set the width of the div, so the buttons can float right.
-document.getElementById('sankey').setAttribute("style","display:block;width:"+ real_width.toString()+"px");
-document.getElementById('sankey').style.width=real_width.toString()+"px";
+document.getElementById('sankey').setAttribute("style","display:block;");
 
 
 ////////// Behaviour of the refine button and fields ////////////
 
 document.observe('dom:loaded', function(){
+    calculate_distribution();
+    if(sankey_data.length > 20){
+        $('refinement').style.float = 'right';
+        $('refinement').style.float = '0 0 50px 10px';        
+        calculate_options();
+        fill_in_dropdown();
+    } else {
+        hide_refinement();
+    }
+
   draw_sankey();
-  /*  These functions disable the choice of a maximum below the set minimum and vice versa. */
-  $('min').observe('change', function() {
-    bound_changed('min','max');
-  });
-  $('max').observe('change', function() {
-    bound_changed('max','min');
-  });
-  $('left_min').observe('change', function() {
-    bound_changed('left_min','left_max');
-  });
-  $('left_max').observe('change', function() {
-    bound_changed('left_max','left_min');
-  });
 });
 
-function bound_changed(current, sibling){
-    for (var i = 0, len = $(sibling).options.length; i < len; i++) {
-        $(sibling).options[i].disabled = i > len - 1- $(current).value;
+
+function hide_refinement(){
+    $('refinement').style.display = 'none';
+}
+
+var column = Object.create(null);
+var distribution = [];
+var options;
+var minimum_size;
+function calculate_distribution(){
+    for(var i = 0; i < sankey_data.length; i++){
+        column[sankey_data[i][0]] = 0;
+        column[sankey_data[i][1]] = 1;
+        var fl = sankey_data[i][2];
+        if(!distribution[fl]){
+            distribution[fl] = 1;
+        } else {
+            distribution[fl]++;
+        }
     }
 }
 
+var nodes_to_show = 20;
+function calculate_options(){
+    options = [];
+    minimum_size = undefined;
+    var total = 0;
+
+    for(var i = distribution.length - 1; i > 0; i--){
+        if(typeof distribution[i] != 'undefined' && distribution[i] !== 0){
+            total += distribution[i];
+            options.push([i,total]);
+            if(!minimum_size && total > nodes_to_show){
+                minimum_size = options[Math.max(0,options.length - 2)][0];
+            }            
+        }
+    }
+    // show options in ascending order
+    options.reverse();
+    // Set a decent minimum value, if choice was never set, there aren't that many choices so pick the first value.
+    if(!minimum_size && options.length > 0){
+        minimum_size = options[0][0];
+    }
+}
+
+
+var dropdown_id = 'min'
+function fill_in_dropdown(){
+    // Clear the dropdown before adding new options
+    $(dropdown_id).update();
+    
+    // If there are no options, ask the user to select something
+    if(options.length === 0){
+        $(dropdown_id).options.add(new Option('Please select labels', 0));
+        return;
+    }
+    // Fill in the dropdown
+    for(var i = 0,len = options.length; i < len; i++){
+        var option_string = '>=' + options[i][0] + ' [' + options[i][1] + ' Gene families]';
+        $(dropdown_id).options.add(new Option(option_string, options[i][0]));
+    }
+
+    $(dropdown_id).value = minimum_size;
+}
 
 ////////// Sankey vizualization ////////////
 
@@ -57,103 +110,68 @@ var svg = d3.select("#sankey").append("svg")
 
  // (Re)draw the sankey diagram
 function draw_sankey() {
-    // Remove the old svg if it exists
+    // Empty the old svg if it exists
     d3.select("svg").text('');
 
     var svg = d3.select("svg")
 	    .append("g")
 	    .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
-
-
-    var e = document.getElementById("min");
-    var minimal_inflow = e.options[e.selectedIndex].text;
-    var ma = document.getElementById("max");
-    var maximal_inflow = ma.options[ma.selectedIndex].text; 
-
-    var e_o = document.getElementById("left_min");
-    var minimal_outflow = e_o.options[e_o.selectedIndex].text;
-    var ma_o = document.getElementById("left_max");
-    var maximal_outflow = ma_o.options[ma_o.selectedIndex].text; 
-    var sankey_data_copy = {nodes : [], links : []};
-
-    // 1. create a list of all nodes we need to remove from the viz
-    var bad_indices = {};
-    for (var key in inflow_data) {
-      if (inflow_data.hasOwnProperty(key)) {
-            if(inflow_data[key] < minimal_inflow || inflow_data[key] > maximal_inflow){
-                //bad_indices[key] = true;
-            }
-        }
-    }    
-
-    for (var key in outflow_data) {
-        if (outflow_data.hasOwnProperty(key)) {
-            if(outflow_data[key] < minimal_outflow || outflow_data[key] > maximal_outflow){
-                //bad_indices[key] = true;
-            }
-        }
+   
+    var sankey_data_copy =JSON.parse(JSON.stringify(sankey_data));
+    var min_flow = 0;
+    if($(dropdown_id).selectedIndex !== -1){
+        min_flow = +$(dropdown_id).options[$(dropdown_id).selectedIndex].value;
     }
+    var links = sankey_data_copy.filter(function(link){        
+        return +link[2] >= min_flow;        
+    });
 
-    // 2 We check for possible orphans either on the source or target side
-    // We check for this in one pass.
-    // Go over all links, if the link is good, meaning both source and target aren't bad, the involved nodes are added to the good node set
-    var good_nodes = {};
-    for(var j = 0; j < sankeyData.links.length; j++) {
-        // If the target isn't in the list of the bad_indices add it.
-        if(!(sankeyData.links[j].target in bad_indices) && !(sankeyData.links[j].source in bad_indices)){
-            good_nodes[sankeyData.links[j].source] = true;
-            good_nodes[sankeyData.links[j].target] = false;
-        }
-    }
-    
-    for(index in good_nodes){
-        console
-        var w = {name:sankeyData.nodes[index].name,
-                     href:sankeyData.nodes[index].href,
-                     original_flow:good_nodes[index]?outflow_data[index]:inflow_data[index]};
-        sankey_data_copy.nodes.push(w);
-    } 
-    
-    
-    // 3. Remove all links with a bad index as source or target.
-    for(var j = 0; j < sankeyData.links.length; j++) {
-        // If the target isn't bad, add the link
-        if(!(sankeyData.links[j].target in bad_indices) && !(sankeyData.links[j].source in bad_indices)){
-            
-            // indices might have changed with the removal of nodes.
-            link = {"value":sankeyData.links[j].value};
-            var found = 0;
-            for (var i=0; i < sankey_data_copy.nodes.length; i++) {
-                
-                if (sankey_data_copy.nodes[i].name === sankeyData.nodes[sankeyData.links[j].target].name) {
-                    link['target'] = i;
-                    found++;
-                    if(found === 2) break;
-                    continue;
-                }
-                if (sankey_data_copy.nodes[i].name === sankeyData.nodes[sankeyData.links[j].source].name) {
-                    link['source'] = i;
-                    found++;
-                    if(found === 2) break;
-                }
-            }
-            if(found === 2)
-                sankey_data_copy.links.push(link);
-        }
-    }    
+console.log(min_flow,links);
 
+    var graph = {"nodes" : [], "links" : []};
+    
+    var good_links = links;
+
+    good_links.forEach(function (d) {
+      graph.nodes.push({ "name": d[0] });
+      graph.nodes.push({ "name": d[1] });
+      graph.links.push({ "source": d[0],
+                         "target": d[1],
+                         "value": +d[2]});
+     });
+
+     // return only the distinct / unique nodes
+     graph.nodes = d3.keys(d3.nest()
+       .key(function (d) { return d.name; })
+       .map(graph.nodes));
+
+     // loop through each link replacing the text with its index from node
+     graph.links.forEach(function (d, i) {
+       graph.links[i].source = graph.nodes.indexOf(graph.links[i].source);
+       graph.links[i].target = graph.nodes.indexOf(graph.links[i].target);
+     });
+
+     //now loop through each nodes to make nodes an array of objects
+     // rather than an array of strings
+     graph.nodes.forEach(function (d, i) {
+       var col = column[d];
+       graph.nodes[i] = { name: d.replace(/^\d+_/g,''),
+                          href: urls[col].replace(place_holder,d).replace('GO:','GO-')};
+     });
+ 
+console.log(graph);
 var sankey = d3.sankey()
 	.size([width, height])
 	.nodeWidth(15)
 	.nodePadding(10)
-	.nodes(sankey_data_copy.nodes)
-	.links(sankey_data_copy.links)
+	.nodes(graph.nodes)
+	.links(graph.links)
 	.layout(32);
 
 var path = sankey.link();
 
 var link = svg.append("g").selectAll(".link")
-	.data(sankey_data_copy.links)
+	.data(graph.links)
 	.enter().append("path")
 	.attr("class", "link")
 	.attr("d", path)
@@ -167,7 +185,7 @@ link.append("title")
 // From http://jsfiddle.net/2EqA3/3/
 
 var node = svg.append("g").selectAll(".node")
-	.data(sankey_data_copy.nodes)
+	.data(graph.nodes)
 	.enter().append("g")
 	.attr("class", "node")
 	.attr("transform", function(d) { return "translate(" + d.x + "," + d.y + ")"; })
@@ -191,7 +209,7 @@ node.append("rect")
 	.style("fill", function(d) { return d.color = color(d.name); })
 	.style("stroke", function(d) { return d3.rgb(d.color).darker(2); })
 	.append("title")
-	.text(function(d) { return d.name + "\n" + format(d.value) + " / " + format(d.original_flow); });
+	.text(function(d) { return create_hovertext(d); });
 
 node.append("text")
 	.attr("x", -6)
@@ -199,16 +217,37 @@ node.append("text")
 	.attr("dy", ".35em")
 	.attr("text-anchor", "end")
 	.attr("transform", null)
-	.text(function(d) { return d.name; })
+	.text(function(d) { return create_node_title(d); })
 	.filter(function(d) { return d.x < width / 2; })
 	.attr("x", 6 + sankey.nodeWidth())
 	.attr("text-anchor", "start");
-//console.log(sankey_data_copy);
+
     function dragmove(d) {
 	    d3.select(this).attr("transform", "translate(" + d.x + "," + (d.y = Math.max(0, Math.min(height - d.dy, d3.event.y))) + ")");
 	    sankey.relayout();
 	    link.attr("d", path);
-    }   
+    }
+
+    function create_hovertext(d){
+        var hover_text = d.name + "\n";
+        if(d.name in descriptions){
+           hover_text += descriptions[d.name].desc + "\n";
+        } 
+        return hover_text + format(d.value);        
+    }
+  
+    function create_node_title(d){
+        var max_length = 40;
+        if(d.name in descriptions){
+            var descrip = descriptions[d.name].desc;               
+            if(descrip.length > max_length + 5){
+                descrip = descrip.substring(0,max_length - 3) + '...';
+            }
+            return descrip;
+        } else {
+            return d.name;
+        }
+    } 
 
 }
 

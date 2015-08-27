@@ -31,10 +31,15 @@
 	<?php
 	$toolbox	= array("Find"=>array(
 					array(
-						"The associated gene families",
+						"The associated gene families table",
 						$html->url(array("action"=>"assoc_gf",$exp_id,"go",$go_web)),
 						"some_image.png"
-					),								
+					),
+                    array(
+						"The associated gene families visualization",
+						$html->url(array("controller"=>"tools","action"=>"GOSankey",$exp_id,$go_web)),
+						"some_image.png"
+					), 								
 				),
 				"Explore"=>array(
 					array(	

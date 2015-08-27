@@ -18,7 +18,7 @@
 			    }
 			?>
 			</dd>
-			<dt>GO description</dt>
+			<dt>Description</dt>
 			<dd><?php echo $go_info["desc"];?></dd>
 			<dt>#transcripts</dt>
 			<dd><?php echo $num_transcripts;?></dd>			
@@ -31,7 +31,7 @@
 	<?php
 	$toolbox	= array("Find"=>array(
 					array(
-						"Find the associated gene families",
+						"The associated gene families",
 						$html->url(array("action"=>"assoc_gf",$exp_id,"go",$go_web)),
 						"some_image.png"
 					),								
@@ -57,11 +57,11 @@
 	<h3>Transcripts</h3>
 	<div class="subdiv">
 	<?php echo $this->element("table_func");?>
-	</div>	
-	<br/><br/>
+	</div>		
 	<?php 
 		$download_url	= $html->url(array("controller"=>"trapid","action"=>"transcript_selection",$exp_id,"go",$go_web),true);	
-		$this->set("download_url",$download_url);	
+		$this->set("download_url",$download_url);
+		$this->set("allow_reference_aa_download",1);	
 		echo $this->element("download"); 
 	?>
 </div>
