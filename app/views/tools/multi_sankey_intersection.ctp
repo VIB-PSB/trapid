@@ -7,13 +7,14 @@
 
 <?php
     echo '<script type="text/javascript">';
+    echo "var selected_label = '". $selected_label ."';";
     echo "var mapping = " . json_encode($mapping) .";";
-    echo "\nvar descriptions = " . json_encode($descriptions) .";";
-    echo "\nvar label_counts = " . json_encode($counts) .";";
-    echo "\nvar total_count = " .   $exp_info['transcript_count'] .";";
-    echo 'var dropdown_filter_name = "' . $dropdown_name .'";';
-    echo "\nvar urls = " . json_encode($urls) .";";
-    echo "\nvar place_holder = '" . $place_holder ."';";
+    echo "\nvar descriptions = ". json_encode($descriptions) .";";
+    echo "\nvar label_counts = ". json_encode($counts) .";";
+    echo "\nvar total_count = ".   $exp_info['transcript_count'] .";";
+    echo 'var dropdown_filter_name = "'. $dropdown_name .'";';
+    echo "\nvar urls = ". json_encode($urls) .";";
+    echo "\nvar place_holder = '". $place_holder ."';";
     echo '</script>';
 
 	echo $html->css('multi_sankey_intersection');

@@ -90,12 +90,23 @@ function add_checkboxes(){
             if(n === null_label){
                 continue;
             }
-            // Make sure other checkboxes are selected in each collumn
-            if((i + col) % 2 === 1){
-                checkbox.checked = true;
-                checked_labels[col][n] = 1;
+            // In the first column check the selected label, disable the rest
+            if(col === 0){
+                if(n === selected_label){
+                    checkbox.checked = true;
+                    checked_labels[col][n] = 1;
+                } else {
+                    checkbox.disabled = true;
+                    
+                }                
             } else {
-                checkbox.disabled = true;
+                // In the second column check the other labels, disable the selected_label
+                if(n === selected_label){
+                    checkbox.disabled = true;
+                } else {
+                    checkbox.checked = true;
+                    checked_labels[col][n] = 1;                    
+                }
             }
         }
     });  

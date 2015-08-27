@@ -300,24 +300,6 @@
 						$subset1
 					),					
 					array(
-						"Label GF intersection",
-						$html->url(array("controller"=>"tools","action"=>"label_gf_intersection",$exp_id)),
-						"some_image.png",
-						$subset1
-					),							
-					array(
-						"Label Interpro intersection",
-						$html->url(array("controller"=>"tools","action"=>"label_interpro_intersection",$exp_id)),
-						"some_image.png",
-						$subset1
-					),							
-					array(
-						"Label GO intersection",
-						$html->url(array("controller"=>"tools","action"=>"label_go_intersection",$exp_id)),
-						"some_image.png",
-						$subset1					
-					),					
-					array(
 						"Label →  Enriched GO →  gene family",
 						$html->url(array("controller"=>"tools","action"=>"label_enrichedgo_gf",$exp_id)),
 						"some_image.png",
@@ -334,7 +316,13 @@
 						$html->url(array("controller"=>"tools","action"=>"label_enrichedgo_gf2",$exp_id)),
 						"some_image.png",
 						$subset1
-					)				
+					),					
+					array(
+						"Label →  Enriched Interpro →  gene family [Improved]",
+						$html->url(array("controller"=>"tools","action"=>"label_enrichedinterpro_gf2",$exp_id)),
+						"some_image.png",
+						$subset1
+					)			
 				),
 				"Find"=>array(
 					array(

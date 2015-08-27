@@ -1785,6 +1785,43 @@ echo 'Getting data takes :'.($stop - $start);
     $this->render('sankey_enriched2');  
   }
 
+  function label_enrichedinterpro_gf2($exp_id=null){
+    $this->general_set_up($exp_id);
+
+    $this->set("col_names", array('Label','Interpro','Gene family'));
+    $this->set('dropdown_names',array('Domains', 'Gene families'));
+    $place_holder = '###';
+    $this->set("place_holder", $place_holder);
+    
+$start = microtime(true); 
+    $enriched_interpros = $this->FunctionalEnrichments->getEnrichedInterpro($exp_id);
+    $transcriptLabelGF = $this->FunctionalEnrichments->getTranscriptToLabelAndGF($exp_id);
+    $transcriptInterpro = $this->FunctionalEnrichments->getTranscriptInterproMapping($exp_id);
+    $counts = $this->TranscriptsLabels->getLabels($exp_id);// not necessary anymore
+
+    $interpros = array();
+    foreach ($enriched_interpros['0.1'] as $key => $val){
+        $interpros[] = $key;
+     }
+    $interpro_info	= $this->ProteinMotifs->retrieveInterproInformation($interpros);
+    $this->set('counts', $counts);
+$stop =    microtime(true);
+echo 'Getting data takes :'.($stop - $start);
+    
+    $urls = array(Router::url(array("controller"=>"labels","action"=>"view",$exp_id,$place_holder)),
+                  Router::url(array("controller"=>"functional_annotation","action"=>"interpro",$exp_id,$place_holder)),
+                  Router::url(array("controller"=>"gene_family","action"=>"gene_family",$exp_id,$place_holder)) 
+    );
+
+    $this->set('enriched_gos',$enriched_interpros);
+    $this->set('transcriptGO', $transcriptInterpro);
+    $this->set('transcriptLabelGF', $transcriptLabelGF);
+    $this->set('descriptions', $interpro_info);
+    $this->set('urls', $urls);
+    $this->set('GO', false);
+    $this->render('sankey_enriched2');  
+  }
+
 
   function general_set_up($exp_id=null){
     $exp_id	= mysql_real_escape_string($exp_id);
@@ -1796,9 +1833,10 @@ echo 'Getting data takes :'.($stop - $start);
   }
 
 
-  function label_gf_intersection($exp_id=null){
+  function label_gf_intersection($exp_id=null,$label=null){
     $this->general_set_up($exp_id);
-    
+        
+    $this->set('selected_label',$label); 
     $this->set("col_names", array('Label','Gene family','Label'));
     $this->set('dropdown_name','Gene families');
 
@@ -1817,9 +1855,11 @@ echo 'Getting data takes :'.($stop - $start);
   }
 
 
-  function label_interpro_intersection($exp_id=null){
+  function label_interpro_intersection($exp_id=null,$label=null){
     $this->general_set_up($exp_id);
-  
+
+    $this->set('selected_label',$label);  
+    $this->set('dropdown_name','IPR Domains');
     $this->set('dropdown_name','IPR Domains');
     $this->set("col_names", array('Label','Interpro','Label'));
 $start = microtime(true); 
@@ -1845,8 +1885,10 @@ $stop = microtime(true);
   }
 
 
-function label_go_intersection($exp_id=null){
+function label_go_intersection($exp_id=null,$label=null){
     $this->general_set_up($exp_id);
+
+    $this->set('selected_label',$label); 
     $this->set('dropdown_name',"GO's");
     
     $this->set("col_names", array('Label','Go','Label'));

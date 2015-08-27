@@ -98,10 +98,10 @@ class FunctionalEnrichments extends AppModel{
     return $result;
   }
 
-// ratio is unnecessary maybe
+
  function getEnrichedGO($exp_id){
     $result	= array();
-    $query	= "SELECT identifier, is_hidden, max_p_value, subset_ratio
+    $query	= "SELECT identifier, is_hidden, max_p_value
                FROM  `functional_enrichments`
                WHERE experiment_id = $exp_id
                    AND data_type = 'go'";
@@ -112,6 +112,23 @@ class FunctionalEnrichments extends AppModel{
       $p_val	= $r['functional_enrichments']['max_p_value'];
       if(!isset($result[$p_val]))$result[$p_val] = array();
       $result[$p_val][$GO] = $hidden;
+    }    
+    return $result;
+  }
+
+  function getEnrichedInterpro($exp_id){
+    $result	= array();
+    $query	= "SELECT identifier, is_hidden, max_p_value
+               FROM  `functional_enrichments`
+               WHERE experiment_id = $exp_id
+                   AND data_type = 'ipr'";
+    $res	= $this->query($query);
+    foreach($res as $r){
+      $ipr	    = $r['functional_enrichments']['identifier'];
+      $hidden	= $r['functional_enrichments']['is_hidden'];
+      $p_val	= $r['functional_enrichments']['max_p_value'];
+      if(!isset($result[$p_val]))$result[$p_val] = array();
+      $result[$p_val][$ipr] = $hidden;
     }    
     return $result;
   }
@@ -139,6 +156,33 @@ class FunctionalEnrichments extends AppModel{
     }
     return $result;
   }
+
+
+
+ function getTranscriptInterproMapping($exp_id){
+    $result	= array();
+    $query	=  "SELECT transcript_id, interpro
+                FROM  `transcripts_interpro` 
+                WHERE experiment_id =$exp_id
+                  AND interpro IN (
+                    SELECT DISTINCT identifier
+                    FROM  `functional_enrichments` 
+                    WHERE experiment_id =$exp_id
+                    AND data_type = 'ipr')
+                  AND transcript_id IN ( 
+                    SELECT DISTINCT transcript_id
+                    FROM  `transcripts_labels` 
+                    WHERE experiment_id =$exp_id)";
+    $res	= $this->query($query);
+    foreach($res as $r){
+      $transcr = $r['transcripts_interpro']['transcript_id'];
+      $ipr      = $r['transcripts_interpro']['interpro'];
+      if(!isset($result[$transcr]))$result[$transcr] = array();
+      $result[$transcr][$ipr] = 1;
+    }
+    return $result;
+  }
+
 }
 
 
