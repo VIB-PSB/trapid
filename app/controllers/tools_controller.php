@@ -1548,45 +1548,8 @@ class ToolsController extends AppController{
   function comparative_statistics($exp_id=null){
 
   }
-function generateSankeyDiagram($rows=null,$exp_id=null,$right_urls=null){}
-   /*
-   * Extract the necessary datastructs to generate a Sankey diagram
-   
-    function generateSankeyDiagram($rows=null,$exp_id=null,$right_urls=null){
 
-    $links = array();
-
-    foreach ($rows as $row){
-      // Clean up the gf label, from expId_GFId to GFId, expId is assumed to be numerical
-      $gf_id = preg_replace("/\d*_/","",$row[0],1);
-      $label = $row[1] === null ? 'no label' :$row[1];
-      $count = $row[2];
-      $links[] = array[]
-      if(!isset($names[$label])){
-        $names[$label] = count($nodes);
-        $right_urls[2] = urlencode($label); //This '2' is because the urls array is semi associative, and the first parameter is the exp_id and the second the id
-        $nodes[] = array('name' => $label, 
-                         'href' => Router::url($right_urls,true));
-        $outflow[$names[$label]] = 0;
-      }
-      if(!isset($names[$gf_id])){
-        $names[$gf_id] = count($nodes);
-        $nodes[] = array('name' => $gf_id, 
-                         'href' => Router::url(array("controller"=>"gene_family","action"=>"gene_family",$exp_id,urlencode($row[0])),true));    
- 
-        $inflow[$names[$gf_id]] = 0;
-      }
-
-      // Keeping track of total inflow in a gene_family
-      $inflow[$names[$gf_id]] += $count;
-
-    }
-    $this->set('mapping', json_encode($links));
-	$this->set('sankeyData', json_encode($d));
-
-    $this->render('sankey');
-  }*/
-
+  function generateSankeyDiagram($rows=null,$exp_id=null,$right_urls=null){}
 
 
   function GOSankey($exp_id=null,$go_web){
@@ -1735,7 +1698,7 @@ $start = microtime(true);
     $enriched_gos = $this->FunctionalEnrichments->getEnrichedGO($exp_id);
     $transcriptLabelGF = $this->FunctionalEnrichments->getTranscriptToLabelAndGF($exp_id);
     $transcriptGO = $this->FunctionalEnrichments->getTranscriptGOMapping($exp_id);
-    $counts = $this->TranscriptsLabels->getLabels($exp_id);// not necessary anymore
+    $counts = $this->TranscriptsLabels->getLabels($exp_id);// not necessary anymore, still used though
 
     $go_ids = array();
     foreach ($enriched_gos['0.1'] as $key => $val){

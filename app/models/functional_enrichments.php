@@ -110,9 +110,9 @@ class FunctionalEnrichments extends AppModel{
       $GO	  = $r['functional_enrichments']['identifier'];
       $hidden = $r['functional_enrichments']['is_hidden'];
       $p_val  = $r['functional_enrichments']['max_p_value'];
-      $sign	  = $r['functional_enrichments']['sign'];
+      $sign	  = $r['0']['sign'];
       if(!isset($result[$p_val]))$result[$p_val] = array();
-      $result[$p_val][$GO] = $hidden;
+      $result[$p_val][$GO] = array($hidden,$sign);
     }    
     return $result;
   }
@@ -128,9 +128,9 @@ class FunctionalEnrichments extends AppModel{
       $ipr	  = $r['functional_enrichments']['identifier'];
       $hidden = $r['functional_enrichments']['is_hidden'];
       $p_val  = $r['functional_enrichments']['max_p_value'];
-      $sign	  = $r['functional_enrichments']['sign'];
+      $sign	  = $r['0']['sign'];
       if(!isset($result[$p_val]))$result[$p_val] = array();
-      $result[$p_val][$ipr] = $hidden;
+      $result[$p_val][$ipr] = array($hidden,$sign);
     }    
     return $result;
   }

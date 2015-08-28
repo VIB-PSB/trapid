@@ -35,13 +35,14 @@ var type_id = 'type';
 var p_val_id = 'pvalue';
 var dropdown_id = 'right_min';
 var normalization_id = 'normalize';
+var enrichment_id = 'Enrichment+'
 
 var boxes = 'left_boxes';
 var col_classes = ['left_col','right_col'];
 
 /* Globals defined in sankey_enriched 
 
-    enrichedIdents : [p_val][identifier] = hidden
+    enrichedIdents : [p_val][identifier] = [hidden,sign]
         ['0.1'][GO:0000271] =  "1"
     transcriptIdent : [transcript][identifier] = 1 
         [contig00001][GO:0003824] = 1
@@ -267,6 +268,7 @@ function determine_current_links(){
     var p_value = $(p_val_id).options[$(p_val_id).selectedIndex].text;
     var type = $(type_id).options[$(type_id).selectedIndex].text;
     var show_hidden = $(hidden_id).checked;
+    var sign = $(enrichment_id).checked ? '1' : '-1';
 
     for(var label in checked_labels){        
         if(!(label in first_links_temp)){
@@ -274,16 +276,17 @@ function determine_current_links(){
             column[label] = 0;
         }
 
-        //var transcripts = transcriptLabelGF[label];
         for(var transcript in transcriptLabelGF[label]){
-            //if(!(transcript in transcriptIdent)) These are transcripts with no GO
             for(var identifier in transcriptIdent[transcript]){
                 // Is the GO term enriched for this p_value? (this check is unnecessary, the second if catches this case too)
                 if(!(identifier in enrichedIdents[p_value])){
                     continue;
                 }
                 // Is this identifier hidden? We only check this if the checkbox isn't checked
-                if(!show_hidden && enrichedIdents[p_value][identifier] === "1"){
+                if(!show_hidden && enrichedIdents[p_value][identifier][0] === "1"){
+                    continue;
+                }
+                if(enrichedIdents[p_value][identifier][1] !== sign){
                     continue;
                 }
                 // Is the type correct? We only check this if we're dealing with GO terms
