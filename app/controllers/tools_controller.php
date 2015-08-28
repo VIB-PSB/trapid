@@ -1743,9 +1743,13 @@ echo 'Getting data takes :'.($stop - $start);
     $counts = $this->TranscriptsLabels->getLabels($exp_id);// not necessary anymore
 
     $interpros = array();
-    foreach ($enriched_interpros['0.1'] as $key => $val){
-        $interpros[] = $key;
-     }
+    foreach($enriched_interpros as $label){
+        if(array_key_exists('0.1',$label)){
+            foreach ($label['0.1'] as $key => $val){
+                $interpros[] = $key;
+            }
+        }
+    }
     $interpro_info	= $this->ProteinMotifs->retrieveInterproInformation($interpros);
     $this->set('counts', $counts);
     

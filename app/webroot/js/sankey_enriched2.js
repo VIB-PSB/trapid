@@ -255,6 +255,7 @@ function process_data(){
     p_values.sort(function(a, b) {
         return Number(a) - Number(b);
     }); // Sorts correctly, even with scientific notation
+
     for(var label in enrichedIdents){
         log_enrichments[label] = Object.create(null);
         for(var p in enrichedIdents[label]){
