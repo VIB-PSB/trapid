@@ -1825,7 +1825,7 @@ echo 'Getting data takes :'.($stop - $start);
     );
     $this->set('urls', $urls);    
     
-    $this->render('multi_sankey_intersection'); 
+    $this->render('sankey_intersection'); 
   }
 
 
@@ -1855,7 +1855,7 @@ $stop = microtime(true);
     $this->set('urls', $urls);
     
     
-    $this->render('multi_sankey_intersection');
+    $this->render('sankey_intersection');
   }
 
 
@@ -1885,7 +1885,7 @@ $stop = microtime(true);
     );
     $this->set('urls', $urls);    
     
-    $this->render('multi_sankey_intersection');
+    $this->render('sankey_intersection');
   }
 
 

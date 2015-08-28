@@ -101,15 +101,16 @@ class FunctionalEnrichments extends AppModel{
 
  function getEnrichedGO($exp_id){
     $result	= array();
-    $query	= "SELECT identifier, is_hidden, max_p_value
+    $query	= "SELECT identifier, is_hidden, max_p_value, sign(log_enrichment) as sign
                FROM  `functional_enrichments`
                WHERE experiment_id = $exp_id
                    AND data_type = 'go'";
     $res	= $this->query($query);
     foreach($res as $r){
-      $GO	    = $r['functional_enrichments']['identifier'];
-      $hidden	= $r['functional_enrichments']['is_hidden'];
-      $p_val	= $r['functional_enrichments']['max_p_value'];
+      $GO	  = $r['functional_enrichments']['identifier'];
+      $hidden = $r['functional_enrichments']['is_hidden'];
+      $p_val  = $r['functional_enrichments']['max_p_value'];
+      $sign	  = $r['functional_enrichments']['sign'];
       if(!isset($result[$p_val]))$result[$p_val] = array();
       $result[$p_val][$GO] = $hidden;
     }    
@@ -118,15 +119,16 @@ class FunctionalEnrichments extends AppModel{
 
   function getEnrichedInterpro($exp_id){
     $result	= array();
-    $query	= "SELECT identifier, is_hidden, max_p_value
+    $query	= "SELECT identifier, is_hidden, max_p_value, sign(log_enrichment) as sign
                FROM  `functional_enrichments`
                WHERE experiment_id = $exp_id
                    AND data_type = 'ipr'";
     $res	= $this->query($query);
     foreach($res as $r){
-      $ipr	    = $r['functional_enrichments']['identifier'];
-      $hidden	= $r['functional_enrichments']['is_hidden'];
-      $p_val	= $r['functional_enrichments']['max_p_value'];
+      $ipr	  = $r['functional_enrichments']['identifier'];
+      $hidden = $r['functional_enrichments']['is_hidden'];
+      $p_val  = $r['functional_enrichments']['max_p_value'];
+      $sign	  = $r['functional_enrichments']['sign'];
       if(!isset($result[$p_val]))$result[$p_val] = array();
       $result[$p_val][$ipr] = $hidden;
     }    
