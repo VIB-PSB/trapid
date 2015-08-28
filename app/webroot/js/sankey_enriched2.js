@@ -37,15 +37,15 @@ var type_id = 'type';
 var p_val_id = 'pvalue';
 var dropdown_id = 'right_min';
 var normalization_id = 'normalize';
-var enrichment_id = 'Enrichment+'
+var enrichment_id = 'Enrichment+';
 
 var boxes = 'left_boxes';
 var col_classes = ['left_col','right_col'];
 
 /* Globals defined in sankey_enriched 
 
-    enrichedIdents : [p_val][identifier] = [hidden,sign]
-        ['0.1'][GO:0000271] =  "1"
+    enrichedIdents : [label][p_val][identifier] = [hidden,sign]
+        ['cluster1']['0.1'][GO:0000271] =  "1"
     transcriptIdent : [transcript][identifier] = 1 
         [contig00001][GO:0003824] = 1
     transcriptLabelGF : [label][transcript] = gf_id 
@@ -69,8 +69,7 @@ document.observe('dom:loaded', function(){
   calculate_current_flow();
   fill_in_dropdown();
   
-  draw_sankey(); 
-  
+  draw_sankey();  
 });
 
 // real_width is used for layout purposes
@@ -244,20 +243,26 @@ function enable_everything(){
 var gftranscript = Object.create(null);
 function process_data(){
     names_list = Object.keys(transcriptLabelGF);
+    var p_set = Object.create(null);
+    for(var label in enrichedIdents){
+        for(var p in enrichedIdents[label]){
+            p_set[p] = 1;
+        }
+    }
 
-    p_values = Object.keys(enrichedIdents);
+    p_values = Object.keys(p_set);
     p_values.sort(function(a, b) {
         return Number(a) - Number(b);
     }); // Sorts correctly, even with scientific notation
-
-    // Pick the biggest group, the largest p_value
-    //var identifiers = enrichedIdents[p_values[p_values.length -1]];
-    for(var p in enrichedIdents){
-        for(var ident in enrichedIdents[p]){
-            if(!(ident in log_enrichments)){
-                log_enrichments[ident] = enrichedIdents[p][ident][1];
-            }
-            enrichedIdents[p][ident][1] = enrichedIdents[p][ident][1] > 0 ? 1 :-1; // only keep the sign
+    for(var label in enrichedIdents){
+        log_enrichments[label] = Object.create(null);
+        for(var p in enrichedIdents[label]){
+            for(var ident in enrichedIdents[label][p]){
+                if(!(ident in log_enrichments)){
+                    log_enrichments[label][ident] = enrichedIdents[label][p][ident][1];
+                }
+                enrichedIdents[label][p][ident][1] = enrichedIdents[label][p][ident][1] > 0 ? 1 :-1; // only keep the sign
+            }            
         }
     }
 
@@ -293,14 +298,14 @@ function determine_current_links(){
         for(var transcript in transcriptLabelGF[label]){
             for(var identifier in transcriptIdent[transcript]){
                 // Is the GO term enriched for this p_value? (this check is unnecessary, the second if catches this case too)
-                if(!(identifier in enrichedIdents[p_value])){
+                if(!(p_value in enrichedIdents[label]) || !(identifier in enrichedIdents[label][p_value])){
                     continue;
                 }
                 // Is this identifier hidden? We only check this if the checkbox isn't checked
-                if(!show_hidden && enrichedIdents[p_value][identifier][0] === "1"){
+                if(!show_hidden && enrichedIdents[label][p_value][identifier][0] === "1"){
                     continue;
                 }
-                if(enrichedIdents[p_value][identifier][1] !== sign){
+                if(enrichedIdents[label][p_value][identifier][1] !== sign){
                     continue;
                 }
                 // Is the type correct? We only check this if we're dealing with GO terms
@@ -373,7 +378,7 @@ function filter_links_to_use(){
     // First add all links in the second mapping, keeping track of the used middle nodes, 
     // prevents middle nodes from floating to the right when all it's targets are fiiltered out
     for(var ident in second_links_temp){
-        var idengf = second_links_temp[ident]
+        var idengf = second_links_temp[ident];
         for(var gf in idengf){
             var fl = flow[gf];
              if(fl >=second_min_flow ){
@@ -488,7 +493,7 @@ function draw_sankey() {
 	    .sort(function(a, b) { return b.dy - a.dy; });
 
    link.append("title")
-	    .text(function(d) { return create_link_hovertext(d)});
+	    .text(function(d) { return create_link_hovertext(d);});
       
     // Work around to make something dragable also clickable
     // From http://jsfiddle.net/2EqA3/3/
@@ -562,8 +567,8 @@ function draw_sankey() {
             } else {
                 hover_string += "\n" + d.value + ' gene' + (d.value != 1 ? 's' : '');
             }
-            if(d.target.name in log_enrichments){
-                hover_string +=  "\n" + parseFloat(log_enrichments[d.target.name]).toFixed(4);
+            if(d.source.name in log_enrichments && d.target.name in log_enrichments[d.source.name]){
+                hover_string +=  "\nlog enrichment: " + parseFloat(log_enrichments[d.source.name][d.target.name]).toFixed(4);
             }
             return  hover_string ; 
         }

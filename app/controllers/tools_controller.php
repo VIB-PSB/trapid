@@ -1649,6 +1649,8 @@ echo 'Getting data takes :'.($stop - $start);
     $this->render('sankey_enriched');  
   }
 
+
+
   function label_enrichedgo_gf($exp_id=null){
     $this->general_set_up($exp_id);
 
@@ -1686,6 +1688,7 @@ echo 'Getting data takes :'.($stop - $start);
   }
 
 
+
   function label_enrichedgo_gf2($exp_id=null){
     $this->general_set_up($exp_id);
 
@@ -1694,19 +1697,21 @@ echo 'Getting data takes :'.($stop - $start);
     $place_holder = '###';
     $this->set("place_holder", $place_holder);
     
-$start = microtime(true); 
     $enriched_gos = $this->FunctionalEnrichments->getEnrichedGO($exp_id);
     $transcriptLabelGF = $this->FunctionalEnrichments->getTranscriptToLabelAndGF($exp_id);
     $transcriptGO = $this->FunctionalEnrichments->getTranscriptGOMapping($exp_id);
     $counts = $this->TranscriptsLabels->getLabels($exp_id);// not necessary anymore, still used though
 
     $go_ids = array();
-    foreach ($enriched_gos['0.1'] as $key => $val){
-        $go_ids[] = $key;
+    foreach($enriched_gos as $label){
+        if(array_key_exists('0.1',$label)){
+            foreach ($label['0.1'] as $key => $val){
+                $go_ids[] = $key;
+            }
+        }
     }
     $go_info	= $this->ExtendedGo->retrieveGoInformation($go_ids);
-$stop =    microtime(true);
-echo 'Getting data takes :'.($stop - $start);
+
     $this->set('counts',$counts);
     
     $urls = array(Router::url(array("controller"=>"labels","action"=>"view",$exp_id,$place_holder)),
@@ -1722,6 +1727,8 @@ echo 'Getting data takes :'.($stop - $start);
     $this->render('sankey_enriched2');  
   }
 
+
+
   function label_enrichedinterpro_gf2($exp_id=null){
     $this->general_set_up($exp_id);
 
@@ -1730,7 +1737,6 @@ echo 'Getting data takes :'.($stop - $start);
     $place_holder = '###';
     $this->set("place_holder", $place_holder);
     
-$start = microtime(true); 
     $enriched_interpros = $this->FunctionalEnrichments->getEnrichedInterpro($exp_id);
     $transcriptLabelGF = $this->FunctionalEnrichments->getTranscriptToLabelAndGF($exp_id);
     $transcriptInterpro = $this->FunctionalEnrichments->getTranscriptInterproMapping($exp_id);
@@ -1742,8 +1748,6 @@ $start = microtime(true);
      }
     $interpro_info	= $this->ProteinMotifs->retrieveInterproInformation($interpros);
     $this->set('counts', $counts);
-$stop =    microtime(true);
-echo 'Getting data takes :'.($stop - $start);
     
     $urls = array(Router::url(array("controller"=>"labels","action"=>"view",$exp_id,$place_holder)),
                   Router::url(array("controller"=>"functional_annotation","action"=>"interpro",$exp_id,$place_holder)),
