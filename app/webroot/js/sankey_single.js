@@ -162,7 +162,6 @@ function draw_sankey() {
                           href: urls[col].replace(place_holder,d).replace('GO:','GO-')};
      });
  
-console.log(graph);
 var sankey = d3.sankey()
 	.size([width, height])
 	.nodeWidth(15)
