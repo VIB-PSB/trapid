@@ -63,7 +63,6 @@ document.observe('dom:loaded', function(){
   process_data();
   add_checkboxes();
   fill_in_p_values();
-  determine_current_links();
   calculate_current_flow();
   fill_in_dropdown();
   
@@ -366,7 +365,7 @@ function calculate_current_flow(){
             distribution[fl]++;
         }
     }
-
+    // new flow = new options
     calculate_options();
 }
 
