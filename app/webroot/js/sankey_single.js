@@ -6,11 +6,11 @@ var margin = {top: 1, right: 1, bottom: 6, left: 1},
     height = calculate_good_height() - margin.top - margin.bottom;
 
 function calculate_good_height(){
-    return Math.min(window.innerHeight - 200, Math.log2(sankey_data.length)* 200);   
+    return Math.min(window.innerHeight - 200, Math.log2(sankey_data.length + 1)* 200);   
 }
 
 function calculate_good_width(){
-    return Math.min(window.innerWidth - margin.left - margin.right - 80,Math.log2(sankey_data.length)* 300);
+    return Math.min(window.innerWidth - margin.left - margin.right - 80,Math.log2(sankey_data.length + 1)* 300);
 }
 
 document.getElementById('sankey').setAttribute("style","display:block;");
@@ -38,13 +38,16 @@ function hide_refinement(){
 }
 
 var column = Object.create(null);
+var no_gf_label = 'no family';
 var distribution = [];
-var options;
-var minimum_size;
 function calculate_distribution(){
     for(var i = 0; i < sankey_data.length; i++){
+        if(sankey_data[i][1] === null){
+          sankey_data[i][1] = no_gf_label;  
+        }
         column[sankey_data[i][0]] = 0;
         column[sankey_data[i][1]] = 1;
+        
         var fl = sankey_data[i][2];
         if(!distribution[fl]){
             distribution[fl] = 1;
@@ -55,6 +58,8 @@ function calculate_distribution(){
 }
 
 var nodes_to_show = 20;
+var options;
+var minimum_size;
 function calculate_options(){
     options = [];
     minimum_size = undefined;
@@ -101,7 +106,7 @@ function fill_in_dropdown(){
 
 // The format of the numbers when hovering over a link or node
 var formatNumber = d3.format(",.0f"),
-    format = function(d) { return formatNumber(d) + " genes"; },
+    format = function(d) { return formatNumber(d) + " gene" + (Math.floor(d) !== 1 ? 's' : ''); },
     color = d3.scale.category20();
 
 var svg = d3.select("#sankey").append("svg")
@@ -125,8 +130,6 @@ function draw_sankey() {
     var links = sankey_data_copy.filter(function(link){        
         return +link[2] >= min_flow;        
     });
-
-console.log(min_flow,links);
 
     var graph = {"nodes" : [], "links" : []};
     

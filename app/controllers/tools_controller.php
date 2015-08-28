@@ -1605,7 +1605,7 @@ function generateSankeyDiagram($rows=null,$exp_id=null,$right_urls=null){}
     $this->set("titleIsAKeyword", 'GO');   
     $this->set("place_holder", $place_holder);
     
-    $this->render('sankey');   
+    $this->render('sankey_single');   
   }
 
   function interproSankey($exp_id=null,$interpro=null){
@@ -1623,7 +1623,7 @@ function generateSankeyDiagram($rows=null,$exp_id=null,$right_urls=null){}
     $this->set('titleIsAKeyword', 'Interpro');
     $this->set("place_holder", $place_holder);
 
-    $this->render('sankey'); 
+    $this->render('sankey_single'); 
   }
 
   function label_go_gf($exp_id=null){

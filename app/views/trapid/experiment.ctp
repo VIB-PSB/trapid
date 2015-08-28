@@ -281,7 +281,7 @@
 					)					
 				),				
 				"Sankeys"=>array(	
-					array(
+					/*array(
 						"Interpro →  gene family",
 						$html->url(array("controller"=>"tools","action"=>"interproSankey",$exp_id)),
 						"some_image.png",
@@ -310,7 +310,7 @@
 						$html->url(array("controller"=>"tools","action"=>"label_enrichedinterpro_gf",$exp_id)),
 						"some_image.png",
 						$subset1
-					),					
+					),		*/			
 					array(
 						"Label →  Enriched GO →  gene family [Improved]",
 						$html->url(array("controller"=>"tools","action"=>"label_enrichedgo_gf2",$exp_id)),

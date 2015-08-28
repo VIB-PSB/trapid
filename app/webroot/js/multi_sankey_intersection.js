@@ -75,11 +75,11 @@ function add_checkboxes(){
             label.htmlFor = checkbox.id;
             
             if(n !== null_label){
-                label.appendChild(document.createTextNode(' ' + n + ' [' + label_counts[n] + ' genes] '));
+                label.appendChild(document.createTextNode(' ' + n + ' [' + label_counts[n] + ' gene' + (label_counts[n] !== 1 ? 's] ' : '] '))); 
              } else {
                 // To make only part of the label red & bold, otherwise the span tags are displayed.
                 label.appendChild(document.createTextNode(""));
-                label.innerHTML = ' <span class="bad_label">' + n + '</span> [' + label_counts[n] + ' genes] ';                
+                label.innerHTML = ' <span class="bad_label">' + n + '</span> [' + label_counts[n] + ' gene' + (label_counts[n] !== 1 ? 's] ' : '] ');                
             }
             
             
@@ -425,11 +425,11 @@ var margin = {top: 1, right: 1, bottom: 6, left: 1},
     height = calculate_good_height() - margin.top - margin.bottom;
 
 function calculate_good_height(){
-    return Math.min(window.innerHeight - 200, Math.log2(2*mapping.length)* 200);
+    return Math.min(window.innerHeight - 200, Math.log2(2*(mapping.length + 1))* 200);
 }
 
 function calculate_good_width(){
-    return Math.min(window.innerWidth - margin.left - margin.right - 80,Math.log2(2*mapping.length)* 200);
+    return Math.min(window.innerWidth - margin.left - margin.right - 80,Math.log2(2*(mapping.length + 1))* 200);
 }
 
 // Create an empty svg as a placeholder
@@ -554,7 +554,7 @@ function draw_sankey() {
                return descriptions[d.name].desc;
             } 
             if(d.name in label_counts ) {
-                return d.name + "\n" + label_counts[d.name] + " genes";
+                return d.name + "\n" + label_counts[d.name] + " gene" + (label_counts[d.name] !== 1 ? 's' : '');
             } else {
                 return d.name;
             }
@@ -574,7 +574,7 @@ function draw_sankey() {
             var option = $('normalization').selectedIndex;
             switch(option){
                 case 0:
-                    hover_string += d.value + ' genes';
+                    hover_string += d.value + " gene" + (label_counts[d.name] !== 1 ? 's' : '');
                 break;
                 case 1:
                     hover_string += parseFloat(d.value).toFixed(2) + '% of genes in intersection';

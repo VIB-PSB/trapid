@@ -167,12 +167,12 @@ function add_checkboxes(){
         label.htmlFor = checkbox.id;
         
         if(n !== null_label){
-            label.appendChild(document.createTextNode(' ' + n + ' [' + label_counts[n] + ' genes] '));
+            label.appendChild(document.createTextNode(' ' + n + ' [' + label_counts[n] + ' gene' + (label_counts[n] !== 1 ? 's] ' : '] ')));
          } else {
             // To make only part of the label red & bold
             label.appendChild(document.createTextNode(''));
             // We can't just create a textNode with the text we want because this displays the span tags as text
-            label.innerHTML = ' <span class="bad_label">' + n + '</span> [' + label_counts[n] + ' genes] ';                
+            label.innerHTML = ' <span class="bad_label">' + n + '</span> [' + label_counts[n] + ' gene' + (label_counts[n] !== 1 ? 's] ' : '] ');                
         }            
         
         var container = $(boxes).select('.' + col_classes[i % 2])[0];
@@ -327,7 +327,6 @@ function calculate_current_flow(){
     for(var node in second_links_temp){        
         var map = second_links_temp[node];
          for(var target in map){
-            console.log
             if(!(target in flow)){
                 flow[target] = 0;
              } 
@@ -400,8 +399,8 @@ function normalize_links(links){
 
 // The format of the numbers when hovering over a link or node
 var formatNumber = d3.format(",.0f"),
-    format = function(d) { return formatNumber(d) + " genes"; },
-    color = d3.scale.category20();
+    format = function(d) { return formatNumber(d) + " genes"; };
+var color = d3.scale.category20(); 
 
 var svg = d3.select("#sankey").append("svg")
 	    .attr("width", width + margin.left + margin.right)
@@ -522,10 +521,10 @@ function draw_sankey() {
 
         function create_hovertext(d){
             if(d.name in descriptions){
-               return d.name + "\n" +descriptions[d.name].desc;
+               return d.name + "\n" + descriptions[d.name].desc;
             } 
             if(d.name in label_counts){
-                return d.name + "\n" + label_counts[d.name] + " genes";
+                return d.name + "\n" + label_counts[d.name] + " gene" + (label_counts[d.name] !== 1 ? 's' : '');
             } else {
                 var gf_prefix;
                 if(d.name === no_gf_label){
@@ -533,7 +532,7 @@ function draw_sankey() {
                 } else {
                     gf_prefix = exp_id + '_';
                 }
-                return d.name + "\n" + flow[gf_prefix + d.name] + " genes";
+                return d.name + "\n" + flow[gf_prefix + d.name] + " gene" + (flow[gf_prefix + d.name] !== 1 ? 's' : '');
             }
         }
 
@@ -544,7 +543,7 @@ function draw_sankey() {
             if($(normalization_id).checked){
                 hover_string += parseFloat(d.value).toFixed(2) + '% of genes shown';
             } else {
-                hover_string += d.value + ' genes';
+                hover_string += d.value + ' gene' + (d.value != 1 ? 's' : '');
             }            
             return  hover_string ; 
         }

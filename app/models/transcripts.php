@@ -204,9 +204,8 @@ class Transcripts extends AppModel{
                LEFT JOIN transcripts_go ON ( transcripts_go.`transcript_id` = transcripts.`transcript_id` 
                                              AND transcripts_go.`experiment_id` = transcripts.`experiment_id` ) 
                WHERE transcripts.`experiment_id` = $exp_id
-               AND transcripts.`gf_id` IS NOT NULL AND transcripts_go.`go` = '$go'
-               GROUP BY transcripts.`gf_id` , transcripts_go.`go` 
-               ORDER BY COUNT( * ) DESC ";
+               AND transcripts_go.`go` = '$go'
+               GROUP BY transcripts.`gf_id`";
     $res	= $this->query($query);
     $result	= array();
     foreach($res as $r){
@@ -250,17 +249,15 @@ class Transcripts extends AppModel{
                LEFT JOIN transcripts_interpro ON ( transcripts_interpro.`transcript_id` = transcripts.`transcript_id` 
                                              AND transcripts_interpro.`experiment_id` = transcripts.`experiment_id` ) 
                WHERE transcripts.`experiment_id` = $exp_id
-               AND transcripts.`gf_id` IS NOT NULL 
                AND transcripts_interpro.`interpro` = '$interpro' 
-               GROUP BY transcripts.`gf_id` , transcripts_interpro.`interpro` 
-               ORDER BY COUNT( * ) DESC ";
+               GROUP BY transcripts.`gf_id` ";//, transcripts_interpro.`interpro` ";
     $res	= $this->query($query);
     $result	= array();
     foreach($res as $r){
       $gf_id    = $r['transcripts']['gf_id'];
       $interpro = $r['transcripts_interpro']['interpro'];
       $count    = reset($r[0]);
-      $result[] = array($gf_id,$interpro,$count);
+      $result[] = array($interpro,$gf_id,$count);
   
     }
     return $result;
