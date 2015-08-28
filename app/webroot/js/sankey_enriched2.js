@@ -5,8 +5,6 @@
 // label to display instead of null.
 var null_label = 'no label';
 var no_gf_label = 'no family';
-// When no labels are checked we fall back to comparing the second mapping
-var single_mode = false;
 // The initial amout of nodes to show
 var nodes_to_show = 20;
 // checked_labels contain the names of all checked labels
@@ -116,6 +114,7 @@ function fill_in_dropdown(){
 }
 
 
+/* p values are used in the filtering, filled in only once*/
 function fill_in_p_values(){
     for(var i = 0, len = p_values.length; i < len; i++){
       $(p_val_id).options.add(new Option(p_values[i], i));
@@ -147,6 +146,7 @@ function calculate_options(){
 }
 
 
+/* Dynamically add checkboxes based on the labels that are supplied */
 function add_checkboxes(){
     names_list.sort();
 
@@ -181,11 +181,9 @@ function add_checkboxes(){
         if(n === null_label){
             continue;
         }
-        // check some values
-        if(i % 2 === 0){
-            checkbox.checked = true;
-            checked_labels[n] = 1;
-        } 
+        // check  all values in the initial view some values
+        checkbox.checked = true;
+        checked_labels[n] = 1;         
     }
 }
 
@@ -199,7 +197,6 @@ function checkbox_changed(event){
     } else {
         delete checked_labels[chckbx.name];        
     }        
-    single_mode = Object.keys(checked_labels).length === 0;
     // Other groupings, other options.
     update_middle_nodes();
 
