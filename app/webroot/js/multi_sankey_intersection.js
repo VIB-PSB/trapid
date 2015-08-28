@@ -538,7 +538,7 @@ function draw_sankey() {
 	    .attr("dy", ".35em")
 	    .attr("text-anchor", "end")
 	    .attr("transform", null)
-	    .text(function(d) { return d.name; })
+	    .text(function(d) { return create_node_title(d.name); })
 	    .filter(function(d) { return d.x < width / 2; })
 	    .attr("x", 6 + sankey.nodeWidth())
 	    .attr("text-anchor", "start");
@@ -550,14 +550,19 @@ function draw_sankey() {
         }
 
         function create_hovertext(d){
-            if(d.name in descriptions){
-               return descriptions[d.name].desc;
-            } 
             if(d.name in label_counts ) {
                 return d.name + "\n" + label_counts[d.name] + " gene" + (label_counts[d.name] !== 1 ? 's' : '');
-            } else {
-                return d.name;
             }
+            var hover_text = d.name;
+            if(d.name in descriptions){
+               hover_text += "\n" + descriptions[d.name].desc;
+            }
+            var used_name = d.name;
+            if(!(used_name in current_flow)){
+                used_name = exp_id + '_' + used_name;
+            }
+            var flows = current_flow[used_name];
+            return hover_text + "\n" + flows[0]+ " gene" + (flows[0] !== 1 ? 's' : '') + ' | ' +  flows[1] + " gene" + (flows[1] !== 1 ? 's' : '');            
         }
 
         // The hovertext varies depending on the normalization used
@@ -585,6 +590,20 @@ function draw_sankey() {
                 default:
             }
             return  hover_string ; 
+        }
+
+
+        function create_node_title(name){
+            var max_length = 40;
+            if(name in descriptions){
+                var descrip = descriptions[name].desc;               
+                if(descrip.length > max_length + 5){
+                    descrip = descrip.substring(0,max_length - 3) + '...';
+                }
+                return descrip;
+            } else {
+                return name;
+            }
         }
 }
 

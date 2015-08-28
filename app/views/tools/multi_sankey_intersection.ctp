@@ -15,6 +15,7 @@
     echo 'var dropdown_filter_name = "'. $dropdown_name .'";';
     echo "\nvar urls = ". json_encode($urls) .";";
     echo "\nvar place_holder = '". $place_holder ."';";
+    echo "\nvar exp_id = '" . $exp_id ."';";
     echo '</script>';
 
 	echo $html->css('multi_sankey_intersection');
