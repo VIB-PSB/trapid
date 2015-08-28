@@ -14,7 +14,7 @@
     echo '</script>';	
 
 	echo $html->css('sankey');
-	echo $javascript->link(array('d3-3.5.6.min','sankey','mysankey'));
+	echo $javascript->link(array('d3-3.5.6.min','sankey','sankey_single'));
 
     echo '<div id="refinement">';
     echo $form->create(false, array('class'=> 'refine_box'));
