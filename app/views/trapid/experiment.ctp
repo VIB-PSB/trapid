@@ -280,37 +280,7 @@
 						"other_image.png"
 					)					
 				),				
-				"Sankeys"=>array(	
-					/*array(
-						"Interpro →  gene family",
-						$html->url(array("controller"=>"tools","action"=>"interproSankey",$exp_id)),
-						"some_image.png",
-						$subset1
-					),					
-					array(
-						"GO →  gene family",
-						$html->url(array("controller"=>"tools","action"=>"GOSankey",$exp_id)),
-						"some_image.png",
-						$subset1
-					),					
-					array(
-						"Label →  GO →  gene family",
-						$html->url(array("controller"=>"tools","action"=>"label_go_gf",$exp_id)),
-						"some_image.png",
-						$subset1
-					),					
-					array(
-						"Label →  Enriched GO →  gene family",
-						$html->url(array("controller"=>"tools","action"=>"label_enrichedgo_gf",$exp_id)),
-						"some_image.png",
-						$subset1
-					),					
-					array(
-						"Label →  Enriched Interpro →  gene family",
-						$html->url(array("controller"=>"tools","action"=>"label_enrichedinterpro_gf",$exp_id)),
-						"some_image.png",
-						$subset1
-					),		*/			
+				"Sankeys"=>array(
 					array(
 						"Label →  Enriched GO →  gene family [Improved]",
 						$html->url(array("controller"=>"tools","action"=>"label_enrichedgo_gf2",$exp_id)),
