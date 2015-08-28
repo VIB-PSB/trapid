@@ -121,18 +121,20 @@ class FunctionalEnrichments extends AppModel{
 
   function getEnrichedInterpro($exp_id){
     $result	= array();
-    $query	= "SELECT identifier, is_hidden, max_p_value, log_enrichment
+    $query	= "SELECT label, identifier, is_hidden, max_p_value, log_enrichment
                FROM  `functional_enrichments`
                WHERE experiment_id = $exp_id
                    AND data_type = 'ipr'";
     $res	= $this->query($query);
     foreach($res as $r){
+      $label  = $r['functional_enrichments']['label'];
       $ipr	  = $r['functional_enrichments']['identifier'];
       $hidden = $r['functional_enrichments']['is_hidden'];
       $p_val  = $r['functional_enrichments']['max_p_value'];
       $sign	  = $r['functional_enrichments']['log_enrichment'];
-      if(!isset($result[$p_val]))$result[$p_val] = array();
-      $result[$p_val][$ipr] = array($hidden,$sign);
+      if(!isset($result[$label]))$result[$label] = array();
+      if(!isset($result[$label][$p_val]))$result[$label][$p_val] = array();
+      $result[$label][$p_val][$ipr] = array($hidden,$sign);
     }    
     return $result;
   }
