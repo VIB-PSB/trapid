@@ -414,7 +414,7 @@ function normalize_links(links){
 
 // The format of the numbers when hovering over a link or node
 var formatNumber = d3.format(",.0f"),
-    format = function(d) { return formatNumber(d) + " genes"; },
+    format = function(d) { return formatNumber(d) + " gene" + (Math.floor(d) !== 1 ? 's' : '');; },
     color = d3.scale.category20();
 
 
@@ -579,7 +579,7 @@ function draw_sankey() {
             var option = $('normalization').selectedIndex;
             switch(option){
                 case 0:
-                    hover_string += d.value + " gene" + (label_counts[d.name] !== 1 ? 's' : '');
+                    hover_string += d.value + " gene" + (d.value !== 1 ? 's' : '');
                 break;
                 case 1:
                     hover_string += parseFloat(d.value).toFixed(2) + '% of genes in intersection';
