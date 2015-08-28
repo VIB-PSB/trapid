@@ -21,7 +21,6 @@ var second_links_temp;
 var first_links_temp;
 
 var distribution = [];
-var single_distribution = [];
 
 // flow from middle nodes to the right collumn {1_HOM000248: 50, 1_HOM001148: 108, 1_HOM004574: 21, 1_HOM000586: 84, 1_HOM002222: 60…}
 var flow = Object.create(null);
@@ -245,9 +244,9 @@ var gftranscript = Object.create(null);
 function process_data(){
     names_list = Object.keys(transcriptLabelGF);
     var p_set = Object.create(null);
-    for(var label in enrichedIdents){
-        for(var p in enrichedIdents[label]){
-            p_set[p] = 1;
+    for(var label2 in enrichedIdents){
+        for(var p2 in enrichedIdents[label2]){
+            p_set[p2] = 1;
         }
     }
 
@@ -392,7 +391,7 @@ function filter_links_to_use(){
     }
 
     for(var lbl in first_links_temp){
-        var lblIden = first_links_temp[lbl]
+        var lblIden = first_links_temp[lbl];
         for(var iden in lblIden){
             if(iden in used_middle_nodes){
                 links.push([lbl, iden, lblIden[iden]]);
@@ -526,7 +525,7 @@ function draw_sankey() {
 	    .style("fill", function(d) { return d.color = color(d.name); })
 	    .style("stroke", function(d) { return d3.rgb(d.color).darker(2); })
 	    .append("title")
-	    .text(function(d) { return create_hovertext(d)});
+	    .text(function(d) { return create_hovertext(d);});
     node.append("text")
 	    .attr("x", -6)
 	    .attr("y", function(d) { return d.dy / 2; })
