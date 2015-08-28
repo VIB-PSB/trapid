@@ -15,8 +15,8 @@ var names_list = [];
 
 var log_enrichments = Object.create(null);
 
-var second_links_temp;
-var first_links_temp;
+var second_links;
+var first_links;
 
 var distribution = [];
 
@@ -77,6 +77,9 @@ var margin = {top: 1, right: 1, bottom: 6, left: 1},
     height = calculate_good_height() - margin.top - margin.bottom;
 
 
+/* calculate_good_x because we have to determine some size before drawing the diagram,
+    d3 will then fill in the shole space allocated to it, so for a small amount of transcripts we allocate less space
+    Otherwise we've got a huge diagram without super big nodes, which looks ridiculous */
 function calculate_good_height(){
     return Math.min(window.innerHeight - 200, Math.log2(2*Object.keys(transcriptIdent).length)* 200);   
 }
@@ -199,7 +202,6 @@ function checkbox_changed(event){
     }        
     // Other groupings, other options.
     update_middle_nodes();
-
     
     enable_everything();
 }
@@ -217,7 +219,7 @@ function update_middle_nodes(){
     fill_in_dropdown();
 }
 
-
+/* Enabling and disabeling all inputs during computations out of fear of race conditions and other bad things */
 function disable_everything(){
     var input_elements = document.getElementsByTagName('input');
     for(var i = 0, len = input_elements.length; i < len ; i++){
@@ -277,10 +279,10 @@ function process_data(){
     }
 }
 
-
+/* The current links are the ones that aren't filtered out, they are split up in 2 partsm first and second _links*/
 function determine_current_links(){
-    first_links_temp = Object.create(null);
-    second_links_temp = Object.create(null);
+    first_links = Object.create(null);
+    second_links = Object.create(null);
     
     var p_value = $(p_val_id).options[$(p_val_id).selectedIndex].text;
     var type = $(type_id).options[$(type_id).selectedIndex].text;
@@ -289,8 +291,8 @@ function determine_current_links(){
     var no_sign_filtering = $(all_enrichment_id).checked;
 
     for(var label in checked_labels){        
-        if(!(label in first_links_temp)){
-            first_links_temp[label] = Object.create(null);
+        if(!(label in first_links)){
+            first_links[label] = Object.create(null);
             column[label] = 0;
         }
 
@@ -313,23 +315,23 @@ function determine_current_links(){
                 }
 
                 // create or increment this link.
-                if(!(identifier in first_links_temp[label])){
-                    first_links_temp[label][identifier] = 1;
+                if(!(identifier in first_links[label])){
+                    first_links[label][identifier] = 1;
                     column[identifier] = 1;
                 } else {
-                    first_links_temp[label][identifier]++;
+                    first_links[label][identifier]++;
                 }
 
                 // create or increment this link in the second mapping.
                 var gf = transcriptLabelGF[label][transcript];
-                if(!(identifier in second_links_temp)){
-                    second_links_temp[identifier] = Object.create(null);
+                if(!(identifier in second_links)){
+                    second_links[identifier] = Object.create(null);
                 }                
-                if(!(gf in second_links_temp[identifier])){
-                    second_links_temp[identifier][gf] = 1;
+                if(!(gf in second_links[identifier])){
+                    second_links[identifier][gf] = 1;
                     column[gf] = 2;
                 } else {
-                    second_links_temp[identifier][gf]++;
+                    second_links[identifier][gf]++;
                 }               
             }                    
         }
@@ -345,8 +347,8 @@ function calculate_current_flow(){
     determine_current_links();
 
     // calculate flow into each gf
-    for(var node in second_links_temp){        
-        var map = second_links_temp[node];
+    for(var node in second_links){        
+        var map = second_links[node];
          for(var target in map){
             if(!(target in flow)){
                 flow[target] = 0;
@@ -376,8 +378,8 @@ function filter_links_to_use(){
 
     // First add all links in the second mapping, keeping track of the used middle nodes, 
     // prevents middle nodes from floating to the right when all it's targets are fiiltered out
-    for(var ident in second_links_temp){
-        var idengf = second_links_temp[ident];
+    for(var ident in second_links){
+        var idengf = second_links[ident];
         for(var gf in idengf){
             var fl = flow[gf];
              if(fl >=second_min_flow ){
@@ -387,8 +389,8 @@ function filter_links_to_use(){
         }
     }
 
-    for(var lbl in first_links_temp){
-        var lblIden = first_links_temp[lbl];
+    for(var lbl in first_links){
+        var lblIden = first_links[lbl];
         for(var iden in lblIden){
             if(iden in used_middle_nodes){
                 links.push([lbl, iden, lblIden[iden]]);
