@@ -15,6 +15,8 @@ var checked_labels = Object.create(null);
 var column = {};
 var names_list = [];
 
+var log_enrichments = Object.create(null);
+
 var second_links_temp;
 var first_links_temp;
 
@@ -116,12 +118,8 @@ function fill_in_dropdown(){
 
 
 function fill_in_p_values(){
-    var list = Object.keys(enrichedIdents);
-    list.sort(function(a, b) {
-        return Number(a) - Number(b);
-    }); // Sorts correctly, even with scientific notation
-    for(var i = 0, len = list.length; i < len; i++){
-      $(p_val_id).options.add(new Option(list[i], i));
+    for(var i = 0, len = p_values.length; i < len; i++){
+      $(p_val_id).options.add(new Option(p_values[i], i));
     }
 }
 
@@ -247,6 +245,22 @@ var gftranscript = Object.create(null);
 function process_data(){
     names_list = Object.keys(transcriptLabelGF);
 
+    p_values = Object.keys(enrichedIdents);
+    p_values.sort(function(a, b) {
+        return Number(a) - Number(b);
+    }); // Sorts correctly, even with scientific notation
+
+    // Pick the biggest group, the largest p_value
+    //var identifiers = enrichedIdents[p_values[p_values.length -1]];
+    for(var p in enrichedIdents){
+        for(var ident in enrichedIdents[p]){
+            if(!(ident in log_enrichments)){
+                log_enrichments[ident] = enrichedIdents[p][ident][1];
+            }
+            enrichedIdents[p][ident][1] = enrichedIdents[p][ident][1] > 0 ? 1 :-1; // only keep the sign
+        }
+    }
+
     gftranscript[no_gf_label] = [];
     for(var label in transcriptLabelGF){
         for(var transcript in transcriptLabelGF[label]){
@@ -254,7 +268,7 @@ function process_data(){
                 transcriptLabelGF[label][transcript] = no_gf_label;
                 gftranscript[no_gf_label].push(transcript);                
             } else {
-            gftranscript[transcriptLabelGF[label][transcript]] = transcript;
+                gftranscript[transcriptLabelGF[label][transcript]] = transcript;
             }
         }
     }
@@ -268,7 +282,7 @@ function determine_current_links(){
     var p_value = $(p_val_id).options[$(p_val_id).selectedIndex].text;
     var type = $(type_id).options[$(type_id).selectedIndex].text;
     var show_hidden = $(hidden_id).checked;
-    var sign = $(enrichment_id).checked ? '1' : '-1';
+    var sign = $(enrichment_id).checked ? 1 : -1;
 
     for(var label in checked_labels){        
         if(!(label in first_links_temp)){
@@ -542,12 +556,15 @@ function draw_sankey() {
         // The hovertext varies depending on the normalization used
         function create_link_hovertext(d){
             var arrow = " → "; 
-            var hover_string = d.source.name + arrow + d.target.name + "\n";
+            var hover_string = d.source.name + arrow + d.target.name ;
             if($(normalization_id).checked){
-                hover_string += parseFloat(d.value).toFixed(2) + '% of genes shown';
+                hover_string += "\n" + parseFloat(d.value).toFixed(2) + '% of genes shown';
             } else {
-                hover_string += d.value + ' gene' + (d.value != 1 ? 's' : '');
-            }            
+                hover_string += "\n" + d.value + ' gene' + (d.value != 1 ? 's' : '');
+            }
+            if(d.target.name in log_enrichments){
+                hover_string +=  "\n" + parseFloat(log_enrichments[d.target.name]).toFixed(4);
+            }
             return  hover_string ; 
         }
 
