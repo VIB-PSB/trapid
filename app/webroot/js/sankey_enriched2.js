@@ -577,7 +577,8 @@ function draw_sankey() {
         function create_node_title(name){
             var max_length = 40;
             if(name in descriptions){
-                var descrip = descriptions[name].desc;               
+                var descrip = descriptions[name].desc;
+                // max_lenght +5, so atleast 8 chars get cut.             
                 if(descrip.length > max_length + 5){
                     descrip = descrip.substring(0,max_length - 3) + '...';
                 }
