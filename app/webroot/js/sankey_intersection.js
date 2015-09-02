@@ -147,12 +147,10 @@ function checkbox_changed(event,col){
     }        
     single_mode = Object.keys(checked_labels[col]).length === 0 || Object.keys(checked_labels[1 - col]).length === 0;
     // Other groupings, other options.
-    //update_current_flow(chckbx.name,col,chckbx.checked);
 
     calculate_current_flow();
     fill_in_dropdown();
 
-    fill_in_dropdown();
     enable_everything();
 }
 
@@ -232,73 +230,6 @@ function calculate_current_flow(){
                 single_distribution[big]++;
         }
     }
-}
-
-function update_current_flow(name, col, selected){
-    var map = per_label_mapping[name];
-    for(var target in map){
-        // The target might not have been added yet
-        if(! (target in current_flow)){
-            current_flow[target] = [0,0];
-        }
-        var before = Math.max(current_flow[target][0],current_flow[target][1]);
-        var in_distr_before = current_flow[target][0] > 0 && current_flow[target][1] > 0;
-        // Update current_flow
-        if(selected){
-            // Add the flow when something new is checked
-            current_flow[target][col] += map[target];
-        } else {
-            // Remove it when the label is deselected
-            current_flow[target][col] -= map[target];
-        }
-
-        var after = Math.max(current_flow[target][0],current_flow[target][1]);
-        var in_distr_now = current_flow[target][0] > 0 && current_flow[target][1] > 0;
-        /* Update the distribution if it changed
-         * if this node wasn't part of the distribution and still isn't, or it was and the value didn't change the distribution stays the same
-         *  The distribution changes in 3 cases
-         *  - Node was in the distribution and isn't anymore -> The previous value is decremented
-         *  - Node was in the distribution and still is, with a different value, the previous gets decremented, the current one incremented
-         *  - Node wasn't in the distribution and now is, increment the new value 
-         */
-        if(in_distr_before){
-            if(in_distr_now ){
-                // If the value changed, decrement the previous and increment the current
-                if(before !== after){
-                    distribution[before]--;
-                    // Check if it exists, create the value or increment it
-                    if(!distribution[after]) {
-                       distribution[after] = 1;
-                    } else {
-                        distribution[after]++;
-                    }
-                } else {
-                    // The value stayed the same, so do nothing.
-                }
-            } else {
-                // Was in the distribution before, not anymore, so decrement the previous
-                distribution[before]--;
-            }
-        } else {
-             if(in_distr_now){
-                // Check if it exists, create the value or increment it
-                if(!distribution[after]) {
-                   distribution[after] = 1;
-                } else {
-                    distribution[after]++;
-                }
-            }
-        }
-        // Also update the single_distribution
-        if(before !== after){
-            single_distribution[before]--;
-            if(!single_distribution[after]) {
-               single_distribution[after] = 1;
-            } else {
-               single_distribution[after]++;
-            }   
-        } 
-    }   
 }
 
 
