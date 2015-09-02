@@ -23,7 +23,8 @@ function hide_type(){
 
 function middle_filter(){
     disable_everything();
-    update_middle_nodes();
+    calculate_current_flow();
+    fill_in_dropdown();
     enable_everything();
 }
 
@@ -146,8 +147,11 @@ function checkbox_changed(event,col){
     }        
     single_mode = Object.keys(checked_labels[col]).length === 0 || Object.keys(checked_labels[1 - col]).length === 0;
     // Other groupings, other options.
-    update_current_flow(chckbx.name,col,chckbx.checked);
-    
+    //update_current_flow(chckbx.name,col,chckbx.checked);
+
+    calculate_current_flow();
+    fill_in_dropdown();
+
     fill_in_dropdown();
     enable_everything();
 }
@@ -179,16 +183,24 @@ function enable_everything(){
 }
 
 
-var distribution = [];
-var single_distribution = [];
 // current_flow maps middle columns to a pair of values giving the left and right flow
 // {'IPR01':[4,8],'IPR02':[8,0]...}
-var current_flow = Object.create(null);
+var current_flow;
+var distribution;
+var single_distribution;
 function calculate_current_flow(){
+    distribution = [];
+    single_distribution = [];
+    current_flow = Object.create(null);
+
+    var type = $(type_id).options[$(type_id).selectedIndex].text;
     checked_labels.forEach(function(labels,col){
         for(var label in labels){
             var map = per_label_mapping[label];
             for(var target in map){
+                if(GO && type !== "All" && descriptions[target].type !== type){
+                    continue;
+                }
                 if(! (target in current_flow)){
                     current_flow[target] = [0,0];
                 }
@@ -344,6 +356,7 @@ function process_data(){
 function filter_links_to_use(){
     var links = [];   
     var min_flow = $(dropdown_name).options[$(dropdown_name).selectedIndex].value;
+    var type = $(type_id).options[$(type_id).selectedIndex].text;
 
     if(!single_mode){
         mapping.forEach(function(s) {
@@ -351,7 +364,12 @@ function filter_links_to_use(){
             var right_flow = current_flow[s[1]]? current_flow[s[1]][1]: 0;  
             if(s[0] in checked_labels[0] && 
               ((right_flow >= min_flow && left_flow > 0) || (left_flow >= min_flow && right_flow > 0))){
-                  links.push(copy_link(s));
+                  
+                  if(GO && type !== "All" && type !== descriptions[s[1]].type){
+                        // Do nothing
+                 } else {
+                    links.push(copy_link(s));
+                 }
             }
         });
 
@@ -360,7 +378,12 @@ function filter_links_to_use(){
             var right_flow = current_flow[s[0]]? current_flow[s[0]][1]: 0;  
             if(s[1] in checked_labels[1] && 
               ((right_flow >= min_flow && left_flow > 0) || (left_flow >= min_flow && right_flow > 0))){
-                  links.push(copy_link(s));
+
+                  if(GO && type !== "All" && type !== descriptions[s[0]].type){
+                        // Do nothing
+                  } else {
+                        links.push(copy_link(s));
+                  }                 
             }        
         });
     } else {
@@ -371,7 +394,12 @@ function filter_links_to_use(){
         mapping_to_use.forEach(function(s) {
             var flow = current_flow[s[other_col]]? current_flow[s[other_col]][label_col]: 0;
             if(s[label_col] in checked_labels[label_col] && flow >= min_flow){
-                links.push(copy_link(s));
+                // Is the type correct? We only check this if we're dealing with GO terms
+                if(GO && type !== "All" && type !== descriptions[s[other_col]].type){
+                    // Do nothing
+                } else {
+                    links.push(copy_link(s));
+                }
             }
         });
     }

@@ -34,8 +34,7 @@ var type_id = 'type';
 var p_val_id = 'pvalue';
 var dropdown_id = 'right_min';
 var normalization_id = 'normalize';
-var positive_enrichment_id = 'Enrichment+';
-var all_enrichment_id = 'EnrichmentX';
+var enrichment_id = 'enrichment';
 
 var boxes = 'left_boxes';
 var col_classes = ['left_col','right_col'];
@@ -286,8 +285,8 @@ function determine_current_links(){
     var p_value = $(p_val_id).options[$(p_val_id).selectedIndex].text;
     var type = $(type_id).options[$(type_id).selectedIndex].text;
     var show_hidden = $(hidden_id).checked;
-    var sign = $(positive_enrichment_id).checked ? 1 : -1;
-    var no_sign_filtering = $(all_enrichment_id).checked;
+    var sign = $(enrichment).selectedIndex === 0 ? 1 : -1;
+
 
     for(var label in checked_labels){        
         if(!(label in first_links)){
@@ -305,7 +304,7 @@ function determine_current_links(){
                 if(!show_hidden && enrichedIdents[label][p_value][identifier][0] === "1"){
                     continue;
                 }
-                if(!no_sign_filtering && enrichedIdents[label][p_value][identifier][1] !== sign){
+                if(enrichedIdents[label][p_value][identifier][1] !== sign){
                     continue;
                 }
                 // Is the type correct? We only check this if we're dealing with GO terms
