@@ -21,7 +21,7 @@
 	<?php
 	$toolbox	= array("Compare"=>array(
 					array(
-						"Label GF intersection",
+						"Label Gene Family intersection",
 						$html->url(array("controller"=>"tools","action"=>"label_gf_intersection",$exp_id,$label)),
 						"some_image.png"
 					),							

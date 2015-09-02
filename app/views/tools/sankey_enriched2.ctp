@@ -41,15 +41,7 @@
     echo $form->create(false, array('id'=> 'middle_refine_form','class'=> 'refine_box'));
     echo $form->input('type: ', array('options' => array('All','MF','BP','CC'), 'id' =>'type','onchange' => 'middle_filter()'));
     echo $form->input('p value: ', array('options' => array(), 'id' => 'pvalue','onchange' => 'middle_filter()'));
-
-    $options=array('x'=>' all ', '+'=>' positive ', '-'=>' negative ');
-    // Select positives by default, also remove the ugly box around the radio buttions
-    echo 'Enrichment: <div style="padding-left:20px;">';
-    $attributes=array('value'=>'x',
-                      'legend'=>false,
-                      'separator' => '<br />',
-                      'onchange' => 'middle_filter()');
-    echo $form->radio('Enrichment',$options,$attributes);
+    echo $form->input('Enrichment: ', array('options' => array('positive', 'negative'), 'id' => 'pvalue','onchange' => 'middle_filter()'));
     echo '</div>';
 
     echo $form->input(' show hidden', array('type' => 'checkbox', 'id' => 'hidden','onchange' => 'middle_filter()'));

@@ -1,6 +1,7 @@
 "use strict";
 
 document.observe('dom:loaded', function(){
+  if(!GO){hide_type();}
   process_data();
   add_checkboxes();
   calculate_current_flow();
@@ -13,6 +14,19 @@ var single_mode = false;
 var null_label = 'no label';
 
 ////////// Behaviour of the refine button and fields ////////////
+var type_id = 'type';
+function hide_type(){
+    // Parent because otherwise the label stays visible.
+    $(type_id).parentElement.style.display = 'none';
+}
+
+
+function middle_filter(){
+    disable_everything();
+    update_middle_nodes();
+    enable_everything();
+}
+
 
 var dropdown_name = 'middle_min';
 function fill_in_dropdown(){    
@@ -350,6 +364,7 @@ function filter_links_to_use(){
             }        
         });
     } else {
+        // single_mode
         var other_col = Object.keys(checked_labels[0]).length === 0 ? 0:1;
         var label_col = 1 - other_col;
         var mapping_to_use = other_col === 0 ? reverse_mapping : mapping;

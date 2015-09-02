@@ -1697,7 +1697,7 @@ class ToolsController extends AppController{
                   Router::url(array("controller"=>"gene_family","action"=>"gene_family",$exp_id,$place_holder)) 
     );
     $this->set('urls', $urls);    
-    
+    $this->set('GO', false);
     $this->render('sankey_intersection'); 
   }
 
@@ -1726,7 +1726,7 @@ class ToolsController extends AppController{
                   Router::url(array("controller"=>"functional_annotation","action"=>"interpro",$exp_id,$place_holder)) 
     );
     $this->set('urls', $urls);
-    
+    $this->set('GO', false);
     
     $this->render('sankey_intersection');
   }
@@ -1757,7 +1757,7 @@ function label_go_intersection($exp_id=null,$label=null){
                   Router::url(array("controller"=>"functional_annotation","action"=>"go",$exp_id,$place_holder)) 
     );
     $this->set('urls', $urls);    
-    
+    $this->set('GO', true);
     $this->render('sankey_intersection');
   }
 
