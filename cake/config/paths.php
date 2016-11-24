@@ -148,7 +148,8 @@ if(!defined('WEBSITE_TITLE')){
 /**
  * Path/URL to the temporary files directory 
  */
-if (!defined('TMP')) {define('TMP', '/www/bioapp/trapid2/');}
+// if (!defined('TMP')) {define('TMP', '/www/bioapp/trapid2/');}
+if (!defined('TMP')) {define('TMP', '/www/bioapp/trapid_frbuc/');}
 if(!defined('TMP_WEB')){define('TMP_WEB','http://bioinformatics.psb.ugent.be/readwrite/trapid2/');}
 
 /**
