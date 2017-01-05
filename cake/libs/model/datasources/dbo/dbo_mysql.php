@@ -98,6 +98,9 @@ class DboMysql extends DboSource {
 
 		if (!$config['persistent'] || $config['connect'] === 'mysql_connect') {
 			$this->connection = mysql_connect($config['host'] . ':' . $config['port'], $config['login'], $config['password'], true);
+			// mysql_query($config['init'], $this->connection);
+			// Better to modify the queries themselves
+			// mysql_query("SET sql_mode = 'STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION';", $this->connection);
 		} else {
 			$this->connection = $connect($config['host'] . ':' . $config['port'], $config['login'], $config['password']);
 		}
