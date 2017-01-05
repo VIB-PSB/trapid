@@ -143,10 +143,10 @@ if (!defined('TESTS')) {
  * Name for the title on pages
  */
 if(!defined('WEBSITE_TITLE')){
-  define('WEBSITE_TITLE','TRAPID: Rapid Analysis of Transcriptome Data');	
+  define('WEBSITE_TITLE','TRAPID: Rapid Analysis of Transcriptome Data');
 }
 /**
- * Path/URL to the temporary files directory 
+ * Path/URL to the temporary files directory
  */
 // if (!defined('TMP')) {define('TMP', '/www/bioapp/trapid2/');}
 if (!defined('TMP')) {define('TMP', '/www/bioapp/trapid_frbuc/');}
@@ -155,14 +155,14 @@ if(!defined('TMP_WEB')){define('TMP_WEB','http://bioinformatics.psb.ugent.be/rea
 /**
  * TRAPID database information
  */
-if(!defined('TRAPID_DB_SERVER')){define('TRAPID_DB_SERVER',"psbsql03");}
+if(!defined('TRAPID_DB_SERVER')){define('TRAPID_DB_SERVER',"psbsql01");}
 if(!defined('TRAPID_DB_NAME')){define('TRAPID_DB_NAME',"db_trapid_02");}
 if(!defined('TRAPID_DB_PORT')){define('TRAPID_DB_PORT',"3306");}
-if(!defined('TRAPID_DB_USER')){define('TRAPID_DB_USER',"trapid_website");}
-if(!defined('TRAPID_DB_PASSWORD')){define('TRAPID_DB_PASSWORD',"trapid_webaccess");}
+if(!defined('TRAPID_DB_USER')){define('TRAPID_DB_USER',"");}
+if(!defined('TRAPID_DB_PASSWORD')){define('TRAPID_DB_PASSWORD',"");}
 
 /**
- * PLAZA database information
+ * PLAZA reference database information
  */
 if(!defined('PLAZA_DB_SERVER')){define('PLAZA_DB_SERVER',"psbsql03");}
 if(!defined('PLAZA_DB_PORT')){define('PLAZA_DB_PORT',"3306");}
@@ -171,8 +171,8 @@ if(!defined('PLAZA_DB_PASSWORD')){define('PLAZA_DB_PASSWORD',"plaza_web_roxor");
 
 
 /*
- * Location BLAST databases on webserver
- * Subdirectories based on database names of PLAZA versions.
+ * Location of BLAST databases on webserver + midas
+ * Subdirectories are named following database names of PLAZA versions.
  */
 if(!defined('BLAST_DB_DIR')){
   define('BLAST_DB_DIR','/www/blastdb/biocomp/moderated/trapid/');
@@ -186,7 +186,7 @@ if(!defined('BLAST_DB_DIR_MIDAS')){
  * Defined to prevent overloading and abuse
  */
 if(!defined('MAX_CLUSTER_JOBS')){
-  define('MAX_CLUSTER_JOBS',2);
+  define('MAX_CLUSTER_JOBS', 2);
 }
 
 
@@ -210,12 +210,12 @@ if (!defined('VENDORS')) {
 }
 /**
  * Path to the Pear directory
- * The purporse is to make it easy porting Pear libs into Cake
+ * The purpose is to make it easy porting Pear libs into Cake
  * without setting the include_path PHP variable.
  */
 	define ('PEAR', VENDORS.'Pear'.DS);
 /**
- *  Full url prefix
+ *  Full URL prefix
  */
 	$s = null;
 	if (env('HTTPS')) {

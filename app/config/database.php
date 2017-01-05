@@ -69,6 +69,7 @@
  * on a per-table basis with the Model::$tablePrefix property.
  *
  */
+ // TODO: Update reference db information
 class DATABASE_CONFIG {
 	var $default = array(
 		'driver' 	=> 'mysql',
@@ -77,26 +78,30 @@ class DATABASE_CONFIG {
 		'port' 		=> '',
 		'login' 	=> TRAPID_DB_USER,
 		'password' 	=> TRAPID_DB_PASSWORD,
-		'database' 	=> TRAPID_DB_NAME,		
+		'database' 	=> TRAPID_DB_NAME,
 		'schema' 	=> '',
 		'prefix' 	=> '',
-		'encoding' 	=> ''
-	);	
+		'encoding' 	=> '' //,
+		// Not compatible with cakephp 1.2 ? Check how it is done in v3
+  	// Better to modify the queries themselves
+		// 'init' => "SET sql_mode = 'STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION';"
+	);
 
-	var $db_trapid_01_taxonomy = array(
+	// Removed as of 2016-01-03 (merged `full_taxonomy` table with main TRAPID db)
+	/* var $db_trapid_01_taxonomy = array(
 		'driver' 	=> 'mysql',
 		'persistent' 	=> false,
 		'host' 		=> PLAZA_DB_SERVER,
 		'port' 		=> '',
 		'login' 	=> PLAZA_DB_USER,
 		'password' 	=> PLAZA_DB_PASSWORD,
-		'database' 	=> "db_trapid_01_taxonomy",		
+		'database' 	=> "db_trapid_01_taxonomy",
 		'schema' 	=> '',
 		'prefix' 	=> '',
 		'encoding' 	=> ''
-	);
+	); */
 
-	
+
 	var $db_plaza_public_02_5	= array(
 		'driver' 	=> 'mysql',
 		'persistent' 	=> false,
@@ -104,7 +109,7 @@ class DATABASE_CONFIG {
 		'port' 		=> '',
 		'login' 	=> PLAZA_DB_USER,
 		'password' 	=> PLAZA_DB_PASSWORD,
-		'database' 	=> 'db_plaza_public_02_5',		
+		'database' 	=> 'db_plaza_public_02_5',
 		'schema' 	=> '',
 		'prefix' 	=> '',
 		'encoding' 	=> ''
@@ -117,7 +122,7 @@ class DATABASE_CONFIG {
 		'port' 		=> '',
 		'login' 	=> PLAZA_DB_USER,
 		'password' 	=> PLAZA_DB_PASSWORD,
-		'database' 	=> 'db_plaza_public_03',		
+		'database' 	=> 'db_plaza_public_03',
 		'schema' 	=> '',
 		'prefix' 	=> '',
 		'encoding' 	=> ''
@@ -130,13 +135,13 @@ class DATABASE_CONFIG {
 		'port' 		=> '',
 		'login' 	=> PLAZA_DB_USER,
 		'password' 	=> PLAZA_DB_PASSWORD,
-		'database' 	=> 'db_orthomcldb_r5',		
+		'database' 	=> 'db_orthomcldb_r5',
 		'schema' 	=> '',
 		'prefix' 	=> '',
 		'encoding' 	=> ''
-	);	
+	);
 
-	/*	
+	/*
 	var $workbench = array(
 		'driver'	=> 'mysql',
 		'persistent'	=> false,
@@ -146,7 +151,7 @@ class DATABASE_CONFIG {
 		'password'	=> 'wb_plaza_roxor',
 		'database'	=> DB_WORKBENCH_NAME,	//defined in /cake/config/paths.php
 		'schema'       	=> '',
-		'prefix'	=> '',					
+		'prefix'	=> '',
 	     	'encoding'	=> ''
 	);
 	*/
