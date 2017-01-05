@@ -1359,7 +1359,7 @@ public class InitialTranscriptsProcessing {
 	 */
 	private void storeInterproTranscripts(Connection trapid_connection,String trapid_exp_id,Map<String,Set<String>>transcript_interpro) throws Exception{
 		long t51							= System.currentTimeMillis();
-		String insert_go_annot				= "INSERT INTO `transcripts_annotation` (`experiment_id`, `type`, `transcript_id`, `name`, `is_hidden`) VALUES ('"+trapid_exp_id+"', 'ipr', ?, ?, '0') ";
+		String insert_ipr_annot				= "INSERT INTO `transcripts_annotation` (`experiment_id`, `type`, `transcript_id`, `name`, `is_hidden`) VALUES ('"+trapid_exp_id+"', 'ipr', ?, ?, '0') ";
 		// TRAPID db structure changed for version 2...
 		// String insert_ipr_annot				= "INSERT INTO `transcripts_interpro` (`experiment_id`,`transcript_id`,`interpro`) VALUES ('"+trapid_exp_id+"', ? , ? )  ";
 		PreparedStatement ins_ipr_annot		= trapid_connection.prepareStatement(insert_ipr_annot);
