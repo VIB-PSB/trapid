@@ -1,6 +1,6 @@
 <?php
 class StatisticsComponent extends Object{
-    
+
 
 
   function makeVennOverview($transcript2labels){
@@ -10,7 +10,7 @@ class StatisticsComponent extends Object{
       sort($labels);
       $label_string	= implode(";;;",$labels);
       if(!array_key_exists($label_string,$result)){$result[$label_string] = 0;}
-      $result[$label_string]++;	
+      $result[$label_string]++;
     }
     return $result;
   }
@@ -28,26 +28,26 @@ class StatisticsComponent extends Object{
       $val["label"] = $labels[$i];
       $val["values"] = array($values[$i]);
       $new_values[] = $val;
-    }    
+    }
     //$result["color"]	= array("#FF0000","#00FF00","#0000FF");
 
     $result["label"]	= array($data_label);
-    $result["values"]	= $new_values;   
+    $result["values"]	= $new_values;
     return $result;
   }
 
 
-  function normalize_json_data($json){       
+  function normalize_json_data($json){
     //first step, get the sum for each possible entry
-    $sums	= array(); 
-    foreach($json['label'] as $k=>$v){$sums[$k]=0;} //initialize sums array    
-    foreach($json['values'] as $val){	
+    $sums	= array();
+    foreach($json['label'] as $k=>$v){$sums[$k]=0;} //initialize sums array
+    foreach($json['values'] as $val){
       foreach($val['values'] as $k=>$v){
 	$sums[$k] = $sums[$k] + $v;
       }
     }
-    //sums is the total amount of transcripts/genes   
-    
+    //sums is the total amount of transcripts/genes
+
     //second step: normalize the data
     foreach($json['values'] as $index=>$val){
       foreach($val['values'] as $k=>$v){
@@ -56,8 +56,8 @@ class StatisticsComponent extends Object{
 	$json['values'][$index]['values'][$k] = $norm;
       }
     }
-    //pr($json);   
-    return $json;       
+    //pr($json);
+    return $json;
   }
 
 
@@ -68,14 +68,14 @@ class StatisticsComponent extends Object{
     $min_val		= $min_val_arr[0];
     $max_val		= $max_val_arr[1];
     $interval		= $min_val_arr[1]-$min_val_arr[0];
-    	
+
     //format of json requires multiple sub-arrays below the "label" and "value" sections
     //using the current index is a convenient way to directly get the new index.
-    $curr_index		= count($json['label']);   
+    $curr_index		= count($json['label']);
     $json['label'][]	= $data_label;
 
     for($i=0;$i<$num_bins;$i++){
-      $json['values'][$i]['values'][$curr_index]	= 0;    
+      $json['values'][$i]['values'][$curr_index]	= 0;
     }
     //pr($json);
 
@@ -92,7 +92,7 @@ class StatisticsComponent extends Object{
       	$prev_value_all	= $json['values'][$bin]['values'][0];
       	$json['values'][$bin]['values'][0] = $prev_value_all-1;
       }
-    }   
+    }
     //pr($json);
     return $json;
   }
@@ -104,7 +104,7 @@ class StatisticsComponent extends Object{
     for($i=0;$i<$num_bins;$i++){$result[$i]=0;}	// initialize array, makes it easier downstream
     $smallest_length	= $data[0];
     $largest_length	= $data[count($data)-1];
-    $bin_size		= ($largest_length-$smallest_length) / $num_bins;   
+    $bin_size		= ($largest_length-$smallest_length) / $num_bins;
     foreach($data as $d){
       $bin		= floor(($d-$smallest_length)/$bin_size);
       if($bin>=$num_bins){$bin = $num_bins-1;}
@@ -120,7 +120,7 @@ class StatisticsComponent extends Object{
       }
     }
     $final_result = array("values"=>$result,"labels"=>$labels);
-    return $final_result;		
+    return $final_result;
   }
 
 
@@ -129,18 +129,18 @@ class StatisticsComponent extends Object{
   function create_bins($data,$num_bins,$use_standard_bins = true){
     ksort($data);
     $result		= array();
-    $keys		= array_keys($data); 	
-    $largest_key	= $keys[count($keys) - 1];   
-    $smallest_key	= $keys[0]; 
+    $keys		= array_keys($data);
+    $largest_key	= $keys[count($keys) - 1];
+    $smallest_key	= $keys[0];
     $divider		= 10;
     if($use_standard_bins){
       $divider		= 1000;
     }
-        
+
     //round the keys.
     $bottom		= $divider * floor($smallest_key / $divider);
     $top		= $divider * ceil($largest_key / $divider);
-    $diff		= round(($top - $bottom)/$num_bins);			
+    $diff		= round(($top - $bottom)/$num_bins);
     for($i = 0; $i < $num_bins; $i++){
       $b		= $bottom + $i * $diff;
       $t		= $bottom + ($i+1) * $diff ;
@@ -149,8 +149,8 @@ class StatisticsComponent extends Object{
       foreach($data as $k=>$v){
 	  if($k>=$b && $k<=$t){$result[$key] ++ ; }
       }
-    }  
-	
+    }
+
     return $result;
   }
 
@@ -167,7 +167,7 @@ class StatisticsComponent extends Object{
 							"Glycine"=>array("GGT","GGC","GGA","GGG"),
 							"Histidine"=>array("CAT","CAC"),
 							"Isoleucine"=>array("ATT","ATC","ATA"),
-							"Leucine"=>array("TTA","TTG","CTT","CTC","CTA","CTG"), 
+							"Leucine"=>array("TTA","TTG","CTT","CTC","CTA","CTG"),
 							"Lysine"=>array("AAA","AAG"),
 							"Methionine"=>array("ATG"),
 							"Phenylalanine"=>array("TTT","TTC"),

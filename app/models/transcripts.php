@@ -2,6 +2,8 @@
   /*
    * This model represents info on the transcripts
    */
+
+   // Queries updated to reflect changes made to the db for TRAPID 2.0
 class Transcripts extends AppModel{
 
   var $name	= 'Transcripts';
@@ -9,7 +11,7 @@ class Transcripts extends AppModel{
 
 
 
-  function getBasicInformationTranscripts($exp_id,$transcript_ids){   
+  function getBasicInformationTranscripts($exp_id,$transcript_ids){
     $result		= array();
     $transcripts_string	= "('".implode("','",$transcript_ids)."')";
     $query		= "SELECT `transcript_id`,`gf_id`,`meta_annotation` FROM `transcripts` WHERE `experiment_id`='".$exp_id."' AND `transcript_id` IN ".$transcripts_string." ";
@@ -17,24 +19,24 @@ class Transcripts extends AppModel{
     foreach($res as $r){
       $result[$r['transcripts']['transcript_id']] = array("transcript_id"=>$r['transcripts']['transcript_id'],
 							  "gf_id"=>$r['transcripts']['gf_id'],
-							  "meta_annotation"=>$r['transcripts']['meta_annotation']);	
+							  "meta_annotation"=>$r['transcripts']['meta_annotation']);
     }
     return $result;
   }
 
 
-  function getRandomTranscriptsFrameDP($exp_id,$bad_gene_family,$count){   
+  function getRandomTranscriptsFrameDP($exp_id,$bad_gene_family,$count){
     $result		= array();
     if($count<=0){return $result;}
     $max_iterations	= 100;	//prevent infinite loops
-    $query		= "SELECT `transcript_id`,`transcript_sequence` FROM `transcripts` WHERE `experiment_id`='".$exp_id."' AND `gf_id`!='".$bad_gene_family."' AND `putative_frameshift`='0' ORDER BY RAND() LIMIT ".$max_iterations; 
-    $res		= $this->query($query);    	       
+    $query		= "SELECT `transcript_id`,`transcript_sequence` FROM `transcripts` WHERE `experiment_id`='".$exp_id."' AND `gf_id`!='".$bad_gene_family."' AND `putative_frameshift`='0' ORDER BY RAND() LIMIT ".$max_iterations;
+    $res		= $this->query($query);
     for($i=0;$i< count($res) && count($result)<$count;$i++){
       $r		= $res[$i]['transcripts'];
       $transcript_id	= $r['transcript_id'];
       $transcript_sequence	= $r['transcript_sequence'];
       $result[$transcript_id] = $transcript_sequence;
-    }  
+    }
     return $result;
   }
 
@@ -45,7 +47,7 @@ class Transcripts extends AppModel{
     $query	= "SELECT `transcript_id`";
     foreach($columns as $column){$query = $query.",`".$column."`";}
     $query	= $query." FROM `transcripts` WHERE `experiment_id`='".$exp_id."'";
-    $res	= $this->query($query);   
+    $res	= $this->query($query);
     $result	= array();
     foreach($res as $r){
       $result[] = $r['transcripts'];
@@ -57,18 +59,18 @@ class Transcripts extends AppModel{
   function findExperimentInformation($exp_id){
     $exp_id	= mysql_real_escape_string($exp_id);
     $query	= "SELECT COUNT(`transcript_id`) as transcript_count, COUNT(DISTINCT(`gf_id`)) as gf_count FROM `transcripts` WHERE `experiment_id`='".$exp_id."' ";
-    $res	= $this->query($query);   
+    $res	= $this->query($query);
     return $res;
   }
 
   function updateCodonStats($exp_id,$transcript_id,$orf_sequence){
     $has_start_codon	= 0;
-    $has_stop_codon 	= 0;	
+    $has_stop_codon 	= 0;
     if(strlen($orf_sequence)>=3){
       $start_codon	= substr($orf_sequence,0,3);
       $stop_codon	= substr($orf_sequence,-3,3);
       if($start_codon=="ATG"){$has_start_codon=1;}
-      if($stop_codon=="TAA" || $stop_codon=="TAG" || $stop_codon=="TGA"){$has_stop_codon=1;}     
+      if($stop_codon=="TAA" || $stop_codon=="TAG" || $stop_codon=="TGA"){$has_stop_codon=1;}
     }
     $statement = "update `transcripts` SET `orf_contains_start_codon`='".$has_start_codon."',`orf_contains_stop_codon`='".$has_stop_codon."' WHERE `experiment_id`='".$exp_id."' AND `transcript_id`='".$transcript_id."' ";
     $this->query($statement);
@@ -77,7 +79,7 @@ class Transcripts extends AppModel{
 
   function findAssociatedGf($exp_id,$transcript_ids){
     $transcripts_string	= "('".implode("','",$transcript_ids)."')";
-    $query	= "SELECT `gf_id`,COUNT(`transcript_id`) as count FROM `transcripts` WHERE `experiment_id`='".$exp_id."' AND 
+    $query	= "SELECT `gf_id`,COUNT(`transcript_id`) as count FROM `transcripts` WHERE `experiment_id`='".$exp_id."' AND
 	`transcript_id` IN ".$transcripts_string." GROUP BY `gf_id` ";
     $res	= $this->query($query);
     $result	= array();
@@ -88,8 +90,8 @@ class Transcripts extends AppModel{
   }
 
   function getSequenceStats($exp_id){
-    $query	= "SELECT AVG(CHAR_LENGTH(`transcript_sequence`)) as avg_transcript_length, 
-				AVG(CHAR_LENGTH(`orf_sequence`)) as avg_orf_length FROM `transcripts` 
+    $query	= "SELECT AVG(CHAR_LENGTH(`transcript_sequence`)) as avg_transcript_length,
+				AVG(CHAR_LENGTH(`orf_sequence`)) as avg_orf_length FROM `transcripts`
 			WHERE `experiment_id`='".$exp_id."' ";
     $res	= $this->query($query);
     $result     = array();
@@ -113,15 +115,15 @@ class Transcripts extends AppModel{
     }
     else{
       return $result;
-    }   
+    }
     if($meta_annot!=null){
       $query	= $query." AND `meta_annotation`='".$meta_annot."' ";
     }
     $res	= $this->query($query);
-    $result	= array();   
-    foreach($res as $r){      
-	$result[] 	= $r[0]['length'];	
-    }  
+    $result	= array();
+    foreach($res as $r){
+	$result[] 	= $r[0]['length'];
+    }
     return $result;
   }
 
@@ -130,7 +132,7 @@ class Transcripts extends AppModel{
 
 
   function getMetaAnnotation($exp_id){
-    $query	= "SELECT `meta_annotation`,`meta_annotation_score`,COUNT(`transcript_id`) as count FROM `transcripts` 
+    $query	= "SELECT `meta_annotation`,`meta_annotation_score`,COUNT(`transcript_id`) as count FROM `transcripts`
 			WHERE `experiment_id`='".$exp_id."' GROUP BY `meta_annotation`,`meta_annotation_score` ";
     $res	= $this->query($query);
     $result	= array();
@@ -153,10 +155,10 @@ class Transcripts extends AppModel{
 
   function getLabelToGFMapping($exp_id,$reverse=false){
     $query	= "SELECT COUNT(*), transcripts.`gf_id`,transcripts_labels.`label`
-               FROM transcripts LEFT JOIN transcripts_labels ON 
-                  (transcripts_labels.`transcript_id`=transcripts.`transcript_id` 
-                   AND transcripts_labels.`experiment_id`=transcripts.`experiment_id`) 
-               WHERE transcripts.`experiment_id` = ".$exp_id." AND transcripts.`gf_id` IS NOT NULL 
+               FROM transcripts LEFT JOIN transcripts_labels ON
+                  (transcripts_labels.`transcript_id`=transcripts.`transcript_id`
+                   AND transcripts_labels.`experiment_id`=transcripts.`experiment_id`)
+               WHERE transcripts.`experiment_id` = ".$exp_id." AND transcripts.`gf_id` IS NOT NULL
                GROUP BY transcripts.`gf_id`, transcripts_labels.`label`
                ORDER BY COUNT( * ) DESC ";
     $res	= $this->query($query);
@@ -175,19 +177,20 @@ class Transcripts extends AppModel{
   }
 
   function getGOToGFMapping($exp_id,$reverse=false){
-    $query	= "SELECT COUNT( * ) , transcripts.`gf_id` , transcripts_go.`go` 
+    $query	= "SELECT COUNT( * ) , transcripts.`gf_id` , transcripts_annotation.`name`
                FROM transcripts
-               LEFT JOIN transcripts_go ON ( transcripts_go.`transcript_id` = transcripts.`transcript_id` 
-                                             AND transcripts_go.`experiment_id` = transcripts.`experiment_id` ) 
+               LEFT JOIN transcripts_annotation ON ( transcripts_annotation.`transcript_id` = transcripts.`transcript_id`
+                                             AND transcripts_annotation.`experiment_id` = transcripts.`experiment_id` )
                WHERE transcripts.`experiment_id` = ".$exp_id."
-               AND transcripts.`gf_id` IS NOT NULL AND transcripts_go.`go` IS NOT NULL
-               GROUP BY transcripts.`gf_id` , transcripts_go.`go` 
+               AND transcripts_annotation.`type` = 'go'
+               AND transcripts.`gf_id` IS NOT NULL AND transcripts_annotation.`name` IS NOT NULL
+               GROUP BY transcripts.`gf_id` , transcripts_annotation.`name`
                ORDER BY COUNT( * ) DESC ";
     $res	= $this->query($query);
     $result	= array();
     foreach($res as $r){
       $gf_id    = $r['transcripts']['gf_id'];
-      $GO       = $r['transcripts_go']['go'];
+      $GO       = $r['transcripts_annotation']['name'];
       $count    = reset($r[0]);
       if(!$reverse){
         $result[] = array($gf_id,$GO,$count);
@@ -199,18 +202,19 @@ class Transcripts extends AppModel{
   }
 
   function getOneGOToGFMapping($exp_id,$go){
-    $query	= "SELECT COUNT( * ) , transcripts.`gf_id` , transcripts_go.`go` 
+    $query	= "SELECT COUNT( * ) , transcripts.`gf_id` , transcripts_annotation.`name`
                FROM transcripts
-               LEFT JOIN transcripts_go ON ( transcripts_go.`transcript_id` = transcripts.`transcript_id` 
-                                             AND transcripts_go.`experiment_id` = transcripts.`experiment_id` ) 
+               LEFT JOIN transcripts_annotation ON ( transcripts_annotation.`transcript_id` = transcripts.`transcript_id`
+                                             AND transcripts_annotation.`experiment_id` = transcripts.`experiment_id` )
                WHERE transcripts.`experiment_id` = $exp_id
-               AND transcripts_go.`go` = '$go'
+               AND transcripts_annotation.`name` = '$go'
+               AND transcripts_annotation.`type` = 'go'
                GROUP BY transcripts.`gf_id`";
     $res	= $this->query($query);
     $result	= array();
     foreach($res as $r){
       $gf_id    = $r['transcripts']['gf_id'];
-      $GO       = $r['transcripts_go']['go'];
+      $GO       = $r['transcripts_annotation']['name'];
       $count    = reset($r[0]);
       $result[] = array($GO,$gf_id,$count);
     }
@@ -218,47 +222,49 @@ class Transcripts extends AppModel{
   }
 
   function getinterproToGFMapping($exp_id,$reverse=false){
-    $query	= "SELECT COUNT( * ) , transcripts.`gf_id` , transcripts_interpro.`interpro` 
+    $query	= "SELECT COUNT( * ) , transcripts.`gf_id` , transcripts_annotation.`name`
                FROM transcripts
-               LEFT JOIN transcripts_interpro ON ( transcripts_interpro.`transcript_id` = transcripts.`transcript_id` 
-                                             AND transcripts_interpro.`experiment_id` = transcripts.`experiment_id` ) 
+               LEFT JOIN transcripts_annotation ON ( transcripts_annotation.`transcript_id` = transcripts.`transcript_id`
+                                             AND transcripts_annotation.`experiment_id` = transcripts.`experiment_id` )
                WHERE transcripts.`experiment_id` = ".$exp_id."
-               AND transcripts.`gf_id` IS NOT NULL 
-               AND transcripts_interpro.`interpro` IS NOT NULL 
-               GROUP BY transcripts.`gf_id` , transcripts_interpro.`interpro` 
+               AND transcripts_annotation.`type`='ipr'
+               AND transcripts.`gf_id` IS NOT NULL
+               AND transcripts_annotation.`name` IS NOT NULL
+               GROUP BY transcripts.`gf_id` , transcripts_annotation.`name`
                ORDER BY COUNT( * ) DESC ";
     $res	= $this->query($query);
     $result	= array();
     foreach($res as $r){
       $gf_id    = $r['transcripts']['gf_id'];
-      $interpro = $r['transcripts_interpro']['interpro'];
+      $interpro = $r['transcripts_annotation']['name'];
       $count    = reset($r[0]);
       if(!$reverse){
         $result[] = array($gf_id,$interpro,$count);
       } else {
         $result[] = array($interpro,$gf_id,$count);
-      }    
+      }
     }
     return $result;
   }
 
 
   function getOneInterproToGFMapping($exp_id,$interpro){
-    $query	= "SELECT COUNT( * ) , transcripts.`gf_id` , transcripts_interpro.`interpro` 
+    $query	= "SELECT COUNT( * ) , transcripts.`gf_id` , transcripts_annotation.`name`
                FROM transcripts
-               LEFT JOIN transcripts_interpro ON ( transcripts_interpro.`transcript_id` = transcripts.`transcript_id` 
-                                             AND transcripts_interpro.`experiment_id` = transcripts.`experiment_id` ) 
+               LEFT JOIN transcripts_annotation ON ( transcripts_annotation.`transcript_id` = transcripts.`transcript_id`
+                                             AND transcripts_annotation.`experiment_id` = transcripts.`experiment_id` )
                WHERE transcripts.`experiment_id` = $exp_id
-               AND transcripts_interpro.`interpro` = '$interpro' 
-               GROUP BY transcripts.`gf_id` ";//, transcripts_interpro.`interpro` ";
+               AND transcripts_annotation.`type` = 'ipr'
+               AND transcripts_annotation.`name` = '$interpro'
+               GROUP BY transcripts.`gf_id` ";  //, transcripts_interpro.`interpro` ";
     $res	= $this->query($query);
     $result	= array();
     foreach($res as $r){
       $gf_id    = $r['transcripts']['gf_id'];
-      $interpro = $r['transcripts_interpro']['interpro'];
+      $interpro = $r['transcripts_annotation']['name'];
       $count    = reset($r[0]);
       $result[] = array($interpro,$gf_id,$count);
-  
+
     }
     return $result;
   }

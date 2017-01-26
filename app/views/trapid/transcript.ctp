@@ -1,14 +1,14 @@
 <div>
 <?php
-//echo $javascript->link(array('prototype-1.7.0.0'));	
+//echo $javascript->link(array('prototype-1.7.0.0'));
 ?>
 <h2>Transcript</h2>
 <div class="subdiv">
-	<?php echo $this->element("trapid_experiment");?>	
-	
+	<?php echo $this->element("trapid_experiment");?>
+
 	<h3>Structural transcript information</h3>
 	<div class="subdiv">
-			
+
 		<dl class="standard2">
 
 		<dt>Transcript identifier</dt>
@@ -16,11 +16,11 @@
 
 		<dt>Uploaded sequence</dt>
 		<dd>
-			<div>		
+			<div>
 			<textarea cols="80" rows="5"  name="transcript_sequence"><?php echo $transcript_info['transcript_sequence'];?></textarea>
-			<br/>			
-			<?php echo "<span>Sequence length: ".strlen($transcript_info['transcript_sequence'])." nt</span>";?>		
-			</div>	
+			<br/>
+			<?php echo "<span>Sequence length: ".strlen($transcript_info['transcript_sequence'])." nt</span>";?>
+			</div>
 		</dd>
 
 		<dt>Frameshift corrected sequence</dt>
@@ -34,7 +34,7 @@
 				echo "<span>Sequence length: ".strlen($transcript_info['transcript_sequence_corrected'])." nt</span>\n";
 				echo "<br/>\n";
 				echo "<input type='submit' value='Store changed corrected sequence' />\n";
-				echo "</form>\n";		
+				echo "</form>\n";
 			}
 			else{
 				echo "<span class='disabled'>Unavailable</span>\n";
@@ -42,7 +42,7 @@
 			?>
 			</div>
 		</dd>
-	
+
 
 		<dt>ORF sequence</dt>
 		<dd>
@@ -55,33 +55,33 @@
 				echo "<span>Sequence length: ".strlen($transcript_info['orf_sequence'])." nt &nbsp; / &nbsp; <a href='javascript:show_aa();'>".(number_format(strlen($transcript_info['orf_sequence'])/3,0))." aa</a></span>\n";
 				echo "<br/>\n";
 				echo "<input type='submit' value='Store changed ORF sequence' style='margin-bottom:10px;'/>\n";
-				echo "</form>\n";				
+				echo "</form>\n";
 				echo "<script type='text/javascript'>\n";
 				echo "//<![CDATA[\n";
 				echo "function show_aa(){\n";
 				echo "$('aa_seq_dt').style.display='block';\n";
 				echo "$('aa_seq_dd').style.display='block';\n";
-				echo "}\n";				
+				echo "}\n";
 				echo "//]]>\n";
 				echo "</script>\n";
 			}
 			else{
-				echo "<span class='disabled'>Unavailable</span>\n";	
-			}		
-			?>			
+				echo "<span class='disabled'>Unavailable</span>\n";
+			}
+			?>
 			</div>
-		</dd>	
+		</dd>
 
 		<dt id='aa_seq_dt' style='display:none;'>AA sequence</dt>
 		<dd id='aa_seq_dd' style='display:none;'><div><textarea cols='80' rows='3'><?php echo $transcript_info['aa_sequence'];?></textarea></div></dd>
-		
+
 
 		<dt>Detected frame</dt>
 		<dd><?php echo $transcript_info['detected_frame'];?></dd>
-		
+
 		<dt>Detected strand</dt>
 		<dd><?php echo $transcript_info['detected_strand'];?></dd>
-		
+
 		<dt>Start/stop codon</dt>
 		<dd>
 			<div>
@@ -101,8 +101,8 @@
 			}
 			?>
 			</div>
-		</dd>	
-		
+		</dd>
+
 		<?php
 		if($transcript_info['putative_frameshift']==1){
 
@@ -115,22 +115,22 @@
 		echo "<li $style1>A putative frameshift was detected in this sequence</li>";
 		if($transcript_info['is_frame_corrected']==1){
 			echo "<li style='color:green'>A putative frameshift was corrected with FrameDP</li>";
-		}	
+		}
 		echo "</ul>";
 		echo "</div>";
-		echo "</dd>\n";			
+		echo "</dd>\n";
 		}
 		?>
 
 		<dt>Meta annotation</dt>
 		<dd>
-			<div>			
+			<div>
 			<?php
 			$possible_meta	= array(	"No Information"=>array("color"=>"#D2D2D2"),
 							"Partial"=>array("color"=>"#D23333"),
 							"Full Length"=>array("color"=>"#000000"),
 							"Quasi Full Length"=>array("color"=>"#000000")
-					);				
+					);
 			echo $form->create("",array("action"=>"transcript/".$exp_id."/".$transcript_info['transcript_id'],"type"=>"post"));
 			echo "<span style='color:".$possible_meta[$transcript_info['meta_annotation']]['color']."'>";
 			echo $transcript_info['meta_annotation'];
@@ -147,7 +147,7 @@
 			?>
 			</div>
 		</dd>
-		
+
 		<dt>Gene family</dt>
 		<dd>
 			<div>
@@ -157,18 +157,18 @@
 			}
 			else{
 				echo "<span class='disabled'>Unavailable</span>\n";
-			}			
+			}
 			?>
-			<?php if($exp_info['genefamily_type']=="HOM"): ?>					
+			<?php if($exp_info['genefamily_type']=="HOM"): ?>
 			<span style='margin-left:5px;'>
 			<?php
 				echo "(".$html->link("change gene family",array("controller"=>"trapid","action"=>"similarity_hits",$exp_id,$transcript_info['transcript_id'])).")";
 			?>
-			</span>	
+			</span>
 			<?php endif;?>
 			</div>
-		</dd>	
-		
+		</dd>
+
 		<dt>Subsets</dt>
 		<dd>
 			<div>
@@ -183,21 +183,21 @@
 							echo "&nbsp; , &nbsp; ";
 						}
 					}
-				}			
-				echo "<span style='margin-left:10px;'>(<a href='javascript:show_subsets();'>Add / change subsets</a>)</span>\n";			
+				}
+				echo "<span style='margin-left:10px;'>(<a href='javascript:show_subsets();'>Add / change subsets</a>)</span>\n";
 				echo "<script type='text/javascript'>\n";
 				echo "//<![CDATA[\n";
 				echo "function show_subsets(){\n";
-				echo "$('all_subsets').style.display='block';\n";			
-				echo "}\n";				
+				echo "$('all_subsets').style.display='block';\n";
+				echo "}\n";
 				echo "//]]>\n";
-				echo "</script>\n";								
+				echo "</script>\n";
 				?>
-			</div>	
+			</div>
 		</dd>
 		</dl>
 		<?php
-		echo "<div id='all_subsets' style='display:none;'>\n";	
+		echo "<div id='all_subsets' style='display:none;'>\n";
 		echo $form->create("",array("action"=>"transcript/".$exp_id."/".$transcript_info['transcript_id'],"type"=>"post"));
 		echo "<input type='hidden' name='subsets' value='subsets'/>";
 		echo "<table cellpadding='0' cellspacing='0' style='width:430px;'>\n";
@@ -214,36 +214,36 @@
 		echo "<tr>";
 		echo "<td><input type='checkbox' name='new_subset' /></td>";
 		echo "<td><input type='text' name='new_subset_name' /> New subset</td>";
-		echo "<td></td>";	
+		echo "<td></td>";
 		echo "</tr>\n";
 		echo "</table>\n";
 		echo "<input type='submit' value='Store changed subset information' />\n";
 		echo "</form>\n";
 		echo "</div>\n";
 
-		?>	
+		?>
 
 	</div>
 	<br/><br/>
 	<h3>Toolbox</h3>
 	<div class="subdiv">
 	<?php
-	
+
 	$disable_cluster_tools	= false;
 	if(isset($max_number_jobs_reached)){
 		echo "<span class='error'>The maximum number of jobs (".MAX_CLUSTER_JOBS.") you can have queued has been reached for this experiment.<br/>Some tools will be unavailable until the currently scheduled jobs have finished or have been deleted.</span><br/><br/>\n";			$disable_cluster_tools = true;
 	}
 
 	$disabled_framedp	= true;
-	if($transcript_info['gf_id']){$disabled_framedp=false;}	
+	if($transcript_info['gf_id']){$disabled_framedp=false;}
 	$toolbox	= array("Structural data"=>array(
 					array(
 					"Correct frameshifts with FrameDP",
 					$html->url(array("controller"=>"tools","action"=>"framedp",$exp_id,$transcript_info['gf_id'],$transcript_info['transcript_id'])),
 					"some_image.png",
-					$disabled_framedp||$disable_cluster_tools				
+					$disabled_framedp||$disable_cluster_tools
 					),
-				),							
+				),
 				"Similarity search"=>array(
 					array(
 					"Browse similarity search output",
@@ -253,35 +253,35 @@
 				),
 			);
 	$this->set("toolbox",$toolbox);
-	echo $this->element("toolbox");	
-	?>		
+	echo $this->element("toolbox");
+	?>
 	</div>
 
 	<br/><br/>
 	<h3>Functional transcript information</h3>
 	<div class="subdiv">
 		<dl class="standard2">
-		
+
 		<dt>Gene Ontology</dt>
-		<dd>			
+		<dd>
 			<?php
 			if($associated_go){
 			        echo "<ul class='tabbed_header'>\n";
 				echo "<li id='tab_collapsed' class='selected_tab'>";
 				echo "<a href=\"javascript:switch_go_display('tab_collapsed','div_collapsed');\">Collapsed GO data</a>";
-				echo "</li>\n";								
+				echo "</li>\n";
 				echo "<li id='tab_all'>";
 				echo "<a href=\"javascript:switch_go_display('tab_all','div_all');\">All GO data</a>";
 				echo "</li>\n";
 				echo "</ul>\n";
-				
+
 				echo "<div class='tabbed_div selected_tabbed_div' id='div_collapsed'>\n";
 				echo "<table class='small' cellpadding='0' cellspacing='0' style='width:600px;'>\n";
 				echo "<tr><th style='width:20%;'>GO term</th><th style='width:80%;'>Description</th></tr>\n";
 				foreach($associated_go as $ag){
-					$go		= $ag['TranscriptsGo']['go'];
+					$go		= $ag['TranscriptsGo']['name'];
 					$is_hidden	= $ag['TranscriptsGo']['is_hidden'];
-					if($is_hidden==0){	
+					if($is_hidden==0){
 					    $web_go		= str_replace(":","-",$go);
 					    echo "<tr>";
 					    echo "<td>".$html->link($go,array("controller"=>"functional_annotation","action"=>"go",$exp_id,$web_go))."</td>";
@@ -291,28 +291,28 @@
 				}
 				echo "</table>\n";
 				echo "</div>\n";
-					
+
 				echo "<div class='tabbed_div' id='div_all'>\n";
 				echo "<table class='small' cellpadding='0' cellspacing='0' style='width:600px;'>\n";
 				echo "<tr><th style='width:20%;'>GO term</th><th style='width:80%;'>Description</th></tr>\n";
 				foreach($associated_go as $ag){
-					$go		= $ag['TranscriptsGo']['go'];
+					$go		= $ag['TranscriptsGo']['name'];
 					$web_go		= str_replace(":","-",$go);
 					$is_hidden	= $ag['TranscriptsGo']['is_hidden'];
 					$class		= null;
-					if($is_hidden==0){$class=" class='altrow' ";}	
+					if($is_hidden==0){$class=" class='altrow' ";}
 					echo "<tr $class >";
 					echo "<td>".$html->link($go,array("controller"=>"functional_annotation","action"=>"go",$exp_id,$web_go))."</td>";
 					echo "<td>".$go_info[$go]['desc']."</td>";
 					echo "</tr>\n";
 				}
 				echo "</table>\n";
-				echo "</div>\n";		
+				echo "</div>\n";
 			}
 			else{
 				echo "<span class='disabled'>Unavailable</span>";
 			}
-			?>						
+			?>
 		</dd>
 
 		<dt>Interpro domains</dt>
@@ -322,9 +322,9 @@
 				echo "<table class='small' cellpadding='0' cellspacing='0' style='width:600px;'>\n";
 				echo "<tr><th style='width:20%;'>InterPro domain</th><th style='width:80%;'>Description</th></tr>\n";
 				foreach($associated_interpro as $ai){
-					$ipr	= $ai['TranscriptsInterpro']['interpro'];
+					$ipr	= $ai['TranscriptsInterpro']['name'];
 					echo "<tr>";
-					echo "<td>".$html->link($ipr,array("controller"=>"functional_annotation","action"=>"interpro",$exp_id,$ipr))."</td>";	
+					echo "<td>".$html->link($ipr,array("controller"=>"functional_annotation","action"=>"interpro",$exp_id,$ipr))."</td>";
 					echo "<td>".$interpro_info[$ipr]['desc']."</td>";
 					echo "</tr>\n";
 				}
@@ -333,9 +333,9 @@
 			else{
 				echo "<span class='disabled'>Unavailable</span>";
 			}
-			?>		
+			?>
 		</dd>
-					
+
 		</dl>
 	</div>
 	<script type="text/javascript">
@@ -348,10 +348,10 @@
 			$("div_all").className="tabbed_div";
 			//create extra class for the correct tab and div
 			$(tab_id).className="selected_tab";
-			$(div_id).className="tabbed_div selected_tabbed_div";	
+			$(div_id).className="tabbed_div selected_tabbed_div";
 		}
 	//]]>
 	</script>
-	
+
 </div>
 </div>

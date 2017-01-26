@@ -1,23 +1,25 @@
 <?php
   /*
-   * This model represents info on the transcripts
+   * This model represents Gene Ontology information associated to the transcripts
    */
 class TranscriptsInterpro extends AppModel{
 
   var $name	= 'TranscriptsInterpro';
-  var $useTable = 'transcripts_interpro';
+  var $useTable = 'transcripts_annotation';
 
-  
+
  function findInterproCountsFromTranscripts($exp_id,$transcript_ids){
     $result	= array();
     $transcripts_string	= "('".implode("','",$transcript_ids)."')";
-    $query	= "SELECT `interpro`,COUNT(`transcript_id`) as `count` FROM `transcripts_interpro` WHERE `experiment_id`='".$exp_id."' AND `transcript_id` IN ".$transcripts_string." GROUP BY `interpro` ORDER BY `count` DESC";
+    $query	= "SELECT `name`,COUNT(`transcript_id`) as `count` FROM `transcripts_annotation` WHERE `type`='ipr' AND `experiment_id`='".$exp_id."' AND `transcript_id` IN ".$transcripts_string." GROUP BY `name` ORDER BY `count` DESC";
+    // Trapid db structure update
+    // $query	= "SELECT `interpro`,COUNT(`transcript_id`) as `count` FROM `transcripts_interpro` WHERE `experiment_id`='".$exp_id."' AND `transcript_id` IN ".$transcripts_string." GROUP BY `interpro` ORDER BY `count` DESC";
     $res	= $this->query($query);
     foreach($res as $r){
-      $go	= $r['transcripts_interpro']['interpro'];
+      $go	= $r['transcripts_annotation']['name'];
       $count	= $r[0]['count'];
       $result[$go] = $count;
-    }    
+    }
     return $result;
   }
 
@@ -26,18 +28,18 @@ class TranscriptsInterpro extends AppModel{
   function findTranscriptsFromInterpro($exp_id,$ipr_terms){
     $result	= array();
     $ipr_terms_string	= "('".implode("','",array_keys($ipr_terms))."')";
-    $query	= "SELECT `interpro`,count(`transcript_id`) as count FROM `transcripts_interpro` WHERE `experiment_id`='".$exp_id."' AND `interpro` IN ".$ipr_terms_string." GROUP BY `interpro` ";
-    $res	= $this->query($query);  
+    $query	= "SELECT `name`,count(`transcript_id`) as count FROM `transcripts_annotation` WHERE `experiment_id`='".$exp_id."' AND `type`='ipr' AND `name` IN ".$ipr_terms_string." GROUP BY `name` ";
+    $res	= $this->query($query);
     foreach($res as $r){
-      $result[$r['transcripts_interpro']['interpro']] = array("count"=>$r[0]['count'],"desc"=>$ipr_terms[$r['transcripts_interpro']['interpro']]);
-    }    
+      $result[$r['transcripts_annotation']['name']] = array("count"=>$r[0]['count'],"desc"=>$ipr_terms[$r['transcripts_annotation']['name']]);
+    }
     return $result;
   }
 
 
 
   function getStats($exp_id){
-    $query	= "SELECT COUNT(DISTINCT(`interpro`)) as count1, COUNT(DISTINCT(`transcript_id`)) as count2 FROM `transcripts_interpro` WHERE `experiment_id`='".$exp_id."' ";
+    $query	= "SELECT COUNT(DISTINCT(`name`)) as count1, COUNT(DISTINCT(`transcript_id`)) as count2 FROM `transcripts_annotation` WHERE `experiment_id`='".$exp_id."' AND `type`='ipr' ";
     $res	= $this->query($query);
     $result	= array("num_interpro"=>0,"num_transcript_interpro"=>0);
     if($res){

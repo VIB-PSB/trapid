@@ -61,8 +61,9 @@ class AppController extends Controller {
     parent::beforeFilter();
     $this->set("title" ,WEBSITE_TITLE);
     $this->Cookie->name		= "trapid_cookie";
+    // TODO: Modify cookie expiration time + path before switching to production
     $this->Cookie->time		= "20000";//should become 7200 after debugging
-    //$this->Cookie->path		= "/webtools/trapid/";
+    // $this->Cookie->path		= "/webtools/trapid/";
     $this->Cookie->path         = "/testix/trapid_frbuc/";
     $this->Cookie->domain	= "bioinformatics.psb.ugent.be";
     $this->Cookie->key		= "JsjdKO09DJfdfjODWSkdW89Sd";

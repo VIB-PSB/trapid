@@ -2,18 +2,21 @@
   /*
    * This model represents info on the functional enrichments
    */
+
+// Queries updated to reflect changes on the DB Structure for TRAPID v2
+
 class FunctionalEnrichments extends AppModel{
 
   var $name	= 'FunctionalEnrichments';
   var $useTable = 'functional_enrichments';
-  
- 
+
+
  function getTranscriptToLabelAndGF($exp_id){
     $result	= array();
     $query	= "SELECT transcript_id, label,gf_id
-               FROM `transcripts` 
+               FROM `transcripts`
                RIGHT JOIN `transcripts_labels`
-               USING (experiment_id, transcript_id)               
+               USING (experiment_id, transcript_id)
                WHERE experiment_id = $exp_id";
     $res	= $this->query($query);
     foreach($res as $r){
@@ -45,7 +48,7 @@ function getEnrichedIdentifier($exp_id,$type){
       if(!isset($result[$label]))$result[$label] = array();
       if(!isset($result[$label][$p_val]))$result[$label][$p_val] = array();
       $result[$label][$p_val][$ident] = array($hidden,$sign);
-    }    
+    }
     return $result;
   }
 
@@ -60,22 +63,23 @@ function getEnrichedIdentifier($exp_id,$type){
 
  function getTranscriptGOMapping($exp_id){
     $result	= array();
-    $query	=  "SELECT transcript_id, go
-                FROM  `transcripts_go` 
+    $query	=  "SELECT transcript_id, name
+                FROM  `transcripts_annotation`
                 WHERE experiment_id =$exp_id
-                  AND go IN (
+                AND `type`='go'
+                  AND name IN (
                     SELECT DISTINCT identifier
-                    FROM  `functional_enrichments` 
+                    FROM  `functional_enrichments`
                     WHERE experiment_id =$exp_id
                     AND data_type = 'go')
-                  AND transcript_id IN ( 
+                  AND transcript_id IN (
                     SELECT DISTINCT transcript_id
-                    FROM  `transcripts_labels` 
+                    FROM  `transcripts_labels`
                     WHERE experiment_id =$exp_id)";
     $res	= $this->query($query);
     foreach($res as $r){
-      $transcr = $r['transcripts_go']['transcript_id'];
-      $GO      = $r['transcripts_go']['go'];
+      $transcr = $r['transcripts_annotation']['transcript_id'];
+      $GO      = $r['transcripts_annotation']['name'];
       if(!isset($result[$transcr]))$result[$transcr] = array();
       $result[$transcr][$GO] = 1;
     }
@@ -86,22 +90,23 @@ function getEnrichedIdentifier($exp_id,$type){
 
  function getTranscriptInterproMapping($exp_id){
     $result	= array();
-    $query	=  "SELECT transcript_id, interpro
-                FROM  `transcripts_interpro` 
+    $query	=  "SELECT transcript_id, name
+                FROM  `transcripts_annotation`
                 WHERE experiment_id =$exp_id
-                  AND interpro IN (
+                AND `type`='ipr'
+                  AND name IN (
                     SELECT DISTINCT identifier
-                    FROM  `functional_enrichments` 
+                    FROM  `functional_enrichments`
                     WHERE experiment_id =$exp_id
                     AND data_type = 'ipr')
-                  AND transcript_id IN ( 
+                  AND transcript_id IN (
                     SELECT DISTINCT transcript_id
-                    FROM  `transcripts_labels` 
+                    FROM  `transcripts_labels`
                     WHERE experiment_id =$exp_id)";
     $res	= $this->query($query);
     foreach($res as $r){
-      $transcr = $r['transcripts_interpro']['transcript_id'];
-      $ipr      = $r['transcripts_interpro']['interpro'];
+      $transcr = $r['transcripts_annotation']['transcript_id'];
+      $ipr      = $r['transcripts_annotation']['name'];
       if(!isset($result[$transcr]))$result[$transcr] = array();
       $result[$transcr][$ipr] = 1;
     }

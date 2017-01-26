@@ -5,7 +5,7 @@
 	<h3>Subset selection</h3>
 	<div class="subdiv">
 		<?php
-		if(isset($error)){echo "<span class='error'>".$error."</span>\n";}		
+		if(isset($error)){echo "<span class='error'>".$error."</span>\n";}
 		echo $form->create("",array("action"=>"enrichment/".$exp_id."/".$type,"type"=>"post"));
 		echo "<dl class='standard'>";
 		echo "<dt>Subset</dt>";
@@ -22,8 +22,8 @@
 		echo "</select>\n";
 		echo "</dd>\n";
 		echo "<dt>P-value</dt>";
-		echo "<dd>";	
-		echo "<select name='pvalue' style='width:80px;'>";	
+		echo "<dd>";
+		echo "<select name='pvalue' style='width:80px;'>";
 		foreach($possible_pvalues as $ppv){
 			if($ppv==$selected_pvalue){
 				echo "<option value='".$ppv."' selected='selected'>".$ppv."</option>";
@@ -38,16 +38,16 @@
 		echo "<input type='submit' style='width:200px;' value='Compute enrichment' />\n";
 		echo "<input type='checkbox' style='margin-left:20px;' name='use_cache' checked='checked' />\n";
 		echo "<span style='margin-left:5px;'>Used cached results</span>\n";
-		echo "</form>\n";	
-		?>		
+		echo "</form>\n";
+		?>
 	</div>
 	<br/><br/>
 	<?php	if(isset($result_file)) : ?>
 	<h3>Enrichment <?php echo "<i>".$selected_subset."</i>"; ?></h3>
 	<br/>
-	<div class="subdiv">	
+	<div class="subdiv">
 		<div class="subdiv">
-		<div id="enrichment_div">		
+		<div id="enrichment_div">
 		<div style="width:200px;">
 		<center>
 		<?php echo $html->image('ajax-loader.gif'); ?><br/>
@@ -56,7 +56,7 @@
 		</div>
 		</div>
 
-		<?php 		
+		<?php
 		if(isset($job_id)){
 		//pr("using job id ".$job_id);
 		    echo $javascript->codeBlock($ajax->remoteFunction(

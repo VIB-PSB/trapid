@@ -7,7 +7,7 @@ class TranscriptsLabels extends AppModel{
   var $name	= 'TranscriptsLabels';
   var $useTable = 'transcripts_labels';
 
-  
+
 
   function getDataTranscript2Labels($exp_id){
     $query	= "SELECT `transcript_id`,`label` FROM `transcripts_labels` WHERE `experiment_id`='".$exp_id."' ";
@@ -17,7 +17,7 @@ class TranscriptsLabels extends AppModel{
       $transcript_id	= $r['transcripts_labels']['transcript_id'];
       $label		= $r['transcripts_labels']['label'];
       if(!array_key_exists($transcript_id,$tmp)){$tmp[$transcript_id]=array();}
-      $tmp[$transcript_id][]	= $label;      
+      $tmp[$transcript_id][]	= $label;
     }
     return $tmp;
   }
@@ -38,7 +38,7 @@ class TranscriptsLabels extends AppModel{
     foreach($transcripts as $transcript_id){
       if(array_key_exists($transcript_id,$all_transcripts)){
 	$counter++;
-	$statement	= "INSERT INTO `transcripts_labels` (`experiment_id`,`transcript_id`,`label`) VALUES 
+	$statement	= "INSERT INTO `transcripts_labels` (`experiment_id`,`transcript_id`,`label`) VALUES
 				('".$exp_id."','".$transcript_id."','".$label."');";
 	$this->query($statement);
       }
@@ -63,15 +63,16 @@ class TranscriptsLabels extends AppModel{
 
   function getLabeltoGOMapping($exp_id){
     $query	= "SELECT COUNT(*), label, go
-                FROM `transcripts_go` 
+                FROM `transcripts_annotation`
                 LEFT JOIN `transcripts_labels` USING (experiment_id,transcript_id)
                 WHERE experiment_id = ".$exp_id."
-                GROUP BY label,go";
+                AND `type`='go'
+                GROUP BY label,name";
     $res	= $this->query($query);
     $result	= array();
     foreach($res as $r){
       $label   = $r['transcripts_labels']['label'];
-      $GO    = $r['transcripts_go']['go'];
+      $GO    = $r['transcripts_annotation']['name'];
       $count    = reset($r[0]);
       $result[] = array($label,$GO,$count);
     }
@@ -79,16 +80,17 @@ class TranscriptsLabels extends AppModel{
   }
 
   function getLabeltoInterproMapping($exp_id){
-    $query	= "SELECT COUNT(*), label, interpro
-                FROM `transcripts_interpro` 
+    $query	= "SELECT COUNT(*), label, name
+                FROM `transcripts_annotation`
                 LEFT JOIN `transcripts_labels` USING (experiment_id,transcript_id)
                 WHERE experiment_id = ".$exp_id."
-                GROUP BY label,interpro";
+                AND `type`='ipr'
+                GROUP BY label,name";
     $res	= $this->query($query);
     $result	= array();
     foreach($res as $r){
       $label   = $r['transcripts_labels']['label'];
-      $interpro    = $r['transcripts_interpro']['interpro'];
+      $interpro    = $r['transcripts_annotation']['name'];
       $count    = reset($r[0]);
       $result[] = array($label,$interpro,$count);
     }

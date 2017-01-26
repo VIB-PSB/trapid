@@ -4,8 +4,9 @@
 class FullTaxonomy extends AppModel{
   var $name		= "FullTaxonomy";
   var $useTable		= "full_taxonomy";
-  var $useDbConfig 	= "db_trapid_01_taxonomy";
-
+  // var $useDbConfig 	= "db_trapid_02"; // This value does not exist in config... 
+  // Changed on 2016-01-03 (`full_taxonomy` table now in the main TRAPID database)
+  // var $useDbConfig 	= "db_trapid_01_taxonomy";
 
 
 
@@ -19,7 +20,6 @@ class FullTaxonomy extends AppModel{
     $species_string	= "('".implode("','",$species_array)."')";
     $query		= "SELECT * FROM `full_taxonomy` WHERE `txid` IN $species_string ORDER BY `tax` ASC";
     $res		= $this->query($query);
-
     $clade_to_species		= array();
     $parents_to_child_clade 	= array();
     //$clade_descriptions		= array();
@@ -62,8 +62,8 @@ class FullTaxonomy extends AppModel{
 	  $result[$clade] = $species;
 	}
       }
-    }   
-    
+    }
+
 
     //ok, now create better parent-to-child clade representation.
     $final_parents_to_child_clade	= array();
@@ -80,27 +80,27 @@ class FullTaxonomy extends AppModel{
     //pr($parents_to_child_clade);
     //pr($final_parents_to_child_clade);
 
- 
+
     //query the database, and get the full string representation for this top clade
     $temp		= array();
     foreach($res as $r){
       $txid		= $r['full_taxonomy']['txid'];
       $scname		= $r['full_taxonomy']['scname'];
-      $tax_string	= $r['full_taxonomy']['tax'];     
+      $tax_string	= $r['full_taxonomy']['tax'];
       $tax_split	= explode(";",$tax_string);
       $local_tmp	= "";
       for($i=0;$i<count($tax_split);$i++){
-	$ts	= trim($tax_split[$i]);	
+	$ts	= trim($tax_split[$i]);
 	if(array_key_exists($ts,$final_parents_to_child_clade)){
 	  $local_tmp = $local_tmp."".$ts.";";
 	}
       }
       $temp[] = $local_tmp."".$txid;
-    }   
+    }
     //pr($temp);
     //pr($clade_to_species);
     $full_tree	       = $this->explodeTree($temp,";");
-    
+
     $final_result	= array("parent_child_clades"=>$final_parents_to_child_clade,"clade_species_tax"=>$result,"full_tree"=>$full_tree);
     return $final_result;
   }
@@ -109,12 +109,12 @@ class FullTaxonomy extends AppModel{
   function explodeTree($array,$delimiter='_'){
     if(!is_array($array)){ return false;}
     $splitRE   = '/' . preg_quote($delimiter, '/') . '/';
-    
+
     $returnArr = array();
     $i = 0;
     foreach ($array as $val) {
-	// Get parent parts and the current leaf	
-	$parts  = preg_split($splitRE, $val, -1, PREG_SPLIT_NO_EMPTY);       
+	// Get parent parts and the current leaf
+	$parts  = preg_split($splitRE, $val, -1, PREG_SPLIT_NO_EMPTY);
 	//if($i==42){pr($val);pr($parts);}
 	$leafPart = array_pop($parts);
 
@@ -124,9 +124,9 @@ class FullTaxonomy extends AppModel{
 	foreach ($parts as $part) {
 	  if (!isset($parentArr[$part])) {
 	    $parentArr[$part] = array();
-	  } 
-	  elseif (!is_array($parentArr[$part])) {		
-	      $parentArr[$part] = array();		
+	  }
+	  elseif (!is_array($parentArr[$part])) {
+	      $parentArr[$part] = array();
 	  }
 	  $parentArr = &$parentArr[$part];
 	}
@@ -134,7 +134,7 @@ class FullTaxonomy extends AppModel{
 	if (empty($parentArr[$leafPart])) {
 	  if(is_numeric($leafPart)){$parentArr[]=$leafPart;}
 	  else{$parentArr[$leafPart] = array();}
-	} 
+	}
 	$i++;
     }
     return $returnArr;

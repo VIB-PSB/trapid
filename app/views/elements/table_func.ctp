@@ -1,16 +1,18 @@
 <?php
+/* Table for functional annotation */
+
 $gf_column_class1=null;
 if(isset($gf_info)){$gf_column_class1="class='highlight'";}
-$go_column_class1=null;$go_column_class2=null; 		
+$go_column_class1=null;$go_column_class2=null;
 if(isset($go_info)){$go_column_class1="class='highlight'";$go_column_class2="highlight";}
-$ipr_column_class1=null;$ipr_column_class2=null;	
+$ipr_column_class1=null;$ipr_column_class2=null;
 if(isset($interpro_info)){$ipr_column_class1="class='highlight'";$ipr_column_class2="highlight";}
 $label_column_class1=null;$label_column_class2=null;
 if(isset($label)){$label_column_class1="class='highlight'";$label_column_class2="highlight";}
 ?>
 <?php $paginator->options(array("url"=>$this->passedArgs));?>
-<table cellpadding="0" cellspacing="0" style="width:90%;">	
-	<tr>	
+<table cellpadding="0" cellspacing="0" style="width:90%;">
+	<tr>
 		<th style="width:10%">Transcript</th>
 		<th style="width:15%" <?php echo $gf_column_class1;?> >Gene family</th>
 		<th style="width:27%" <?php echo $go_column_class1;?> >GO annotation</th>
@@ -21,7 +23,7 @@ if(isset($label)){$label_column_class1="class='highlight'";$label_column_class2=
 	</tr>
 	<?php
 	$bad_status	= "unassigned";
-	$tr_counter	= 0;		
+	$tr_counter	= 0;
 	foreach($transcript_data as $transcript_dat){
 		$row_class	= null; if($tr_counter++%2==0){$row_class=" class='altrow' ";}
 
@@ -32,7 +34,7 @@ if(isset($label)){$label_column_class1="class='highlight'";$label_column_class2=
 		echo "<td>".$html->link($td['transcript_id'],
 			array("controller"=>"trapid","action"=>"transcript",$exp_id,urlencode($td['transcript_id'])))."</td>";
 
-		//GF ID	
+		//GF ID
 		echo "<td $gf_column_class1 >";
 		if($td['gf_id']){
 			echo $html->link($td['gf_id'],
@@ -41,7 +43,7 @@ if(isset($label)){$label_column_class1="class='highlight'";$label_column_class2=
 		else{echo "<span class='".$bad_status."'>".$bad_status."</span>";}
 		echo "</td>\n";
 
-		//GO annotation				
+		//GO annotation
 		if(!array_key_exists($td['transcript_id'],$transcripts_go)){
 			echo "<td class='$go_column_class2'><span class='disabled'>Unavailable</span></td>";
 		}
@@ -54,7 +56,7 @@ if(isset($label)){$label_column_class1="class='highlight'";$label_column_class2=
 				echo ($i+1).") ".$html->link($desc,array("controller"=>"functional_annotation","action"=>"go",$exp_id,$go_web))."<br/>";
 			}
 			echo "</td>";
-		}			
+		}
 
 		//InterPro annotation
 		if(!array_key_exists($td['transcript_id'],$transcripts_ipr)){
@@ -84,12 +86,12 @@ if(isset($label)){$label_column_class1="class='highlight'";$label_column_class2=
 			    echo "</td>";
 		}
 
-		echo "<td>".$html->link($td['meta_annotation'],array("controller"=>"trapid","action"=>"transcript_selection",$exp_id,"meta_annotation",urlencode($td['meta_annotation'])))."</td>";		
+		echo "<td>".$html->link($td['meta_annotation'],array("controller"=>"trapid","action"=>"transcript_selection",$exp_id,"meta_annotation",urlencode($td['meta_annotation'])))."</td>";
 
 		//EDIT
 		//echo "<td>TODO</td>";
 
-	 	echo "</tr>\n";	
+	 	echo "</tr>\n";
 	    }
 	    ?>
 
@@ -102,5 +104,5 @@ if(isset($label)){$label_column_class1="class='highlight'";$label_column_class2=
     echo $paginator->numbers();
     echo "&nbsp;";
     echo $paginator->next(__('next', true).' >>', array(), null, array('class'=>'disabled'));
-    ?>	
+    ?>
 </div>

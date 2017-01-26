@@ -18,7 +18,7 @@ import java.util.Set;
  */
 public class PrepareEnrichment {
 
-	
+
 	public static void main(String[] args){
 		PrepareEnrichment	pge	= new PrepareEnrichment();
 		try{
@@ -27,32 +27,32 @@ public class PrepareEnrichment {
 			String trapid_name					= args[1];
 			String trapid_login					= args[2];
 			String trapid_password				= args[3];
-			
+
 			String exp_id						= args[4];
 			String data_type					= args[5];
 			String all_gene_funcannot_file		= args[6];
 			String subset_gene_funcannot_file	= args[7];
 			String subset						= args[8];
-			
-			Class.forName("com.mysql.jdbc.Driver");	
+
+			Class.forName("com.mysql.jdbc.Driver");
 			Connection trapid_db_connection		= pge.createDbConnection(trapid_server,trapid_name,trapid_login,trapid_password);
 			BufferedWriter all_writer			= new BufferedWriter(new FileWriter(new File(all_gene_funcannot_file)));
 			BufferedWriter subset_writer		= new BufferedWriter(new FileWriter(new File(subset_gene_funcannot_file)));
-			
+
 			Set<String> subset_genes			= pge.getSubsetGenes(trapid_db_connection,exp_id,subset);
 			String query						= null;
 			String data_identifier				= null;
-			if(data_type.equals("go")){				
-				query							= "SELECT `transcript_id`,`go` FROM `transcripts_go` WHERE `experiment_id`='"+exp_id+"' ";
-				data_identifier					= "go";
+			if(data_type.equals("go")){
+				query							= "SELECT `transcript_id`,`name` FROM `transcripts_annotation` WHERE `experiment_id`='"+exp_id+"' AND `type`='go' ";
+				data_identifier					= "name";
 			}
-			else if(data_type.equals("ipr")){			
-				query							= "SELECT `transcript_id`,`interpro` FROM `transcripts_interpro` WHERE `experiment_id`='"+exp_id+"' ";
-				data_identifier					= "interpro";	
+			else if(data_type.equals("ipr")){
+				query							= "SELECT `transcript_id`,`name` FROM `transcripts_annotation` WHERE `experiment_id`='"+exp_id+"' AND `type`='ipr' ";
+				data_identifier					= "name";
 			}
 			else{
 				throw new Exception("unknown data type : "+data_type);
-			}					
+			}
 			Statement stmt						= trapid_db_connection.createStatement();
 			ResultSet set						= stmt.executeQuery(query);
 			while(set.next()){
@@ -63,8 +63,8 @@ public class PrepareEnrichment {
 				//write to subset file if present in subset_genes
 				if(subset_genes.contains(transcript_id)){
 					subset_writer.write(transcript_id+"\t"+funcannot+"\n");
-				}				
-			}			
+				}
+			}
 			set.close();
 			stmt.close();
 			all_writer.close();
@@ -74,13 +74,13 @@ public class PrepareEnrichment {
 		catch(Exception exc){
 			exc.printStackTrace();
 		}
-		
-	}	
-	
-	
-	
-	
-	
+
+	}
+
+
+
+
+
 	private Set<String> getSubsetGenes(Connection conn,String exp_id,String subset)throws Exception{
 		Set<String> result		= new HashSet<String>();
 		Statement stmt			= conn.createStatement();
@@ -93,9 +93,9 @@ public class PrepareEnrichment {
 		stmt.close();
 		return result;
 	}
-	
-	
-	
+
+
+
 	/**
 	 * Create a database connection, based on given parameters
 	 * @param server
@@ -110,6 +110,5 @@ public class PrepareEnrichment {
 		Connection conn	= DriverManager.getConnection(url,login,password);
 		return conn;
 	}
-	
-}
 
+}
