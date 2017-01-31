@@ -1,11 +1,11 @@
-<?php 
+<?php
 vendor('fpdf/fpdf');
 
 if (!defined('PARAGRAPH_STRING')) define('PARAGRAPH_STRING', '~~~');
 
 class fpdfHelper extends FPDF {
-    
-    var $helpers = array();	
+
+    var $helpers = array();
 
     /**
     * Allows you to change the defaults set in the FPDF constructor
@@ -15,9 +15,9 @@ class fpdfHelper extends FPDF {
     * @param string $format values: A3, A4, A5, Letter, Legal or a two element array with the width and height in unit given in $unit
     */
     function setup ($orientation='P',$unit='mm',$format='A4') {
-        $this->FPDF($orientation, $unit, $format); 
+        $this->FPDF($orientation, $unit, $format);
     }
-    
+
     /**
     * Allows you to control how the pdf is returned to the user, most of the time in CakePHP you probably want the string
     *
@@ -26,7 +26,7 @@ class fpdfHelper extends FPDF {
     * @return string if the $destination is S
     */
     function fpdfOutput ($name = 'page.pdf', $destination = 's') {
-        // I: send the file inline to the browser. The plug-in is used if available. 
+        // I: send the file inline to the browser. The plug-in is used if available.
         //    The name given by name is used when one selects the "Save as" option on the link generating the PDF.
         // D: send to the browser and force a file download with the name given by name.
         // F: save to a local file with the name given by name.
@@ -38,8 +38,8 @@ class fpdfHelper extends FPDF {
 
     function Header()
     {
-        //Logo      
-        $this->Image(WWW_ROOT.DS.'img/vib_logo.gif',10,8,20);
+        //Logo
+        $this->Image(WWW_ROOT.DS.'img/vib_logo.png',10,8,20);
         // you can use jpeg or pngs see the manual for fpdf for more info
         //Arial bold 15
         $this->SetFont('Arial','B',15);
@@ -60,43 +60,43 @@ class fpdfHelper extends FPDF {
         $this->SetFont('Arial','I',8);
         //Page number
         $this->Cell(0,10,'Page '.$this->PageNo().'/{nb}',0,0,'C');
-    } 	
+    }
 
 
 
     function basicOverview($header,$data){
 	$this->SetFont('Arial','U',12);
     	$this->Cell(60,10,$header);
-    	$this->Ln();	
+    	$this->Ln();
     	$this->SetFont('Arial','',10);
 	foreach($data as $k=>$v){
 		$this->SetFont('','B');
-		$this->Cell(60,5,$k);	
+		$this->Cell(60,5,$k);
 		$this->SetFont('','');
 		$this->Cell(10);
 		//if $v is not an array, we just print the data
 		if(!is_array($v)){
-		    $this->Cell(60,5,$v);		
+		    $this->Cell(60,5,$v);
 		}
 		else{
 		  //html link, existing from raw data: 2 keys: url and text
 		  if(array_key_exists("url",$v) && array_key_exists("text",$v)){
-		    $final_url	= "http://".$_SERVER["SERVER_NAME"].$v['url'];	
+		    $final_url	= "http://".$_SERVER["SERVER_NAME"].$v['url'];
 		    $this->SetTextColor(0,0,255);
-    		    $this->SetFont('','U');		    
+    		    $this->SetFont('','U');
 		    $this->Cell(60,5,$v['text'],0,0,'',false,$final_url);
 		    $this->SetFont('','');
     		    $this->SetTextColor(0);
 		  }
 		  else{
-		    $this->Cell(60,5,"Problem sourcing HTML link");	
+		    $this->Cell(60,5,"Problem sourcing HTML link");
 		  }
 		}
 		$this->Ln();
 	}
 	$this->Ln();
     }
-       	
+
 
     function basicTable($header,$data)
     {
@@ -111,14 +111,14 @@ class fpdfHelper extends FPDF {
             }
             $this->Ln();
         }
-    } 	
+    }
 
 
     function fancyTable($header,$table_header,$col_width,$table_data){
       //General header
       $this->SetFont('Arial','U',12);
       $this->Cell(60,10,$header);
-      $this->Ln();	
+      $this->Ln();
       $this->SetFont('Arial','',8);
 
       $this->SetDrawColor(50,50,50);
@@ -137,22 +137,22 @@ class fpdfHelper extends FPDF {
 	for($i=0;$i<count($row);$i++){
 	  $v	= $row[$i];
 	  if(!is_array($v)){
-	    $this->Cell($col_width[$i],5,$v,'LR',0,'L');	
+	    $this->Cell($col_width[$i],5,$v,'LR',0,'L');
 	  }
 	  else{
 	   if(array_key_exists("url",$v) && array_key_exists("text",$v)){
-	     $final_url	= "http://".$_SERVER["SERVER_NAME"].$v['url'];	
+	     $final_url	= "http://".$_SERVER["SERVER_NAME"].$v['url'];
 	     $this->SetTextColor(0,0,255);
-    	     $this->SetFont('','U');		    
+    	     $this->SetFont('','U');
 	     $this->Cell($col_width[$i],5,$v['text'],'LR',0,'L',false,$final_url);
 	     $this->SetFont('','');
     	     $this->SetTextColor(0);
 	   }
 	   else{
-	     $this->Cell($col_width[$i],5,"Data Problem",'LR',0,'L');	
+	     $this->Cell($col_width[$i],5,"Data Problem",'LR',0,'L');
 	   }
 	  }
-	}	   	
+	}
 	$this->Ln();
       }
       $this->Cell(array_sum($col_width),0,'','T');
@@ -167,7 +167,7 @@ class fpdfHelper extends FPDF {
 	$this->SetDrawColor(128,0,0);
 	$this->SetLineWidth(.3);
 	$this->SetFont('','B');
-    
+
 	//Header
 	for($i=0;$i< count($header);$i++)
 	    $this->Cell($colWidth[$i],7,$header[$i],1,0,'C',1);
@@ -187,8 +187,8 @@ class fpdfHelper extends FPDF {
 	    $fill=!$fill;
 	    }
 	$this->Cell(array_sum($colWidth),0,'','T');
-    } 
+    }
     */
 
 }
-?> 
+?>
