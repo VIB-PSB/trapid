@@ -1,20 +1,21 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml">
+<!DOCTYPE html>
+<html lang="en-US">
 <head>
+  <meta charset="utf-8">
+  <meta name="description" content="TRAPID: Rapid analysis of transcriptomics data">
+  <meta name="author" content="Michiel Van Bel">
+  <meta http-equiv="Content-Style-Type" content="text/css">
     <?php
-	//echo $javascript->link(array('prototype-1.7.0.0','scriptaculous'));
-	echo $javascript->link(array('prototype-1.7.0.0','swfobject'));
+	// echo $javascript->link(array('prototype-1.7.0.0','scriptaculous'));
+  // TODO: only import what is actually used from bootstrap + use minified version
+	echo $javascript->link(array('prototype-1.7.0.0','swfobject', 'bootstrap-3.3.7'));
     ?>
-    <meta name="description" content="Trapid: Rapid analysis of transcriptomics data" />
-    <meta name="author" content="Michiel Van Bel"/>
-    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-    <meta http-equiv="Content-Style-Type" content="text/css" />
     <title>
 	<?php echo $title_for_layout; ?>
     </title>
     <?php
-	echo $html->charset()."\n";
-	echo $html->css('trapid')."\n";
+	// echo $html->charset()."\n"; // Duplicated above?
+	echo $html->css(array('trapid', 'bootstrap-3.3.7'))."\n";
     ?>
 </head>
 <body>
