@@ -51,7 +51,7 @@ class AppController extends Controller {
 
   /*
    * Cookie setup: 
-   * The entire TRAPID websit is based on user-defined data sets, and as such a method for 
+   * The entire TRAPID website is based on user-defined data sets, and as such a method for
    * account handling and user identification is required.
    *
    * The 'beforeFilter' method is executed BEFORE each method, and as such ensures that the necessary
