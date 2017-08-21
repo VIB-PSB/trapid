@@ -101,6 +101,44 @@ class DATABASE_CONFIG {
 		'encoding' 	=> ''
 	); */
 
+	var $db_trapid_ref_plaza_monocots_03_test	= array(
+		'driver' 	=> 'mysql',
+		'persistent' 	=> false,
+		'host' 		=> TRAPID_DB_SERVER,
+		'port' 		=> TRAPID_DB_PORT,
+		'login' 	=> TRAPID_DB_USER,
+		'password' 	=> TRAPID_DB_PASSWORD,
+		'database' 	=> 'db_trapid_ref_plaza_monocots_03_test',
+		'schema' 	=> '',
+		'prefix' 	=> '',
+		'encoding' 	=> ''
+	);
+
+    var $db_trapid_ref_plaza_dicots_03_test	= array(
+        'driver' 	=> 'mysql',
+        'persistent' 	=> false,
+        'host' 		=> TRAPID_DB_SERVER,
+        'port' 		=> TRAPID_DB_PORT,
+        'login' 	=> TRAPID_DB_USER,
+        'password' 	=> TRAPID_DB_PASSWORD,
+        'database' 	=> 'db_trapid_ref_plaza_dicots_03_test',
+        'schema' 	=> '',
+        'prefix' 	=> '',
+        'encoding' 	=> ''
+    );
+
+    var $db_trapid_ref_plaza_pico_02_test	= array(
+        'driver' 	=> 'mysql',
+        'persistent' 	=> false,
+        'host' 		=> TRAPID_DB_SERVER,
+        'port' 		=> TRAPID_DB_PORT,
+        'login' 	=> TRAPID_DB_USER,
+        'password' 	=> TRAPID_DB_PASSWORD,
+        'database' 	=> 'db_trapid_ref_plaza_pico_02_test',
+        'schema' 	=> '',
+        'prefix' 	=> '',
+        'encoding' 	=> ''
+    );
 
 	var $db_plaza_public_02_5	= array(
 		'driver' 	=> 'mysql',
@@ -114,6 +152,7 @@ class DATABASE_CONFIG {
 		'prefix' 	=> '',
 		'encoding' 	=> ''
 	);
+
 
 	var $db_plaza_public_03	= array(
 		'driver' 	=> 'mysql',
