@@ -82,10 +82,11 @@
 	if (isset($_GET['url']) && $_GET['url'] === 'favicon.ico') {
 		return;
 	} else {
-		$Dispatcher = new Dispatcher();	 
+		$Dispatcher = new Dispatcher();
 		$Dispatcher->dispatch($url);
 	}
 	if (Configure::read() > 0) {
-		echo "<!-- " . round(getMicrotime() - $TIME_START, 4) . "s -->";
+        // echo "<!-- Serieux les mecs... -->";
+		echo ""; // <!-- " . round(getMicrotime() - $TIME_START, 4) . "s -->";
 	}
 ?>
