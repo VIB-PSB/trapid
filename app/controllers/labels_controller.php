@@ -60,6 +60,8 @@ class LabelsController extends AppController{
     $this->set("go_info_transcripts",$go_info);
     $this->set("ipr_info_transcripts",$ipr_info);
 
+    $this->pageTitle = $label.' &middot; Subset';
+
   }
 
 
@@ -76,6 +78,8 @@ class LabelsController extends AppController{
     $data_raw 			= $this->TranscriptsLabels->getDataTranscript2Labels($exp_id);
     $data_venn			= $this->Statistics->makeVennOverview($data_raw);
     $this->set("data_venn",$data_venn);
+
+    $this->pageTitle = 'Subsets overview';
   }
 
 

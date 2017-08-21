@@ -4,12 +4,14 @@
 class Annotation extends AppModel{
   var $name		= "Annotation";
   var $useTable		= "annotation";
-  var $useDbConfig 	= "db_plaza_public_02_5";
+  // var $useDbConfig 	= "db_plaza_public_02_5";
+  var $useDbConfig 	= "db_trapid_ref_plaza_monocots_03_test";
 
 
 
-  function getSequencesGo($go_term){    
-    $query 		= "SELECT `gene_id` FROM `gene_go` WHERE `go`='".$go_term."' ";
+  function getSequencesGo($go_term){
+    // $query 		= "SELECT `gene_id` FROM `gene_go` WHERE `go`='".$go_term."' ";
+    $query 		= "SELECT `gene_id` FROM `gene_go` WHERE `name`='".$go_term."' ";
     $res		= $this->query($query);
     $gene_ids		= array();
     foreach($res as $r){$gene_ids[] = $r['gene_go']['gene_id'];}
@@ -47,14 +49,14 @@ class Annotation extends AppModel{
 
 
 
-  function getLengths($species){    
+  function getLengths($species){
     $query		= "SELECT CHAR_LENGTH(`seq`) as `length` FROM `annotation` WHERE `species`='".$species."' AND `type`='coding'";
-    $res		= $this->query($query);  
+    $res		= $this->query($query);
     $result		= array();
     foreach($res as $r){
       $length		= $r[0]['length'];
       $result[]		= $length;
-    }       
+    }
     return $result;
   }
 
@@ -76,7 +78,7 @@ class Annotation extends AppModel{
 
   function getSpeciesGeneCounts(){
     $query	= "SELECT `species`,count(`gene_id`) as count FROM `annotation` WHERE `type`='coding' GROUP BY `species`";
-    $res	= $this->query($query);    
+    $res	= $this->query($query);
     $result	= array();
     foreach($res as $r){
       $spec	= $r['annotation']['species'];
@@ -91,7 +93,7 @@ class Annotation extends AppModel{
     //pr($gene_ids);
     $result		= 0;
     $gene_string	= "('".implode("','",$gene_ids)."')";
-    $query		= "SELECT COUNT(DISTINCT(`species`)) as count FROM `annotation` WHERE `gene_id` IN ".$gene_string; 
+    $query		= "SELECT COUNT(DISTINCT(`species`)) as count FROM `annotation` WHERE `gene_id` IN ".$gene_string;
     $res		= $this->query($query);
     $result 		= $res[0][0]['count'];
     return $result;
@@ -108,7 +110,7 @@ class Annotation extends AppModel{
       $spec		= $r['annotation']['species'];
       $gene		= $r['annotation']['gene_id'];
       if(!array_key_exists($spec,$result)){$result[$spec] = array();}
-      $result[$spec][] = $gene;      
+      $result[$spec][] = $gene;
     }
     return $result;
   }
@@ -123,10 +125,10 @@ class Annotation extends AppModel{
       $spec	= $r['annotation']['species'];
       $count	= $r[0]['count'];
       $result[$spec]	= $count;
-    }  
+    }
     return $result;
   }
 
 
-}	
+}
 ?>

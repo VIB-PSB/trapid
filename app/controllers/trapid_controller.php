@@ -15,7 +15,7 @@ class TrapidController extends AppController{
 
   var $components	= array("Cookie","TrapidUtils","Sequence");
   var $paginate		= array(
-				"Transcripts"=>
+    "Transcripts"=>
 					array(
 						"limit"=>10,
 			       			"order"=>array("Transcripts.transcript_id"=>"ASC")
@@ -166,22 +166,24 @@ class TrapidController extends AppController{
    * Skips right to experiments overview if user is already logged in.
    */
   function index(){
+        $this->layout = "external";  // Layout for external pages (i.e. not in experiment)
+        $this->pageTitle = 'Welcome';
       	$user_id	= $this->Cookie->read("user_id");
       	$email		= $this->Cookie->read("email");
       	$user_id  	= mysql_real_escape_string($user_id);
       	$email		= mysql_real_escape_string($email);
       	$user_data	= $this->Authentication->find("first",array("conditions"=>array("user_id"=>$user_id,"email"=>$email)));
-	if($user_data){$this->redirect(array("controller"=>"trapid","action"=>"experiments"));}
+  // Disable this behavior as it can be confusing to have the home page disappearing?
+  // if($user_data){$this->redirect(array("controller"=>"trapid","action"=>"experiments"));}
 
 	// Send a test email
 	//mail("mibel@psb.ugent.be","test email","blablabla");
-
   }
 
 
   //fast and ugly hack to facilitate ajax call to get extra information about number of transcripts per experiment.
   function experiments_num_transcripts($exp_id){
-    Configure::write("debug",2);
+    Configure::write("debug",1);
     $this->layout = "";
     if(!$exp_id){$this->redirect(array("controller"=>"trapid","action"=>"experiments"));}
     $exp_id	= mysql_real_escape_string($exp_id);
@@ -200,8 +202,9 @@ class TrapidController extends AppController{
    * Displays experiment information for a given user
    */
   function experiments(){
-    Configure::write("debug",2);
-
+    // Configure::write("debug",2);
+    $this->layout = "external";  // Layout for external pages (i.e. not in experiment)
+    $this->pageTitle = 'Experiments overview';
 
     $MAX_USER_EXPERIMENTS	= 10;
     $this->set("max_user_experiments",$MAX_USER_EXPERIMENTS);
@@ -403,21 +406,21 @@ class TrapidController extends AppController{
     $exp_id	= mysql_real_escape_string($exp_id);
     parent::check_user_exp($exp_id);
     $standard_experiment_info	= $this->Experiments->find("first",array("conditions"=>array("experiment_id"=>$exp_id)));
-    $this->TrapidUtils->checkPageAccess($standard_experiment_info['Experiments']['title'],$standard_experiment_info['Experiments']['process_state'],$this->process_states["default"]);
+    $this->TrapidUtils->checkPageAccess($standard_experiment_info['Experiments']['title'], $standard_experiment_info['Experiments']['process_state'], $this->process_states["default"]);
 
-    //set the edit date
+    // Set the edit date
     $this->Experiments->updateAll(array("last_edit_date"=>"'".date("Y-m-d H:i:s")."'"),array("experiment_id"=>$exp_id));
 
 
     $this->set("exp_id",$exp_id);
     $user_group=$this->Authentication->find("first",array("fields"=>array("group"),"conditions"=>array("user_id"=>parent::check_user())));
-    if($user_group['Authentication']['group'] == "admin"){$this->set("admin",1);}
+    if($user_group['Authentication']['group'] == "admin"){$this->set("admin", 1);}
 
-    //check whether the number of jobs in the queue for this experiment has not been reached.
+    // Check whether the number of jobs in the queue for this experiment has not been reached.
     $current_job_number = $this->ExperimentJobs->getNumJobs($exp_id);
     if($current_job_number>=MAX_CLUSTER_JOBS){$this->set("max_number_jobs_reached",true);}
 
-    //get default experiment information
+    // Get default experiment information
     $transcript_experiment_info	= $this->Transcripts->findExperimentInformation($exp_id);
     $datasource_info		= $this->DataSources->find("first",array("conditions"=>array("db_name"=>$standard_experiment_info["Experiments"]["used_plaza_database"])));
     $this->set("standard_experiment_info",$standard_experiment_info);
@@ -430,13 +433,14 @@ class TrapidController extends AppController{
 
 
     if($standard_experiment_info['Experiments']['process_state']!="empty"){
-	//retrieve information for table at bottom of page
+	// Retrieve information for table at bottom of page
 	$transcripts_p	= $this->paginate("Transcripts",array("Transcripts.experiment_id"=>$exp_id));
 	$transcript_ids	= $this->TrapidUtils->reduceArray($transcripts_p,"Transcripts","transcript_id");
+    $this->set("transcript_ids", $transcript_ids);
 
-	//retrieve functional annotation for the table
+	// retrieve functional annotation for the table
 	$transcripts_go	= $this->TrapidUtils->indexArray($this->TranscriptsGo->find("all",array("conditions"=>array("experiment_id"=>$exp_id,"transcript_id"=>$transcript_ids,"is_hidden"=>"0", "type"=>"go"))),"TranscriptsGo","transcript_id","name");
-  // TRAPID DB structure changed
+    // TRAPID DB structure changed
 	// $transcripts_go	= $this->TrapidUtils->indexArray($this->TranscriptsGo->find("all",array("conditions"=>array("experiment_id"=>$exp_id,"transcript_id"=>$transcript_ids,"is_hidden"=>"0", "type"=>"go"))),"TranscriptsGo","transcript_id","go");
 	$go_info	= array();
 	if(count($transcripts_go)!=0){
@@ -445,7 +449,7 @@ class TrapidController extends AppController{
 	}
 
 	$transcripts_ipr= $this->TrapidUtils->indexArray($this->TranscriptsInterpro->find("all",array("conditions"=>array("experiment_id"=>$exp_id,"transcript_id"=>$transcript_ids, "type"=>"ipr"))),"TranscriptsInterpro","transcript_id","name");
-  // TRAPID DB structure changed
+    // TRAPID DB structure changed
 	// $transcripts_ipr= $this->TrapidUtils->indexArray($this->TranscriptsInterpro->find("all",array("conditions"=>array("experiment_id"=>$exp_id,"transcript_id"=>$transcript_ids, "type"=>"ipr"))),"TranscriptsInterpro","transcript_id","interpro");
 	$ipr_info	= array();
 	if(count($transcripts_ipr)!=0){
@@ -464,6 +468,10 @@ class TrapidController extends AppController{
 	$this->set("go_info",$go_info);
 	$this->set("ipr_info",$ipr_info);
     }
+    // TODO: To change as we now get experiment information twice... Not very smart but will do for protatyping.
+      $exp_info	= $this->Experiments->getDefaultInformation($exp_id);
+      $this->set("exp_info",$exp_info);
+      $this -> pageTitle = 'Experiment overview &middot; ' . $standard_experiment_info['Experiments']['title'];
   }
 
 
@@ -743,7 +751,7 @@ class TrapidController extends AppController{
     $this->set("associated_go",$associated_go);
     $this->set("go_info",$go_information);
 
-    $associated_interpro	= $this->TranscriptsInterpro->find("all",array("conditions"=>array("experiment_id"=>$exp_id,"transcript_id"=>$transcript_id, type=>"ipr")));
+    $associated_interpro	= $this->TranscriptsInterpro->find("all",array("conditions"=>array("experiment_id"=>$exp_id,"transcript_id"=>$transcript_id, "type"=>"ipr")));
     $interpros	= $this->TrapidUtils->reduceArray($associated_interpro,"TranscriptsInterpro","name");
     $interpro_information = $this->ProteinMotifs->retrieveInterproInformation($interpros);
     $this->set("associated_interpro",$associated_interpro);
@@ -1071,9 +1079,11 @@ class TrapidController extends AppController{
       //check on length of search value
       if(strlen($sv) < 3){$this->set("search_result","bad_search");$this->set("error","Description should be 3 characters or more");return;}
       //find InterPro domains with this description
-      $ipr_terms = $this->ProteinMotifs->find("all",array("conditions"=>array("`ProteinMotifs.desc` LIKE '%$sv%' ")));
+//      $ipr_terms = $this->ProteinMotifs->find("all",array("conditions"=>array("`ProteinMotifs.desc` LIKE '%$sv%' ")));
+      $ipr_terms = $this->ProteinMotifs->find("all",array("conditions"=>array("`ProteinMotifs.desc` LIKE '%$sv%' ", "type"=>"interpro")));
       if(!$ipr_terms){$this->set("search_result","bad_search");$this->set("error","Unknown InterPro description");return;}
-      $ipr_terms = $this->TrapidUtils->indexArraySimple($ipr_terms,"ProteinMotifs","motif_id","desc");
+      // $ipr_terms = $this->TrapidUtils->indexArraySimple($ipr_terms,"ProteinMotifs","motif_id","desc");
+      $ipr_terms = $this->TrapidUtils->indexArraySimple($ipr_terms,"ProteinMotifs","name","desc");
       //ok, now find possibe associated transcripts
       $transcripts_info = $this->TranscriptsInterpro->findTranscriptsFromInterpro($exp_id,$ipr_terms);
       if(!$transcripts_info){$this->set("search_result","bad_search");return;}
@@ -1171,7 +1181,8 @@ class TrapidController extends AppController{
   function initial_processing($exp_id=null){
     $exp_id	= mysql_real_escape_string($exp_id);
     parent::check_user_exp($exp_id);
-    $exp_info	= $this->Experiments->getDefaultInformation($exp_id);
+      $this->pageTitle = "Perform initial processing";
+      $exp_info	= $this->Experiments->getDefaultInformation($exp_id);
     $user_group=$this->Authentication->find("first",array("fields"=>array("group"),"conditions"=>array("user_id"=>parent::check_user())));
     if($user_group['Authentication']['group'] != "admin"){
       $this->TrapidUtils->checkPageAccess($exp_info['title'],$exp_info["process_state"],$this->process_states["upload"]);
@@ -1269,11 +1280,11 @@ class TrapidController extends AppController{
       //return;
 
 
-      //parameters are ok. we can now proceed with the actual pipeline organization.
-      //create shell file for submission to the web-cluster.
-      //Shell file contains both the necessary module load statements
-      //as well as the correct name for the global perl-file.
-      //A single "initial processing" job should only run on a single cluster-node
+      // Parameters are ok: we can now proceed with the actual pipeline organization.
+      // Create shell file for submission to the web-cluster.
+      // Shell file contains both the necessary module load statements
+      // as well as the correct name for the global perl-file.
+      // A single "initial processing" job should only run on a single cluster node
       $qsub_file  = $this->TrapidUtils->create_qsub_script($exp_id);
       $shell_file = $this->TrapidUtils->create_shell_file_initial($exp_id,$exp_info['used_plaza_database'],$blast_db,$gf_type,$num_blast_hits,$possible_evalues[$blast_evalue],$func_annot);
       if($shell_file == null || $qsub_file == null ){$this->set("error","problem creating program files");return;}
@@ -1338,6 +1349,7 @@ class TrapidController extends AppController{
     $exp_id	= mysql_real_escape_string($exp_id);
     parent::check_user_exp($exp_id);
     $exp_info	= $this->Experiments->getDefaultInformation($exp_id);
+    $this->pageTitle = "Import transcripts";
     $this->TrapidUtils->checkPageAccess($exp_info['title'],$exp_info["process_state"],$this->process_states["start"]);
     $this->set("exp_info",$exp_info);
     $this->set("exp_id",$exp_id);
@@ -1707,8 +1719,9 @@ class TrapidController extends AppController{
     $this->TrapidUtils->checkPageAccess($exp_info['title'],$exp_info["process_state"],$this->process_states["default"]);
     $this->set("exp_info",$exp_info);
     $this->set("exp_id",$exp_id);
+    $this->pageTitle = "Export data";
 
-    $structural_export = array("transcript_id"=>"Transcript identifier","frame_info"=>"Frame information","frameshift_info"=>"Frameshift information","orf"=>"ORF information","meta_annotation"=>"Meta annotation");
+      $structural_export = array("transcript_id"=>"Transcript identifier","frame_info"=>"Frame information","frameshift_info"=>"Frameshift information","orf"=>"ORF information","meta_annotation"=>"Meta annotation");
     $structural_export_cols = array(	"transcript_id"=>array("transcript_id"),
 					"frame_info"=>array("detected_frame","detected_strand","full_frame_info"),
 					"frameshift_info"=>array("putative_frameshift","is_frame_corrected"),
@@ -1908,6 +1921,8 @@ class TrapidController extends AppController{
 
   function change_password(){
     //Configure::write("debug",2);
+    $this->layout = "external";  // Layout for external pages (i.e. not in experiment)
+    $this->pageTitle = "Change password";
 
     $user_id		= parent::check_user();
     //retrieve information about the user
@@ -1940,9 +1955,12 @@ class TrapidController extends AppController{
    * Authentication: registration and login
    */
   function authentication($registration=null){
-    Configure::write("debug",2);
-    $hashed_pass	= hash("sha256","test");
-    pr($hashed_pass);
+    // Configure::write("debug",2);
+    $this->layout = "external";  // Layout for external pages (i.e. not in experiment)
+    $this->pageTitle = "Authentication";
+
+      $hashed_pass	= hash("sha256","test");
+    // pr($hashed_pass);
 
     //basic first check, to see whether user is already logged in.
     $user_id		= $this->Cookie->read("user_id");
@@ -1953,9 +1971,11 @@ class TrapidController extends AppController{
     if($user_data){$this->redirect(array("controller"=>"trapid","action"=>"experiments"));}
 
     if($registration=="registration"){
+      $this->pageTitle = "Register";
       $this->set("registration",true);
     }
     if($registration=="password_recovery"){
+      $this->pageTitle = "Forgotten password";
       $this->set("pass_recovery",true);
     }
 
@@ -1982,18 +2002,18 @@ class TrapidController extends AppController{
 	if($user_data){
 	  $this->set("error","Email-address already in use");return;
 	}
-	//now, we can actually create a password, add the user to the database
+	// now, we can actually create a password, add the user to the database
 	$password	= $this->TrapidUtils->rand_str(8);
 	$hashed_pass	= hash("sha256",$password);
   // `user_id` value set to NULL (setting it to an empty string, like before, would require to turn SQL strict mode off)
-  // sql_mode is not the same on psbsql01 and psbsql03
+  // Reason: sql_mode is not the same on psbsql01 and psbsql03
 	$this->Authentication->save(array("user_id"=>NULL,"email"=>$email,"password"=>$hashed_pass,"group"=>"academic",
 					  "organization"=>$organization,"country"=>$country));
 	//send email to user with password information
 	$this->TrapidUtils->send_registration_email($email,$password);
 	$this->set("message","Please use the authentication information send to you by email to login");
-	$this->set("registration",false);
-	return;
+	$this->set("registration", false);
+          return;
       }
 
       //authentication part of the page
@@ -2059,7 +2079,7 @@ class TrapidController extends AppController{
 
   /*
    * Cookie setup:
-   * The entire TRAPID websit is based on user-defined data sets, and as such a method for
+   * The entire TRAPID website is based on user-defined data sets, and as such a method for
    * account handling and user identification is required.
    *
    * The 'beforeFilter' method is executed BEFORE each method, and as such ensures that the necessary
@@ -2089,6 +2109,29 @@ class TrapidController extends AppController{
    }
 
 
+  /* Simple function that returns True if a user is logged in (so the value for
+  `user_id` in the Cookie isn't null), False otherwise.
+  Used in the navbar to display different links if a user is logged in. */
+  function is_logged_in(){
+    $user_id	= $this->Cookie->read("user_id");
+    if($user_id!=null){
+      return True;
+    }
+    else {
+      return False;
+  }
+}
+
+/* Trying to use jQuery dataTables for the transcripts table (with data retrieved on the fly via ajax).
+   WIP */
+
+//function ajaxData() {
+//    $this->modelClass = "TranscriptsPagination";
+//    $this->autoRender = false;
+//    $output = $this->TranscriptsPagination->GetData();
+//    echo json_encode($output);
+//    // echo $output;
+//}
 
 }
 

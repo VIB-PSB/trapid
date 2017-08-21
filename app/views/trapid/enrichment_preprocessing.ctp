@@ -1,6 +1,7 @@
 <div>
-
-<h2>Preprocess functional enrichments</h2>
+<div class="page-header">
+<h1 class="text-primary">Preprocess functional enrichments</h1>
+</div>
 <div class="subdiv">
 	<?php echo $this->element("trapid_experiment");?>
 	

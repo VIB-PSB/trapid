@@ -1,12 +1,14 @@
-<div id="container">
-	<div style='float:right;width:100px;text-align:right;margin-right:100px;'>
-		<a class="mainref" href="/webtools/trapid/documentation/">Documentation</a>
-	</div>
-	<div style='clear:both;width:700px;font-size:8px;'>&nbsp;</div>
+<div class="container">
+<!--	<div style='float:right;width:100px;text-align:right;margin-right:100px;'>-->
+<!--		<a class="mainref" href="/webtools/trapid/documentation/">Documentation</a>-->
+<!--	</div>-->
+<!--	<div style='clear:both;width:700px;font-size:8px;'>&nbsp;</div>-->
+    <div class="page-header">
+		<h1 class="text-primary">TRAPID FAQ</h1>
+    </div>
 	<div id="tutorial" style="width:900px;">
-		<h2>TRAPID FAQ</h2>
-		
-		<h3>General</h3>
+
+		<h2>General</h2>
 		<div class="subdiv">
 			<div class="faq_question"> - How many TRAPID experiments can I create?</div>
 			<div class="faq_answer"> - Each user-account has the ability to create up to 10 different TRAPID experiments.</div>
@@ -25,7 +27,7 @@
 
 		</div>
 
-		<h3>Input/Output</h3>
+		<h2>Input/Output</h2>
 		<div class="subdiv">
 			<div class="faq_question"> - What input files should I use?</div>
 			<div class="faq_answer"> - TRAPID supports properly formatted multi-fasta files, with the '>' symbol indicating the transcript identifier of the following sequence (see also <a href='http://en.wikipedia.org/wiki/FASTA_format'>here</a>). In case the headers of the multi-fasta file consist of multiple sections separated by the '|' symbol, the first section will be used as unique identifier.</div>
@@ -46,7 +48,7 @@
 
 		</div>
 
-		<h3>Analyzes</h3>
+		<h2>Analyzes</h2>
 		<div class="subdiv">
 			<div class="faq_question"> - How can I download an alignment and/or phylogenetic tree?</div>
 			<div class="faq_answer"> - After the multiple sequence alignment (MSA) has been created for a given gene family, the user can both view the MSA and download the MSA in text-format, by following the alignment links within the toolbox on the gene family page. If a phylogenetic tree has been created, both the MSA and the tree will be downloadable by following the tree links within the toolbox on the gene family page. The phylogenetic tree will be downloadable in both newick format and phyloxml-format.</div>

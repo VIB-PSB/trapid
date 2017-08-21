@@ -13,6 +13,7 @@ class FunctionalAnnotationController extends AppController{
 
 
   var $components	= array("Cookie","TrapidUtils");
+  // Note: pagination should be handled by jQuery DataTables
   var $paginate		= array(
 				"TranscriptsGo"=>
 				array(
@@ -92,7 +93,7 @@ class FunctionalAnnotationController extends AppController{
     $this->set("num_transcripts",$num_transcripts);
 
 
-    //get the parent go terms.
+    // Get the parent go terms.
     $parental_gos		= $this->GoParents->find("all",array("conditions"=>array("child_go"=>$go),"fields"=>array("parent_go")));
     $parental_gos		= $this->TrapidUtils->reduceArray($parental_gos,"GoParents","parent_go");
     $this->set("num_parent_gos",count($parental_gos));
@@ -126,15 +127,19 @@ class FunctionalAnnotationController extends AppController{
     $this->set("exp_id",$exp_id);
     $this->TrapidUtils->checkPageAccess($exp_info['title'],$exp_info["process_state"],$this->process_states["default"]);
 
-    //check GO validity
+    // Check GO validity
     $go			= mysql_real_escape_string(str_replace("-",":",$go_web));
-    $go_information	= $this->ExtendedGo->find("first",array("conditions"=>array("go"=>$go)));
+    // $go_information	= $this->ExtendedGo->find("first",array("conditions"=>array("go"=>$go)));
+    $go_information	= $this->ExtendedGo->find("first",array("conditions"=>array("name"=>$go)));
     $num_transcripts	= $this->TranscriptsGo->find("count",array("conditions"=>array("experiment_id"=>$exp_id,"type"=>"go", "name"=>$go)));
     if(!$go_information || $num_transcripts==0){$this->redirect(array("controller"=>"trapid","action"=>"experiment",$exp_id));}
     $this->set("go_info",$go_information["ExtendedGo"]);
     $this->set("num_transcripts",$num_transcripts);
 
-    $transcripts_p		= $this->paginate("TranscriptsGo",array("experiment_id"=>$exp_id,"name"=>$go, "type"=>"go"));
+    // Pagination should be handled by jQuery DataTables
+    // TODO: reread how the information is formatted/displayed and try to optimize (same for IPR)
+     $transcripts_p		= $this->paginate("TranscriptsGo",array("experiment_id"=>$exp_id,"name"=>$go, "type"=>"go"));
+    $transcripts_p		= $this->TranscriptsGo->find("all", array("fields"=>array("transcript_id"), "conditions"=>array("experiment_id"=>$exp_id, "type"=>"go", "name"=>$go)));
     $transcript_ids	= $this->TrapidUtils->reduceArray($transcripts_p,"TranscriptsGo","transcript_id");
     $transcripts	= $this->Transcripts->find("all",array("conditions"=>array("experiment_id"=>$exp_id,"transcript_id"=>$transcript_ids)));
 
@@ -164,6 +169,8 @@ class FunctionalAnnotationController extends AppController{
     $this->set("go_info_transcripts",$go_info);
     $this->set("ipr_info_transcripts",$ipr_info);
 
+    $this -> pageTitle = $go.' &middot; GO term ';
+
   }
 
 
@@ -178,15 +185,18 @@ class FunctionalAnnotationController extends AppController{
     $this->set("exp_id",$exp_id);
     $this->TrapidUtils->checkPageAccess($exp_info['title'],$exp_info["process_state"],$this->process_states["default"]);
 
-    //check InterPro validity
+    // Check InterPro validity
     $interpro		= mysql_real_escape_string($interpro);
-    $interpro_info	= $this->ProteinMotifs->find("first",array("conditions"=>array("motif_id"=>$interpro)));
+    // $interpro_info	= $this->ProteinMotifs->find("first",array("conditions"=>array("motif_id"=>$interpro)));
+    $interpro_info	= $this->ProteinMotifs->find("first",array("conditions"=>array("name"=>$interpro, "type"=>"interpro")));
     $num_transcripts =$this->TranscriptsInterpro->find("count",array("conditions"=>array("experiment_id"=>$exp_id, "type"=>"ipr", "name"=>$interpro)));
     if(!$interpro_info || $num_transcripts==0){$this->redirect(array("controller"=>"trapid","action"=>"experiment",$exp_id));}
     $this->set("interpro_info",$interpro_info['ProteinMotifs']);
     $this->set("num_transcripts",$num_transcripts);
 
-    $transcripts_p	= $this->paginate("TranscriptsInterpro",array("experiment_id"=>$exp_id, "type"=>"ipr", "name"=>$interpro));
+    // Pagination should be handled by jQuery DataTables
+     $transcripts_p	= $this->paginate("TranscriptsInterpro",array("experiment_id"=>$exp_id, "type"=>"ipr", "name"=>$interpro));
+    $transcripts_p	= $this->TranscriptsInterpro->find("all",array("fields"=>array("transcript_id"), "conditions"=>array("experiment_id"=>$exp_id, "type"=>"ipr", "name"=>$interpro)));
     $transcript_ids	= $this->TrapidUtils->reduceArray($transcripts_p,"TranscriptsInterpro","transcript_id");
     $transcripts	= $this->Transcripts->find("all",array("conditions"=>array("experiment_id"=>$exp_id,"transcript_id"=>$transcript_ids)));
 
@@ -216,6 +226,8 @@ class FunctionalAnnotationController extends AppController{
     $this->set("transcripts_labels",$transcripts_labels);
     $this->set("go_info_transcripts",$go_info);
     $this->set("ipr_info_transcripts",$ipr_info);
+
+    $this -> pageTitle = $interpro.' &middot; Protein domain ';
   }
 
 
@@ -252,7 +264,10 @@ class FunctionalAnnotationController extends AppController{
       //find whether any genes are associated (this also validates the interpro itself)
       $num_transcripts= $this->TranscriptsInterpro->find("count",array("conditions"=>array("experiment_id"=>$exp_id, "type"=>"ipr", "name"=>$interpro)));
       if($num_transcripts==0){$this->redirect(array("controller"=>"trapid","action"=>"experiment",$exp_id));}
-      $interpro_information	= $this->ProteinMotifs->find("first",array("conditions"=>array("motif_id"=>$interpro)));
+//      $interpro_information	= $this->ProteinMotifs->find("first",array("conditions"=>array("motif_id"=>$interpro)));
+//      $this->set("description",$interpro_information["ProteinMotifs"]["desc"]);
+        // TRAPID db structure changed
+      $interpro_information	= $this->ProteinMotifs->find("first",array("conditions"=>array("name"=>$interpro, "type"=>"ipr")));
       $this->set("description",$interpro_information["ProteinMotifs"]["desc"]);
       $this->set("type","interpro");
       $this->set("interpro",$interpro);
@@ -284,22 +299,28 @@ class FunctionalAnnotationController extends AppController{
 	foreach($trid_ipr as $ti){$extra_annot_ipr[$gf][]=$ti['TranscriptsInterpro']['name'];$ipr_descriptions[]=$ti['TranscriptsInterpro']['name'];}
       }
     }
-    $go_descriptions	= $this->ExtendedGo->find("all",array("conditions"=>array("go"=>array_unique($go_descriptions))));
-    $ipr_descriptions	= $this->ProteinMotifs->find("all",array("conditions"=>array("motif_id"=>array_unique($ipr_descriptions))));
+//    $go_descriptions	= $this->ExtendedGo->find("all",array("conditions"=>array("go"=>array_unique($go_descriptions))));
+//    $ipr_descriptions	= $this->ProteinMotifs->find("all",array("conditions"=>array("motif_id"=>array_unique($ipr_descriptions))));
+    $go_descriptions	= $this->ExtendedGo->find("all",array("conditions"=>array("name"=>array_unique($go_descriptions), "type"=>"go")));
+    $ipr_descriptions	= $this->ProteinMotifs->find("all",array("conditions"=>array("name"=>array_unique($ipr_descriptions), "type"=>"interpro")));
     //pr($ipr_descriptions);
 
     //    pr($extra_annot_go);
     //	pr($go_descriptions);
     //    pr($extra_annot_ipr);
     //    pr($ipr_descriptions);
-    $go_descriptions	= $this->TrapidUtils->indexArraySimple($go_descriptions,"ExtendedGo","go","desc");
-    $ipr_descriptions	= $this->TrapidUtils->indexArraySimple($ipr_descriptions,"ProteinMotifs","motif_id","desc");
+//    $go_descriptions	= $this->TrapidUtils->indexArraySimple($go_descriptions,"ExtendedGo","go","desc");
+//    $ipr_descriptions	= $this->TrapidUtils->indexArraySimple($ipr_descriptions,"ProteinMotifs","motif_id","desc");
+    $go_descriptions	= $this->TrapidUtils->indexArraySimple($go_descriptions,"ExtendedGo","name","desc");
+    $ipr_descriptions	= $this->TrapidUtils->indexArraySimple($ipr_descriptions,"ProteinMotifs","name","desc");
     //$this->set("extra_annotation",$extra_annotation);
 
     $this->set("extra_annot_go",$extra_annot_go);
     $this->set("extra_annot_ipr",$extra_annot_ipr);
     $this->set("go_descriptions",$go_descriptions);
     $this->set("ipr_descriptions",$ipr_descriptions);
+
+    $this -> pageTitle = $identifier.' &middot; Associated gene families';
 
   }
 

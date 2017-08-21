@@ -1,5 +1,7 @@
 <div>
-<h2>Lengths distribution gene family</h2>
+    <div class="page-header">
+<h1 class="text-primary">Lengths distribution gene family</h1>
+    </div>
 <div class="subdiv">
 	<?php echo $this->element("trapid_experiment");?>
 	

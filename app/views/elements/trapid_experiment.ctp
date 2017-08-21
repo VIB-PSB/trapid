@@ -1,4 +1,5 @@
-<div style='float:left;width:700px;'>
+<!--<div style='float:left;width:700px;'>-->
+<div style='float:left;width:700px;display:none;'>
 <h3>Experiment overview</h3>
 <div class="subdiv">
 	<div>
@@ -33,13 +34,14 @@
 	</div>
 </div>
 </div>
-<div style='float:right;width:200px;text-align:right;margin-right:50px;'>
-	<?php
-	echo $html->link("Experiments",array("controller"=>"trapid","action"=>"experiments"),array("class"=>"mainref"));
-	echo "<br/>\n";
-	echo $html->link("Manage jobs",array("controller"=>"trapid","action"=>"manage_jobs",$exp_id),array("class"=>"mainref"));
-	echo "<br/>\n";
-	echo $html->link("Documentation",array("controller"=>"documentation","action"=>"index"),array("target"=>"_blank","class"=>"mainref"));
-	?>	
-</div>
+<!-- Useless div now with the new layout? -->
+<!--<div style='float:right;width:200px;text-align:right;margin-right:50px;'>-->
+<!--	--><?php
+//	echo $html->link("Experiments",array("controller"=>"trapid","action"=>"experiments"),array("class"=>"mainref"));
+//	echo "<br/>\n";
+//	echo $html->link("Manage jobs",array("controller"=>"trapid","action"=>"manage_jobs",$exp_id),array("class"=>"mainref"));
+//	echo "<br/>\n";
+//	echo $html->link("Documentation",array("controller"=>"documentation","action"=>"index"),array("target"=>"_blank","class"=>"mainref"));
+//	?><!--	-->
+<!--</div>-->
 <div style='clear:both;width:800px;font-size:x-small;'>&nbsp;</div>

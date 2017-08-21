@@ -1,5 +1,7 @@
 <div>
-<h2>Associated gene families</h2>
+    <div class="page-header">
+<h1 class="text-primary">Associated gene families</h1>
+    </div>
 <div class="subdiv">
 	<?php echo $this->element("trapid_experiment");?>
 	<h3>Overview</h3>

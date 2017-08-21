@@ -28,7 +28,7 @@ if((isset($search_type) && ($search_type=="transcript" || $search_type=="gene"))
 	echo "<input type='checkbox' name='multiple_values_check' id='multiple_values_check' style='margin-right:5px;' ".$checked."/>";
 	echo "<span style='margin-right:20px;' id='mvs_txt'>Multiple values</span>";
 }
-echo "<input type='submit' value='Search' />\n";
+echo "<input type='submit' class='btn btn-primary' value='Search' />\n";
 echo "</form>\n";
 ?>
 

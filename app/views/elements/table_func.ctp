@@ -1,6 +1,9 @@
 <?php
 /* Table for functional annotation */
 
+// Updated to make it work with jQuery dataTables and Bootstrap + minor improvements
+// Removed this functionality for now... Will re-implement it better soon.
+
 $gf_column_class1=null;
 if(isset($gf_info)){$gf_column_class1="class='highlight'";}
 $go_column_class1=null;$go_column_class2=null;
@@ -10,22 +13,24 @@ if(isset($interpro_info)){$ipr_column_class1="class='highlight'";$ipr_column_cla
 $label_column_class1=null;$label_column_class2=null;
 if(isset($label)){$label_column_class1="class='highlight'";$label_column_class2="highlight";}
 ?>
-<?php $paginator->options(array("url"=>$this->passedArgs));?>
-<table cellpadding="0" cellspacing="0" style="width:90%;">
-	<tr>
-		<th style="width:10%">Transcript</th>
-		<th style="width:15%" <?php echo $gf_column_class1;?> >Gene family</th>
-		<th style="width:27%" <?php echo $go_column_class1;?> >GO annotation</th>
-		<th style="width:27%" <?php echo $ipr_column_class1;?> >Protein domain annotation</th>
-		<th style="width:10%" <?php echo $label_column_class1;?> >Subset</th>
-		<th style="width:10%" >Meta annotation</th>
+<?php $paginator->options(array("url"=>$this->passedArgs)); ?>
+<table id="table_func" class="table table-striped table-bordered table-hover table-condensed display" style="font-size: 14px;">
+<!--table cellpadding="0" cellspacing="0" style="width:90%;"-->
+	<thead>
+		<th>Transcript</th>
+		<th <?php echo $gf_column_class1;?> >Gene family</th>
+		<th style="width: 27%;" <?php echo $go_column_class1;?> >GO annotation</th>
+		<th style="width: 27%;" <?php echo $ipr_column_class1;?> >Protein domain annotation</th>
+		<th <?php echo $label_column_class1;?> >Subset</th>
+		<th>Meta-annotation</th>
+		<!--th>Meta annotation</th-->
 		<!--<th style="width:5%">Edit</th>-->
-	</tr>
+	</thead>
 	<?php
 	$bad_status	= "unassigned";
 	$tr_counter	= 0;
 	foreach($transcript_data as $transcript_dat){
-		$row_class	= null; if($tr_counter++%2==0){$row_class=" class='altrow' ";}
+		$row_class	= null; // if($tr_counter++%2==0){$row_class=" class='altrow' ";}
 
 		$td=$transcript_dat['Transcripts'];
 		echo "<tr $row_class>";
@@ -53,7 +58,7 @@ if(isset($label)){$label_column_class1="class='highlight'";$label_column_class2=
 				$go	= $transcripts_go[$td['transcript_id']][$i];
 				$go_web	= str_replace(":","-",$go);
 				$desc	= $go_info_transcripts[$go]['desc'];
-				echo ($i+1).") ".$html->link($desc,array("controller"=>"functional_annotation","action"=>"go",$exp_id,$go_web))."<br/>";
+				echo ($i+1).". ".$html->link($desc,array("controller"=>"functional_annotation","action"=>"go",$exp_id,$go_web))."<br/>";
 			}
 			echo "</td>";
 		}
@@ -67,7 +72,7 @@ if(isset($label)){$label_column_class1="class='highlight'";$label_column_class2=
 			for($i=0;$i<count($transcripts_ipr[$td['transcript_id']]) && $i<3;$i++){
 				$ipr	= $transcripts_ipr[$td['transcript_id']][$i];
 				$desc	= $ipr_info_transcripts[$ipr]['desc'];
-				echo ($i+1).") ".$html->link($desc,array("controller"=>"functional_annotation","action"=>"interpro",$exp_id,$ipr))."</br>";
+				echo ($i+1).". ".$html->link($desc,array("controller"=>"functional_annotation","action"=>"interpro",$exp_id,$ipr))."</br>";
 			}
 			echo "</td>";
 		}
@@ -81,7 +86,7 @@ if(isset($label)){$label_column_class1="class='highlight'";$label_column_class2=
 			    echo "<td class='left $label_column_class2'>";
 			    for($i=0;$i<count($transcripts_labels[$td['transcript_id']]) && $i<3;$i++){
 				    $label	= $transcripts_labels[$td['transcript_id']][$i];
-				    echo ($i+1).") ".$html->link($label,array("controller"=>"labels","action"=>"view",$exp_id,urlencode($label)))."<br/>";
+				    echo ($i+1).". ".$html->link($label,array("controller"=>"labels","action"=>"view",$exp_id,urlencode($label)))."<br/>";
 			    }
 			    echo "</td>";
 		}
@@ -98,11 +103,27 @@ if(isset($label)){$label_column_class1="class='highlight'";$label_column_class2=
 </table>
 
 <div class='paging'>
-    <?php
-    echo $paginator->prev('<< '.__('previous', true), array(), null, array('class'=>'disabled'));
+<?php
+	echo $paginator->prev('<< '.__('previous', true), array(), null, array('class'=>'disabled'));
     echo "&nbsp;";
     echo $paginator->numbers();
     echo "&nbsp;";
     echo $paginator->next(__('next', true).' >>', array(), null, array('class'=>'disabled'));
     ?>
 </div>
+
+<!-- Pagination is now handled by jQuery DataTables -->
+<!--<script type="text/javascript">-->
+<!--  $(document).ready(function() {-->
+<!--      $('#table_func').DataTable({-->
+<!--				scrollY:        '50vh',-->
+<!--        scrollCollapse: true,-->
+<!--        paging:         false,-->
+<!--				dom: 'Bfrtip',-->
+<!--buttons: [-->
+<!--		'columnsToggle'-->
+<!--]-->
+<!--			});-->
+<!---->
+<!--  });-->
+<!--</script>-->

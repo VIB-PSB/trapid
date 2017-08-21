@@ -94,7 +94,7 @@ class TranscriptsGo extends AppModel{
     $query	= "SELECT COUNT(DISTINCT(`name`)) as count1, COUNT(DISTINCT(`transcript_id`)) as count2 FROM `transcripts_annotation` WHERE `experiment_id`='".$exp_id."' AND `type`='go' ";
     $res	= $this->query($query);
     $result	= array("num_go"=>0,"num_transcript_go"=>0);
-    debug($result);
+//    debug($result);
     if($res){
       $result["num_go"]			= $res[0][0]['count1'];
       $result["num_transcript_go"]	= $res[0][0]['count2'];

@@ -27,7 +27,9 @@
 ?>
 <?php if(!isset($pdf_view)) : ?>
 <div>
-<h2>Statistics</h2>
+<div class="page-header">
+    <h1 class="text-primary">Statistics</h1>
+</div>
 <div class="subdiv">
 	<?php echo $this->element("trapid_experiment");?>
 	<h3>Transcript information</h3>
@@ -125,17 +127,16 @@
 
 	<h3>Export</h3>
 	<div class="subdiv">
-		<br/>
 		<?php
 		echo $form->create("",array("url"=>array("controller"=>"tools","action"=>"statistics/".$exp_id),
 				"type"=>"post"));
 		echo "<input type='hidden' name='export_type' value='pdf'/>\n";
-		echo "<input type='submit' value='PDF export' />\n";
+		echo "<input type='submit' class='btn btn-primary' value='PDF export' />\n";
 		echo "</form>\n";
 		?>
 	</div>
 </div>
-</div>
+<!--</div>-->
 <?php else: ?>
 <?php
 	$fpdf->setTitle("TRAPID analysis");

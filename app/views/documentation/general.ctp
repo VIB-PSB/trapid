@@ -6,14 +6,17 @@
 </head>
 <body>
 -->
-<div id="container">
-	<div style='float:right;width:100px;text-align:right;margin-right:100px;'>
-		<a class="mainref" href="/webtools/trapid/documentation/">Documentation</a>
-	</div>
-	<div style='clear:both;width:700px;font-size:8px;'>&nbsp;</div>
 
+<div class="container">
+<!--	<div style='float:right;width:100px;text-align:right;margin-right:100px;'>-->
+<!--		<a class="mainref" href="/webtools/trapid/documentation/">Documentation</a>-->
+<!--	</div>-->
+<!--	<div style='clear:both;width:700px;font-size:8px;'>&nbsp;</div>-->
+
+    <div class="page-header">
+		<h1 class="text-primary">TRAPID General Documentation</h1>
+    </div>
 	<div id="tutorial">
-		<h2>TRAPID General Documentation</h2>
 
 		<!--<h3>INTRODUCTION &amp; REFERENCES</h3>-->
 		<h3>Introduction &amp; References</h3>
@@ -45,20 +48,20 @@
 		<p>To acquire a username/password combination for the platform, select the Register option when visiting the TRAPID website. After supplying a valid email-address an associated password will be send to you. Using the email-address/password combination the user gains access to a 'to the user restricted' area within the TRAPID platform. </p>
 		<p>Step-by-step instructions on how to <a href="./tutorial#intro">create an account and log in</a> can be found in the tutorial.</a>
 		</div>
-		
+
 		<h3>Creating TRAPID Experiments</h3>
 		<div class="subdiv">
 		<p>The transcriptome data should be uploaded to the TRAPID platform. Before doing this, it is important to note that, after authentication, the user has the ability to create different experiments for different transcriptome data sets, with a maximum of 5 experiments per user. So analyzing different transcriptome data sets at the same time is perfectly possible. The most important choice to be made here is what kind of reference database the user would like to use. The PLAZA reference database should be very good for transcriptome data sets from plant species, while the OrthoMCL reference database should be used for any other species, such as animals, fungi or bacteria.</p>
 		<p>Step-by-step instructions on how to <a href="./tutorial#t1p1">create an experiment</a> can be found in the tutorial.</a>
 		</div>
-		
+
 		<h3>Uploading transcript sequences and Job control</h3>
 		<div class="subdiv">
 		<p>After the creation of a TRAPID experiment using the TRAPID website, the user should upload his transcriptome data to the platform. The transcriptome data should be made available as a multi-fasta file before upload to the server (max. size 30MB using the File upload option). In order to accommodate for the rather large file size associated with plain-text multi-fasta files, the uploaded file can also be compressed using zip or gzip. Fasta files, compressed or not, can also be uploaded by providing a URL to a specific transcript file (e.g. hosted at FTP site, public DropBox URL, etc); this option allows to upload bigger data sets (max. size 300MB). If the transcriptome data is split over several multi-fasta files, the user has the ability to continue uploading data (via traditional File upload or URLs) into his transcriptome data set before starting the processing phase. You will a receive an e-mail when your sequences have been successfully uploaded into the database.</p>
 		<p>During all TRAPID processing steps (upload, transcript processing, running frameshift correction or computing alignment/phylogenetic tree), users can check the Experiment Status to see if their job is queued, running or in error status. In case you want to cancel or stop your job, go to the Experiment Status page and modify the New status to Finished. </p>
 		<p>Step-by-step instructions on how to <a href="./tutorial#t1p1">upload data</a> can be found in the tutorial.</a>
 		</div>
-		
+
 		<h3>Perform transcript processing</h3>
 		<div class="subdiv">
 		<p>The processing phase of the TRAPID platform is the next step, and necessary before any of the user custom analyses can be performed. This phase is initiated by selecting the Perform Initial Processing link on an experiment page. During this step, the user should consider the options carefully, as they may seriously impact the custom analyses.</p>
@@ -79,8 +82,8 @@
 		<h4>General statistics</h4>
 		<div class="picture right" style="width:278px;"> <a href="/webtools/trapid/img/documentation/001_stats.png"><img src="/webtools/trapid/img/documentation/001_stats.png" width="276" alt="General statistics" /></a> <br /><strong>FIGURE 1 GENERAL STATISTICS EXAMPLE.</strong></div>
 		<p>Offers a complete overview of ORF finding, gene family assignments, similarity search species information, meta-annotation and functional information.</p>
-		
-		
+
+
 		<a id="labels"><h4 class="clear">Subsets and labels</h4></a>
 		<p>If the data set is comprised of transcriptome data from different sources (with sources indicating different tissues, developmental types or stress conditions), then the user has the ability to assign labels to the subsets. This is done through the <em>Import transcript labels</em> link on the experiment page and providing per label a list of transcript identifiers. Note that it is possible to assign multiple labels to one transcript. By assigning labels to transcripts, several new analyses become available, such as comparison of functional annotation between different subsets, or by computing functional enrichment. </p>
 		<p>Step-by-step instructions on how to <a href="./tutorial#t1p4">use subsets and labels</a> can be found in the tutorial.</a>
@@ -89,19 +92,19 @@
 		<h4>Exporting data</h4>
 		<p>The TRAPID platform allows the export of both the original data and the annotated and processed data of a user experiment. This data access is available under the <em>import/export data</em> header on an experiment page and includes structural ORF information, transcript/ORF/protein sequences and functional GO/InterPro information.</p>
 		<p>The export of the functional GO information has an extra column 'is_hidden', indicating whether a GO term is flagged as hidden, due to the presence of more informative GO codes in the GO graph for the given transcript.</p>
-		
+
 		<h4>The toolbox</h4>
 		<p>On most pages (experiment/transcript/gene family/GO/protein domain) a toolbox is available which contains the most common analyses to be performed on the given data object. <p>
-		
+
 		</div>
-		
+
 		<a id="frameshift"><h3>Frameshift correction</h3></a>
 		<div class="subdiv">
 		<p>For transcripts that were flagged as potentially containing frameshifts, the user can execute FrameDP to putatively correct the transcript sequence and identify the correct ORF. FrameDP is a program which uses BLAST together with machine learning methods to build models which are used to test whether a sequence has a putative frameshift or not. The model is then used to correct the sequence (by inserting N-nucleotides at the necessary locations), which of course also directly has an impact on the associated Open Reading Frame (ORF). The drawback is however the exceptional long processing time. As such, the correction of frameshifts can only be done per gene family, and not on an entire transcript experimement.</p>
 		<p>The putative frameshifts are first detected during the "initial processing" phase, using a simple algorithm. The user has the ability to, on a gene family page, select these transcripts for FrameDP processing. If the total number of selected transcripts is lower than 20, additional random transcripts are added in order to have a good background model. Subsequently, all sequences are used for training and 'correction'.</p>
 		<p>Step-by-step instructions on how to <a href="./tutorial#tutorial2">correct frameshifts using FrameDP</a> can be found in the tutorial.</a>
 		</div>
-		
+
 		<a id="enrichment"><h3>Functional enrichment analysis</h3></a>
 		<div class="subdiv">
 		<p>Apart from the functional annotation of individual transcripts, TRAPID also supports the quantitative analysis of experiment subsets using GO and protein domain enrichment statistics. Through the association of specific labels to (sub-)sets of sequences, transcripts can be annotated with specific sample information (e.g. tissue, developmental stage, control or treatment condition) and be used to perform within-transcriptome functional analysis. </p>
@@ -118,14 +121,14 @@
 		<li>Different subsets - Venn diagrams</li>
 		</ul>
 		</div>
-		
+
 		<a id="msa"><h3 class="clear">Multiple sequence alignment</h3></a>
 		<div class="subdiv">
 				<div class="picture right" style="width:278px;"> <a href="/webtools/trapid/img/documentation/005_jalview.png"><img src="/webtools/trapid/img/documentation/005_jalview.png" width="276" alt="Jalview" /></a> <br /><strong>FIGURE 5 EXAMPLE MULTIPLE SEQUENCE ALIGNMENT.</strong>Panicum data set, transcript contig16311 in family HOM000957 covering 117 genes from 25 species.</div>
 		<p>Starting from a selected transcript, the user has the ability to create an amino acid multiple sequence alignment (MSA) within a gene family context. As such, the user can create an MSA containing the transcripts within a gene family together with a selection of coding sequences from the reference database.  This tool is accessible from the toolbox from a gene family. The MSA is created using  MUSCLE (<a href="http://www.ebi.ac.uk/Tools/msa/muscle/">http://www.ebi.ac.uk/Tools/msa/muscle/</a>), a tool which delivers a good balance between speed and accuracy (Edgar 2004 Nucleic Acids Res. 2004; 32(5): 1792-1797). In order to reduce the computation time, the maximum number of iterations in the MUSCLE algorithm is fixed at three.  All other settings are left at default.</p>
 		<p>After the MSA has been created, the user has the ability to view this alignment using JalView, or to download the MSA and investigate it using a different tool.</p>
 		</div>
-	
+
 		<a id="tree"><h3 class="clear">Phylogenetic trees</h3></a>
 		<div class="subdiv">
 				<div class="picture right" style="width:278px;"> <a href="/webtools/trapid/img/documentation/006_tree.png"><img src="/webtools/trapid/img/documentation/006_tree.png" width="276" alt="phylo tree" /></a> <br /><strong>FIGURE 5 EXAMPLE FASTTREE PHYLOGENETIC TREE.</strong>(Panicum data set, transcript contig16311 in family HOM000957 covering 117 genes from 25 species, relaxed editing). The query transcript is shown in grey while homologs from the reference proteomes are shown in colors based on their taxonomic information. Meta-annotations are displayed as colored boxes next to the gene identifiers. Only a part of the complete tree is depicted in the image below.</div>
@@ -146,7 +149,7 @@
 		</p>
 
 	</div>
-	
+
 	<h3 class="clear">Orthology</h3>
 	<div class="subdiv">
 	<p>A key challenge in comparative genomics is reliably grouping homologous genes (derived from a common ancestor) and orthologous genes (homologs separated by a speciation event) into gene families. Orthology is generally considered a good proxy to identify genes performing a similar function in different species. Consequently, orthologs are frequently used as a means to transfer functional information from well-studied model systems to non-model organisms, for which e.g. only RNA-Seq-based  gene catalogs are available. In eukaryotes, the utilization of orthology is not trivial, due to a wealth of paralogs (homologous genes created through a duplication event) in almost all lineages. Ancient duplication events preceding speciation led to outparalogs, which are frequently considered as subtypes within large gene families. In contrast to these are inparalogs, genes that originated through duplication events occurring after a speciation event. Besides continuous duplication events (for instance, via tandem duplication), many paralogs are remnants of different whole genome duplications (WGDs), resulting in the establishment of one-to-many and many-to-many orthologs (or co-orthologs).</p>

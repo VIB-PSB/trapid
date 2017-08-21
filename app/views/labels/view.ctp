@@ -1,5 +1,7 @@
 <div>
-<h2>Subset</h2>
+<div class="page-header">
+    <h1 class="text-primary"><?php echo $label; ?> <small>Transcript subset</small></h1>
+</div>
 <div class="subdiv">
 	<?php echo $this->element("trapid_experiment");?>
 	

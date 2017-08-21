@@ -1,52 +1,83 @@
-<?php 
-//phpinfo(); 
-//pr(phpversion());
+<?php
+// phpinfo();
+// pr(phpversion());
 ?>
+<!-- TODO: move inline style to separate stylesheet -->
+<style>
+.center {
+    margin-top:50px;
+}
 
+.modal-header {
+	padding-bottom: 5px;
+}
 
-<div>
+.modal-footer {
+    	padding: 0;
+	}
 
-<h2>User information</h2>
-<div class="subdiv">
-	<dl class="standard">
-		<dt>User id</dt>
-		<dd><?php echo $user_email['Authentication']['email'];?></dd>
-		<dt>Change password</dt>
-		<dd><?php echo $html->link("Define a new TRAPID password",array("controller"=>"trapid","action"=>"change_password"));?></dd>
-		<dt>Exit trapid</dt>
-		<dd><?php echo $html->link("Log out",array("controller"=>"trapid","action"=>"log_off"));?></dd>
-	</dl>
+.modal-footer .btn-group button {
+	height:40px;
+	border-top-left-radius : 0;
+	border-top-right-radius : 0;
+	border: none;
+	border-right: 1px solid #ddd;
+}
+
+.modal-footer .btn-group:last-child > button {
+	border-right: 0;
+}
+
+.form-control {
+  position: relative;
+  font-size: 16px;
+  height: auto;
+  padding: 10px;
+  @include box-sizing(border-box);
+}
+</style>
+
+<div class="container">
+<!-- No need for this information anymore? -->
+<div class="page-header">
+<h1 class="text-primary">Experiments overview</h1>
 </div>
-<br/><br/>
-<h2>Experiments overview</h2>
+<p class="text-justify">Current experiments for <strong><?php echo $user_email['Authentication']['email'];?></strong>: </p>
 <div class="subdiv">
-	
-	<dl class="standard">	
-	<dt>Current experiments</dt>
+
+	<dl class="standard">
+	<dt></dt>
 	<dd>
-	<div>			
-		<table cellspacing="0" cellpadding="0" style="width:900px;">
-		<tr>
-			<th style="width:20%;">Name</th>
-			<th style="width:10%;">#Transcripts</th>
-			<th style="width:10%;">Status</th>
-			<th style="width:20%;">Last edit</th>
-			<th style="width:13%;">PLAZA version</th>			
-			<th style="width:5%;">Empty</th>
-			<th style="width:5%;">Delete</th>			
-			<th style="width:10%;">Log</th>
-			<th style="width:10%;">Jobs</th>
+	<div>
+		<!--table cellspacing="0" cellpadding="0" style="width:900px;"-->
+		<table class="table table-hover table-striped">
+		<thead>
+			<tr>
+			<th>Name</th>
+			<th>#Transcripts</th>
+			<th>Status</th>
+			<th>Last edit</th>
+			<!--th>PLAZA version</th-->
+			<th>Reference database</th>
+			<th>Log</th>
+			<th>Jobs</th>
+<!--			<th>Empty</th>-->
+			<th>Reset</th>
+			<th>Delete</th>
 		</tr>
+	</thead>
+	<tbody>
 		<?php
-	
+
 		//pr($experiments);
 
 		if(count($experiments)==0){
-			echo "<tr class='disabled'>";
-			echo "<td>Unavailable</td><td>0</td><td>Unavailable</td>";
-			echo "<td>Unavailable</td><td>Unavailable</td><td></td><td></td>";
-			echo "<td></td>";	
-			echo "</tr>\n";
+			echo "<p class='text-justify lead'>No experiments... Create one?</p>";
+			// echo "<tr class='disabled'>";
+			// echo "<td>Unavailable</td><td>0</td><td>Unavailable</td>";
+			// echo "<td>Unavailable</td><td>Unavailable</td><td></td><td></td>";
+			// echo "<td></tdreplay>";
+			// echo "</tr>\n";
 		}
 		else{
 			foreach($experiments as $experiment){
@@ -65,9 +96,9 @@
 			    	}
 				echo "<td></td>";
 				echo "<td></td>";
-				echo "<td>".$html->link("View log",array("controller"=>"trapid","action"=>"view_log",$e['experiment_id']))."</td>\n";	
+				echo "<td>".$html->link("View log",array("controller"=>"trapid","action"=>"view_log",$e['experiment_id']))."</td>\n";
 				if(count($experiment['experiment_jobs'])==0){echo "<td>NA</td>";}
-				else{echo "<td>".$html->link(count($experiment['experiment_jobs'])." jobs",array("controller"=>"trapid","action"=>"manage_jobs",$e['experiment_id']))."</td>";}				
+				else{echo "<td>".$html->link(count($experiment['experiment_jobs'])." jobs",array("controller"=>"trapid","action"=>"manage_jobs",$e['experiment_id']))."</td>";}
 			    	echo "</tr>\n";
 			}
 			else if ($e['process_state']=="loading_db"){
@@ -75,7 +106,8 @@
 			    	echo "<td>".$e['title']."</td>";
 				//echo "<td>".$experiment['count']."</td>";
 				echo "<td><span id='exp_count_".$e['experiment_id']."'>".$experiment['count']."</span></td>";
-				echo "<td>".$html->link($e['process_state'],array("controller"=>"trapid","action"=>"change_status",$e['experiment_id']),array("style"=>"color:blue;text-decoration:underline;"))."</td>";
+				// echo "<td>".$html->link($e['process_state'],array("controller"=>"trapid","action"=>"change_status",$e['experiment_id']),array("style"=>"color:blue;text-decoration:underline;"))."</td>";
+				echo "<td>".$html->link($e['process_state'],array("controller"=>"trapid","action"=>"change_status",$e['experiment_id']))."</td>";
 				echo "<td>".$e['last_edit_date']."</td>";
 				if($experiment['DataSources']['URL']){
 				    echo "<td>".$html->link($experiment['DataSources']['name'],$experiment['DataSources']['URL'])."</td>";
@@ -85,7 +117,7 @@
 			    	}
 				echo "<td></td>";
 				echo "<td></td>";
-				echo "<td>".$html->link("View log",array("controller"=>"trapid","action"=>"view_log",$e['experiment_id']))."</td>\n";		
+				echo "<td>".$html->link("View log",array("controller"=>"trapid","action"=>"view_log",$e['experiment_id']))."</td>\n";
 				if(count($experiment['experiment_jobs'])==0){echo "<td>NA</td>";}
 				else{echo "<td>".$html->link(count($experiment['experiment_jobs'])." jobs",array("controller"=>"trapid","action"=>"manage_jobs",$e['experiment_id']))."</td>";}
 			    	echo "</tr>\n";
@@ -105,13 +137,13 @@
 			    	}
 				echo "<td></td>";
 				echo "<td></td>";
-				echo "<td>".$html->link("View log",array("controller"=>"trapid","action"=>"view_log",$e['experiment_id']))."</td>\n";		
+				echo "<td>".$html->link("View log",array("controller"=>"trapid","action"=>"view_log",$e['experiment_id']))."</td>\n";
 				if(count($experiment['experiment_jobs'])==0){echo "<td>NA</td>";}
 				else{echo "<td>".$html->link(count($experiment['experiment_jobs'])." jobs",array("controller"=>"trapid","action"=>"manage_jobs",$e['experiment_id']))."</td>";}
 			    	echo "</tr>\n";
 			}
 			else{
-			    echo "<tr>";			
+			    echo "<tr>";
 			    echo "<td>".$html->link($e['title'],array("action"=>"experiment",$e['experiment_id']))."</td>";
 			    //echo "<td>".$experiment['count']."</td>";
 			    echo "<td><span id='exp_count_".$e['experiment_id']."'>".$experiment['count']."</span></td>";
@@ -123,33 +155,62 @@
 			    else{
 				    echo "<td>".$experiment['DataSources']['name']."</td>";
 			    }
-			    echo "<td>".$html->link("E",
-				    array("controller"=>"trapid","action"=>"empty_experiment",$e['experiment_id']),
-				    array("style"=>"color:#AA0055;font-weight:bold;"),
-				    "Are you sure you want to delete all content from this experiment?")."</td>";
-			    echo "<td>".$html->link("X",
-				    array("controller"=>"trapid","action"=>"delete_experiment",$e['experiment_id']),
-				    array("style"=>"color:red;font-weight:bold;"),
-				    "Are you sure you want to delete the experiment?")."</td>";
-			    echo "<td>".$html->link("View log",array("controller"=>"trapid","action"=>"view_log",$e['experiment_id']))."</td>\n";					
+			    echo "<td>".$html->link("View log",array("controller"=>"trapid","action"=>"view_log",$e['experiment_id']))."</td>\n";
 			    if(count($experiment['experiment_jobs'])==0){echo "<td>NA</td>";}
 				else{echo "<td>".$html->link(count($experiment['experiment_jobs'])." jobs",array("controller"=>"trapid","action"=>"manage_jobs",$e['experiment_id']))."</td>";}
+			    echo "<td style=\"text-align:center;\">".$html->link("<span class='material-icons text-info'>replay</span>",
+				    array("controller"=>"trapid","action"=>"empty_experiment",$e['experiment_id']),
+				    array("style"=>"", "escape"=>false, "title"=>"Empty experiment"),
+				    "Are you sure you want to reset this experiment? All its content will be deleted. ")."</td>";
+                /* Using Bootstrap's glyphicons */
+			    /* echo "<td style=\"text-align:center;\">".$html->link("<span class='glyphicon glyphicon-remove text-danger'></span>",
+                        array("controller"=>"trapid","action"=>"delete_experiment",$e['experiment_id']),
+                        array("style"=>"", "escape"=>false, "title"=>"Delete experiment"),
+                        "Are you sure you want to delete the experiment?")."</td>";*/
+			    /* Using Google's Material icons */
+                echo "<td style=\"text-align:center;\">".$html->link("<span class='material-icons text-danger'>delete</span>",
+                        array("controller"=>"trapid","action"=>"delete_experiment",$e['experiment_id']),
+                        array("style"=>"", "escape"=>false, "title"=>"Delete experiment"),
+                        "Are you sure you want to delete this experiment?")."</td>";
 			    echo "</tr>\n";
 			}
 		    }
-		}			
-		?>			
+		}
+		?>
+	</tbody>
 		</table>
-		<script type='text/javascript'>
-		   	//<![CDATA[
-				var experiments = <?php echo $javascript->object($experiments); ?>;
-				for(var i=0;i<experiments.length;i++){
-					var experiment_id = experiments[i]["Experiments"]["experiment_id"];
-					var span_id = "exp_count_"+experiment_id;
-					var ajax_url = <?php echo "\"".$html->url(array("controller"=>"trapid","action"=>"experiments_num_transcripts"))."\"";?>+"/"+experiment_id+"/";				
-					new Ajax.Updater(span_id,ajax_url, {asynchronous:true, evalScripts:true, requestHeaders:['X-Update', span_id]});
+		<script type='text/javascript' defer="defer">
+        var experiments = <?php echo $javascript->object($experiments); ?>;
+        // Updated code to work with jQuery
+        function get_exp_num_trancripts(exp_id) {
+          var span_id = "#exp_count_" + exp_id;
+          var ajax_url = <?php echo "\"".$html->url(array("controller"=>"trapid","action"=>"experiments_num_transcripts"))."\"";?>+"/" + exp_id + "/";
+          $.ajax({
+              type: "GET",
+              url: ajax_url,
+              contentType: "application/json;charset=UTF-8",
+              success: function(data) {
+                  // alert("Success! ");
+                  // alert(experiment_id);
+                  // $(span_id).hide().html(data).fadeIn();
+                  $(span_id).html(data);
+              },
+              error: function() {
+                  alert("Failure - Unable to retrieve transcripts count. ");
+              },
+              complete: function() {
+                // Debug
+                // console.log(experiment_id);
+                // console.log(span_id);
+                // console.log(ajax_url);
+              }
+          });
+        }
+
+				for(var i=0;i<experiments.length;i++) {
+				  var experiment_id = experiments[i]["Experiments"]["experiment_id"];
+          get_exp_num_trancripts(experiment_id);
 				}
-			//]]>
 		</script>
 	</div>
 	</dd>
@@ -157,48 +218,115 @@
 	<?php if(count($shared_experiments)!=0): ?>
 	<dt>Shared experiments</dt>
 	<dd>
-	<div>		
+	<div>
 		<table cellspacing="0" cellpadding="0" style="width:900px;">
 		<tr>
 			<th style="width:30%;">Name</th>
-			<th style="width:40%;">Owner</th>	
-			<th style="width:20%;">PLAZA version</th>	
+			<th style="width:40%;">Owner</th>
+			<th style="width:20%;">PLAZA version</th>
 			<th style="width:10%;">Log</th>
 		</tr>
 		<?php
 		foreach($shared_experiments as $experiment){
 			$e	= $experiment['Experiments'];
 			echo "<tr>";
-			echo "<td>".$html->link($e['title'],array("controller"=>"trapid","action"=>"experiment",$e['experiment_id']))."</td>";				
+			echo "<td>".$html->link($e['title'],array("controller"=>"trapid","action"=>"experiment",$e['experiment_id']))."</td>";
 			$owner_email	= $all_user_ids[$e['user_id']];
 			echo "<td><a href='mailto:".$owner_email."'>".$owner_email."</a></td>";
-			if($experiment['DataSources']['URL']){	
+			if($experiment['DataSources']['URL']){
 				echo "<td>".$html->link($experiment['DataSources']['name'],$experiment['DataSources']['URL'])."</td>";
 			}
 			else{
 				echo "<td>".$experiment['DataSources']['name']."</td>";
 			}
-			 echo "<td>".$html->link("View log",array("controller"=>"trapid","action"=>"view_log",$e['experiment_id']))."</td>\n";		
+			 echo "<td>".$html->link("View log",array("controller"=>"trapid","action"=>"view_log",$e['experiment_id']))."</td>\n";
 			echo "</tr>\n";
 		}
 		?>
 		</table>
-	</div>	
-	</dd>		
+	</div>
+	</dd>
 
 	<?php endif; ?>
 
 
 	<?php if(count($experiments)<$max_user_experiments): ?>
-	<dt>Add new experiment</dt>
-	<dd>
-	<div>		
-		<?php
+<p class="text-right">
+	<button data-toggle="modal" data-target="#squarespaceModal" class="btn btn-primary btn-lg" name="" id="">
+	  <span class="glyphicon glyphicon-plus"> </span> Add new experiment
+  </button>
+</p>
+
+
+<div class="modal fade" id="squarespaceModal" tabindex="-1" role="dialog" aria-labelledby="modalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+	<div class="modal-content">
+		<div class="modal-header">
+			<button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">×</span><span class="sr-only">Close</span></button>
+			<h3 class="modal-title" id="lineModalLabel">New experiment</h3>
+		</div>
+		<div class="modal-body">
+
+            <!-- content goes here -->
+            <?php
+                if(isset($error)){
+                echo "<span class='error'>".$error."</span><br/>\n";
+                }
+                echo $form->create("Experiments",array("url"=>array("controller"=>"trapid","action"=>"experiments"),
+                            "type"=>"post"));
+            ?>
+              <div class="form-group">
+                <label for=""><strong>Name</strong></label>
+                <input type="text" maxlength="50" class="form-control" id="experiment_name" name="experiment_name" placeholder="My experiment">
+              </div>
+              <div class="form-group">
+                <label for=""><strong>Description</strong></label>
+								<textarea rows="4" name="experiment_description" id="experiment_description" class="form-control" placeholder="Experiment description... "></textarea>
+              </div>
+              <div class="form-group">
+                <label for=""><strong>Reference database</strong></label>
+								<select class="form-control" name="data_source">
+								<?php
+								foreach($available_sources as $av){
+									echo "<option value='".$av['DataSources']['db_name']."'>".$av['DataSources']['name']."</option>\n";
+								}
+								?>
+								</select>
+                <p class="help-block"><strong>Note:</strong> GO annotations are only available for the PLAZA reference database</p>
+              </div>
+							<p class="text-center">
+              <button type="submit" class="btn btn-primary">Create experiment</button></p>
+            </form>
+
+		</div>
+		<!--div class="modal-footer">
+			<div class="btn-group btn-group-justified" role="group" aria-label="group button">
+				<div class="btn-group" role="group">
+					<button type="button" class="btn btn-default" data-dismiss="modal"  role="button">Close</button>
+				</div>
+				<div class="btn-group btn-delete hidden" role="group">
+					<button type="button" id="delImage" class="btn btn-default btn-hover-red" data-dismiss="modal"  role="button">Delete</button>
+				</div>
+				<div class="btn-group" role="group">
+					<button type="button" id="saveImage" class="btn btn-default btn-hover-green" data-action="save" role="button">Save</button>
+				</div>
+			</div>
+		</div-->
+	</div>
+  </div>
+</div>
+
+
+
+	<!--dt>Add new experiment</dt-->
+	<!--dd>
+	<div>
+		<?php /*
 		    if(isset($error)){
 			echo "<span class='error'>".$error."</span><br/>\n";
 		    }
 		    echo $form->create("Experiments",array("url"=>array("controller"=>"trapid","action"=>"experiments"),
-						"type"=>"post"));	
+						"type"=>"post")); */
 		?>
 		<dl class="nb">
 			<dt>Name</dt>
@@ -206,7 +334,7 @@
 			<dt>Description</dt>
 			<dd><textarea rows="4" name="experiment_description" style="width:400px;"></textarea></dd>
 			<dt>Reference DB</dt>
-			<dd>	
+			<dd>
 				<div>
 				<select name="data_source" style="width:150px;">
 				<?php
@@ -216,41 +344,26 @@
 				?>
 				</select>
 				<span style='margin-left:20px;font-weight:bold;color:black'>Note: GO annotations are only available for the PLAZA reference database</span>
-				
-				</div>	
-			</dd>		
-		</dl>					
+
+				</div>
+			</dd>
+		</dl>
 		<input type="submit" value="Create experiment" style="width:150px;margin-top:1em;" />
 		</form>
 	</div>
-	</dd>
+	</dd-->
 	<?php else: ?>
-	<dt>Add new experiment</dt>
+	<p class="text-right"><span class="text-danger">Maximum number of experiments reached, cannot create more experiments! </span>
+		<!--button disabled class="btn btn-primary btn-lg" name="" id=""><span class="glyphicon glyphicon-plus"> </span> Create experiment</button-->
+		</p>
+	<!--dt>Add new experiment</dt-->
 	<dd>
 	<div>
-		<span class="error">Maximum number of experiments reached for this user account</span>	
-	</div>	
-	</dd>		
+
+	</div>
+	</dd>
 	<?php endif;?>
-	</dl>	
+	</dl>
 </div>
-
-
-<div class="subdiv" style="width:800px;margin-top:60px;margin-left:16em;">	
-	<?php		
-		echo "<span class='startlink'>Login</span>\n";
-		echo "<span class='line'>&#8226;</span>\n";	
-		echo "<span class='startlink'>Register</span>\n";
-		echo "<span class='line'>&#8226;</span>\n";
-		echo $html->link("Documentation",array("controller"=>"documentation","action"=>"index"),
-					array("class"=>"startlink","target"=>"_blank"));
-		echo "<span class='line'>&#8226;</span>\n";
-		//echo "<a href='mailto:plaza@psb.vib-ugent.be' class='startlink'>Contact</a>\n";
-		echo $html->link("About",array("controller"=>"documentation","action"=>"about"),
-					array("class"=>"startlink","target"=>"_blank"));
-
-	?>	
-</div>
-
 
 </div>

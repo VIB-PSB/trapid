@@ -1,5 +1,7 @@
-<div>
-	<h2>Change password</h2>
+<div class="container">
+	<div class="page-header">
+	<h1 class="text-primary">Change password</h1>
+</div>
 	<div class="subdiv">
 		<?php
 		if(isset($error)){echo "<span class='error'>".$error."</span><br/><br/>\n";}
@@ -16,5 +18,5 @@
 		echo "<input type='submit' value='Change password' />\n";
 		echo "</form>\n";
 		?>
-	</div>	
+	</div>
 </div>

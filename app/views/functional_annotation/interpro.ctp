@@ -1,5 +1,7 @@
 <div>
-<h2>Protein domain</h2>
+    <div class="page-header">
+<h1 class="text-primary">Protein domain</h1>
+    </div>
 <div class="subdiv">
 	<?php echo $this->element("trapid_experiment");?>	
 	
@@ -9,12 +11,14 @@
 			<dt>Protein domain</dt>
 			<dd>
 			<?php
-				$interpro	= $interpro_info['motif_id'];
+				// $interpro	= $interpro_info['motif_id'];
+				$interpro	= $interpro_info['name'];
 				if(!$exp_info['allow_linkout']){
 					echo $interpro;
 				}
 				else{
 					echo $html->link($interpro,$exp_info['datasource_URL']."interpro/view/".$interpro);
+					// TODO: add link to InterPro itself. Link is formed as such: http://www.ebi.ac.uk/interpro/entry/<motif_id>
 				}			 
 			?>
 			</dd>

@@ -95,9 +95,14 @@ class TrapidUtilsComponent extends Object{
     $fh			= fopen($shell_file,"w");
 
     $java_program	= "transcript_pipeline.ExportManager";
+    /*
     $java_params	= array(PLAZA_DB_SERVER,$plaza_db,PLAZA_DB_USER,PLAZA_DB_PASSWORD,
 				TRAPID_DB_SERVER,TRAPID_DB_NAME,TRAPID_DB_USER,TRAPID_DB_PASSWORD,
-				$exp_id,$export_key,$internal_file);
+				$exp_id,$export_key,$internal_file); */
+    // New parameters... TODO: create separate user to read from the reference databases
+    $java_params	= array(TRAPID_DB_SERVER, $plaza_db, TRAPID_DB_USER, TRAPID_DB_PASSWORD,
+          TRAPID_DB_SERVER,TRAPID_DB_NAME,TRAPID_DB_USER,TRAPID_DB_PASSWORD,
+          $exp_id,$export_key,$internal_file);
     if($filter!=null){
       $java_params[]	= $filter;
     }
@@ -667,7 +672,8 @@ class TrapidUtilsComponent extends Object{
 	//1) Generate gene-go files for each subset. We enforce the creation of the background frequency DB for the first one.
 	//2) Compute GO enrichment for each subset
 	$java_params_filedump	= array(TRAPID_DB_SERVER,TRAPID_DB_NAME,TRAPID_DB_USER,TRAPID_DB_PASSWORD,$exp_id,$data_type);
-	$java_params_enrichment	= array(PLAZA_DB_SERVER,$reference_db,PLAZA_DB_USER,PLAZA_DB_PASSWORD,$data_type);
+  // $java_params_enrichment	= array(PLAZA_DB_SERVER,$reference_db,PLAZA_DB_USER,PLAZA_DB_PASSWORD,$data_type);
+	$java_params_enrichment	= array(TRAPID_DB_SERVER, $reference_db, TRAPID_DB_USER, TRAPID_DB_PASSWORD, $data_type);
 	$java_params_loaddb	= array(TRAPID_DB_SERVER,TRAPID_DB_NAME,TRAPID_DB_USER,TRAPID_DB_PASSWORD,$exp_id,$data_type);
 	$perl_params		= array(TRAPID_DB_SERVER,TRAPID_DB_NAME,TRAPID_DB_PORT,TRAPID_DB_USER,TRAPID_DB_PASSWORD,$exp_id,$data_type);
 	$java_location		= $base_scripts_location."java/";
@@ -756,7 +762,8 @@ class TrapidUtilsComponent extends Object{
 
 	$java_params1		= array(TRAPID_DB_SERVER,TRAPID_DB_NAME,TRAPID_DB_USER,TRAPID_DB_PASSWORD,
 					$exp_id,$type,$fa_file_all,$fa_file_subset,$subset);
-	$java_params2		= array(PLAZA_DB_SERVER,$plaza_db,PLAZA_DB_USER,PLAZA_DB_PASSWORD,
+//	$java_params2		= array(PLAZA_DB_SERVER,$plaza_db,PLAZA_DB_USER,PLAZA_DB_PASSWORD,
+	$java_params2		= array(TRAPID_DB_SERVER, $plaza_db, TRAPID_DB_USER, TRAPID_DB_PASSWORD,
 					$type,$fa_file_all,$fa_file_subset,$result_file,$pvalue,"false");
 
 	$java_location		= $base_scripts_location."java/";
@@ -1020,11 +1027,17 @@ class TrapidUtilsComponent extends Object{
 	$tmp_dir		= TMP."experiment_data/".$exp_id."/";
 	$final_blast_dir	= BLAST_DB_DIR."".$plaza_db."/";
     	$necessary_modules	= array("perl","java","framedp");
-    	$necessary_parameters	= array(PLAZA_DB_SERVER,$plaza_db,PLAZA_DB_PORT,PLAZA_DB_USER,PLAZA_DB_PASSWORD,
+    	/* $necessary_parameters	= array(PLAZA_DB_SERVER,$plaza_db,PLAZA_DB_PORT,PLAZA_DB_USER,PLAZA_DB_PASSWORD,
 					TRAPID_DB_SERVER,TRAPID_DB_NAME,TRAPID_DB_PORT,TRAPID_DB_USER,TRAPID_DB_PASSWORD,
 					$tmp_dir,$exp_id,$final_blast_dir,$blast_db.".rap",$gf_type,$num_top_hits,$evalue,$func_annot,
 					$base_scripts_location
-					);
+        ); */
+      // TODO: once a prototype is working, replace hard-coded variables by proper user/db server!
+      $necessary_parameters	= array("psbsql01", $plaza_db, PLAZA_DB_PORT, TRAPID_DB_USER, TRAPID_DB_PASSWORD,
+    			TRAPID_DB_SERVER,TRAPID_DB_NAME,TRAPID_DB_PORT,TRAPID_DB_USER,TRAPID_DB_PASSWORD,
+    			$tmp_dir,$exp_id,$final_blast_dir,$blast_db.".rap",$gf_type,$num_top_hits,$evalue,$func_annot,
+    			$base_scripts_location
+    			);
 
 	//create actual file
       	$shell_file		= $tmp_dir."initial_processing_".$exp_id.".sh";

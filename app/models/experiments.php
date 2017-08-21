@@ -35,7 +35,7 @@ class Experiments extends AppModel{
       #$query2	= "SELECT COUNT(`transcript_id`) as count FROM `transcripts` WHERE `experiment_id`='".$exp_id."' ";
       #$res2	= $this->query($query2);
       #$r[0]	= $res2[0][0];
-      $r['count']= "computing";
+      $r['count']= "computing...";
 
 
       $query3 	= "SELECT * FROM `experiment_jobs` WHERE `experiment_id`='".$exp_id."'";
@@ -53,14 +53,26 @@ class Experiments extends AppModel{
 
   function getDefaultInformation($exp_id){
     $exp_id	= mysql_real_escape_string($exp_id);
-    // Modified query to comply with MySQL 5.7 / psbsql01
     // $query	= "SELECT a.*,COUNT(b.`transcript_id`) as transcript_count,d.`name`,d.`URL`,d.`plaza_linkout`, d.`gf_prefix` FROM `experiments` a LEFT JOIN `transcripts` b ON a.`experiment_id`=b.`experiment_id` JOIN `data_sources` d ON a.`used_plaza_database`=d.`db_name` WHERE a.`experiment_id`='".$exp_id."' ";
-    $query	= "SELECT exp.*, COUNT(tr.`transcript_id`) AS transcript_count, ds.`name`, ds.`URL`, ds.`plaza_linkout`, ds.`gf_prefix` FROM `experiments` exp LEFT JOIN `transcripts` tr ON exp.`experiment_id`=tr.`experiment_id` JOIN `data_sources` ds ON exp.`used_plaza_database`=ds.`db_name` WHERE exp.`experiment_id`='".$exp_id."' GROUP BY ds.`name`, ds.`URL`, ds.`plaza_linkout`, ds.`gf_prefix`";
+    // Modified query to comply with MySQL 5.7 / psbsql01
+//     $query	= "SELECT exp.*, COUNT(tr.`transcript_id`) AS transcript_count, ds.`name`, ds.`URL`, ds.`plaza_linkout`, ds.`gf_prefix` FROM `experiments` exp LEFT JOIN `transcripts` tr ON exp.`experiment_id`=tr.`experiment_id` JOIN `data_sources` ds ON exp.`used_plaza_database`=ds.`db_name` WHERE exp.`experiment_id`='".$exp_id."' GROUP BY ds.`name`, ds.`URL`, ds.`plaza_linkout`, ds.`gf_prefix`";
+//     Faster/simpler query? TODO: rework it to make it clean (move COUNT()?)
+//    $query	= "SELECT exp.*, tr.`transcript_count`, ds.`name`, ds.`URL`, ds.`plaza_linkout`, ds.`gf_prefix` FROM `experiments` exp LEFT JOIN (SELECT `experiment_id`, COUNT(`transcript_id`) AS transcript_count FROM `transcripts` where experiment_id='".$exp_id."') AS tr ON exp.`experiment_id`=tr.`experiment_id` JOIN `data_sources` ds ON exp.`used_plaza_database`=ds.`db_name` WHERE exp.`experiment_id`='".$exp_id."'";
+    // Other idea: retrieving the number of labels too? Gets slower but still faster than the original query (while getting more information)
+    // TODO/NOTE: inelegant query.
+    $query = "SELECT exp.*, tr.`transcript_count` AS transcript_count, tl.`label_count` AS label_count, ds.`name`, ds.`URL`, ds.`plaza_linkout`, ds.`gf_prefix` FROM `experiments` exp JOIN `data_sources` ds ON exp.`used_plaza_database`=ds.`db_name`,"
+        ."(SELECT COUNT(transcript_id) AS transcript_count FROM transcripts WHERE experiment_id='".$exp_id."') tr, ".
+        "(SELECT COUNT(DISTINCT `label`) AS label_count FROM `transcripts_labels` WHERE `experiment_id`='".$exp_id."') tl ".
+        "WHERE exp.`experiment_id`='".$exp_id."'";
+
     $res = $this->query($query);
     $result = array();
     if($res){
     	$result	= $res[0]['exp'];
-    	$result["transcript_count"] = $res[0][0]['transcript_count'];
+    	// Modified query => modified format of result (+label_count)
+//    	$result["transcript_count"] = $res[0][0]['transcript_count'];
+    	$result["transcript_count"] = (int) $res[0]['tr']['transcript_count'];  // Need to cast to int?
+    	$result["label_count"] = (int) $res[0]['tl']['label_count'];  // Need to cast to int?
 	$result["datasource"] = $res[0]['ds']['name'];
 	$result["datasource_URL"] = $res[0]['ds']['URL'];
 	$result["allow_linkout"]  = $res[0]['ds']['plaza_linkout'];

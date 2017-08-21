@@ -1,6 +1,6 @@
 <script type="text/javascript">
     /* Sidebar is inspired by AdminLTE template (https://adminlte.io/themes/AdminLTE/), iGEM 2015 Evry wiki
-    (http://2015.igem.org/Team:Evry) and this CodePen snippet (https://codepen.io/zavoloklom/pen/dIgco). 
+    (http://2015.igem.org/Team:Evry) and this CodePen snippet (https://codepen.io/zavoloklom/pen/dIgco).
     */
 
     // Toggle sidebar

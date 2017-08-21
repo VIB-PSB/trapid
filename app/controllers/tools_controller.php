@@ -441,13 +441,14 @@ class ToolsController extends AppController{
 
 
 
-  function create_tree($exp_id=null,$gf_id=null){
+  function create_tree($exp_id=null, $gf_id=null){
     if(!$exp_id || !$gf_id){$this->redirect(array("controller"=>"trapid","action"=>"experiments"));}
     $exp_id	= mysql_real_escape_string($exp_id);
     parent::check_user_exp($exp_id);
     $exp_info	= $this->Experiments->getDefaultInformation($exp_id);
     $this->set("exp_info",$exp_info);
     $this->set("exp_id",$exp_id);
+    $this->pageTitle = "Create phylogenetic tree";
 
     //check gf_id
     $gf_info	= $this->GeneFamilies->find("first",array("conditions"=>array("experiment_id"=>$exp_id,"gf_id"=>$gf_id)));
@@ -796,7 +797,6 @@ class ToolsController extends AppController{
 
     }
 
-
   }
 
 
@@ -814,6 +814,7 @@ class ToolsController extends AppController{
     $this->TrapidUtils->checkPageAccess($exp_info['title'],$exp_info["process_state"],$this->process_states["finished"]);
     $this->set("exp_info",$exp_info);
     $this->set("exp_id",$exp_id);
+    $this->pageTitle = "Compare transcript subsets";
 
     $possible_types	= array("go"=>"GO","ipr"=>"Protein domain");
     //check type
@@ -852,9 +853,12 @@ class ToolsController extends AppController{
       	$subset1_go_counts  	= $this->TranscriptsGo->findGoCountsFromTranscripts($exp_id,$subset1_transcripts);
 	$subset2_go_counts	= $this->TranscriptsGo->findGoCountsFromTranscripts($exp_id,$subset2_transcripts);
 	$go_ids			= array_unique(array_merge(array_keys($subset1_go_counts),array_keys($subset2_go_counts)));
-	$go_descriptions	= $this->ExtendedGo->find("all",array("conditions"=>array("go"=>$go_ids)));
-	$go_types		= $this->TrapidUtils->indexArraySimple($go_descriptions,"ExtendedGo","go","type");
-	$go_descriptions	= $this->TrapidUtils->indexArraySimple($go_descriptions,"ExtendedGo","go","desc");
+//	$go_descriptions	= $this->ExtendedGo->find("all",array("conditions"=>array("go"=>$go_ids)));
+	$go_descriptions	= $this->ExtendedGo->find("all",array("conditions"=>array("name"=>$go_ids, "type"=>"go")));
+//	$go_types		= $this->TrapidUtils->indexArraySimple($go_descriptions,"ExtendedGo","go","type");
+	$go_types		= $this->TrapidUtils->indexArraySimple($go_descriptions,"ExtendedGo","name","info");
+//	$go_descriptions	= $this->TrapidUtils->indexArraySimple($go_descriptions,"ExtendedGo","go","desc");
+	$go_descriptions	= $this->TrapidUtils->indexArraySimple($go_descriptions,"ExtendedGo","name","desc");
 	$type_descriptions	= array("BP"=>"Biological Process","CC"=>"Cellular Component","MF"=>"Molecular Function");
 	$this->set("data_subset1",$subset1_go_counts);
 	$this->set("data_subset2",$subset2_go_counts);
@@ -863,11 +867,13 @@ class ToolsController extends AppController{
 	$this->set("type_desc",$type_descriptions);
       }
       else if($type=="ipr"){
-	$subset1_ipr_counts	= $this->TranscriptsInterpro->findInterproCountsFromTranscripts($exp_id,$subset1_transcripts);
+    $subset1_ipr_counts	= $this->TranscriptsInterpro->findInterproCountsFromTranscripts($exp_id,$subset1_transcripts);
 	$subset2_ipr_counts	= $this->TranscriptsInterpro->findInterproCountsFromTranscripts($exp_id,$subset2_transcripts);
 	$ipr_ids		= array_unique(array_merge(array_keys($subset1_ipr_counts),array_keys($subset2_ipr_counts)));
-	$ipr_descriptions	= $this->ProteinMotifs->find("all",array("conditions"=>array("motif_id"=>$ipr_ids)));
-	$ipr_descriptions	= $this->TrapidUtils->indexArraySimple($ipr_descriptions,"ProteinMotifs","motif_id","desc");
+//	$ipr_descriptions	= $this->ProteinMotifs->find("all",array("conditions"=>array("motif_id"=>$ipr_ids)));
+	$ipr_descriptions	= $this->ProteinMotifs->find("all",array("conditions"=>array("name"=>$ipr_ids, "type"=>"interpro")));
+//	$ipr_descriptions	= $this->TrapidUtils->indexArraySimple($ipr_descriptions,"ProteinMotifs","motif_id","desc");
+	$ipr_descriptions	= $this->TrapidUtils->indexArraySimple($ipr_descriptions,"ProteinMotifs","name","desc");
 	$this->set("data_subset1",$subset1_ipr_counts);
 	$this->set("data_subset2",$subset2_ipr_counts);
 	$this->set("descriptions",$ipr_descriptions);
@@ -932,9 +938,12 @@ class ToolsController extends AppController{
       	$subset1_go_counts  	= $this->TranscriptsGo->findGoCountsFromTranscripts($exp_id,$subset1_transcripts);
 	$subset2_go_counts	= $this->TranscriptsGo->findGoCountsFromTranscripts($exp_id,$subset2_transcripts);
 	$go_ids			= array_unique(array_merge(array_keys($subset1_go_counts),array_keys($subset2_go_counts)));
-	$go_descriptions	= $this->ExtendedGo->find("all",array("conditions"=>array("go"=>$go_ids)));
-	$go_types		= $this->TrapidUtils->indexArraySimple($go_descriptions,"ExtendedGo","go","type");
-	$go_descriptions	= $this->TrapidUtils->indexArraySimple($go_descriptions,"ExtendedGo","go","desc");
+//	$go_descriptions	= $this->ExtendedGo->find("all",array("conditions"=>array("go"=>$go_ids)));
+	$go_descriptions	= $this->ExtendedGo->find("all",array("conditions"=>array("name"=>$go_ids, "type"=>"go")));
+//	$go_types		= $this->TrapidUtils->indexArraySimple($go_descriptions,"ExtendedGo","go","type");
+	$go_types		= $this->TrapidUtils->indexArraySimple($go_descriptions,"ExtendedGo","name","info");
+//	$go_descriptions	= $this->TrapidUtils->indexArraySimple($go_descriptions,"ExtendedGo","go","desc");
+	$go_descriptions	= $this->TrapidUtils->indexArraySimple($go_descriptions,"ExtendedGo","name","desc");
 	//$type_descriptions	= array("BP"=>"Biological Process","CC"=>"Cellular Component","MF"=>"Molecular Function");
 	$this->set("data_subset1",$subset1_go_counts);
 	$this->set("data_subset2",$subset2_go_counts);
@@ -948,8 +957,10 @@ class ToolsController extends AppController{
 	$subset1_ipr_counts	= $this->TranscriptsInterpro->findInterproCountsFromTranscripts($exp_id,$subset1_transcripts);
 	$subset2_ipr_counts	= $this->TranscriptsInterpro->findInterproCountsFromTranscripts($exp_id,$subset2_transcripts);
 	$ipr_ids		= array_unique(array_merge(array_keys($subset1_ipr_counts),array_keys($subset2_ipr_counts)));
-	$ipr_descriptions	= $this->ProteinMotifs->find("all",array("conditions"=>array("motif_id"=>$ipr_ids)));
-	$ipr_descriptions	= $this->TrapidUtils->indexArraySimple($ipr_descriptions,"ProteinMotifs","motif_id","desc");
+//	$ipr_descriptions	= $this->ProteinMotifs->find("all",array("conditions"=>array("motif_id"=>$ipr_ids)));
+	$ipr_descriptions	= $this->ProteinMotifs->find("all",array("conditions"=>array("name"=>$ipr_ids, "type"=>"interpro")));
+//	$ipr_descriptions	= $this->TrapidUtils->indexArraySimple($ipr_descriptions,"ProteinMotifs","motif_id","desc");
+	$ipr_descriptions	= $this->TrapidUtils->indexArraySimple($ipr_descriptions,"ProteinMotifs","name", "desc");
 	$this->set("data_subset1",$subset1_ipr_counts);
 	$this->set("data_subset2",$subset2_ipr_counts);
 	$this->set("descriptions",$ipr_descriptions);
@@ -961,13 +972,15 @@ class ToolsController extends AppController{
 
 
 
-  function enrichment($exp_id=null,$type=null){
+  function enrichment($exp_id=null, $type=null){
     $exp_id	= mysql_real_escape_string($exp_id);
     parent::check_user_exp($exp_id);
     $exp_info	= $this->Experiments->getDefaultInformation($exp_id);
     $this->TrapidUtils->checkPageAccess($exp_info['title'],$exp_info["process_state"],$this->process_states["finished"]);
     $this->set("exp_info",$exp_info);
     $this->set("exp_id",$exp_id);
+
+    $this->pageTitle = "Subset enrichment";
 
     $possible_types	= array("go"=>"GO","ipr"=>"Protein domain");
     //check type
@@ -1198,19 +1211,25 @@ class ToolsController extends AppController{
 
     //get extra information
     if($type=="go"){
-    	$go_data		= $this->ExtendedGo->find("all",array("conditions"=>array("go"=>array_keys($result))));
-    	$go_descriptions	= $this->TrapidUtils->indexArray($go_data,"ExtendedGo","go","desc");
+//    	$go_data		= $this->ExtendedGo->find("all",array("conditions"=>array("go"=>array_keys($result))));
+//    	$go_descriptions	= $this->TrapidUtils->indexArray($go_data,"ExtendedGo","go","desc");
+    	$go_data		= $this->ExtendedGo->find("all",array("conditions"=>array("name"=>array_keys($result), "type"=>"go")));
+    	$go_descriptions	= $this->TrapidUtils->indexArray($go_data,"ExtendedGo","name","desc");
     	$go_types		= array("MF"=>array(),"BP"=>array(),"CC"=>array());
     	foreach($go_data as $gd){
-      		$go_type	= $gd['ExtendedGo']['type'];
-      		$go_types[$go_type][] = $gd['ExtendedGo']['go'];
+//      		$go_type	= $gd['ExtendedGo']['type'];
+//      		$go_types[$go_type][] = $gd['ExtendedGo']['go'];
+      		$go_type	= $gd['ExtendedGo']['info'];
+      		$go_types[$go_type][] = $gd['ExtendedGo']['name'];
     	}
     	$this->set("go_descriptions",$go_descriptions);
     	$this->set("go_types",$go_types);
     }
     else if($type=="ipr"){
-      $ipr_data			= $this->ProteinMotifs->find("all",array("conditions"=>array("motif_id"=>array_keys($result))));
-      $ipr_descriptions		= $this->TrapidUtils->indexArray($ipr_data,"ProteinMotifs","motif_id","desc");
+//      $ipr_data			= $this->ProteinMotifs->find("all",array("conditions"=>array("motif_id"=>array_keys($result))));
+//      $ipr_descriptions		= $this->TrapidUtils->indexArray($ipr_data,"ProteinMotifs","motif_id","desc");
+      $ipr_data			= $this->ProteinMotifs->find("all",array("conditions"=>array("name"=>array_keys($result), "type"=>"interpro")));
+      $ipr_descriptions		= $this->TrapidUtils->indexArray($ipr_data,"ProteinMotifs","name","desc");
       $this->set("ipr_descriptions",$ipr_descriptions);
     }
   }
@@ -1288,19 +1307,28 @@ class ToolsController extends AppController{
 
     //get extra information
     if($type=="go"){
-    	$go_data		= $this->ExtendedGo->find("all",array("conditions"=>array("go"=>array_keys($result))));
-    	$go_descriptions	= $this->TrapidUtils->indexArray($go_data,"ExtendedGo","go","desc");
+//    	$go_data		= $this->ExtendedGo->find("all",array("conditions"=>array("go"=>array_keys($result))));
+    	$go_data		= $this->ExtendedGo->find("all",array("conditions"=>array("name"=>array_keys($result))));
+//    	pr($go_data);
+    	// $go_descriptions	= $this->TrapidUtils->indexArray($go_data,"ExtendedGo","go","desc");
+    	$go_descriptions	= $this->TrapidUtils->indexArray($go_data,"ExtendedGo","name","desc");
+//    	pr($go_descriptions);
     	$go_types		= array("MF"=>array(),"BP"=>array(),"CC"=>array());
     	foreach($go_data as $gd){
-      		$go_type	= $gd['ExtendedGo']['type'];
-      		$go_types[$go_type][] = $gd['ExtendedGo']['go'];
+//      		$go_type	= $gd['ExtendedGo']['type'];
+//      		$go_types[$go_type][] = $gd['ExtendedGo']['go'];
+            // Db structure changed...
+      		$go_type	= $gd['ExtendedGo']['info'];
+      		$go_types[$go_type][] = $gd['ExtendedGo']['name'];
     	}
     	$this->set("go_descriptions",$go_descriptions);
     	$this->set("go_types",$go_types);
     }
     else if($type=="ipr"){
-      $ipr_data			= $this->ProteinMotifs->find("all",array("conditions"=>array("motif_id"=>array_keys($result))));
-      $ipr_descriptions		= $this->TrapidUtils->indexArray($ipr_data,"ProteinMotifs","motif_id","desc");
+      // $ipr_data			= $this->ProteinMotifs->find("all",array("conditions"=>array("motif_id"=>array_keys($result))));
+//      $ipr_descriptions		= $this->TrapidUtils->indexArray($ipr_data,"ProteinMotifs","motif_id","desc");
+      $ipr_data			= $this->ProteinMotifs->find("all",array("conditions"=>array("name"=>array_keys($result))));
+      $ipr_descriptions		= $this->TrapidUtils->indexArray($ipr_data,"ProteinMotifs","name","desc");
       $this->set("ipr_descriptions",$ipr_descriptions);
     }
 
@@ -1454,9 +1482,10 @@ class ToolsController extends AppController{
 
 
 
-  function statistics($exp_id=null,$pdf='0'){
+  function statistics($exp_id=null, $pdf='0'){
     $exp_id	= mysql_real_escape_string($exp_id);
     parent::check_user_exp($exp_id);
+    $this->pageTitle = "Statistics";
     $exp_info	= $this->Experiments->getDefaultInformation($exp_id);
     $this->TrapidUtils->checkPageAccess($exp_info['title'],$exp_info["process_state"],$this->process_states["default"]);
     $this->set("exp_info",$exp_info);
@@ -1504,7 +1533,7 @@ class ToolsController extends AppController{
 
     //get functional data information
     $go_stats		= $this->TranscriptsGo->getStats($exp_id);
-    debug($go_stats);
+//    debug($go_stats);
     $this->set("num_go",$go_stats['num_go']);
     $this->set("num_transcript_go",$go_stats['num_transcript_go']);
     $interpro_stats	= $this->TranscriptsInterpro->getStats($exp_id);

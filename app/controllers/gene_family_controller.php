@@ -153,6 +153,8 @@ class GeneFamilyController extends AppController{
     $this->set("gf_species_counts",$gf_species_counts);
     //pr($gf_species_counts);
 
+    $this->pageTitle = 'Gene families';
+
   }
 
 
@@ -306,7 +308,7 @@ class GeneFamilyController extends AppController{
     $this->set("exp_id",$exp_id);
     //pr($exp_info);
 
-    //check whether gene family is valid
+      //check whether gene family is valid
     $gf_id	= mysql_real_escape_string($gf_id);
     $gf_info 	= $this->GeneFamilies->find("first",array("conditions"=>array("experiment_id"=>$exp_id,"gf_id"=>$gf_id)));
     if(!$gf_info){$this->redirect(array("controller"=>"trapid","action"=>"experiment",$exp_id));} //failsafe
@@ -359,7 +361,7 @@ class GeneFamilyController extends AppController{
     $this->set("go_info_transcripts",$go_info);
     $this->set("ipr_info_transcripts",$ipr_info);
 
-
+    $this->pageTitle = $gf_id.' &middot; Gene family';
   }
 
 

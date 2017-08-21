@@ -6,13 +6,15 @@
 </head>
 <body>
 -->
-<div id="container">
-	<div style='float:right;width:100px;text-align:right;margin-right:100px;'>
-		<a class="mainref" href="/webtools/trapid/documentation/">Documentation</a>
-	</div>
-	<div style='clear:both;width:700px;font-size:8px;'>&nbsp;</div>
+<div class="container">
+<!--	<div style='float:right;width:100px;text-align:right;margin-right:100px;'>-->
+<!--		<a class="mainref" href="/webtools/trapid/documentation/">Documentation</a>-->
+<!--	</div>-->
+<!--	<div style='clear:both;width:700px;font-size:8px;'>&nbsp;</div>-->
+    <div class="page-header">
+		<h1 class="text-primary">TRAPID Tutorials</h1>
+    </div>
 	<div id="tutorial">
-		<h2>TRAPID Tutorial</h2>
 
 		<a id="intro"><h3>INTRODUCTION </h3></a>
 	

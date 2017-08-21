@@ -2,16 +2,18 @@
 	//load the necessary javascript libraries			
 			
 	echo $javascript->link(array('ftiens4.js','ua.js'));
-	//echo $javascript->link(array('prototype-1.7.0.0'));
+	echo $javascript->link(array('prototype-1.7.0.0'));
 ?>
 <div>
-<h2>Create phylogenetic tree</h2>
+    <div class="page-header">
+        <h1 class="text-primary">Create phylogenetic tree</h1>
+    </div>
 <div class="subdiv">
 	<?php echo $this->element("trapid_experiment");?>
 	
 	<h3>Gene family</h3>
 	<div class="subdiv">
-		<dl class='standard'>
+		<dl class='standard dl-horizontal'>
 		<dt>Gene family</dt>
 		<dd><?php echo $html->link($gf_id,array("controller"=>"gene_family","action"=>"gene_family",$exp_id,$gf_id));?></dd>
 		<dt>#Transcripts</dt>

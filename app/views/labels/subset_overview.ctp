@@ -1,9 +1,12 @@
 <?php
+    echo $javascript->link('prototype-1.7.0.0');
 	echo $javascript->link("canvasXpress/canvasXpress.min.js");
 ?>
 
 <div>
-<h2>Subsets overview </h2>
+<div class="page-header">
+    <h1 class="text-primary">Subsets overview </h1>
+</div>
 <div class="subdiv">
 	<?php echo $this->element("trapid_experiment");?>
 	
@@ -32,9 +35,9 @@
 			$data_venn_js["venn"]["legend"][$curr_char]	= $fc;
 		}
 		$counter++;
-	}	
-	
-	//reduce data, because not all labels might be selected.	
+	}
+
+	//reduce data, because not all labels might be selected.
 	$data_venn_reduced	= array();
 	foreach($data_venn as $intersection=>$count){
 		$labels			= explode(";;;",$intersection);
@@ -81,12 +84,14 @@
 	<h3>Non-intersection subsets</h3>
 	<div class="subdiv">	
 		<div style="float:left;width:500px;">
+<!--		<table class="table table-striped table-bordered">-->
 		<table cellspacing="0" cellpadding="0" style="width:400px;">
-			<tr>
+			<thead>
 				<th style="width:10%">Select</th>
 				<th style="width:60%">Label</th>
 				<th style="width:30%">#Transcripts</th>
-			</tr>
+			</thead>
+            <tbody>
 			<?php
 			$i=0;		
 			foreach($full_counts as $fc=>$count){
@@ -99,6 +104,7 @@
 				echo "</tr>\n";
 			}
 			?>
+            </tbody>
 		</table>
 		</div>
 		<div style="float:left;width:200px;"><span style='color:red;font-weight:bold;' id='comment'></span></div>
@@ -141,6 +147,7 @@
 			new CanvasXpress("venn_canvas",venn_data,venn_info);	
 		}		
 
+		// Trying to get rid of prototype...
 		document.observe('dom:loaded', function() {
  	               	$$('.label_select').each(function(element) {
 				element.observe("change",function(event){

@@ -1,5 +1,11 @@
+<?php
+    echo $javascript->link('prototype-1.7.0.0');
+    echo $javascript->link("canvasXpress/canvasXpress.min.js");
+?>
 <div>
-<h2><?php echo "$col_names[0] to $col_names[1] to $col_names[2] intersection";?></h2>
+    <div class="page-header">
+<h1 class="text-primary"><?php echo "$col_names[0] to $col_names[1] to $col_names[2] intersection";?></h1>
+    </div>
 <div class="subdiv">
 	<?php echo $this->element("trapid_experiment");?>
 <h3><?php echo "$col_names[0] to $col_names[1] to $col_names[2] intersection";?></h3>
