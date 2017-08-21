@@ -1370,6 +1370,7 @@ public class InitialTranscriptsProcessing {
 			for(String ipr_id:transcript_interpro.get(transcript_id)){
 				ins_ipr_annot.setString(1,transcript_id);
 				ins_ipr_annot.setString(2,ipr_id);
+				// System.out.println(ins_ipr_annot.toString());
 				ins_ipr_annot.addBatch();
 			}
 			ins_ipr_annot.executeBatch();
@@ -1891,7 +1892,12 @@ public class InitialTranscriptsProcessing {
 
 	private Map<String,Set<String>> loadInterproData(Connection conn) throws Exception{
 		Map<String,Set<String>> gene_interpro			= new HashMap<String,Set<String>>();
-		String query_interpro_annot						= "SELECT `gene_id`,`motif_id` FROM `protein_motifs_data` ";
+		// String query_interpro_annot						= "SELECT `gene_id`,`motif_id` FROM `protein_motifs_data` ";
+		// Reference DBs structure changed in version 2
+		// String query_interpro_annot						= "SELECT `gene_id`,`motif_id` FROM `gene_protein_motif` ";
+		// Quick fix to not take SignalP annotations as they are too long for the limit of 10 characters (12 in some cases)
+		// Ask Michiel what to do with them (keep or not?)
+		String query_interpro_annot						= "SELECT `gene_id`,`motif_id` FROM `gene_protein_motif` where `motif_id` not like 'SignalP-%'";
 		Statement stmt_interpro_annot					= conn.createStatement();
 		ResultSet set_intepro_annot						= stmt_interpro_annot.executeQuery(query_interpro_annot);
 		while(set_intepro_annot.next()){
@@ -1988,7 +1994,9 @@ public class InitialTranscriptsProcessing {
 		Map<String,Set<String>> go_parent2children	= new HashMap<String,Set<String>>();	//mapping of
 
 
-		String query					= "SELECT `child_go`,`parent_go` FROM `go_parents` ";
+		// String query					= "SELECT `child_go`,`parent_go` FROM `go_parents` ";
+		// Reference DBs structure changed in version 2
+		String query					= "SELECT `child`, `parent` FROM `functional_parents` WHERE `type`=\"go\"";
 		Statement stmt					= conn.createStatement();
 		ResultSet set					= stmt.executeQuery(query);
 		while(set.next()){

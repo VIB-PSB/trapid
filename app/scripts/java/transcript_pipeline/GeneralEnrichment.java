@@ -592,12 +592,16 @@ public class GeneralEnrichment {
 	
 	private Map<String,GoData> loadGoData(Connection conn)throws Exception{
 		Map<String,GoData> result	= new HashMap<String,GoData>();
-		String sql				= "SELECT `go`,`type`,`is_obsolete` FROM `extended_go` ";
+// 		String sql				= "SELECT `go`,`type`,`is_obsolete` FROM `extended_go` ";
+        // Updated to fit new reference DB structure
+		String sql				= "SELECT `name`,`info`,`is_obsolete` FROM `functional_data` where `type`='go'";
 		Statement stmt			= conn.createStatement();
 		ResultSet set			= stmt.executeQuery(sql);
 		while(set.next()){
-			String go	= set.getString("go");
-			GoData gd	= new GoData(go,set.getString("type"),Boolean.parseBoolean(set.getString("is_obsolete")));
+// 			String go	= set.getString("go");
+// 			GoData gd	= new GoData(go,set.getString("type"),Boolean.parseBoolean(set.getString("is_obsolete")));
+			String go	= set.getString("name");
+			GoData gd	= new GoData(go,set.getString("info"),Boolean.parseBoolean(set.getString("is_obsolete")));
 			result.put(go,gd);
 		}
 		set.close();
@@ -629,8 +633,10 @@ public class GeneralEnrichment {
 	private Map<String,Map<String,Set<String>>> loadGOGraph(Connection conn,Map<String,GoData> extended_go) throws Exception{		
 		Map<String,Map<String,Set<String>>> result	= new HashMap<String,Map<String,Set<String>>>();		
 		Map<String,Set<String>> go_child2parents	= new HashMap<String,Set<String>>(); 	//mapping from child go to parent go
-		Map<String,Set<String>> go_parent2children	= new HashMap<String,Set<String>>();	//mapping of 
-		String query					= "SELECT `child_go`,`parent_go` FROM `go_parents` ";
+		Map<String,Set<String>> go_parent2children	= new HashMap<String,Set<String>>();	//mapping of
+        // Updated query to fit the new ref db structure
+// 		String query					= "SELECT `child_go`,`parent_go` FROM `go_parents` ";
+		String query					= "SELECT `child`,`parent` FROM `functional_parents` where `type`='go'";
 		Statement stmt					= conn.createStatement();
 		ResultSet set					= stmt.executeQuery(query);
 		while(set.next()){

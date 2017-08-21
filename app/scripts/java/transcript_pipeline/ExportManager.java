@@ -326,7 +326,9 @@ public class ExportManager {
 
 	private Map<String,String> getGoDescriptions(Connection conn) throws Exception{
 		Map<String,String> result		= new HashMap<String,String>();
-		String sql						= "SELECT `go`,`desc` FROM `extended_go` ";
+		// TRAPID v2 database does not have this structure anymore
+// 		String sql						= "SELECT `go`,`desc` FROM `extended_go` ";
+		String sql						= "SELECT `name`,`desc` FROM `functional_data` WHERE `type`='go'";
 		Statement stmt					= conn.createStatement();
 		ResultSet set					= stmt.executeQuery(sql);
 		while(set.next()){
@@ -341,7 +343,9 @@ public class ExportManager {
 
 	private Map<String,String> getProteinDomainDescriptions(Connection conn) throws Exception{
 		Map<String,String> result		= new HashMap<String,String>();
-		String sql						= "SELECT `motif_id`,`desc` FROM `protein_motifs` ";
+        // TRAPID v2 database does not have this structure anymore
+// 		String sql						= "SELECT `motif_id`,`desc` FROM `protein_motifs` ";
+		String sql						= "SELECT `name`,`desc` FROM `functional_data` WHERE `type`='ipr'";
 		Statement stmt					= conn.createStatement();
 		ResultSet set					= stmt.executeQuery(sql);
 		while(set.next()){
@@ -368,7 +372,9 @@ public class ExportManager {
 		while(set.next()){
 			counter++;
 			String transcript_id		= set.getString("transcript_id");
-			String go					= set.getString("go");
+    		// TRAPID v2 database does not have this structure anymore
+// 			String go					= set.getString("go");
+			String go					= set.getString("name");
 			String is_hidden			= set.getString("is_hidden");
 			String desc					= go_descriptions.get(go);
 			writer.write(counter+"\t"+transcript_id+"\t"+go+"\t"+"ISS"+"\t"+is_hidden+"\t"+desc+"\n");
@@ -411,7 +417,7 @@ public class ExportManager {
 	public void exportTranscriptInterpro(Connection plaza_connection,Connection conn,String exp_id,String output_file) throws Exception{
 		Map<String,String> interpro_descriptions	= this.getProteinDomainDescriptions(plaza_connection);
 		BufferedWriter writer	= new BufferedWriter(new FileWriter(new File(output_file)));
-		String sql				= "SELECT `transcript_id`,`interpro` FROM `transcripts_annotation` WHERE `experiment_id`='"+exp_id+"' AND `type`='ipr'";
+		String sql				= "SELECT `transcript_id`,`name` FROM `transcripts_annotation` WHERE `experiment_id`='"+exp_id+"' AND `type`='ipr'";
 		// TRAPID v2 database does not have this structure anymore
 		// String sql				= "SELECT `transcript_id`,`interpro` FROM `transcripts_interpro` WHERE `experiment_id`='"+exp_id+"' ";
 		Statement stmt			= conn.createStatement();
