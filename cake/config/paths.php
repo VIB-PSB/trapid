@@ -146,11 +146,11 @@ if(!defined('WEBSITE_TITLE')){
   define('WEBSITE_TITLE','TRAPID: Rapid Analysis of Transcriptome Data');
 }
 /**
- * Path/URL to the temporary files directory
+ * Path/URL to the temporary files directory. Prefix needs to be the same.
  */
 // if (!defined('TMP')) {define('TMP', '/www/bioapp/trapid2/');}
 if (!defined('TMP')) {define('TMP', '/www/bioapp/trapid_frbuc/');}
-if(!defined('TMP_WEB')){define('TMP_WEB','http://bioinformatics.psb.ugent.be/readwrite/trapid2/');}
+if(!defined('TMP_WEB')){define('TMP_WEB','http://bioinformatics.psb.ugent.be/readwrite/trapid_frbuc/');}
 
 /**
  * TRAPID database information
@@ -169,16 +169,19 @@ if(!defined('PLAZA_DB_PORT')){define('PLAZA_DB_PORT',"3306");}
 if(!defined('PLAZA_DB_USER')){define('PLAZA_DB_USER',"plaza_web");}
 if(!defined('PLAZA_DB_PASSWORD')){define('PLAZA_DB_PASSWORD',"plaza_web_roxor");}
 
+// TODO: create new variables for new reference databases (one for all)?
 
 /*
  * Location of BLAST databases on webserver + midas
  * Subdirectories are named following database names of PLAZA versions.
  */
 if(!defined('BLAST_DB_DIR')){
-  define('BLAST_DB_DIR','/www/blastdb/biocomp/moderated/trapid/');
+  define('BLAST_DB_DIR','/www/blastdb/biocomp/moderated/trapid_02/');
+  // define('BLAST_DB_DIR','/www/blastdb/biocomp/moderated/trapid/');
 }
 if(!defined('BLAST_DB_DIR_MIDAS')){
-   define('BLAST_DB_DIR_MIDAS','/blastdb/webdb/moderated/trapid/');
+   define('BLAST_DB_DIR_MIDAS','/blastdb/webdb/moderated/trapid_02/');
+   // define('BLAST_DB_DIR_MIDAS','/blastdb/webdb/moderated/trapid/');
 }
 
 /*
