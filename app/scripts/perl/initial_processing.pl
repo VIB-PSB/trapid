@@ -15,6 +15,7 @@ use FindBin qw{$Bin};
 ### 3) ORF verification
 ### 4) transfer of functional annotation
 
+### Update: run taxonomic binning step before similarity search (after creation of the multi-fasta file) - for now a simple kaiju mem search vs NCBI NR
 
 
 #Basic parameter check
@@ -76,6 +77,30 @@ my $DELETE_TEMP_DATA = 1;
 my $stime1		= time();
 my $multi_fasta_file 	= &create_experiment_multifasta($par{"trapid_db_server"},$par{"trapid_db_name"},$par{"trapid_db_port"},
 				$par{"trapid_db_user"},$par{"trapid_db_password"},$par{"temp_dir"},$par{"experiment"});
+
+
+###
+# Extra step: before the similarity search, run kaiju! First trial: unparalellized, quick, dirty
+###
+my $kaiju_program	= "run_kaiju_splitted.py";
+my $python_location	= $par{"base_script_location"}."python/";
+my $kaiju_command        = "python ".$python_location.$kaiju_program;
+my @kaiju_options        = ("-o", $par{"temp_dir"}."kaiju",
+	"-s", $par{"temp_dir"}."run_kaiju_splitted.sh", "-kp=\"-v -z 1 -x\"",
+	$par{"experiment"},
+	"/www/blastdb/biocomp/moderated/trapid_02/kaiju_files/ncbi_tax_2017_09/nodes.dmp",
+	"/www/blastdb/biocomp/moderated/trapid_02/kaiju_files/ncbi_tax_2017_09/names.dmp",
+	"/www/blastdb/biocomp/moderated/trapid_02/kaiju_files/ncbi_nr_2017_09_splitted/",
+	$multi_fasta_file);
+#my @kaiju_options        = ($par{"plaza_db_server"},$par{"plaza_db_name"},$par{"plaza_db_user"},$par{"plaza_db_password"},
+#	$par{"trapid_db_server"},$par{"trapid_db_name"},$par{"trapid_db_user"},$par{"trapid_db_password"},
+#	$par{"experiment"},$similarity_output,$par{"gf_type"},$par{"num_top_hits"},$par{"func_annot"});
+
+my $kaiju_exec           = $kaiju_command." ".join(" ",@kaiju_options);
+print STDOUT $kaiju_exec."\n";
+system($kaiju_exec);
+
+
 my $similarity_output 	= &perform_similarity_search($multi_fasta_file,$par{"temp_dir"},$par{"experiment"},
 						     $par{"blast_location"},$par{"blast_directory"},$par{"evalue"},
 						     $par{"base_script_location"});
