@@ -403,7 +403,9 @@ function calculate_good_height(){
 }
 
 function calculate_good_width(){
-    return Math.min(window.innerWidth - margin.left - margin.right - 80,Math.log2(2*(mapping.length + 1))* 200);
+    // return Math.min(window.innerWidth - margin.left - margin.right - 80,Math.log2(2*(mapping.length + 1))* 200);
+    return Math.min(window.innerWidth - margin.left - margin.right - 80 - 300, Math.log2(2*(mapping.length + 1))* 200);
+
 }
 
 // Create an empty svg as a placeholder

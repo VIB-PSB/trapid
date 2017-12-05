@@ -1,7 +1,8 @@
 
 // real_width is used for layout purposes
+// var margin = {top: 1, right: 1, bottom: 6, left: 1},
 var margin = {top: 1, right: 1, bottom: 6, left: 1},
-    real_width = calculate_good_width(),    
+    real_width = calculate_good_width(),
     width = real_width - margin.left - margin.right,
     height = calculate_good_height() - margin.top - margin.bottom;
 
@@ -9,8 +10,10 @@ function calculate_good_height(){
     return Math.min(window.innerHeight - 200, Math.log2(sankey_data.length + 1)* 200);   
 }
 
+// TODO: update to fit new TRAPID layout!
 function calculate_good_width(){
-    return Math.min(window.innerWidth - margin.left - margin.right - 80,Math.log2(sankey_data.length + 1)* 300);
+    // return Math.min(window.innerWidth - margin.left - margin.right - 80,Math.log2(sankey_data.length + 1)* 300);
+    return Math.min(window.innerWidth - margin.left - margin.right - 80 - 300, Math.log2(sankey_data.length + 1)* 300);
 }
 
 document.getElementById('sankey').setAttribute("style","display:block;");
