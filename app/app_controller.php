@@ -159,28 +159,29 @@ class AppController extends Controller {
      //pr(count($shared_exp));
      //pr("test2");
 
-     //possbility 1: the experiment is a public experiment. And as such visible to everyone.
+     // Possibility 1: the experiment is a public experiment. And as such visible to everyone.
      $experiment = $this->Experiments->find("first",array("conditions"=>array("experiment_id"=>$exp_id)));
      if($experiment['Experiments']['public_experiment']==1){
        $this->changeDbConfigs($exp_id);	//no need to check on user-experiment 
        return;
      }
-     //possibility 2: the experiment is private, the user is not an admin, and the user matches the experiment.
+     // Possibility 2: the experiment is private, the user is not an admin, and the user matches the experiment.
      else if($experiment['Experiments']['user_id']==$user_id){
 	$this->changeDbConfigs($exp_id);
      	return;
      }
-     //possibility 3: the experiment is private, the user is an admin
+     // Possibility 3: the experiment is private, the user is an admin
      else if($user_data['Authentication']['group']=="admin"){
 	$this->changeDbConfigs($exp_id);
      	return;
      }
-     //possibility 4: shared experiment between users.
+     // Possibility 4: experiment is a shared experiment between users.
      else if($shared_exp){
 	$this->changeDbConfigs($exp_id);
      	return;	
      }
-     //possibility 5: the experiment is private, the user is not an admin, and the user does not match the experiment
+     // Possibility 5: the experiment is private, the user is not an admin, and the user does not match the experiment
+     // In that case, redirect to the `experiments` page.
      else{
 	$this->redirect(array("controller"=>"trapid","action"=>"experiments"));
      }
