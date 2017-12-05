@@ -1594,6 +1594,7 @@ class ToolsController extends AppController{
   }
 
 
+  /* Check experiment + get general experiment information */
   function general_set_up($exp_id=null){
     $exp_id	= mysql_real_escape_string($exp_id);
     parent::check_user_exp($exp_id);
@@ -1646,6 +1647,7 @@ class ToolsController extends AppController{
 
   function label_enrichedgo_gf2($exp_id=null){
     $this->general_set_up($exp_id);
+    $this->pageTitle = "Labels - Enriched GO terms - GF intersection";
 
     $this->set("col_names", array('Label','Go','Gene family'));
     $this->set('dropdown_names',array('Domains', 'Gene families'));
@@ -1804,6 +1806,94 @@ function label_go_intersection($exp_id=null,$label=null){
     $this->set('GO', true);
     $this->render('sankey_intersection');
   }
+
+
+  /* Taxonomic binning related controllers */
+
+  // Main page for taxonomic binning.
+    function tax_binning($exp_id=null){
+        if(!$exp_id){$this->redirect(array("controller"=>"trapid","action"=>"experiments"));}
+        $exp_id	= mysql_real_escape_string($exp_id);
+        parent::check_user_exp($exp_id);
+        $exp_info	= $this->Experiments->getDefaultInformation($exp_id);
+        $this->set("exp_info",$exp_info);
+        $this->set("exp_id",$exp_id);
+        // Pie/bar charts (domain / tax-rank composition).
+        // Top tax domain level
+        $top_tax_domain = $this->read_top_tax_data($exp_id=$exp_id, $tax_rank="domain");
+        $domain_sum_transcripts = number_format(array_sum(array_map(function($x) {return intval($x[1]);}, $top_tax_domain)));
+        // Top tax phylum level
+//        $top_tax_phylum = $this->read_top_tax_data($exp_id=$exp_id, $tax_rank="phylum");
+        $top_tax_phylum = $this->read_top_tax_data($exp_id=$exp_id, $tax_rank="phylum");
+        $phylum_sum_transcripts = number_format(array_sum(array_map(function($x) {return intval($x[1]);}, $top_tax_phylum)));
+        // Set all variables and render page
+        $this->set("display_krona_url", Router::url(array("controller"=>"tools","action"=>"display_krona", $exp_id)));
+        $this->set("treeview_json_url", Router::url(array("controller"=>"tools","action"=>"get_treeview_json", $exp_id)));
+        $this->set("top_tax_domain", $top_tax_domain);
+        $this->set("domain_sum_transcripts", $domain_sum_transcripts);
+        $this->set("top_tax_phylum", $top_tax_phylum);
+        $this->set("phylum_sum_transcripts", $phylum_sum_transcripts);
+        $this->set("active_sidebar_item", "Tax");
+        $this->pageTitle = 'Taxonomic binning';
+        return;
+    }
+
+
+    // Reads a Krona HTML file, store it as a variable and render the 'display_krona' page
+    // By doing that we don't reveal the real location of the file
+    // TODO: return error if user is not owner of experiment (not the experiments page?)
+    // TODO: fix exception handling
+    function display_krona($exp_id=null){
+        // Check privileges to access current experiment's data
+        parent::check_user_exp($exp_id);
+        try {
+            $krona_html_path = TMP."experiment_data/".$exp_id."/kaiju/kaiju_merged.krona.html";
+            // pr($krona_html_path);  // Debug
+            $krona_code = implode(" ", file($krona_html_path));
+        }
+        catch(Exception $e){
+            $krona_code = "Unable to retrieve Krona code";
+        }
+        $this->layout = "";
+        $this->set("krona_code", $krona_code);
+        $this->render('tax_binning_krona');
+    }
+
+
+    // Read a top taxa summary file, return it as two-dimensional list.
+    // In the future, this information should be in the database and read from there instead.
+    function read_top_tax_data($exp_id=null, $tax_rank){
+        $top_tax_path = TMP."experiment_data/".$exp_id."/kaiju/top_tax.".$tax_rank.".tsv";
+        // pr($top_tax_path);
+        $top_tax_data = array();
+        $top_tax_file = file($top_tax_path);
+        foreach($top_tax_file as $key=>$value) {
+            $top_tax_data[$key] = explode("\t", $value);
+//            pr($key);
+        }
+//         pr($top_tax_data);  // Debug
+        return $top_tax_data;
+    }
+
+
+    // Reads JSON data for treeview visualization
+    // By doing that we don't reveal the real location of the file
+    // TODO: return error if user is not owner of experiment (not the experiments page?)
+    // TODO: change the workaround used to get json (rename function from krona to something more general)
+    function get_treeview_json($exp_id=null){
+        // Check privileges to access current experiment's data
+        parent::check_user_exp($exp_id);
+        try {
+            $json_web_path = TMP_WEB."experiment_data/".$exp_id."/kaiju/kaiju_merged.to_treeview.json";
+            $json_string = implode("", file($json_web_path));
+        }
+        catch(Exception $e){
+            $json_string = "Unable to retrieve JSON data. ";
+        }
+        $this->layout = "";
+        $this->set("krona_code", $json_string);
+        $this->render('tax_binning_krona');
+    }
 
 
 

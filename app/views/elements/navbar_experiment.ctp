@@ -152,6 +152,7 @@
         <?php if ($exp_info['transcript_count'] == 0) :
             // No transcripts == every tool is  disabled ?>
             <li class="sidebar-text sidebar-disabled">Statistics</li>
+            <li class="sidebar-text sidebar-disabled">Taxonomic binning</li>
             <li class="sidebar-text sidebar-disabled">Browse gene families</li>
             <li class="sidebar-text sidebar-disabled">Expanded/depleted GFs</li>
         <?php else :
@@ -174,6 +175,8 @@
                 </ul>
             </li>
             <li>
+                <?php echo $html->link("Taxonomic binning <span class=\"label label-primary\">test</span>", array("controller" => "tools", "action" => "tax_binning", $exp_id), array("escape" => false)); ?>
+            </li>            <li>
                 <?php echo $html->link("Browse gene families", array("controller" => "gene_family", "action" => "index", $exp_id)); ?>
             </li>
             <li>

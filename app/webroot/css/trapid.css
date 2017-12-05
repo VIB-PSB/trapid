@@ -1327,6 +1327,14 @@ body {
 	background-color:#2196f3;
 }
 
+
+/* Tax binning */
+.krona-display{
+	width:100%;
+	height:800px;
+	border:1px solid #aaaaaa;
+}
+
 /* Lots of ugly borders: useful for debugging when things are not displayed as expected */
 
 /*body {*/
