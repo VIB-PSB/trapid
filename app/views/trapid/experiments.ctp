@@ -196,7 +196,8 @@
                   $(span_id).html(data);
               },
               error: function() {
-                  alert("Failure - Unable to retrieve transcripts count. ");
+                  // alert("Failure - Unable to retrieve transcripts count. ");
+                  console.log("Failure - Unable to retrieve transcripts count. ");
               },
               complete: function() {
                 // Debug
