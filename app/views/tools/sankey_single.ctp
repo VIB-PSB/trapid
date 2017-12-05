@@ -1,5 +1,11 @@
+<?php
+echo $javascript->link('prototype-1.7.0.0');  // Prototype is still used in the sankey JS code
+echo $javascript->link("canvasXpress/canvasXpress.min.js");
+?>
 <div>
-<h2><?php echo $titleIsAKeyword;?> to gene family</h2>
+    <div class="page-header">
+<h1 class="text-primary"><?php echo $titleIsAKeyword;?> to gene family</h1>
+    </div>
 <div class="subdiv">
 	<?php echo $this->element("trapid_experiment");?>
 <h3><?php echo $titleIsAKeyword;?> to gene family</h3>
