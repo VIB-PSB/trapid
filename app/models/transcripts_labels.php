@@ -62,11 +62,12 @@ class TranscriptsLabels extends AppModel{
 
 
   function getLabeltoGOMapping($exp_id){
-    $query	= "SELECT COUNT(*), label, go
+    // Add `is_hidden` = 0?
+    $query	= "SELECT COUNT(*), label, name
                 FROM `transcripts_annotation`
                 LEFT JOIN `transcripts_labels` USING (experiment_id,transcript_id)
                 WHERE experiment_id = ".$exp_id."
-                AND `type`='go'
+                AND `type`='go' 
                 GROUP BY label,name";
     $res	= $this->query($query);
     $result	= array();
@@ -78,6 +79,7 @@ class TranscriptsLabels extends AppModel{
     }
     return $result;
   }
+
 
   function getLabeltoInterproMapping($exp_id){
     $query	= "SELECT COUNT(*), label, name
