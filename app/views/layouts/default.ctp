@@ -34,11 +34,11 @@
     // echo $html->css(array('trapid'))."\n";
     ?>
     <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
-    <link href="http://allfont.net/allfont.css?fonts=redensek" rel="stylesheet" type="text/css"/>
-    <link rel="stylesheet" href="https://cdn.datatables.net/1.10.13/css/jquery.dataTables.min.css">
+<!--    <link href="http://allfont.net/allfont.css?fonts=redensek" rel="stylesheet" type="text/css"/>-->
+<!--    <link rel="stylesheet" href="https://cdn.datatables.net/1.10.13/css/jquery.dataTables.min.css">-->
     <!-- Favicon (if we do not want to keep the PSB bioinformatics one) -->
     <link rel="icon" href="<?php echo $this->webroot . 'favicon.ico'; ?>" type="image/x-icon"/>
-    <script src="https://cdn.datatables.net/1.10.13/js/jquery.dataTables.min.js"></script>
+<!--    <script src="https://cdn.datatables.net/1.10.13/js/jquery.dataTables.min.js"></script>-->
 </head>
 <!--<body style="margin-top:50px;">-->
 <body>
@@ -106,5 +106,32 @@
         s.parentNode.insertBefore(ga, s);
     })();
 </script>
+
+<script type="text/javascript">
+    // TODO: find something better to add 'active' class to header/sidebar <li> elements. Maybe from CakePHP instead?
+    var header_item_text = "<?php echo (isset($active_header_item) ? $active_header_item : ''); ?>";
+    var sidebar_item_text = "<?php echo (isset($active_sidebar_item) ? $active_sidebar_item : ''); ?>";
+    // console.log(header_item_text.toString());  // Debug/test
+    // console.log(sidebar_item_text.toString());  // Debug/test
+    function activeHeaderItem(itemText) {
+        // Add active class to menu item containing 'itemText'
+        $('.header-bar .navbar-nav li').filter(function () {
+            return $.text([this]).indexOf(itemText) > -1;
+        }).addClass('active');
+    }
+    function activeSidebarItem(itemText) {
+        // Add active class to menu item containing 'itemText'
+        $('.sidebar-nav li').filter(function () {
+            return $.text([this]).indexOf(itemText) > -1;
+        }).addClass('active');
+    }
+    if(header_item_text!=='') {
+        activeHeaderItem(header_item_text);
+    }
+    if(sidebar_item_text!=='') {
+        activeSidebarItem(sidebar_item_text);
+    }
+</script>
+
 </body>
 </html>

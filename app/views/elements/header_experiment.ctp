@@ -41,16 +41,3 @@
             </ul></li>
     </ul>
 </header>
-
-<script type="text/javascript">
-    // TODO: find something cool to add 'active' class to navbar <li> elements. Maybe from CakePHP instead?
-    var item_text = "<?php echo (isset($active_navbar_item) ? $active_navbar_item : ''); ?>";
-    // Debug/test
-    // item_text = "Home";
-     console.log(item_text.toString());
-    if(item_text!==''){
-        $('.header-bar .navbar-nav li').filter(function () {
-            return $.text([this]).indexOf(item_text) > -1;
-        }).addClass('active');
-    }
-</script>

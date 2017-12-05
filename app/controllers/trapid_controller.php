@@ -183,12 +183,14 @@ class TrapidController extends AppController{
 
   //fast and ugly hack to facilitate ajax call to get extra information about number of transcripts per experiment.
   function experiments_num_transcripts($exp_id){
-    Configure::write("debug",1);
+    //Configure::write("debug",1);
+//      ini_set('memory_limit','800M');
     $this->layout = "";
     if(!$exp_id){$this->redirect(array("controller"=>"trapid","action"=>"experiments"));}
     $exp_id	= mysql_real_escape_string($exp_id);
     parent::check_user_exp($exp_id);
     $exp_info	= $this->Experiments->getDefaultInformation($exp_id);
+    // pr($exp_info);
     $num_transcripts = "N/A";
     if($exp_info){
       $num_transcripts = $exp_info['transcript_count'];
@@ -1948,7 +1950,6 @@ class TrapidController extends AppController{
     }
 
   }
-
 
 
   /*

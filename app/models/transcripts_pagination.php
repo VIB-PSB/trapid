@@ -9,7 +9,7 @@ class TranscriptsPagination extends AppModel{
 
 
 
-
+  // TODO: Change used tables to reflect changes made to the TRAPID db
   function getPossibleParameters(){
 	//transcripts:			a
     	//transcripts_labels:		b,b1,b2,b3,...
