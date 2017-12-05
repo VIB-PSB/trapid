@@ -603,10 +603,12 @@ class TrapidUtilsComponent extends Object{
     foreach($necessary_modules as $nm){
 	  fwrite($fh,"module load ".$nm." \n");
     }
-    $parameters			= array(PLAZA_DB_SERVER,$plaza_db,PLAZA_DB_PORT,PLAZA_DB_USER,PLAZA_DB_PASSWORD,
-					TRAPID_DB_SERVER,TRAPID_DB_NAME,TRAPID_DB_PORT,TRAPID_DB_USER,TRAPID_DB_PASSWORD,
-					$tmp_dir,$exp_id,$gf_id,
-					$base_scripts_location."perl/blosum62.txt"
+    $parameters			= array(
+//        PLAZA_DB_SERVER, $plaza_db, PLAZA_DB_PORT, PLAZA_DB_USER, PLAZA_DB_PASSWORD,
+        TRAPID_DB_SERVER, $plaza_db, PLAZA_DB_PORT, TRAPID_DB_USER, TRAPID_DB_PASSWORD,
+		TRAPID_DB_SERVER, TRAPID_DB_NAME, TRAPID_DB_PORT, TRAPID_DB_USER, TRAPID_DB_PASSWORD,
+		$tmp_dir,$exp_id,$gf_id,
+		$base_scripts_location."perl/blosum62.txt"
 					);
 
     fwrite($fh,"\n#Launching perl script for creating necessary files, then MSA \n");
@@ -1019,14 +1021,16 @@ class TrapidUtilsComponent extends Object{
 
 
 
-  //function to create the necessary shell-files
-  function create_shell_file_initial($exp_id,$plaza_db,$blast_db,$gf_type,$num_top_hits,$evalue,$func_annot){
+  // Function to create the necessary shell files for initial processing
+  function create_shell_file_initial($exp_id, $plaza_db, $blast_db, $gf_type, $num_top_hits, $evalue, $func_annot){
 	$num_training_framedp	= 50;
 
         $base_scripts_location  = APP."scripts/";
 	$tmp_dir		= TMP."experiment_data/".$exp_id."/";
 	$final_blast_dir	= BLAST_DB_DIR."".$plaza_db."/";
-    	$necessary_modules	= array("perl","java","framedp");
+    	// $necessary_modules	= array("perl","java","framedp");
+      // kaiju needs to be loaded, and I will write my extra scripts in python
+    	$necessary_modules	= array("perl","java","framedp",  "python/x86_64/2.7.2", "kaiju");
     	/* $necessary_parameters	= array(PLAZA_DB_SERVER,$plaza_db,PLAZA_DB_PORT,PLAZA_DB_USER,PLAZA_DB_PASSWORD,
 					TRAPID_DB_SERVER,TRAPID_DB_NAME,TRAPID_DB_PORT,TRAPID_DB_USER,TRAPID_DB_PASSWORD,
 					$tmp_dir,$exp_id,$final_blast_dir,$blast_db.".rap",$gf_type,$num_top_hits,$evalue,$func_annot,
