@@ -117,8 +117,9 @@ else{
 	//TABLE 
 	echo "<div>\n";
 	echo "<h4>GO enrichment data table</h4>\n";
-	echo "<table cellpadding='0' cellspacing='0' style='width:900px;'>\n";
-	echo "<tr>";
+//	echo "<table class='table table-bordered table-striped' cellpadding='0' cellspacing='0' style='width:900px;'>\n";
+	echo "<table class='table table-bordered table-striped' style=''>\n";
+	echo "<thead>";
 	echo "<th style='width:5%'>GO type</th>";
 	echo "<th style='width:10%'>GO term</th>";
 	echo "<th style='width:10%'>Enrichment</th>";
@@ -126,7 +127,7 @@ else{
 	echo "<th style='width:10%'>Subset ratio</th>";
 	echo "<th style='width:50%'>Description</th>";
 	echo "<th style='width:5%'>Shown</th>";
-	echo "</tr>\n";
+	echo "</thead>\n";
 	$i	= 0;
 	foreach($go_types as $go_type=>$gos){
 		foreach($gos as $counter=>$go_id){
