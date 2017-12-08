@@ -63,3 +63,28 @@ Cache::config('default', array('engine' => 'File'));
  * CakePlugin::load('DebugKit'); //Loads a single plugin named DebugKit
  *
  */
+
+
+/**
+ * Added while migrating from CakePHP 2.1.0 to 2.2.0. 
+ * More details here: https://book.cakephp.org/2.0/en/appendices/2-2-migration-guide.html
+ */
+
+// Enable the Dispatcher filters for plugin assets, and
+// CacheHelper.
+Configure::write('Dispatcher.filters', array(
+    'AssetDispatcher',
+    'CacheDispatcher'
+));
+
+// Add logging configuration.
+CakeLog::config('debug', array(
+    'engine' => 'FileLog',
+    'types' => array('notice', 'info', 'debug'),
+    'file' => 'debug',
+));
+CakeLog::config('error', array(
+    'engine' => 'FileLog',
+    'types' => array('warning', 'error', 'critical', 'alert', 'emergency'),
+    'file' => 'error',
+));
