@@ -2,7 +2,7 @@
 /**
  * This file is loaded automatically by the app/webroot/index.php file after core.php
  *
- * This file should load/create any application wide configuration settings, such as 
+ * This file should load/create any application wide configuration settings, such as
  * Caching, Logging, loading additional configuration files.
  *
  * You should also use this file to include any files that provide global functions/constants
@@ -40,7 +40,7 @@ Cache::config('default', array('engine' => 'File'));
  *     'View/Helper' => array('/full/path/to/helpers/', '/next/full/path/to/helpers/'),
  *     'Vendor' => array('/full/path/to/vendors/', '/next/full/path/to/vendors/'),
  *     'Console/Command' => array('/full/path/to/shells/', '/next/full/path/to/shells/'),
- *     'locales' => array('/full/path/to/locale/', '/next/full/path/to/locale/')
+ *     'Locale' => array('/full/path/to/locale/', '/next/full/path/to/locale/')
  * ));
  *
  */

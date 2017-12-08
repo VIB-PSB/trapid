@@ -46,7 +46,7 @@ class CacheSessionTest extends CakeTestCase {
  * @return void
  */
 	public static function teardownAfterClass() {
-		Cache::clear('session_test');
+		Cache::clear(false, 'session_test');
 		Cache::drop('session_test');
 
 		Configure::write('Session', self::$_sessionBackup);
@@ -63,7 +63,7 @@ class CacheSessionTest extends CakeTestCase {
 	}
 
 /**
- * teardown
+ * tearDown
  *
  * @return void
  */

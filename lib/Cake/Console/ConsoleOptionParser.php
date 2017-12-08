@@ -467,7 +467,7 @@ class ConsoleOptionParser {
 		}
 		$params = $args = array();
 		$this->_tokens = $argv;
-		while ($token = array_shift($this->_tokens)) {
+		while (($token = array_shift($this->_tokens)) !== null) {
 			if (substr($token, 0, 2) == '--') {
 				$params = $this->_parseLongOption($token, $params);
 			} elseif (substr($token, 0, 1) == '-') {
@@ -551,6 +551,7 @@ class ConsoleOptionParser {
  * @param string $option The option to parse.
  * @param array $params The params to append the parsed value into
  * @return array Params with $option added in.
+ * @throws ConsoleException When unknown short options are encountered.
  */
 	protected function _parseShortOption($option, $params) {
 		$key = substr($option, 1);
@@ -596,7 +597,6 @@ class ConsoleOptionParser {
 			return $params;
 		}
 	}
-
 
 /**
  * Check to see if $name has an option (short/long) defined for it.

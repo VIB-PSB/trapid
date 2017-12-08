@@ -19,7 +19,7 @@
 
 /**
  * This component is used to handle automatic model data pagination.  The primary way to use this
- * component is to call the paginate() method. There is a convience wrapper on Controller as well.
+ * component is to call the paginate() method. There is a convenience wrapper on Controller as well.
  *
  * ### Configuring pagination
  *
@@ -223,7 +223,7 @@ class PaginatorComponent extends Component {
 	protected function _getObject($object) {
 		if (is_string($object)) {
 			$assoc = null;
-			if (strpos($object, '.')  !== false) {
+			if (strpos($object, '.') !== false) {
 				list($object, $assoc) = pluginSplit($object);
 			}
 
@@ -333,7 +333,7 @@ class PaginatorComponent extends Component {
 			$options['order'] = array($options['sort'] => $direction);
 		}
 
-		if (!empty($whitelist)) {
+		if (!empty($whitelist) && isset($options['order']) && is_array($options['order'])) {
 			$field = key($options['order']);
 			if (!in_array($field, $whitelist)) {
 				$options['order'] = null;
@@ -353,7 +353,7 @@ class PaginatorComponent extends Component {
 					$order[$alias . '.' . $field] = $value;
 				} elseif ($object->hasField($key, true)) {
 					$order[$field] = $value;
-				} elseif (isset($object->{$alias}) && $object->{$alias}->hasField($field)) {
+				} elseif (isset($object->{$alias}) && $object->{$alias}->hasField($field, true)) {
 					$order[$alias . '.' . $field] = $value;
 				}
 			}
@@ -370,11 +370,12 @@ class PaginatorComponent extends Component {
  * @return array An array of options for pagination
  */
 	public function checkLimit($options) {
-		$options['limit'] = (int) $options['limit'];
+		$options['limit'] = (int)$options['limit'];
 		if (empty($options['limit']) || $options['limit'] < 1) {
 			$options['limit'] = 1;
 		}
 		$options['limit'] = min((int)$options['limit'], $options['maxLimit']);
 		return $options;
 	}
+
 }

@@ -18,7 +18,8 @@
  */
 
 /**
- * CakePlugin class
+ * CakePlugin is responsible for loading and unloading plugins. It also can 
+ * retrieve plugin paths and load their bootstrap and routes files.
  *
  * @package       Cake.Core
  * @link http://book.cakephp.org/2.0/en/plugins.html
@@ -125,7 +126,7 @@ class CakePlugin {
 			if ($opts === null && isset($options[0])) {
 				$opts = $options[0];
 			}
-			self::load($p, (array) $opts);
+			self::load($p, (array)$opts);
 		}
 	}
 
@@ -161,7 +162,7 @@ class CakePlugin {
 
 		$path = self::path($plugin);
 		if ($config['bootstrap'] === true) {
-			return include($path . 'Config' . DS . 'bootstrap.php');
+			return include $path . 'Config' . DS . 'bootstrap.php';
 		}
 
 		$bootstrap = (array)$config['bootstrap'];
@@ -190,11 +191,11 @@ class CakePlugin {
 		if ($config['routes'] === false) {
 			return false;
 		}
-		return (bool) include self::path($plugin) . 'Config' . DS . 'routes.php';
+		return (bool)include self::path($plugin) . 'Config' . DS . 'routes.php';
 	}
 
 /**
- * Retruns true if the plugin $plugin is already loaded
+ * Returns true if the plugin $plugin is already loaded
  * If plugin is null, it will return a list of all loaded plugins
  *
  * @param string $plugin
@@ -223,4 +224,5 @@ class CakePlugin {
 			unset(self::$_plugins[$plugin]);
 		}
 	}
+
 }

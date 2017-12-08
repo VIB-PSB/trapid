@@ -22,7 +22,16 @@
 
 App::uses('JsBaseEngineHelper', 'View/Helper');
 
+/**
+ * Prototype Engine Helper for JsHelper
+ *
+ * Provides Prototype specific Javascript for JsHelper. Requires at least
+ * Prototype 1.6
+ *
+ * @package       Cake.View.Helper
+ */
 class PrototypeEngineHelper extends JsBaseEngineHelper {
+
 /**
  * Is the current selection a multiple selection? or is it just a single element.
  *
@@ -111,7 +120,7 @@ class PrototypeEngineHelper extends JsBaseEngineHelper {
 	public function get($selector) {
 		$this->_multiple = false;
 		if ($selector == 'window' || $selector == 'document') {
-			$this->selection = "$(" . $selector .")";
+			$this->selection = "$(" . $selector . ")";
 			return $this;
 		}
 		if (preg_match('/^#[^\s.]+$/', $selector)) {
@@ -211,7 +220,7 @@ class PrototypeEngineHelper extends JsBaseEngineHelper {
 			case 'fadeIn':
 			case 'fadeOut':
 				$name = ($name == 'fadeIn') ? 'appear' : 'fade';
-				$effect = $this->selection . '.' . $name .'(' . substr($optionString, 2) . ');';
+				$effect = $this->selection . '.' . $name . '(' . substr($optionString, 2) . ');';
 			break;
 		}
 		return $effect;
@@ -225,7 +234,7 @@ class PrototypeEngineHelper extends JsBaseEngineHelper {
  * @return string The completed ajax call.
  */
 	public function request($url, $options = array()) {
-		$url = '"'. $this->url($url) . '"';
+		$url = '"' . $this->url($url) . '"';
 		$options = $this->_mapOptions('request', $options);
 		$type = '.Request';
 		$data = null;
@@ -255,7 +264,7 @@ class PrototypeEngineHelper extends JsBaseEngineHelper {
  *
  * #### Note: Requires scriptaculous to be loaded.
  *
- * The scriptaculous implementation of sortables does not suppot the 'start'
+ * The scriptaculous implementation of sortables does not support the 'start'
  * and 'distance' options.
  *
  * @param array $options Array of options for the sortable.
@@ -357,4 +366,5 @@ class PrototypeEngineHelper extends JsBaseEngineHelper {
 		}
 		return $selection . $method;
 	}
+
 }

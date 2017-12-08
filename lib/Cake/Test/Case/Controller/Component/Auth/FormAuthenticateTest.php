@@ -3,7 +3,7 @@
  * FormAuthenticateTest file
  *
  * PHP 5
- * 
+ *
  * CakePHP(tm) : Rapid Development Framework (http://cakephp.org)
  * Copyright 2005-2011, Cake Software Foundation, Inc. (http://cakefoundation.org)
  *
@@ -115,7 +115,7 @@ class FormAuthenticateTest extends CakeTestCase {
 	}
 
 /**
- * test authenticate sucesss
+ * test authenticate success
  *
  * @return void
  */
@@ -159,10 +159,11 @@ class FormAuthenticateTest extends CakeTestCase {
 	public function testPluginModel() {
 		Cache::delete('object_map', '_cake_core_');
 		App::build(array(
-			'plugins' => array(CAKE . 'Test' . DS . 'test_app' . DS . 'Plugin' . DS),
-		), true);
+			'Plugin' => array(CAKE . 'Test' . DS . 'test_app' . DS . 'Plugin' . DS),
+		), App::RESET);
 		CakePlugin::load('TestPlugin');
 
+		$ts = date('Y-m-d H:i:s');
 		$PluginModel = ClassRegistry::init('TestPlugin.TestPluginAuthUser');
 		$user['id'] = 1;
 		$user['username'] = 'gwoo';
@@ -184,7 +185,7 @@ class FormAuthenticateTest extends CakeTestCase {
 			'username' => 'gwoo',
 			'created' => '2007-03-17 01:16:23'
 		);
-		$this->assertTrue($result['updated'] >= date('Y-m-d H:i:s'));
+		$this->assertTrue($result['updated'] >= $ts);
 		unset($result['updated']);
 		$this->assertEquals($expected, $result);
 		CakePlugin::unload();

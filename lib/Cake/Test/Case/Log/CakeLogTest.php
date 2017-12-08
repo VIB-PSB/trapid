@@ -47,22 +47,22 @@ class CakeLogTest extends CakeTestCase {
  */
 	public function testImportingLoggers() {
 		App::build(array(
-			'libs' => array(CAKE . 'Test' . DS . 'test_app' . DS . 'Lib' . DS),
-			'plugins' => array(CAKE . 'Test' . DS . 'test_app' . DS . 'Plugin' . DS)
-		), true);
+			'Lib' => array(CAKE . 'Test' . DS . 'test_app' . DS . 'Lib' . DS),
+			'Plugin' => array(CAKE . 'Test' . DS . 'test_app' . DS . 'Plugin' . DS)
+		), App::RESET);
 		CakePlugin::load('TestPlugin');
 
 		$result = CakeLog::config('libtest', array(
 			'engine' => 'TestAppLog'
 		));
 		$this->assertTrue($result);
-		$this->assertEqual(CakeLog::configured(), array('libtest'));
+		$this->assertEquals(CakeLog::configured(), array('libtest'));
 
 		$result = CakeLog::config('plugintest', array(
 			'engine' => 'TestPlugin.TestPluginLog'
 		));
 		$this->assertTrue($result);
-		$this->assertEqual(CakeLog::configured(), array('libtest', 'plugintest'));
+		$this->assertEquals(CakeLog::configured(), array('libtest', 'plugintest'));
 
 		App::build();
 		CakePlugin::unload();
@@ -102,7 +102,7 @@ class CakeLogTest extends CakeTestCase {
 		$this->assertTrue(file_exists(LOGS . 'error.log'));
 
 		$result = CakeLog::configured();
-		$this->assertEqual($result, array('default'));
+		$this->assertEquals($result, array('default'));
 		unlink(LOGS . 'error.log');
 	}
 
@@ -117,7 +117,7 @@ class CakeLogTest extends CakeTestCase {
 			'path' => LOGS
 		));
 		$result = CakeLog::configured();
-		$this->assertEqual($result, array('file'));
+		$this->assertEquals($result, array('file'));
 
 		if (file_exists(LOGS . 'error.log')) {
 			@unlink(LOGS . 'error.log');
@@ -126,12 +126,12 @@ class CakeLogTest extends CakeTestCase {
 		$this->assertTrue(file_exists(LOGS . 'error.log'));
 
 		$result = file_get_contents(LOGS . 'error.log');
-		$this->assertPattern('/^2[0-9]{3}-[0-9]+-[0-9]+ [0-9]+:[0-9]+:[0-9]+ Warning: Test warning/', $result);
+		$this->assertRegExp('/^2[0-9]{3}-[0-9]+-[0-9]+ [0-9]+:[0-9]+:[0-9]+ Warning: Test warning/', $result);
 		unlink(LOGS . 'error.log');
 	}
 
 /**
- * explict tests for drop()
+ * explicit tests for drop()
  *
  * @return void
  **/
@@ -141,11 +141,11 @@ class CakeLogTest extends CakeTestCase {
 			'path' => LOGS
 		));
 		$result = CakeLog::configured();
-		$this->assertEqual($result, array('file'));
+		$this->assertEquals($result, array('file'));
 
 		CakeLog::drop('file');
 		$result = CakeLog::configured();
-		$this->assertEqual($result, array());
+		$this->assertEquals($result, array());
 	}
 
 /**
@@ -165,8 +165,8 @@ class CakeLogTest extends CakeTestCase {
 		CakeLog::write(LOG_WARNING, 'Test warning 1');
 		CakeLog::write(LOG_WARNING, 'Test warning 2');
 		$result = file_get_contents(LOGS . 'error.log');
-		$this->assertPattern('/^2[0-9]{3}-[0-9]+-[0-9]+ [0-9]+:[0-9]+:[0-9]+ Warning: Test warning 1/', $result);
-		$this->assertPattern('/2[0-9]{3}-[0-9]+-[0-9]+ [0-9]+:[0-9]+:[0-9]+ Warning: Test warning 2$/', $result);
+		$this->assertRegExp('/^2[0-9]{3}-[0-9]+-[0-9]+ [0-9]+:[0-9]+:[0-9]+ Warning: Test warning 1/', $result);
+		$this->assertRegExp('/2[0-9]{3}-[0-9]+-[0-9]+ [0-9]+:[0-9]+:[0-9]+ Warning: Test warning 2$/', $result);
 		unlink(LOGS . 'error.log');
 	}
 

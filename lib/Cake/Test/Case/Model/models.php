@@ -18,8 +18,41 @@
  * @since         CakePHP(tm) v 1.2.0.6464
  * @license       MIT License (http://www.opensource.org/licenses/mit-license.php)
  */
+App::uses('Model', 'Model');
+/**
+ * AppModel class
+ *
+ * @package       Cake.Test.Case.Model
+ */
+class AppModel extends Model {
 
-PHP_CodeCoverage_Filter::getInstance()->addFileToBlacklist(__FILE__, 'DEFAULT');
+/**
+ * findMethods property
+ *
+ * @var array
+ */
+	public $findMethods = array('published' => true);
+
+/**
+ * useDbConfig property
+ *
+ * @var array
+ */
+	public $useDbConfig = 'test';
+
+/**
+ * _findPublished custom find
+ *
+ * @return array
+ */
+	public function _findPublished($state, $query, $results = array()) {
+        if ($state === 'before') {
+            $query['conditions']['published'] = 'Y';
+            return $query;
+        }
+        return $results;
+	}
+}
 
 /**
  * Test class
@@ -48,12 +81,12 @@ class Test extends CakeTestModel {
  * @var array
  */
 	protected $_schema = array(
-		'id'=> array('type' => 'integer', 'null' => '', 'default' => '1', 'length' => '8', 'key'=>'primary'),
-		'name'=> array('type' => 'string', 'null' => '', 'default' => '', 'length' => '255'),
-		'email'=> array('type' => 'string', 'null' => '1', 'default' => '', 'length' => '155'),
-		'notes'=> array('type' => 'text', 'null' => '1', 'default' => 'write some notes here', 'length' => ''),
-		'created'=> array('type' => 'date', 'null' => '1', 'default' => '', 'length' => ''),
-		'updated'=> array('type' => 'datetime', 'null' => '1', 'default' => '', 'length' => null)
+		'id' => array('type' => 'integer', 'null' => '', 'default' => '1', 'length' => '8', 'key' => 'primary'),
+		'name' => array('type' => 'string', 'null' => '', 'default' => '', 'length' => '255'),
+		'email' => array('type' => 'string', 'null' => '1', 'default' => '', 'length' => '155'),
+		'notes' => array('type' => 'text', 'null' => '1', 'default' => 'write some notes here', 'length' => ''),
+		'created' => array('type' => 'date', 'null' => '1', 'default' => '', 'length' => ''),
+		'updated' => array('type' => 'datetime', 'null' => '1', 'default' => '', 'length' => null)
 	);
 }
 
@@ -91,12 +124,12 @@ class TestAlias extends CakeTestModel {
  * @var array
  */
 	protected $_schema = array(
-		'id'=> array('type' => 'integer', 'null' => '', 'default' => '1', 'length' => '8', 'key'=>'primary'),
-		'name'=> array('type' => 'string', 'null' => '', 'default' => '', 'length' => '255'),
-		'email'=> array('type' => 'string', 'null' => '1', 'default' => '', 'length' => '155'),
-		'notes'=> array('type' => 'text', 'null' => '1', 'default' => 'write some notes here', 'length' => ''),
-		'created'=> array('type' => 'date', 'null' => '1', 'default' => '', 'length' => ''),
-		'updated'=> array('type' => 'datetime', 'null' => '1', 'default' => '', 'length' => null)
+		'id' => array('type' => 'integer', 'null' => '', 'default' => '1', 'length' => '8', 'key' => 'primary'),
+		'name' => array('type' => 'string', 'null' => '', 'default' => '', 'length' => '255'),
+		'email' => array('type' => 'string', 'null' => '1', 'default' => '', 'length' => '155'),
+		'notes' => array('type' => 'text', 'null' => '1', 'default' => 'write some notes here', 'length' => ''),
+		'created' => array('type' => 'date', 'null' => '1', 'default' => '', 'length' => ''),
+		'updated' => array('type' => 'datetime', 'null' => '1', 'default' => '', 'length' => null)
 	);
 }
 
@@ -185,7 +218,7 @@ class User extends CakeTestModel {
  *
  * @return bool
 */
-	public function beforeFind ($queryData) {
+	public function beforeFind($queryData) {
 		if (!empty($queryData['lazyLoad'])) {
 			if (!isset($this->Article, $this->Comment, $this->ArticleFeatured)) {
 				throw new Exception('Unavailable associations');
@@ -259,7 +292,7 @@ class Article extends CakeTestModel {
  * @param mixed $title
  * @return void
  */
-	static function titleDuplicate ($title) {
+	static function titleDuplicate($title) {
 		if ($title === 'My Article Title') {
 			return false;
 		}
@@ -643,6 +676,13 @@ class Attachment extends CakeTestModel {
  * @var string 'Attachment'
  */
 	public $name = 'Attachment';
+
+/**
+ * belongsTo property
+ *
+ * @var array
+ */
+	public $belongsTo = array('Comment');
 }
 
 /**
@@ -901,7 +941,7 @@ class ModifiedAuthor extends Author {
  * @return void
  */
 	public function afterFind($results, $primary = false) {
-		foreach($results as $index => $result) {
+		foreach ($results as $index => $result) {
 			$results[$index]['Author']['user'] .= ' (CakePHP)';
 		}
 		return $results;
@@ -1001,6 +1041,69 @@ class Bid extends CakeTestModel {
  * @var array
  */
 	public $belongsTo = array('Message');
+}
+
+/**
+ * BiddingMessage class
+ *
+ * @package       Cake.Test.Case.Model
+ */
+class BiddingMessage extends CakeTestModel {
+
+/**
+ * name property
+ *
+ * @var string 'BiddingMessage'
+ */
+	public $name = 'BiddingMessage';
+
+/**
+ * primaryKey property
+ *
+ * @var string 'bidding'
+ */
+	public $primaryKey = 'bidding';
+
+
+/**
+ * belongsTo property
+ *
+ * @var array
+ */
+	public $belongsTo = array(
+		'Bidding' => array(
+			'foreignKey' => false,
+			'conditions' => array('BiddingMessage.bidding = Bidding.bid')
+		)
+	);
+}
+
+/**
+ * Bidding class
+ *
+ * @package       Cake.Test.Case.Model
+ */
+class Bidding extends CakeTestModel {
+
+/**
+ * name property
+ *
+ * @var string 'Bidding'
+ */
+	public $name = 'Bidding';
+
+/**
+ * hasOne property
+ *
+ * @var array
+ */
+	public $hasOne = array(
+		'BiddingMessage' => array(
+			'foreignKey' => false,
+			'conditions' => array('BiddingMessage.bidding = Bidding.bid'),
+			'dependent' => true
+		)
+	);
 }
 
 /**
@@ -1833,6 +1936,7 @@ class AssociationTest2 extends CakeTestModel {
 class Callback extends CakeTestModel {
 
 }
+
 /**
  * CallbackPostTestModel class
  *
@@ -2001,7 +2105,7 @@ class ValidationTest1 extends CakeTestModel {
 	}
 
 /**
- * Custom validator with messaage
+ * Custom validator with message
  *
  * @return array
  */
@@ -2442,7 +2546,7 @@ class UnconventionalTree extends NumberTree {
 	public $actsAs = array(
 		'Tree' => array(
 			'parent' => 'join',
-			'left'  => 'left',
+			'left' => 'left',
 			'right' => 'right'
 		)
 	);
@@ -2482,7 +2586,7 @@ class Campaign extends CakeTestModel {
  *
  * @var array
  */
-	public $hasMany = array('Ad' => array('fields' => array('id','campaign_id','name')));
+	public $hasMany = array('Ad' => array('fields' => array('id', 'campaign_id', 'name')));
 }
 
 /**
@@ -3069,7 +3173,7 @@ class CounterCachePost extends CakeTestModel {
 class CounterCacheUserNonstandardPrimaryKey extends CakeTestModel {
 	public $name = 'CounterCacheUserNonstandardPrimaryKey';
 	public $alias = 'User';
-    public $primaryKey = 'uid';
+	public $primaryKey = 'uid';
 
 	public $hasMany = array('Post' => array(
 		'className' => 'CounterCachePostNonstandardPrimaryKey',
@@ -3080,7 +3184,7 @@ class CounterCacheUserNonstandardPrimaryKey extends CakeTestModel {
 class CounterCachePostNonstandardPrimaryKey extends CakeTestModel {
 	public $name = 'CounterCachePostNonstandardPrimaryKey';
 	public $alias = 'Post';
-    public $primaryKey = 'pid';
+	public $primaryKey = 'pid';
 
 	public $belongsTo = array('User' => array(
 		'className' => 'CounterCacheUserNonstandardPrimaryKey',
@@ -3215,6 +3319,24 @@ class TransactionManyTestModel extends CakeTestModel {
 		);
 		$this->saveMany($data, array('atomic' => true, 'callbacks' => false));
 	}
+}
+
+class Site extends CakeTestModel {
+	public $name = 'Site';
+	public $useTable = 'sites';
+
+	public $hasAndBelongsToMany = array(
+		'Domain' => array('unique' => 'keepExisting'),
+		);
+}
+
+class Domain extends CakeTestModel {
+	public $name = 'Domain';
+	public $useTable = 'domains';
+
+	public $hasAndBelongsToMany = array(
+		'Site' => array('unique' => 'keepExisting'),
+		);
 }
 
 /**
@@ -3784,7 +3906,7 @@ class Level extends CakeTestModel {
  * @var array
  */
 	public $hasMany = array(
-		'Group'=> array(
+		'Group' => array(
 			'className' => 'Group'
 		),
 		'User2' => array(
@@ -3995,9 +4117,9 @@ class Category2 extends CakeTestModel {
 		),
 		'Article2' => array(
 			'className' => 'Article2',
-			'order'=>'Article2.published_date DESC',
+			'order' => 'Article2.published_date DESC',
 			'foreignKey' => 'category_id',
-			'limit'=>'3')
+			'limit' => '3')
 	);
 
 /**
@@ -4302,7 +4424,7 @@ class ArticleFeatured2 extends CakeTestModel {
  * @var array
  */
 	public $hasMany = array(
-		'Comment2' => array('className'=>'Comment2', 'dependent' => true)
+		'Comment2' => array('className' => 'Comment2', 'dependent' => true)
 	);
 
 /**
@@ -4411,8 +4533,8 @@ class MysqlTestModel extends Model {
 class PrefixTestModel extends CakeTestModel {
 }
 class PrefixTestUseTableModel extends CakeTestModel {
-       public $name = 'PrefixTest';
-       public $useTable = 'prefix_tests';
+	public $name = 'PrefixTest';
+	public $useTable = 'prefix_tests';
 }
 
 /**
@@ -4533,4 +4655,107 @@ class ScaffoldTag extends CakeTestModel {
  * @var string 'posts'
  */
 	public $useTable = 'tags';
+}
+
+/**
+ * Player class
+ *
+ * @package       Cake.Test.Case.Model
+ */
+class Player extends CakeTestModel {
+	public $hasAndBelongsToMany = array(
+		'Guild' => array(
+			'with' => 'GuildsPlayer',
+			'unique' => true,
+			),
+		);
+}
+
+/**
+ * Guild class
+ *
+ * @package       Cake.Test.Case.Model
+ */
+class Guild extends CakeTestModel {
+	public $hasAndBelongsToMany = array(
+		'Player' => array(
+			'with' => 'GuildsPlayer',
+			'unique' => true,
+			),
+		);
+}
+
+/**
+ * GuildsPlayer class
+ *
+ * @package       Cake.Test.Case.Model
+ */
+class GuildsPlayer extends CakeTestModel {
+
+	public $useDbConfig = 'test2';
+
+	public $belongsTo = array(
+		'Player',
+		'Guild',
+		);
+}
+
+/**
+ * Armor class
+ *
+ * @package       Cake.Test.Case.Model
+ */
+class Armor extends CakeTestModel {
+
+	public $useDbConfig = 'test2';
+
+	public $hasAndBelongsToMany = array(
+		'Player' => array('with' => 'ArmorsPlayer'),
+		);
+}
+
+/**
+ * ArmorsPlayer class
+ *
+ * @package       Cake.Test.Case.Model
+ */
+class ArmorsPlayer extends CakeTestModel {
+
+	public $useDbConfig = 'test_database_three';
+
+}
+
+/**
+ * CustomArticle class
+ *
+ * @package       Cake.Test.Case.Model
+ */
+class CustomArticle extends AppModel {
+/**
+ * useTable property
+ *
+ * @var string
+ */
+	public $useTable = 'articles';
+
+/**
+ * findMethods property
+ *
+ * @var array
+ */
+	public $findMethods = array('unPublished' => true);
+
+/**
+ * _findUnPublished custom find
+ *
+ * @return array
+ */
+	public function _findUnPublished($state, $query, $results = array()) {
+        if ($state === 'before') {
+            $query['conditions']['published'] = 'N';
+            return $query;
+        }
+        return $results;
+	}
+
 }

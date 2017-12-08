@@ -18,6 +18,7 @@
  * @since         Cake v 0.10.0.1076
  * @license       MIT License (http://www.opensource.org/licenses/mit-license.php)
  */
+
 App::uses('ThemeView', 'View');
 
 /**
@@ -86,4 +87,5 @@ class ScaffoldView extends ThemeView {
 
 		throw new MissingViewException($paths[0] . $name . $this->ext);
 	}
+
 }

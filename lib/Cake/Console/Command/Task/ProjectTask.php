@@ -17,6 +17,7 @@
  * @license       MIT License (http://www.opensource.org/licenses/mit-license.php)
  */
 
+App::uses('AppShell', 'Console/Command');
 App::uses('File', 'Utility');
 App::uses('Folder', 'Utility');
 App::uses('String', 'Utility');
@@ -27,7 +28,7 @@ App::uses('Security', 'Utility');
  *
  * @package       Cake.Console.Command.Task
  */
-class ProjectTask extends Shell {
+class ProjectTask extends AppShell {
 
 /**
  * configs path (used in testing).
@@ -53,7 +54,6 @@ class ProjectTask extends Shell {
 			$project = $this->in($prompt, null, APP . 'myapp');
 		}
 
-
 		if ($project && !Folder::isAbsolute($project) && isset($_SERVER['PWD'])) {
 			$project = $_SERVER['PWD'] . DS . $project;
 		}
@@ -61,7 +61,7 @@ class ProjectTask extends Shell {
 		$response = false;
 		while ($response == false && is_dir($project) === true && file_exists($project . 'Config' . 'core.php')) {
 			$prompt = __d('cake_console', '<warning>A project already exists in this location:</warning> %s Overwrite?', $project);
-			$response = $this->in($prompt, array('y','n'), 'n');
+			$response = $this->in($prompt, array('y', 'n'), 'n');
 			if (strtolower($response) === 'n') {
 				$response = $project = false;
 			}
@@ -111,7 +111,7 @@ class ProjectTask extends Shell {
 				$this->out(__d('cake_console', ' * CAKE_CORE_INCLUDE_PATH set to %s in webroot/index.php', CAKE_CORE_INCLUDE_PATH));
 				$this->out(__d('cake_console', ' * CAKE_CORE_INCLUDE_PATH set to %s in webroot/test.php', CAKE_CORE_INCLUDE_PATH));
 			} else {
-				$this->err(__d('cake_console', 'Unable to set CAKE_CORE_INCLUDE_PATH, you should change it in %s', $path . 'webroot' .DS .'index.php'));
+				$this->err(__d('cake_console', 'Unable to set CAKE_CORE_INCLUDE_PATH, you should change it in %s', $path . 'webroot' . DS .'index.php'));
 				$success = false;
 			}
 			if ($success && $hardCode) {
@@ -152,7 +152,6 @@ class ProjectTask extends Shell {
  * Looks for a skeleton template of a Cake application,
  * and if not found asks the user for a path. When there is a path
  * this method will make a deep copy of the skeleton to the project directory.
- * A default home page will be added, and the tmp file storage will be chmod'ed to 0777.
  *
  * @param string $path Project path
  * @param string $skel Path to copy from
@@ -231,8 +230,8 @@ class ProjectTask extends Shell {
 		$app = basename($dir);
 		$path = $dir . 'View' . DS . 'Pages' . DS;
 		$source = CAKE . 'Console' . DS . 'Templates' . DS .'default' . DS . 'views' . DS . 'home.ctp';
-		include($source);
-		return $this->createFile($path.'home.ctp', $output);
+		include $source;
+		return $this->createFile($path . 'home.ctp', $output);
 	}
 
 /**
@@ -268,7 +267,7 @@ class ProjectTask extends Shell {
 		$contents = $File->read();
 		if (preg_match('/([\s]*Configure::write\(\'Security.salt\',[\s\'A-z0-9]*\);)/', $contents, $match)) {
 			$string = Security::generateAuthKey();
-			$result = str_replace($match[0], "\t" . 'Configure::write(\'Security.salt\', \''.$string.'\');', $contents);
+			$result = str_replace($match[0], "\t" . 'Configure::write(\'Security.salt\', \'' . $string . '\');', $contents);
 			if ($File->write($result)) {
 				return true;
 			}
@@ -282,16 +281,14 @@ class ProjectTask extends Shell {
  *
  * @param string $path Project path
  * @return boolean Success
-	 */
+ */
 	public function securityCipherSeed($path) {
 		$File = new File($path . 'Config' . DS . 'core.php');
 		$contents = $File->read();
 		if (preg_match('/([\s]*Configure::write\(\'Security.cipherSeed\',[\s\'A-z0-9]*\);)/', $contents, $match)) {
-			if (!class_exists('Security')) {
-				require CAKE . 'Utility' . DS . 'security.php';
-			}
+			App::uses('Security', 'Utility');
 			$string = substr(bin2hex(Security::generateAuthKey()), 0, 30);
-			$result = str_replace($match[0], "\t" . 'Configure::write(\'Security.cipherSeed\', \''.$string.'\');', $contents);
+			$result = str_replace($match[0], "\t" . 'Configure::write(\'Security.cipherSeed\', \'' . $string . '\');', $contents);
 			if ($File->write($result)) {
 				return true;
 			}
@@ -358,7 +355,7 @@ class ProjectTask extends Shell {
 		$File = new File($path . 'core.php');
 		$contents = $File->read();
 		if (preg_match('%(\s*[/]*Configure::write\(\'Routing.prefixes\',[\s\'a-z,\)\(]*\);)%', $contents, $match)) {
-			$result = str_replace($match[0], "\n" . 'Configure::write(\'Routing.prefixes\', array(\''.$name.'\'));', $contents);
+			$result = str_replace($match[0], "\n" . 'Configure::write(\'Routing.prefixes\', array(\'' . $name . '\'));', $contents);
 			if ($File->write($result)) {
 				Configure::write('Routing.prefixes', array($name));
 				return true;
@@ -426,6 +423,7 @@ class ProjectTask extends Shell {
 			)->addArgument('name', array(
 				'help' => __d('cake_console', 'Application directory to make, if it starts with "/" the path is absolute.')
 			))->addOption('empty', array(
+				'boolean' => true,
 				'help' => __d('cake_console', 'Create empty files in each of the directories. Good if you are using git')
 			))->addOption('skel', array(
 				'default' => current(App::core('Console')) . 'Templates' . DS . 'skel',

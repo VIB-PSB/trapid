@@ -1,11 +1,5 @@
 <?php
 /**
- * Pluralize and singularize English words.
- *
- * Used by Cake's naming conventions throughout the framework.
- *
- * PHP 5
- *
  * CakePHP(tm) : Rapid Development Framework (http://cakephp.org)
  * Copyright 2005-2011, Cake Software Foundation, Inc. (http://cakefoundation.org)
  *
@@ -41,7 +35,7 @@ class Inflector {
 			'/(quiz)$/i' => '\1zes',
 			'/^(ox)$/i' => '\1\2en',
 			'/([m|l])ouse$/i' => '\1ice',
-			'/(matr|vert|ind)(ix|ex)$/i'  => '\1ices',
+			'/(matr|vert|ind)(ix|ex)$/i' => '\1ices',
 			'/(x|ch|ss|sh)$/i' => '\1es',
 			'/([^aeiouy]|qu)y$/i' => '\1ies',
 			'/(hive)$/i' => '\1s',
@@ -144,6 +138,7 @@ class Inflector {
 			'.*[nrlm]ese', '.*deer', '.*fish', '.*measles', '.*ois', '.*pox', '.*sheep', '.*ss'
 		),
 		'irregular' => array(
+			'foes' => 'foe',
 			'waves' => 'wave',
 			'curves' => 'curve'
 		)
@@ -160,12 +155,12 @@ class Inflector {
 		'debris', 'diabetes', 'djinn', 'eland', 'elk', 'equipment', 'Faroese', 'flounder',
 		'Foochowese', 'gallows', 'Genevese', 'Genoese', 'Gilbertese', 'graffiti',
 		'headquarters', 'herpes', 'hijinks', 'Hottentotese', 'information', 'innings',
-		'jackanapes', 'Kiplingese', 'Kongoese', 'Lucchese', 'mackerel', 'Maltese', 'media',
+		'jackanapes', 'Kiplingese', 'Kongoese', 'Lucchese', 'mackerel', 'Maltese', '.*?media',
 		'mews', 'moose', 'mumps', 'Nankingese', 'news', 'nexus', 'Niasese',
 		'Pekingese', 'Piedmontese', 'pincers', 'Pistoiese', 'pliers', 'Portuguese',
 		'proceedings', 'rabies', 'rice', 'rhinoceros', 'salmon', 'Sarawakese', 'scissors',
 		'sea[- ]bass', 'series', 'Shavese', 'shears', 'siemens', 'species', 'swine', 'testes',
-		'trousers', 'trout','tuna', 'Vermontese', 'Wenchowese', 'whiting', 'wildebeest',
+		'trousers', 'trout', 'tuna', 'Vermontese', 'Wenchowese', 'whiting', 'wildebeest',
 		'Yengeese'
 	);
 
@@ -220,7 +215,7 @@ class Inflector {
 		'/Ź|Ż|Ž/' => 'Z',
 		'/ź|ż|ž/' => 'z',
 		'/Æ|Ǽ/' => 'AE',
-		'/ß/'=> 'ss',
+		'/ß/' => 'ss',
 		'/Ĳ/' => 'IJ',
 		'/ĳ/' => 'ij',
 		'/Œ/' => 'OE',
@@ -349,7 +344,6 @@ class Inflector {
  * @link http://book.cakephp.org/2.0/en/core-utility-libraries/inflector.html#Inflector::pluralize
  */
 	public static function pluralize($word) {
-
 		if (isset(self::$_cache['pluralize'][$word])) {
 			return self::$_cache['pluralize'][$word];
 		}
@@ -393,7 +387,6 @@ class Inflector {
  * @link http://book.cakephp.org/2.0/en/core-utility-libraries/inflector.html#Inflector::singularize
  */
 	public static function singularize($word) {
-
 		if (isset(self::$_cache['singularize'][$word])) {
 			return self::$_cache['singularize'][$word];
 		}
@@ -551,6 +544,7 @@ class Inflector {
 		$map = self::$_transliteration + $merge;
 		return preg_replace(array_keys($map), array_values($map), $string);
 	}
+
 }
 
 // Store the initial state

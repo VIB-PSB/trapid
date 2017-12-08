@@ -1,9 +1,5 @@
 <?php
 /**
- * CakePHP Console Shell
- *
- * PHP 5
- *
  * CakePHP(tm) : Rapid Development Framework (http://cakephp.org)
  * Copyright 2005-2011, Cake Software Foundation, Inc. (http://cakefoundation.org)
  *
@@ -16,12 +12,14 @@
  * @license       MIT License (http://www.opensource.org/licenses/mit-license.php)
  */
 
+App::uses('AppShell', 'Console/Command');
+
 /**
  * Provides a very basic 'interactive' console for CakePHP apps.
  *
  * @package       Cake.Console.Command
  */
-class ConsoleShell extends Shell {
+class ConsoleShell extends AppShell {
 
 /**
  * Available binding types
@@ -45,11 +43,11 @@ class ConsoleShell extends Shell {
 	public $models = array();
 
 /**
- * Override initialize of the Shell
+ * Override startup of the Shell
  *
  * @return void
  */
-	public function initialize() {
+	public function startup() {
 		App::uses('Dispatcher', 'Routing');
 		$this->Dispatcher = new Dispatcher();
 		$this->models = App::objects('Model');
@@ -86,7 +84,7 @@ class ConsoleShell extends Shell {
 		$out .= "\n";
 		$out .= 'To dynamically set associations, you can do the following:';
 		$out .= "\tModelA bind <association> ModelB";
-		$out .= "where the supported assocations are hasOne, hasMany, belongsTo, hasAndBelongsToMany";
+		$out .= "where the supported associations are hasOne, hasMany, belongsTo, hasAndBelongsToMany";
 		$out .= "\n";
 		$out .= 'To dynamically remove associations, you can do the following:';
 		$out .= "\t ModelA unbind <association> ModelB";
@@ -115,7 +113,7 @@ class ConsoleShell extends Shell {
 		$out .= "\n";
 		$out .= "will return something like the following:";
 		$out .= "\n";
-		$out .= "\tarray (";
+		$out .= "\tarray(";
 		$out .= "\t  [...]";
 		$out .= "\t  'controller' => 'posts',";
 		$out .= "\t  'action' => 'view',";
@@ -341,7 +339,7 @@ class ConsoleShell extends Shell {
 		Router::reload();
 		extract(Router::getNamedExpressions());
 
-		if (!@include(APP . 'Config' . DS . 'routes.php')) {
+		if (!@include APP . 'Config' . DS . 'routes.php') {
 			return false;
 		}
 		CakePlugin::routes();
@@ -357,4 +355,5 @@ class ConsoleShell extends Shell {
 		}
 		return true;
 	}
+
 }

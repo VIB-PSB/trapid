@@ -144,13 +144,49 @@ class Router {
 	protected static $_requests = array();
 
 /**
- * Initial state is popualated the first time reload() is called which is at the bottom
+ * Initial state is populated the first time reload() is called which is at the bottom
  * of this file.  This is a cheat as get_class_vars() returns the value of static vars even if they
  * have changed.
  *
  * @var array
  */
 	protected static $_initialState = array();
+
+/**
+ * Default route class to use
+ *
+ * @var string
+ */
+    protected static $_routeClass = 'CakeRoute';
+
+/**
+ * Set the default route class to use or return the current one
+ *
+ * @param string $routeClass to set as default
+ * @return mixed void|string
+ * @throws RouterException
+ */
+	public static function defaultRouteClass($routeClass = null) {
+		if (is_null($routeClass)) {
+			return self::$_routeClass;
+		}
+
+		self::$_routeClass = self::_validateRouteClass($routeClass);
+	}
+
+/**
+ * Validates that the passed route class exists and is a subclass of CakeRoute
+ *
+ * @param $routeClass
+ * @return string
+ * @throws RouterException
+ */
+	protected static function _validateRouteClass($routeClass) {
+		if (!class_exists($routeClass) || !is_subclass_of($routeClass, 'CakeRoute')) {
+			throw new RouterException(__d('cake_dev', 'Route classes must extend CakeRoute'));
+		}
+		return $routeClass;
+	}
 
 /**
  * Sets the Routing prefixes.
@@ -172,6 +208,20 @@ class Router {
  */
 	public static function getNamedExpressions() {
 		return self::$_namedExpressions;
+	}
+
+/**
+ * Resource map getter & setter.
+ *
+ * @param array $resourceMap Resource map
+ * @return mixed
+ * @see Router::$_resourceMap
+ */
+	public static function resourceMap($resourceMap = null) {
+		if ($resourceMap === null) {
+			return self::$_resourceMap;
+		}
+		self::$_resourceMap = $resourceMap;
 	}
 
 /**
@@ -233,7 +283,11 @@ class Router {
 	public static function connect($route, $defaults = array(), $options = array()) {
 		foreach (self::$_prefixes as $prefix) {
 			if (isset($defaults[$prefix])) {
-				$defaults['prefix'] = $prefix;
+				if ($defaults[$prefix]) {
+					$defaults['prefix'] = $prefix;
+				} else {
+					unset($defaults[$prefix]);
+				}
 				break;
 			}
 		}
@@ -245,16 +299,13 @@ class Router {
 		if (empty($options['action'])) {
 			$defaults += array('action' => 'index');
 		}
-		$routeClass = 'CakeRoute';
+		$routeClass = self::$_routeClass;
 		if (isset($options['routeClass'])) {
-			$routeClass = $options['routeClass'];
-			if (!is_subclass_of($routeClass, 'CakeRoute')) {
-				throw new RouterException(__d('cake_dev', 'Route classes must extend CakeRoute'));
-			}
+			$routeClass = self::_validateRouteClass($options['routeClass']);
 			unset($options['routeClass']);
-			if ($routeClass == 'RedirectRoute' && isset($defaults['redirect'])) {
-				$defaults = $defaults['redirect'];
-			}
+		}
+		if ($routeClass == 'RedirectRoute' && isset($defaults['redirect'])) {
+			$defaults = $defaults['redirect'];
 		}
 		self::$routes[] = new $routeClass($route, $defaults, $options);
 		return self::$routes;
@@ -433,7 +484,7 @@ class Router {
 				Router::connect($url,
 					array(
 						'plugin' => $plugin,
-						'controller' => $urlName, 
+						'controller' => $urlName,
 						'action' => $params['action'],
 						'[method]' => $params['method']
 					),
@@ -775,7 +826,7 @@ class Router {
 			}
 		} else {
 			if (
-				(strpos($url, '://') ||
+				(strpos($url, '://') !== false ||
 				(strpos($url, 'javascript:') === 0) ||
 				(strpos($url, 'mailto:') === 0)) ||
 				(!strncmp($url, '#', 1))
@@ -820,7 +871,7 @@ class Router {
  * @see Router::url()
  */
 	protected static function _handleNoRoute($url) {
-		$named = $args = $query = array();
+		$named = $args = array();
 		$skip = array_merge(
 			array('bare', 'action', 'controller', 'plugin', 'prefix'),
 			self::$_prefixes
@@ -847,7 +898,7 @@ class Router {
 			}
 		}
 
-		if (empty($named) && empty($args) && empty($query) && (!isset($url['action']) || $url['action'] === 'index')) {
+		if (empty($named) && empty($args) && (!isset($url['action']) || $url['action'] === 'index')) {
 			$url['action'] = null;
 		}
 
@@ -866,7 +917,7 @@ class Router {
 		$output = implode('/', $urlOut);
 
 		if (!empty($args)) {
-			$output .= '/' . implode('/', $args);
+			$output .= '/' . implode('/', array_map('rawurlencode', $args));
 		}
 
 		if (!empty($named)) {
@@ -874,15 +925,12 @@ class Router {
 				if (is_array($value)) {
 					$flattend = Set::flatten($value, '][');
 					foreach ($flattend as $namedKey => $namedValue) {
-						$output .= '/' . $name . "[$namedKey]" . self::$_namedConfig['separator'] . $namedValue;
+						$output .= '/' . $name . "[$namedKey]" . self::$_namedConfig['separator'] . rawurlencode($namedValue);
 					}
 				} else {
-					$output .= '/' . $name . self::$_namedConfig['separator'] . $value;
+					$output .= '/' . $name . self::$_namedConfig['separator'] . rawurlencode($value);
 				}
 			}
-		}
-		if (!empty($query)) {
-			$output .= Router::queryString($query);
 		}
 		return $output;
 	}
@@ -1029,15 +1077,17 @@ class Router {
  * Instructs the router to parse out file extensions from the URL. For example,
  * http://example.com/posts.rss would yield an file extension of "rss".
  * The file extension itself is made available in the controller as
- * $this->params['url']['ext'], and is used by the RequestHandler component to
+ * `$this->params['ext']`, and is used by the RequestHandler component to
  * automatically switch to alternate layouts and templates, and load helpers
- * corresponding to the given content, i.e. RssHelper.
+ * corresponding to the given content, i.e. RssHelper. Switching layouts and helpers
+ * requires that the chosen extension has a defined mime type in `CakeResponse`
  *
  * A list of valid extension can be passed to this method, i.e. Router::parseExtensions('rss', 'xml');
  * If no parameters are given, anything after the first . (dot) after the last / in the URL will be
  * parsed, excluding querystring parameters (i.e. ?q=...).
  *
  * @return void
+ * @see RequestHandler::startup()
  */
 	public static function parseExtensions() {
 		self::$_parseExtensions = true;

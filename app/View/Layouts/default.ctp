@@ -51,7 +51,7 @@
     ?>
     <div class="side-content">
         <div class="container-fluid">
-            <?php echo $content_for_layout; ?>
+            <?php echo $this->fetch('content'); ?>
             <!--<br/>
             <div style="float:right;width:105px;background-color:#B5EAAA;border:1px solid #A0C544;font-size:10px;padding:3px;margin-right:5px;">
                 Powered by <a href='http://bioinformatics.psb.ugent.be/plaza/'>PLAZA</a>

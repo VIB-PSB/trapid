@@ -18,7 +18,7 @@
  */
 
 /**
- * Mail class
+ * Send mail using mail() function
  *
  * @package       Cake.Network.Email
  */
@@ -29,6 +29,7 @@ class MailTransport extends AbstractTransport {
  *
  * @param CakeEmail $email CakeEmail
  * @return array
+ * @throws SocketException When mail cannot be sent.
  */
 	public function send(CakeEmail $email) {
 		$eol = PHP_EOL;

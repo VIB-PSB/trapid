@@ -75,7 +75,8 @@ class Sqlserver extends DboSource {
 		'host' => 'localhost\SQLEXPRESS',
 		'login' => '',
 		'password' => '',
-		'database' => 'cake'
+		'database' => 'cake',
+		'schema' => '',
 	);
 
 /**
@@ -167,14 +168,14 @@ class Sqlserver extends DboSource {
  * Returns an array of sources (tables) in the database.
  *
  * @param mixed $data
- * @return array Array of tablenames in the database
+ * @return array Array of table names in the database
  */
 	public function listSources($data = null) {
 		$cache = parent::listSources();
 		if ($cache !== null) {
 			return $cache;
 		}
-		$result = $this->_execute("SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_TYPE='BASE TABLE'");
+		$result = $this->_execute("SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES");
 
 		if (!$result) {
 			$result->closeCursor();
@@ -182,7 +183,7 @@ class Sqlserver extends DboSource {
 		} else {
 			$tables = array();
 
-			while ($line = $result->fetch()) {
+			while ($line = $result->fetch(PDO::FETCH_NUM)) {
 				$tables[] = $line[0];
 			}
 
@@ -222,7 +223,7 @@ class Sqlserver extends DboSource {
 			throw new CakeException(__d('cake_dev', 'Could not describe table for %s', $table));
 		}
 
-		foreach ($cols as $column) {
+		while ($column = $cols->fetch(PDO::FETCH_OBJ)) {
 			$field = $column->Field;
 			$fields[$field] = array(
 				'type' => $this->column($column),
@@ -260,12 +261,12 @@ class Sqlserver extends DboSource {
  * Generates the fields list of an SQL query.
  *
  * @param Model $model
- * @param string $alias Alias tablename
+ * @param string $alias Alias table name
  * @param array $fields
  * @param boolean $quote
  * @return array
  */
-	public function fields($model, $alias = null, $fields = array(), $quote = true) {
+	public function fields(Model $model, $alias = null, $fields = array(), $quote = true) {
 		if (empty($alias)) {
 			$alias = $model->alias;
 		}
@@ -302,7 +303,7 @@ class Sqlserver extends DboSource {
 						$fieldAlias = $this->name($alias . '__' . $fields[$i]);
 					} else {
 						$build = explode('.', $fields[$i]);
-						$this->_fieldMappings[$build[0] . '__' .$build[1]] = $fields[$i];
+						$this->_fieldMappings[$build[0] . '__'  . $build[1]] = $fields[$i];
 						$fieldName  = $this->name($build[0] . '.' . $build[1]);
 						$fieldAlias = $this->name(preg_replace("/^\[(.+)\]$/", "$1", $build[0]) . '__' . $build[1]);
 					}
@@ -585,6 +586,7 @@ class Sqlserver extends DboSource {
 				return parent::value($data, $column);
 		}
 	}
+
 /**
  * Returns an array of all result rows for a given SQL query.
  * Returns false if no rows matched.
@@ -607,7 +609,7 @@ class Sqlserver extends DboSource {
  * @return mixed
  */
 	public function fetchResult() {
-		if ($row = $this->_result->fetch()) {
+		if ($row = $this->_result->fetch(PDO::FETCH_NUM)) {
 			$resultRow = array();
 			foreach ($this->map as $col => $meta) {
 				list($table, $column, $type) = $meta;
@@ -644,14 +646,7 @@ class Sqlserver extends DboSource {
 			$this->_execute('SET IDENTITY_INSERT ' . $this->fullTableName($table) . ' ON');
 		}
 
-		$table = $this->fullTableName($table);
-		$fields = implode(', ', array_map(array(&$this, 'name'), $fields));
-		$this->begin();
-		foreach ($values as $value) {
-			$holder = implode(', ', array_map(array(&$this, 'value'), $value));
-			$this->_execute("INSERT INTO {$table} ({$fields}) VALUES ({$holder})");
-		}
-		$this->commit();
+		parent::insertMulti($table, $fields, $values);
 
 		if ($hasPrimaryKey) {
 			$this->_execute('SET IDENTITY_INSERT ' . $this->fullTableName($table) . ' OFF');
@@ -694,7 +689,7 @@ class Sqlserver extends DboSource {
 		foreach ($indexes as $name => $value) {
 			if ($name == 'PRIMARY') {
 				$join[] = 'PRIMARY KEY (' . $this->name($value['column']) . ')';
-			} else if (isset($value['unique']) && $value['unique']) {
+			} elseif (isset($value['unique']) && $value['unique']) {
 				$out = "ALTER TABLE {$table} ADD CONSTRAINT {$name} UNIQUE";
 
 				if (is_array($value['column'])) {
@@ -716,9 +711,6 @@ class Sqlserver extends DboSource {
  * @return string
  */
 	protected function _getPrimaryKey($model) {
-		if (!is_object($model)) {
-			$model = new Model(false, $model);
-		}
 		$schema = $this->describe($model);
 		foreach ($schema as $field => $props) {
 			if (isset($props['key']) && $props['key'] == 'primary') {
@@ -742,18 +734,19 @@ class Sqlserver extends DboSource {
 		}
 		return $affected;
 	}
+
 /**
  * Executes given SQL statement.
  *
  * @param string $sql SQL statement
  * @param array $params list of params to be bound to query (supported only in select)
  * @param array $prepareOptions Options to be used in the prepare statement
- * @return mixed PDOStatement if query executes with no problem, true as the result of a succesfull, false on error
- * query returning no rows, suchs as a CREATE statement, false otherwise
+ * @return mixed PDOStatement if query executes with no problem, true as the result of a successful, false on error
+ * query returning no rows, such as a CREATE statement, false otherwise
  */
 	protected function _execute($sql, $params = array(), $prepareOptions = array()) {
 		$this->_lastAffected = false;
-		if (strncasecmp($sql, 'SELECT', 6) == 0) {
+		if (strncasecmp($sql, 'SELECT', 6) == 0 || preg_match('/^EXEC(?:UTE)?\s/mi', $sql) > 0) {
 			$prepareOptions += array(PDO::ATTR_CURSOR => PDO::CURSOR_SCROLL);
 			return parent::_execute($sql, $params, $prepareOptions);
 		}
@@ -788,11 +781,19 @@ class Sqlserver extends DboSource {
 		$out = '';
 		foreach ($schema->tables as $curTable => $columns) {
 			if (!$table || $table == $curTable) {
-				$t =  $this->fullTableName($curTable);
 				$out .= "IF OBJECT_ID('" . $this->fullTableName($curTable, false). "', 'U') IS NOT NULL DROP TABLE " .  $this->fullTableName($curTable) . ";\n";
 			}
 		}
 		return $out;
+	}
+
+/**
+ * Gets the schema name
+ *
+ * @return string The schema name
+ */
+	public function getSchemaName() {
+		return $this->config['schema'];
 	}
 
 }

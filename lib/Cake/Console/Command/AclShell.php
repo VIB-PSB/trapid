@@ -15,6 +15,9 @@
  * @since         CakePHP(tm) v 1.2.0.5012
  * @license       MIT License (http://www.opensource.org/licenses/mit-license.php)
  */
+
+App::uses('AppShell', 'Console/Command');
+App::uses('Controller', 'Controller');
 App::uses('ComponentCollection', 'Controller');
 App::uses('AclComponent', 'Controller/Component');
 App::uses('DbAcl', 'Model');
@@ -25,7 +28,7 @@ App::uses('DbAcl', 'Model');
  *
  * @package       Cake.Console.Command
  */
-class AclShell extends Shell {
+class AclShell extends AppShell {
 
 /**
  * Contains instance of AclComponent
@@ -88,7 +91,7 @@ class AclShell extends Shell {
 			if (!in_array($this->command, array('initdb'))) {
 				$collection = new ComponentCollection();
 				$this->Acl = new AclComponent($collection);
-				$controller = null;
+				$controller = new Controller();
 				$this->Acl->startup($controller);
 			}
 		}
@@ -197,7 +200,7 @@ class AclShell extends Shell {
 		}
 		$this->out(__d('cake_console', 'Path:'));
 		$this->hr();
-		for ($i = 0; $i < count($nodes); $i++) {
+		for ($i = 0, $len = count($nodes); $i < $len; $i++) {
 			$this->_outputNode($class, $nodes[$i], $i);
 		}
 	}
@@ -215,7 +218,7 @@ class AclShell extends Shell {
 		$data = $node[$class];
 		if ($data['alias']) {
 			$this->out($indent . "[" . $data['id'] . "] " . $data['alias']);
-		 } else {
+		} else {
 			$this->out($indent . "[" . $data['id'] . "] " . $data['model'] . '.' . $data['foreign_key']);
 		}
 	}
@@ -363,8 +366,9 @@ class AclShell extends Shell {
 			'help' => __d('cake_console', 'Type of node to create.')
 		);
 
-		$parser->description(__d('cake_console', 'A console tool for managing the DbAcl'))
-			->addSubcommand('create', array(
+		$parser->description(
+			__d('cake_console', 'A console tool for managing the DbAcl')
+			)->addSubcommand('create', array(
 				'help' => __d('cake_console', 'Create a new ACL node'),
 				'parser' => array(
 					'description' => __d('cake_console', 'Creates a new ACL object <node> under the parent'),
@@ -485,7 +489,7 @@ class AclShell extends Shell {
 					)
 				)
 			))->addSubcommand('initdb', array(
-				'help' => __d('cake_console', 'Initialize the DbAcl tables. Uses this command : cake schema run create DbAcl')
+				'help' => __d('cake_console', 'Initialize the DbAcl tables. Uses this command : cake schema create DbAcl')
 			))->epilog(
 				array(
 					'Node and parent arguments can be in one of the following formats:',
@@ -511,8 +515,9 @@ class AclShell extends Shell {
 		if (!isset($this->args[0]) || !isset($this->args[1])) {
 			return false;
 		}
-		extract($this->_dataVars($this->args[0]));
-		$key = is_numeric($this->args[1]) ? $secondary_id : 'alias';
+		$dataVars = $this->_dataVars($this->args[0]);
+		extract($dataVars);
+		$key = is_numeric($this->args[1]) ? $dataVars['secondary_id'] : 'alias';
 		$conditions = array($class . '.' . $key => $this->args[1]);
 		$possibility = $this->Acl->{$class}->find('all', compact('conditions'));
 		if (empty($possibility)) {
@@ -574,12 +579,9 @@ class AclShell extends Shell {
 		if (is_string($aco)) {
 			$aco = $this->parseIdentifier($aco);
 		}
-		$action = null;
-		if (isset($this->args[2])) {
+		$action = '*';
+		if (isset($this->args[2]) && !in_array($this->args[2], array('', 'all'))) {
 			$action = $this->args[2];
-			if ($action == '' || $action == 'all') {
-				$action = '*';
-			}
 		}
 		return compact('aro', 'aco', 'action', 'aroName', 'acoName');
 	}
@@ -602,4 +604,5 @@ class AclShell extends Shell {
 		$vars['class'] = $class;
 		return $vars;
 	}
+
 }

@@ -29,6 +29,7 @@ App::uses('String', 'Utility');
  * @since  CakePHP(tm) v 2.0
  */
 class HelpFormatter {
+
 /**
  * The maximum number of arguments shown when generating usage.
  *
@@ -140,7 +141,7 @@ class HelpFormatter {
 		foreach ($this->_parser->options() as $option) {
 			$options[] = $option->usage();
 		}
-		if (count($options) > $this->_maxOptions){
+		if (count($options) > $this->_maxOptions) {
 			$options = array('[options]');
 		}
 		$usage = array_merge($usage, $options);
@@ -196,4 +197,5 @@ class HelpFormatter {
 		}
 		return $string ? $xml->asXml() : $xml;
 	}
+
 }
