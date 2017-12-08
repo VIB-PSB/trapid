@@ -1,7 +1,10 @@
 <?php
-vendor('fpdf/fpdf');
+App::import("vendor","fpdf");
+// App::import("vendor","fpdf","fpdf/fpdf.php");
+// vendor('fpdf/fpdf');
 
 if (!defined('PARAGRAPH_STRING')) define('PARAGRAPH_STRING', '~~~');
+
 
 class fpdfHelper extends FPDF {
 

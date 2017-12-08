@@ -131,7 +131,7 @@
                             if ($display_change_form) {
                                 echo "<td>";
                                 echo "<div>";
-                                echo $this->Form->create("", array("action" => "similarity_hits/" . $exp_id . "/" . $transcript_info['transcript_id'], "type" => "post"));
+                                echo $this->Form->create(false, array("action" => "similarity_hits/" . $exp_id . "/" . $transcript_info['transcript_id'], "type" => "post"));
                                 echo "<input type='hidden' name='plaza_gf_id' value='" . $plaza_gf_id . "' />";
                                 if ($trapid_gf_id != null) {
                                     echo "<input type='hidden' name='trapid_gf_id' value='" . $trapid_gf_id . "' />";

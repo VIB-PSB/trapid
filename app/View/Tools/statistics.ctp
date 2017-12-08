@@ -128,7 +128,7 @@
 	<h3>Export</h3>
 	<div class="subdiv">
 		<?php
-		echo $this->Form->create("",array("url"=>array("controller"=>"tools","action"=>"statistics/".$exp_id),
+		echo $this->Form->create(false,array("url"=>array("controller"=>"tools","action"=>"statistics/".$exp_id),
 				"type"=>"post"));
 		echo "<input type='hidden' name='export_type' value='pdf'/>\n";
 		echo "<input type='submit' class='btn btn-primary' value='PDF export' />\n";

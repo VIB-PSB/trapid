@@ -93,7 +93,7 @@
 	<div id="options_div" <?php echo $options_div_style;?> >
 	<br/>	
 	<?php
-		echo $this->Form->create("",array("action"=>"create_tree/".$exp_id."/".$gf_id,"type"=>"post"));
+		echo $this->Form->create(false,array("action"=>"create_tree/".$exp_id."/".$gf_id,"type"=>"post"));
 	?>		
 
 

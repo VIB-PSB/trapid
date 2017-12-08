@@ -31,7 +31,7 @@
                     <div>
                         <?php
                         if ($transcript_info['transcript_sequence_corrected'] != "") {
-                            echo $this->Form->create("", array("action" => "transcript/" . $exp_id . "/" . $transcript_info['transcript_id'], "type" => "post"));
+                            echo $this->Form->create(false, array("action" => "transcript/" . $exp_id . "/" . $transcript_info['transcript_id'], "type" => "post"));
                             echo "<textarea cols='80' rows='5'  name='corrected_sequence'>" . $transcript_info['transcript_sequence_corrected'] . "</textarea>\n";
                             echo "<br/>\n";
                             echo "<span>Sequence length: " . strlen($transcript_info['transcript_sequence_corrected']) . " nt</span>\n";
@@ -51,7 +51,7 @@
                     <div>
                         <?php
                         if ($transcript_info['orf_sequence'] != "") {
-                            echo $this->Form->create("", array("action" => "transcript/" . $exp_id . "/" . $transcript_info['transcript_id'], "type" => "post"));
+                            echo $this->Form->create(false, array("action" => "transcript/" . $exp_id . "/" . $transcript_info['transcript_id'], "type" => "post"));
                             echo "<textarea cols='80' rows='5' name='orf_sequence'>" . $transcript_info['orf_sequence'] . "</textarea>\n";
                             echo "<br/>\n";
                             echo "<span>Sequence length: " . strlen($transcript_info['orf_sequence']) . " nt &nbsp; / &nbsp; <a href='javascript:show_aa();'>" . (number_format(strlen($transcript_info['orf_sequence']) / 3, 0)) . " aa</a></span>\n";
@@ -135,7 +135,7 @@
                             "Full Length" => array("color" => "#000000"),
                             "Quasi Full Length" => array("color" => "#000000")
                         );
-                        echo $this->Form->create("", array("action" => "transcript/" . $exp_id . "/" . $transcript_info['transcript_id'], "type" => "post"));
+                        echo $this->Form->create(false, array("action" => "transcript/" . $exp_id . "/" . $transcript_info['transcript_id'], "type" => "post"));
                         echo "<span style='color:" . $possible_meta[$transcript_info['meta_annotation']]['color'] . "'>";
                         echo $transcript_info['meta_annotation'];
                         echo "</span>\n";
@@ -202,7 +202,7 @@
             </dl>
             <?php
             echo "<div id='all_subsets' style='display:none;'>\n";
-            echo $this->Form->create("", array("action" => "transcript/" . $exp_id . "/" . $transcript_info['transcript_id'], "type" => "post"));
+            echo $this->Form->create(false, array("action" => "transcript/" . $exp_id . "/" . $transcript_info['transcript_id'], "type" => "post"));
             echo "<input type='hidden' name='subsets' value='subsets'/>";
             echo "<table cellpadding='0' cellspacing='0' style='width:430px;'>\n";
             echo "<tr><th style='width:15%'>Include</th><th style='width:60%'>Subset</th><th>#Transcripts</th></tr>\n";

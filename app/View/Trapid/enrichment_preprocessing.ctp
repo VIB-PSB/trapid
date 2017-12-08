@@ -17,7 +17,7 @@
 	<h3>Options</h3>
 	<div class="subdiv">
 		<?php
-		echo $this->Form->create("",array("url"=>array("controller"=>"trapid","action"=>"enrichment_preprocessing",$exp_id),"type"=>"post"));
+		echo $this->Form->create(false,array("url"=>array("controller"=>"trapid","action"=>"enrichment_preprocessing",$exp_id),"type"=>"post"));
 		?>
 			<dl class="standard2">
 				<dt>Data Type</dt>

@@ -6,7 +6,7 @@
 	<div class="subdiv">
 		<?php
 		if(isset($error)){echo "<span class='error'>".$error."</span>\n";}
-		echo $this->Form->create("",array("action"=>"compare_ratios/".$exp_id."/".$type,"type"=>"post"));
+		echo $this->Form->create(false,array("action"=>"compare_ratios/".$exp_id."/".$type,"type"=>"post"));
 		echo "<dl class='standard'>";	
 		echo "<dt>Subset 1</dt>";
 		echo "<dd>";

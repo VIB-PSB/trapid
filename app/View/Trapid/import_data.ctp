@@ -29,7 +29,7 @@
             } ?>
 
             <?php
-            echo $this->Form->create("", array("controller" => "trapid", "action" => "import_data/" . $exp_id,
+            echo $this->Form->create(false, array("controller" => "trapid", "action" => "import_data/" . $exp_id,
                 "type" => "post", "enctype" => "multipart/form-data",
                 "id" => "import_data_form", "name" => "import_data_form"));
             ?>
@@ -61,7 +61,7 @@
                     echo "<span class='error'>" . $error . "</span><br/><br/>\n";
                 } ?>
                 <?php
-                echo $this->Form->create("", array("controller" => "trapid", "action" => "import_data/" . $exp_id,
+                echo $this->Form->create(false, array("controller" => "trapid", "action" => "import_data/" . $exp_id,
                     "type" => "post", "enctype" => "multipart/form-data",
                     "id" => "import_data_form", "name" => "import_data_form"));
                 ?>
@@ -108,7 +108,7 @@
     <div class="subdiv border">
         <div>
             <?php
-            echo $this->Form->create("", array("controller" => "trapid", "action" => "import_data/" . $exp_id,
+            echo $this->Form->create(false, array("controller" => "trapid", "action" => "import_data/" . $exp_id,
                 "type" => "post", "enctype" => "multipart/form-data",
                 "id" => "import_data_form", "name" => "import_data_form"));
             ?>

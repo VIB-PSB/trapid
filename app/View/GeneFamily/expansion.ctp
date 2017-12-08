@@ -19,7 +19,7 @@
 	<h3>Options</h3>
 	<div class="subdiv">
 	<?php
-		echo $this->Form->create("",array("action"=>"expansion/".$exp_id,"type"=>"post"));
+		echo $this->Form->create(false,array("action"=>"expansion/".$exp_id,"type"=>"post"));
 	?>
 	<dl class="standard">
 		<dt>Reference species</dt>

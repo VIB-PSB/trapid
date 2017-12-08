@@ -54,7 +54,7 @@
             ?>
 
             <?php
-            echo $this->Form->create("", array("url" => array("controller" => "trapid", "action" => "initial_processing", $exp_id), "type" => "post"));
+            echo $this->Form->create(false, array("url" => array("controller" => "trapid", "action" => "initial_processing", $exp_id), "type" => "post"));
             ?>
             <dl class="standard2">
                 <dt>&nbsp;</dt>

@@ -1353,9 +1353,8 @@ class TrapidController extends AppController{
     $exp_info	= $this->Experiments->getDefaultInformation($exp_id);
     $this -> set('title_for_layout', "Import transcripts");
     $this->TrapidUtils->checkPageAccess($exp_info['title'],$exp_info["process_state"],$this->process_states["start"]);
-    $this->set("exp_info",$exp_info);
-    $this->set("exp_id",$exp_id);
-
+    $this->set("exp_info", $exp_info);
+    $this->set("exp_id", $exp_id);
     //this is a basis location for creating the temp storage for an experiment.
     $tmp_dir	= TMP."experiment_data/".$exp_id."/";
     if(!file_exists($tmp_dir) || !is_dir($tmp_dir)){mkdir($tmp_dir,0777);}
@@ -1368,9 +1367,10 @@ class TrapidController extends AppController{
 
     //give an overview of the content of the directory, so the user doesn't upload the same file twice
     //$uploaded_files = $this->TrapidUtils->readDir($upload_dir);
-    $uploaded_files = $this->DataUploads->findAll(array("user_id"=>$exp_info['user_id'],"experiment_id"=>$exp_id));
+    // `Model::findAll` was removed in CakePHP 1.3
+    // $uploaded_files = $this->DataUploads->findAll(array("user_id"=>$exp_info['user_id'],"experiment_id"=>$exp_id));
+    $uploaded_files = $this->DataUploads->find('all', array('conditions' => array("user_id"=>$exp_info['user_id'],"experiment_id"=>$exp_id)));
     $this->set("uploaded_files",$uploaded_files);
-
     $uploaded_files_index = $this->TrapidUtils->indexArrayMulti($uploaded_files,"DataUploads","id",
 							array("user_id","experiment_id","type","name"));
 
@@ -1454,7 +1454,7 @@ class TrapidController extends AppController{
 	    }
 	  }
 	}
-	$this->redirect(array("controller"=>"trapid","action"=>"import_data",$exp_id));
+	$this->redirect(array("controller"=>"trapid", "action"=>"import_data", $exp_id));
       }
       //#########################################
       //     DATABASE UPLOAD

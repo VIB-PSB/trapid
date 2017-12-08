@@ -23,7 +23,7 @@ echo $this->Html->script("swfobject");
 //                        if (isset($error)) {
 //                            echo "<span class='error'>" . $error . "</span>\n";
 //                        }
-//                        echo $this->Form->create("", array("action" => "enrichment/" . $exp_id . "/" . $type, "type" => "post", "id" => "toto", "class" => "form-horizontal"));
+//                        echo $this->Form->create(false, array("action" => "enrichment/" . $exp_id . "/" . $type, "type" => "post", "id" => "toto", "class" => "form-horizontal"));
 //                        echo "<div class=\"form-group\">";
 //                        echo "<dl class='standard dl-horizontal'>";
 //                        echo "<dt>Subset</dt>";
@@ -71,7 +71,7 @@ echo $this->Html->script("swfobject");
         if (isset($error)) {
             echo "<span class='error'>" . $error . "</span>\n";
         }
-        echo $this->Form->create("", array("action" => "enrichment/" . $exp_id . "/" . $type, "type" => "post"));
+        echo $this->Form->create(false, array("action" => "enrichment/" . $exp_id . "/" . $type, "type" => "post"));
         echo "<dl class='standard dl-horizontal'>";
         echo "<dt>Subset</dt>";
         echo "<dd>";
