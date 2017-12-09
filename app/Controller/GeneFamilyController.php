@@ -1,5 +1,5 @@
 <?php
-App::import("Sanitize");
+App::uses('Sanitize', 'Utility');
 /*
  * General controller class for the trapid functionality
  */
