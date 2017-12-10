@@ -1,8 +1,6 @@
 <?php
-// TODO: scrap prototype
-//    echo $this->Html->script('prototype-1.7.0.0');
-echo $this->Html->script("canvasXpress/canvasXpress.min.js");
-echo $this->Html->script("swfobject");
+    echo $this->Html->script("canvasXpress/canvasXpress.min.js");
+    echo $this->Html->script("swfobject");
 ?>
 
 <div>
@@ -143,8 +141,6 @@ echo $this->Html->script("swfobject");
                 </script>
             </div>
         </div>
-<!--    <script type="text/javascript">-->
-<!--    </script>-->
     <?php endif; ?>
     </div>
 </div>
