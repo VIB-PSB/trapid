@@ -1,5 +1,5 @@
 <?php
-    echo $this->Html->script('prototype-1.7.0.0');
+//    echo $this->Html->script('prototype-1.7.0.0');
 	echo $this->Html->script("canvasXpress/canvasXpress.min.js");
 ?>
 
@@ -85,7 +85,7 @@
 	<div class="subdiv">	
 		<div style="float:left;width:500px;">
 <!--		<table class="table table-striped table-bordered">-->
-		<table cellspacing="0" cellpadding="0" style="width:400px;">
+		<table cellspacing="0" cellpadding="0" style="width:400px;" id="label_table">
 			<thead>
 				<th style="width:10%">Select</th>
 				<th style="width:60%">Label</th>
@@ -107,7 +107,7 @@
             </tbody>
 		</table>
 		</div>
-		<div style="float:left;width:200px;"><span style='color:red;font-weight:bold;' id='comment'></span></div>
+		<div style="float:left;width:200px;"><span class="text-danger" style='font-weight:bold;' id='comment'></span></div>
 		<div style="clear:both;width:700px;">&nbsp;</div>
 	</div>
 	
@@ -136,19 +136,134 @@
 
 	<div id="canvas_container" style="height:500px;"><canvas id="venn_canvas" width="600" height="500"></canvas></div>
 	<script type="text/javascript">
+		// Trying to get rid of prototype...
 		//<![CDATA[
 		var venn_data	= <?php echo json_encode($data_venn_js); ?>;
 		var venn_info	= <?php echo json_encode($info_venn_js); ?>;
 		var data_venn_full	= <?php echo json_encode($data_venn); ?>;
 		var fc_count	= <?php echo $fc_count;?>;
 
-
+		// Create Venn diagram if there are between 2 and 4 labels selected
 		if(fc_count>=2 && fc_count<=4){
-			new CanvasXpress("venn_canvas",venn_data,venn_info);	
-		}		
+			new CanvasXpress("venn_canvas", venn_data, venn_info);
+		}
 
-		// Trying to get rid of prototype...
-		document.observe('dom:loaded', function() {
+		function get_selected_labels(){
+            var total_checked = $('.label_select:checkbox:checked');
+            return(total_checked);
+        }
+
+        $(document).ready(function () {
+            $( "#label_table" ).change(function() {
+                var selected = get_selected_labels();
+                if (selected.length >=2 && selected.length <=4){
+                    // console.log("Update chart");
+                    $("#comment").html("");
+                    updateVennDiagram(selected);
+                }
+                else if(selected.length < 2){
+                    $("#comment").html("Too few selected labels: cannot display Venn diagram. ");
+                }
+                else{
+                    $("#comment").html("Too many selected labels: cannot display Venn diagram. ");
+                }
+            });
+            });
+
+
+        function updateVennDiagram(selected_labels){
+            var new_venn_data	= JSON.parse(JSON.stringify(venn_data));	//deep copy
+            var new_venn_info	= JSON.parse(JSON.stringify(venn_info));	//deep copy
+            // Set correct number of Venn groups
+            new_venn_info.vennGroups	= selected_labels.length;
+            // Get IDs of currently selected labels
+            selected_labels_ids = [];
+            selected_labels.each(function(){ selected_labels_ids.push(this.id); });
+            // Now update the data itself, so only selected labels are taken into account.
+            // We need to do this by updating `new_venn_data` using the full data
+            // First step, create a mapping.
+            var mapping		= new Object();
+            var possible_chars	= ["A","B","C","D"];
+            // console.log(JSON.stringify(new_venn_data.venn.legend));  // {"A":"a","B":"d","C":"b","D":"e"}
+            try{
+                delete new_venn_data.venn.legend.A;
+                delete new_venn_data.venn.legend.B;
+                delete new_venn_data.venn.legend.C;
+                delete new_venn_data.venn.legend.D;
+            }
+            catch(exc){}
+            // console.log(JSON.stringify(new_venn_data.venn.legend));  // {}
+            for(var i=0;i<selected_labels.length;i++){
+                var c	= possible_chars[i];
+                mapping[selected_labels[i].id] = c;
+                new_venn_data.venn.legend[c]	= selected_labels[i].id;
+            }
+            // console.log(JSON.stringify(new_venn_data.venn.legend));  // {"A":"d","B":"b","C":"e"}
+            var dvf		= new Object(data_venn_full);
+            var dvf_keys	= Object.keys(dvf);
+            // console.log(JSON.stringify(dvf_keys));
+            var dvf_reduc	= new Object();
+            for(var i=0;i<dvf_keys.length;i++){
+                var labels	= dvf_keys[i].split(";;;");
+                var count	= dvf[dvf_keys[i]];
+                var acc_labels	= new Array();
+                for(var j=0;j<labels.length;j++){
+                    var label	= labels[j];
+                    var index	= selected_labels_ids.indexOf(label);
+                    if(index!=-1){acc_labels.push(label);}
+                }
+                if(acc_labels.length!=0){
+                    acc_labels.sort();
+                    var label_string	= acc_labels.join(";;;");
+                    if(dvf_reduc[label_string]===undefined){
+                        dvf_reduc[label_string]=count;
+                    }
+                    else {
+                        dvf_reduc[label_string] = dvf_reduc[label_string]+count;
+                    }
+                }
+            }
+            // Clear the local venn_data cache
+            var tmp	= new Object(new_venn_data.venn.data);
+            // console.log(JSON.stringify(new_venn_data.venn.data));  // {"A":0,"B":0,"C":0,"D":0,"AB":0,"AC":0,"AD":0,"BC":0,"BD":0,"CD":0,"ABC":0,"ABD":0,"ACD":0,"BCD":0,"ABCD":0}
+            for(var i=0;i<Object.keys(tmp).length;i++){
+                var k	= Object.keys(tmp)[i];
+                // Delete new_venn_data.venn.data[k];
+                new_venn_data.venn.data[k] = 0;
+            }
+            // console.log(JSON.stringify(new_venn_data.venn.data));
+
+            // Ok, the `dvf_reduc` hash now contains the correct counts.
+            // Now we just have to generate the mapping, and then update the data.
+            for(var i=0;i<Object.keys(dvf_reduc).length;i++){
+                var key		= Object.keys(dvf_reduc)[i];
+                var labels	= key.split(";;;");
+                var count	= dvf_reduc[key];
+                var label_map	= new Array();
+                for(var j=0;j<labels.length;j++){
+                    var label	= labels[j];
+                    var c		= mapping[label];
+                    label_map.push(c);
+                }
+                label_map.sort();
+                var label_map_string	= ""+label_map.join("")+"";
+                // console.log(key+"\t"+label_map_string);  // d	A
+                new_venn_data.venn.data[label_map_string] = count;
+                // console.log(label_map_string+"\t"+count+"\t"+JSON.stringify(new_venn_data.venn.data)); // A	3	{"A":3,"B":0,"C":0,"D":0,"AB":0,"AC":0,"AD":0,"BC":0,"BD":0,"CD":0,"ABC":0,"ABD":0,"ACD":0,"BCD":0,"ABCD":0}
+            }
+            //new_venn_data.venn.data["ABC"] = 156;
+
+            $("#canvas_container").html("<canvas id='venn_canvas' width='600' height='500'></canvas>");
+
+            // console.log(JSON.stringify(new_venn_data));  // {"venn":{"data":{"A":3,"B":0,"C":4,"D":0,"AB":0,"AC":0,"AD":0,"BC":0,"BD":0,"CD":0,"ABC":3,"ABD":0,"ACD":0,"BCD":0,"ABCD":0},"legend":{"A":"d","B":"b","C":"e"}}}
+            // console.log(JSON.stringify(new_venn_info));  //  {"graphType":"Venn","vennGroups":3}
+
+            new CanvasXpress("venn_canvas", new_venn_data, new_venn_info);
+
+        }
+
+
+		 /* document.observe('dom:loaded', function() {
  	               	$$('.label_select').each(function(element) {
 				element.observe("change",function(event){
 					//count number of elements
@@ -156,7 +271,7 @@
 					var selected_labels	= new Array();
 					$$('.label_select').each(function(e){if(e.checked){count++;selected_labels.push(e.id)}});
 					if(count>=2 && count<=4){
-						$("comment").innerHTML = "";					
+						$("comment").innerHTML = "";
 						updateVennDiagram(selected_labels);
 					}
 					else if(count<2){
@@ -167,20 +282,21 @@
 					}
 				});
 			});
-		});				
+		});
+
 
 		function updateVennDiagram(selected_labels){
 			var new_venn_data	= JSON.parse(JSON.stringify(venn_data));	//deep copy
-			var new_venn_info	= JSON.parse(JSON.stringify(venn_info));	//deep copy	
-			//set correct number of Venn groups	
+			var new_venn_info	= JSON.parse(JSON.stringify(venn_info));	//deep copy
+			//set correct number of Venn groups
 			new_venn_info.vennGroups	= selected_labels.length;
 			//ok, now update the data itself, so only selected labels are taken into account.
-			//we need to do this by updating the "new_venn_data", using the full data 
+			//we need to do this by updating the "new_venn_data", using the full data
 			//first step, create a mapping.
 			var mapping		= new Hash();
 			var possible_chars	= ["A","B","C","D"];
-			
-			//alert(JSON.stringify(new_venn_data.venn.legend));
+
+			alert(JSON.stringify(new_venn_data.venn.legend));
 			try{
 				delete new_venn_data.venn.legend.A;
 				delete new_venn_data.venn.legend.B;
@@ -188,30 +304,30 @@
 				delete new_venn_data.venn.legend.D;
 			}
 			catch(exc){}
-			//alert(JSON.stringify(new_venn_data.venn.legend));
+			alert(JSON.stringify(new_venn_data.venn.legend));
 			for(var i=0;i<selected_labels.length;i++){
 				var c	= possible_chars[i];
 				mapping.set(selected_labels[i],c);
-				new_venn_data.venn.legend[c]	= selected_labels[i];					
+				new_venn_data.venn.legend[c]	= selected_labels[i];
 			}
-			//alert(JSON.stringify(new_venn_data.venn.legend));
-			var dvf		= new Hash(data_venn_full);		
+			alert(JSON.stringify(new_venn_data.venn.legend));
+			var dvf		= new Hash(data_venn_full);
 			var dvf_keys	= dvf.keys();
 			var dvf_reduc	= new Hash();
-			for(var i=0;i<dvf_keys.length;i++){	
+			for(var i=0;i<dvf_keys.length;i++){
 				var labels	= dvf_keys[i].split(";;;");
 				var count	= dvf.get(dvf_keys[i]);
 				var acc_labels	= new Array();
 				for(var j=0;j<labels.length;j++){
 					var label	= labels[j];
 					var index	= selected_labels.indexOf(label);
-					if(index!=-1){acc_labels.push(label);}	
+					if(index!=-1){acc_labels.push(label);}
 				}
 				if(acc_labels.length!=0){
 					acc_labels.sort();
 					var label_string	= acc_labels.join(";;;");
 					if(dvf_reduc.get(label_string)==undefined){dvf_reduc.set(label_string,count);}
-					else{dvf_reduc.set(label_string,dvf_reduc.get(label_string)+count);}		
+					else{dvf_reduc.set(label_string,dvf_reduc.get(label_string)+count);}
 				}
 			}
 			//clear the local venn_data cache
@@ -222,10 +338,10 @@
 				//delete new_venn_data.venn.data[k];
 				new_venn_data.venn.data[k] = 0;
 			}
-			//alert(JSON.stringify(new_venn_data.venn.data));
-			
+			alert(JSON.stringify(new_venn_data.venn.data));
+
 			//ok, the dvf_reduc hash now contains the correct counts.
-			//so now we just have to generate the mapping, and than update the data.			
+			//so now we just have to generate the mapping, and than update the data.
 			for(var i=0;i<dvf_reduc.keys().length;i++){
 				var key		= dvf_reduc.keys()[i];
 				var labels	= key.split(";;;");
@@ -236,25 +352,23 @@
 					var c		= mapping.get(label);
 					label_map.push(c);
 				}
-				label_map.sort();				
-				var label_map_string	= ""+label_map.join("")+"";	
-				//alert(key+"\t"+label_map_string);
-				new_venn_data.venn.data[label_map_string] = count;			
-				//alert(label_map_string+"\t"+count+"\t"+JSON.stringify(new_venn_data.venn.data));
+				label_map.sort();
+				var label_map_string	= ""+label_map.join("")+"";
+				alert(key+"\t"+label_map_string);
+				new_venn_data.venn.data[label_map_string] = count;
+				alert(label_map_string+"\t"+count+"\t"+JSON.stringify(new_venn_data.venn.data));
 			}
 			//new_venn_data.venn.data["ABC"] = 156;
-			
+
 			$("canvas_container").innerHTML = "<canvas id='venn_canvas' width='600' height='500'></canvas>";
-				
-			//alert(JSON.stringify(new_venn_data));
-			//alert(JSON.stringify(new_venn_info));
 
-			new CanvasXpress("venn_canvas",new_venn_data,new_venn_info);			
+			alert(JSON.stringify(new_venn_data));
+			alert(JSON.stringify(new_venn_info));
 
-		}
+			new CanvasXpress("venn_canvas",new_venn_data,new_venn_info);
 
+		}  */
 
-	
 		//]]>
 	</script>	
 	
