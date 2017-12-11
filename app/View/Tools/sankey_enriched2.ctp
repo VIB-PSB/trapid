@@ -1,6 +1,6 @@
 <?php
-    echo $this->Html->script('prototype-1.7.0.0');
-    echo $this->Html->script("canvasXpress/canvasXpress.min.js");
+//    echo $this->Html->script('prototype-1.7.0.0');
+//    echo $this->Html->script("canvasXpress/canvasXpress.min.js");
 ?>
 <div>
     <div class="page-header">
