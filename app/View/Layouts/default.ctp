@@ -11,9 +11,9 @@
     <meta http-equiv="Content-Style-Type" content="text/css">
     <?php
     echo $this->Html->script(array('jquery-3.1.1.min', 'bootstrap-3.3.7.min'));
-//     echo $this->Html->script(array('prototype-1.7.0.0','scriptaculous'));
-    // TODO: only import what is actually used from bootstrap + use minified version
-//     echo $this->Html->script(array('prototype-1.7.0.0','swfobject', 'bootstrap-3.3.7'));
+//     echo $this->Html->script(array('scriptaculous'));
+//     TODO: only import what is actually used from bootstrap + use minified version
+//     echo $this->Html->script(array('swfobject', 'bootstrap-3.3.7'));
 //     echo $this->Html->script(array('swfobject', 'bootstrap-3.3.7'));
     ?>
     <title>
