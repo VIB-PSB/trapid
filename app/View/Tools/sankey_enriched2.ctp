@@ -8,7 +8,7 @@
     </div>
 <div class="subdiv">
 	<?php echo $this->element("trapid_experiment");?>
-<h3><?php echo "$col_names[0] to $col_names[1] to $col_names[2] intersection";?></h3>
+<!--<h3>--><?php //echo "$col_names[0] to $col_names[1] to $col_names[2] intersection";?><!--</h3>-->
 <div id="sankey" class="subdiv">
 
 <?php
@@ -19,7 +19,7 @@
     echo "\nvar descriptions = " . json_encode($descriptions) .";";
     echo "\nvar label_counts = " . json_encode($counts) .";";
     echo "\nvar total_count = " .   $exp_info['transcript_count'] .";";
-    echo "var dropdown_filter_name = " . json_encode($dropdown_names) .';';
+    echo "\nvar dropdown_filter_name = " . json_encode($dropdown_names) .';';
     echo "\nvar urls = " . json_encode($urls) .";";
     echo "\nvar place_holder = '" . $place_holder ."';";
     echo "\nvar GO = '" . $GO ."';";

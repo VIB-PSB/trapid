@@ -57,7 +57,6 @@ var col_classes = ['left_col','right_col'];
 */
 
 $(document).ready(function () {
-    console.log("HELLO WAULRDDD");
     if(!GO){hide_type();}
     process_data();
     add_checkboxes();
@@ -125,7 +124,6 @@ function fill_in_dropdown(){
 /* p values are used in the filtering, filled in only once*/
 function fill_in_p_values(){
     var dropdown_elmt  = document.getElementById(p_val_id.split("#")[1]);  // Get element id (non-jQuery)
-    alert(dropdown_elmt.id);
     for(var i = 0, len = p_values.length; i < len; i++){
       dropdown_elmt.add(new Option(p_values[i], i));
     }
@@ -293,8 +291,8 @@ function determine_current_links(){
     
     var p_value = $(p_val_id + " option:selected").text();  // $(p_val_id).options[$(p_val_id).selectedIndex].text;
     var type = $(type_id + " option:selected").text();
-    var show_hidden = $(hidden_id).checked;
-    var sign = $(enrichment).selectedIndex === 0 ? 1 : -1;
+    var show_hidden = $(hidden_id).is(":checked");
+    var sign = parseInt($(enrichment_id + " option:selected").val()) === 0 ? 1 : -1;
 
 
     for(var label in checked_labels){        

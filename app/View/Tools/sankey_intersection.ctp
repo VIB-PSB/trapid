@@ -1,16 +1,11 @@
-<?php
-echo $this->Html->script('prototype-1.7.0.0');  // Prototype is still used in the sankey JS code
-echo $this->Html->script("canvasXpress/canvasXpress.min.js");
-?>
-
 <div>
     <div class="page-header">
 <h1 class="text-primary"><?php echo "$col_names[0] to $col_names[1] intersection";?></h1>
     </div>
 <div class="subdiv">
 	<?php echo $this->element("trapid_experiment");?>
-<h3><?php echo"$col_names[0] to $col_names[1] intersection";?> </h3>
-<div id="sankey" class="subdiv">
+
+    <div id="sankey" class="subdiv">
 
 <?php
     echo '<script type="text/javascript">';
