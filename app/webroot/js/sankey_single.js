@@ -19,25 +19,42 @@ function calculate_good_width(){
 document.getElementById('sankey').setAttribute("style","display:block;");
 
 
-////////// Behaviour of the refine button and fields ////////////
+/* Run everything on page loading */
+$(document).ready(function () {
+    calculate_distribution();
+    if(sankey_data.length > 20){
+        $('#refinement').css("float", "right");
+        $('#refinement').css("float", "0 0 50px 10px");
+        calculate_options();
+        fill_in_dropdown();
+    } else {
+        hide_refinement();
+    }
+    draw_sankey();
+});
 
-document.observe('dom:loaded', function(){
+
+/* Legacy prototype JS code */
+/* document.observe('dom:loaded', function(){
     calculate_distribution();
     if(sankey_data.length > 20){
         $('refinement').style.float = 'right';
-        $('refinement').style.float = '0 0 50px 10px';        
+        $('refinement').style.float = '0 0 50px 10px';
         calculate_options();
         fill_in_dropdown();
     } else {
         hide_refinement();
     }
 
-  draw_sankey();
+    draw_sankey();
 });
+*/
 
 
+////////// Behaviour of the refine button and fields ////////////
+// TODO: set up CSS classes and toggle them (cleaner than modifying the CSS from here)
 function hide_refinement(){
-    $('refinement').style.display = 'none';
+    $('#refinement').css("display", "none");
 }
 
 var column = Object.create(null);
@@ -86,26 +103,27 @@ function calculate_options(){
 }
 
 
-var dropdown_id = 'min'
+var dropdown_id = '#min';
 function fill_in_dropdown(){
     // Clear the dropdown before adding new options
-    $(dropdown_id).update();
+    $(dropdown_id).empty();
     
     // If there are no options, ask the user to select something
     if(options.length === 0){
-        $(dropdown_id).options.add(new Option('Please select labels', 0));
+        document.getElementById(dropdown_id.substring(1)).add(new Option("Please select labels", 0));
+        // $(dropdown_id).options.add(new Option('Please select labels', 0));
         return;
     }
     // Fill in the dropdown
     for(var i = 0,len = options.length; i < len; i++){
         var option_string = '>=' + options[i][0] + ' [' + options[i][1] + ' Gene families]';
-        $(dropdown_id).options.add(new Option(option_string, options[i][0]));
+        document.getElementById(dropdown_id.substring(1)).add(new Option(option_string, options[i][0]));
     }
 
-    $(dropdown_id).value = minimum_size;
+    $(dropdown_id).val(minimum_size);
 }
 
-////////// Sankey vizualization ////////////
+////////// Sankey visualization ////////////
 
 // The format of the numbers when hovering over a link or node
 var formatNumber = d3.format(",.0f"),
@@ -127,8 +145,8 @@ function draw_sankey() {
    
     var sankey_data_copy =JSON.parse(JSON.stringify(sankey_data));
     var min_flow = 0;
-    if($(dropdown_id).selectedIndex !== -1){
-        min_flow = +$(dropdown_id).options[$(dropdown_id).selectedIndex].value;
+    if(parseInt($(dropdown_id + " option:selected").val()) !== -1){
+        min_flow = +$(dropdown_id + " option:selected").val();
     }
     var links = sankey_data_copy.filter(function(link){        
         return +link[2] >= min_flow;        

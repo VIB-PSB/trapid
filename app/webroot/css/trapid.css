@@ -426,11 +426,6 @@
 	/*margin-bottom:15px;*/
 /*}*/
 
-/* Quickfix to override a behavior caused by conflict with prototype js */
-.dropdown {
-	display: inherit !important;
-}
-
 /* Leave space at the bottom of a div/section having this class ('-sm' for smaller size) */
 .page-section {
 	margin-bottom:45px;

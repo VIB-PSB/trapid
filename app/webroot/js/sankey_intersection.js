@@ -1,5 +1,32 @@
 "use strict";
 
+/* Global variables corresponding to HTML elements in the view */
+var type_id = '#type';
+var dropdown_id = '#middle_min';
+var boxes_ids = ['#left_boxes', '#right_boxes'];
+var col_classes = ['.left_col', '.right_col'];
+var normalize_id = "#normalization";
+
+// This defines if we're comparing 2 groups or just viewing a single side of the diagram
+var single_mode = false;
+var null_label = 'no_label';
+var null_label_txt = 'No label';
+
+
+/* Run everything on page loading */
+$(document).ready(function () {
+    if(!GO){hide_type();}
+    process_data();
+    add_checkboxes();
+    calculate_current_flow();
+    fill_in_dropdown();
+    draw_sankey();
+
+});
+
+
+/* Legacy prototype JS code */
+/*
 document.observe('dom:loaded', function(){
   if(!GO){hide_type();}
   process_data();
@@ -8,16 +35,13 @@ document.observe('dom:loaded', function(){
   fill_in_dropdown();
   draw_sankey();
 });
+*/
 
-// This defines if we're comparing 2 groups or just viewing a single side of the diagram
-var single_mode = false;
-var null_label = 'no label';
 
 ////////// Behaviour of the refine button and fields ////////////
-var type_id = 'type';
 function hide_type(){
     // Parent because otherwise the label stays visible.
-    $(type_id).parentElement.style.display = 'none';
+    $(type_id).parent().css("display", 'none');
 }
 
 
@@ -29,12 +53,12 @@ function middle_filter(){
 }
 
 
-var dropdown_name = 'middle_min';
-function fill_in_dropdown(){    
+function fill_in_dropdown(){
     var choice;
     var total = 0;
     var options = [];
     var used_distribution = single_mode? single_distribution : distribution;
+    var dropdown_elmt  = document.getElementById(dropdown_id.substring(1));  // Get element id without leading `#`
     for(var i = used_distribution.length - 1; i > 0; i--){
         if(typeof used_distribution[i] != 'undefined' && used_distribution[i] !== 0){
             total += used_distribution[i];
@@ -46,31 +70,31 @@ function fill_in_dropdown(){
         }
     }
     // Clear the dropdown before adding new options
-    $(dropdown_name).update();
+    $(dropdown_id).empty();
     
     // If there are no options, ask the user to select something
     if(options.length === 0){
-        $(dropdown_name).options.add(new Option("Please select labels.", 0));
+        dropdown_elmt.add(new Option("Please select labels", 0));
         return;
     }
     // show options in ascending order
     options.reverse();
 
     for(var i = 0,len = options.length; i < len; i++){
-        var option_string = ">=" + options[i][0] + " [" + options[i][1] + " " + dropdown_filter_name+ "]";
-        $(dropdown_name).options.add(new Option(option_string, options[i][0]));
+        // `dropdown_filter_name` is defined in the view itself.
+        var option_string = ">=" + options[i][0] + " [" + options[i][1] + " " + dropdown_filter_name + "]";
+        dropdown_elmt.add(new Option(option_string, options[i][0]));
     }
-    // Set a decent minimum value, if choice was never set, there aren't that many  choices so pick the first value.
+    // Set a decent minimum value, if choice was never set, there aren't that many choices so pick the first value.
     if(!choice && options.length > 0){
         choice = options[0][0];
     }
-    $(dropdown_name).value = choice;
+    $(dropdown_id).val(choice);
 }
 
-// checked_labels contain the names of all checked labels, per column
+
+// `checked_labels` contains the names of all checked labels, per column
 var checked_labels = [Object.create(null),Object.create(null)];
-var boxes_ids = ['left_boxes','right_boxes'];
-var col_classes = ['left_col','right_col'];
 function add_checkboxes(){
     names_list.sort();
 
@@ -82,23 +106,23 @@ function add_checkboxes(){
             checkbox.type = "checkbox";
             checkbox.name = n;
             checkbox.value = n;
-            checkbox.id = boxes + n;
+            checkbox.id = boxes.substring(1) + n;  // We don't want the trailing hash here either.
             checkbox.onchange = function(event){checkbox_changed(event,col)};
 
             var label = document.createElement('label');
 
             label.htmlFor = checkbox.id;
-            
+
             if(n !== null_label){
-                label.appendChild(document.createTextNode(' ' + n + ' [' + label_counts[n] + ' gene' + (label_counts[n] !== 1 ? 's] ' : '] '))); 
+                label.appendChild(document.createTextNode(' ' + n + ' [' + label_counts[n] + ' gene' + (label_counts[n] !== 1 ? 's] ' : '] ')));
              } else {
                 // To make only part of the label red & bold, otherwise the span tags are displayed.
                 label.appendChild(document.createTextNode(""));
-                label.innerHTML = ' <span class="bad_label">' + n + '</span> [' + label_counts[n] + ' gene' + (label_counts[n] !== 1 ? 's] ' : '] ');                
+                label.innerHTML = ' <span class="bad_label">' + null_label_txt + '</span> [' + label_counts[n] + ' gene' + (label_counts[n] !== 1 ? 's] ' : '] ');
             }
-            
-            
-            var container = $(boxes).select('.' + col_classes[i % 2])[0];
+
+
+            var container = $(boxes).find(col_classes[i % 2])[0];
             container.appendChild(checkbox);// Fix for IE browsers, first append, then check.
             container.appendChild(label);
             container.appendChild(document.createElement('br'));
@@ -112,34 +136,36 @@ function add_checkboxes(){
                     checked_labels[col][n] = 1;
                 } else {
                     checkbox.disabled = true;
-                    
-                }                
+
+                }
             } else {
                 // In the second column check the other labels, disable the selected_label
                 if(n === selected_label){
                     checkbox.disabled = true;
                 } else {
                     checkbox.checked = true;
-                    checked_labels[col][n] = 1;                    
+                    checked_labels[col][n] = 1;
                 }
             }
         }
     });  
 }
 
+
 function checkbox_changed(event,col){
     disable_everything();
     var chckbx = event.target;
-    // Check if it starts with left_
+    console.log(chckbx.checked);
+    // Check if it starts with `left_`
     var sibling_id;
-    if(chckbx.id.lastIndexOf('left',0) === 0){
+    if(chckbx.id.lastIndexOf('left') === 0){
         // By default javascript only replaces the first occurence, which is what we want.
         sibling_id = chckbx.id.replace('left','right');
     } else {
         sibling_id = chckbx.id.replace('right','left');
     }
     //Dis/enable the other based on the checkedness
-    $(sibling_id).disabled = chckbx.checked;
+    $("#" + sibling_id).attr("disabled", chckbx.checked);
     if(chckbx.checked){
         checked_labels[col][chckbx.name] = 1;
     } else {
@@ -168,12 +194,14 @@ function enable_everything(){
        var element = input_elements[i];
        if(element.type === 'checkbox'){
            var sibling_id;
-           if(element.id.lastIndexOf('left',0) === 0){
+           if(element.id.lastIndexOf('left') === 0){
                 sibling_id = element.id.replace('left','right');
             } else {
                 sibling_id = element.id.replace('right','left');
             }
-            element.disabled = $(sibling_id).checked;
+           element.disabled = $("#"+sibling_id).is(":checked"); // checked;
+           // Debug
+           // console.log("Element: "+element.id+" -- Sibling: "+sibling_id+" -- State: "+element.disabled);
         } else {
             element.disabled = false;
        }
@@ -191,7 +219,7 @@ function calculate_current_flow(){
     single_distribution = [];
     current_flow = Object.create(null);
 
-    var type = $(type_id).options[$(type_id).selectedIndex].text;
+    var type = $(type_id + " option:selected").text();
     checked_labels.forEach(function(labels,col){
         for(var label in labels){
             var map = per_label_mapping[label];
@@ -286,8 +314,8 @@ function process_data(){
 
 function filter_links_to_use(){
     var links = [];   
-    var min_flow = $(dropdown_name).options[$(dropdown_name).selectedIndex].value;
-    var type = $(type_id).options[$(type_id).selectedIndex].text;
+    var min_flow = $(dropdown_id + " option:selected").val();
+    var type = $(type_id + " option:selected").text();
 
     if(!single_mode){
         mapping.forEach(function(s) {
@@ -347,7 +375,7 @@ var divisors;
  * 2: Every links is divided by the total number of genes belonging to a label
  */
 function normalize_links(links){
-    var option = $('normalization').selectedIndex;
+    var option = parseInt($(normalize_id + " option:selected").val());
     switch(option){
         case 0:
             return;
@@ -552,7 +580,7 @@ function draw_sankey() {
                 target_node = d.source;
             } 
             var hover_string = label_node.name + arrow + target_node.name + "\n";
-            var option = $('normalization').selectedIndex;
+            var option = parseInt($(normalize_id + " option:selected").val());
             switch(option){
                 case 0:
                     hover_string += d.value + " gene" + (d.value !== 1 ? 's' : '');

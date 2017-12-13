@@ -29,14 +29,14 @@ var minimum_size;
 var options = [];
 
 /* HTML identifiers used to select on */
-var hidden_id = 'hidden';
-var type_id = 'type';
-var p_val_id = 'pvalue';
-var dropdown_id = 'right_min';
-var normalization_id = 'normalize';
-var enrichment_id = 'enrichment';
+var hidden_id = '#hidden';
+var type_id = '#type';
+var p_val_id = '#pvalue';
+var dropdown_id = '#right_min';
+var normalization_id = '#normalize';
+var enrichment_id = '#enrichment';
 
-var boxes = 'left_boxes';
+var boxes = '#left_boxes';
 var col_classes = ['left_col','right_col'];
 
 /* Globals defined in sankey_enriched 
@@ -56,17 +56,18 @@ var col_classes = ['left_col','right_col'];
     GO : bool
 */
 
-document.observe('dom:loaded', function(){
-  // Hide the option to filter on type when we're not dealing with GO.
-  if(!GO){hide_type();}    
-  process_data();
-  add_checkboxes();
-  fill_in_p_values();
-  calculate_current_flow();
-  fill_in_dropdown();
-  
-  draw_sankey();  
+$(document).ready(function () {
+    if(!GO){hide_type();}
+    process_data();
+    add_checkboxes();
+    fill_in_p_values();
+    calculate_current_flow();
+    fill_in_dropdown();
+
+    draw_sankey();
+
 });
+
 
 // real_width is used for layout purposes
 var margin = {top: 1, right: 1, bottom: 6, left: 1},
@@ -92,24 +93,28 @@ function calculate_good_width(){
 ////////// Behaviour of the refine button and fields ////////////
 
 function hide_type(){
+    /* If not working with GO terms, we want to hide the `Type` select element */
     // Parent because otherwise the label stays visible.
-    $(type_id).parentElement.style.display = 'none';
+    $(type_id).parent().css("display", "none");
 }
 
 
 function fill_in_dropdown(){
+    var dropdown_elmt  = document.getElementById(dropdown_id.split("#")[1]);  // Get element id
     // Clear the dropdown before adding new options
-    $(dropdown_id).update();
-    
+    // $(dropdown_id).update();
+    $(dropdown_id).empty();
+
     // If there are no options, ask the user to select something
     if(options.length === 0){
-        $(dropdown_id).options.add(new Option('Please select labels', 0));
+        // $(dropdown_id).options.add(new Option('Please select labels', 0));
+        dropdown_elmt.add(new Option('Please select labels', 0));
         return;
     }
     // Fill in the dropdown
     for(var i = 0,len = options.length; i < len; i++){
         var option_string = '>=' + options[i][0] + ' [' + options[i][1] + ' ' + dropdown_filter_name[1]+ ']';
-        $(dropdown_id).options.add(new Option(option_string, options[i][0]));
+        dropdown_elmt.add(new Option(option_string, options[i][0]));
     }
 
     $(dropdown_id).value = minimum_size;
@@ -118,8 +123,9 @@ function fill_in_dropdown(){
 
 /* p values are used in the filtering, filled in only once*/
 function fill_in_p_values(){
+    var dropdown_elmt  = document.getElementById(p_val_id.split("#")[1]);  // Get element id (non-jQuery)
     for(var i = 0, len = p_values.length; i < len; i++){
-      $(p_val_id).options.add(new Option(p_values[i], i));
+      dropdown_elmt.add(new Option(p_values[i], i));
     }
 }
 
@@ -161,22 +167,22 @@ function add_checkboxes(){
         checkbox.value = n;
         checkbox.id = boxes + n;
         checkbox.onchange = function(event){checkbox_changed(event);};
-
         var label = document.createElement('label');
 
         label.htmlFor = checkbox.id;
-        
+
         if(n !== null_label){
             label.appendChild(document.createTextNode(' ' + n + ' [' + label_counts[n] + ' gene' + (label_counts[n] !== 1 ? 's] ' : '] ')));
          } else {
             // To make only part of the label red & bold
             label.appendChild(document.createTextNode(''));
             // We can't just create a textNode with the text we want because this displays the span tags as text
-            label.innerHTML = ' <span class="bad_label">' + n + '</span> [' + label_counts[n] + ' gene' + (label_counts[n] !== 1 ? 's] ' : '] ');                
-        }            
-        
-        var container = $(boxes).select('.' + col_classes[i % 2])[0];
-        container.appendChild(checkbox);// Fix for IE browsers, first append, then check.
+            label.html(' <span class="bad_label">' + n + '</span> [' + label_counts[n] + ' gene' + (label_counts[n] !== 1 ? 's] ' : '] '));
+        }
+
+        // var container = $(boxes).select('.' + col_classes[i % 2])[0];
+        var container = $(boxes).find('.' + col_classes[i % 2])[0];
+        container.appendChild(checkbox); // Fix for IE browsers, first append, then check.
         container.appendChild(label);
         container.appendChild(document.createElement('br'));
         // Don't check the 'no label' label
@@ -283,10 +289,10 @@ function determine_current_links(){
     first_links = Object.create(null);
     second_links = Object.create(null);
     
-    var p_value = $(p_val_id).options[$(p_val_id).selectedIndex].text;
-    var type = $(type_id).options[$(type_id).selectedIndex].text;
-    var show_hidden = $(hidden_id).checked;
-    var sign = $(enrichment).selectedIndex === 0 ? 1 : -1;
+    var p_value = $(p_val_id + " option:selected").text();  // $(p_val_id).options[$(p_val_id).selectedIndex].text;
+    var type = $(type_id + " option:selected").text();
+    var show_hidden = $(hidden_id).is(":checked");
+    var sign = parseInt($(enrichment_id + " option:selected").val()) === 0 ? 1 : -1;
 
 
     for(var label in checked_labels){        
@@ -373,10 +379,9 @@ function calculate_current_flow(){
 function filter_links_to_use(){
     var links = [];
     var used_middle_nodes = Object.create(null);
-    var second_min_flow = $(dropdown_id).options[$(dropdown_id).selectedIndex].value;
-
-    // First add all links in the second mapping, keeping track of the used middle nodes, 
-    // prevents middle nodes from floating to the right when all it's targets are fiiltered out
+    var second_min_flow =  $(dropdown_id + " option:selected").val(); // $(dropdown_id).options[$(dropdown_id).selectedIndex].value;
+    // First add all links in the second mapping, keeping track of the used middle nodes,
+    // prevents middle nodes from floating to the right when all it's targets are filtered out
     for(var ident in second_links){
         var idengf = second_links[ident];
         for(var gf in idengf){
@@ -442,8 +447,7 @@ function draw_sankey() {
     var graph = {"nodes" : [], "links" : []};
     
     var good_links = filter_links_to_use();
-
-    if($(normalization_id).checked){
+    if($(normalization_id).is(":checked")){
         normalize_links(good_links);
     }
     good_links.forEach(function (d) {
@@ -562,7 +566,7 @@ function draw_sankey() {
         function create_link_hovertext(d){
             var arrow = " → "; 
             var hover_string = d.source.name + arrow + d.target.name ;
-            if($(normalization_id).checked){
+            if($(normalization_id).is(":checked")){
                 hover_string += "\n" + parseFloat(d.value).toFixed(2) + '% of genes shown';
             } else {
                 hover_string += "\n" + d.value + ' gene' + (d.value != 1 ? 's' : '');
