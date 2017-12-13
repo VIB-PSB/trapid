@@ -64,6 +64,7 @@ def get_tax_parents(nodes_tax_file, tax_ids):
     return tax_parents
 
 
+# TODO: cleaner implementation LCA function.
 def get_lca(tax_ids, tax_parents):
     """Return lowest common ancestor of a set of tax ids (`tax_ids`. The tax ids need to be present in `tax_parents`.
     Very dumb/simplistic implementation of LCA, using the list of parents produced with `get_tax_parents`.
@@ -135,7 +136,7 @@ def create_transcript_dict(kaiju_outdir):
                         # It is already there... If same length, add extra information, replace selected taxon by `None`
                         # (i.e. we need to find LCA).
                         if int(match_len) == int(transcript_dict[transcript_id]['match_len']):
-                            print transcript_id
+                            # print transcript_id
                             transcript_dict[transcript_id]['selected_taxon'] = None
                             transcript_dict[transcript_id]['match_tax_ids'] = transcript_dict[transcript_id]['match_tax_ids']|match_tax_ids
                             transcript_dict[transcript_id]['match_sqce_ids'] = transcript_dict[transcript_id]['match_sqce_ids']|match_sqce_ids
@@ -165,20 +166,25 @@ def solve_match_conflicts(transcript_dict, nodes_tax_file):
     '''
     sys.stderr.write('[' + time.strftime("%H:%M:%S") + '] Solving conflicting matches (replacement by LCA). \n')
     updated_transcript_dict = transcript_dict
-    conflicting_tax_ids = set.union(*[(transcript_dict[t]['match_tax_ids']) for t in transcript_dict if not transcript_dict[t]['selected_taxon']])
+    # Try to get 'ambiguous' taxonomic results (i.e. we need to get the LCA).
+    try:
+        conflicting_tax_ids = set.union(*[(transcript_dict[t]['match_tax_ids']) for t in transcript_dict if not transcript_dict[t]['selected_taxon']])
+        # print conflicting_tax_ids
+    except:
+        sys.stderr.write('[' + time.strftime("%H:%M:%S") + '] No conflicting matches found! \n')
+        conflicting_tax_ids = None
+    # If there were no 'ambiguities' to solve, just return `transcript_dict`
+    if not conflicting_tax_ids:
+        return transcript_dict
     # Get parents for all retrieved tax_ids.
     conflicting_tax_parents = get_tax_parents(nodes_tax_file=nodes_tax_file, tax_ids=conflicting_tax_ids)
     not_found = set([parent for parent in conflicting_tax_parents.keys() if conflicting_tax_parents[parent] is None])
-    # print conflicting_tax_parents
     # Now for each transcript for which we have a conflict, get LCA and assign it.
     for transcript_id in transcript_dict:
         if not transcript_dict[transcript_id]['selected_taxon']:
             tax_ids = transcript_dict[transcript_id]['match_tax_ids'] - not_found
             if len(tax_ids) > 0:
                 best_taxon = get_lca(tax_ids=tax_ids, tax_parents=conflicting_tax_parents)
-                if transcript_id=='TRINITY_DN10490_c0_g1_i1':
-                    print best_taxon
-                    print tax_ids
             # There are only problematic tax ids in that case... what to do?
             else:
                 sys.stderr.write("[Warning] problematic case: conflict and none of the tax_ids are in the up-to-date taxonomy. \n")
