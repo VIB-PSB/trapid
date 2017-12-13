@@ -103,6 +103,11 @@ for(my $i=0;$i<scalar(@data_content);$i++){
 	elsif($data_content[$i][0] eq "file"){
 		$file_location = $par{"upload_dir"}.$data_content[$i][1];
 	}
+
+	# Trying to fix the 'infinite upload status' issue (Gitlab issue #1)
+	# Wait before upload
+	sleep 3;  
+
 	#next step, check the file extension. If zip or gz, try to extract the content in the upload folder
 	my ($name,$path,$suffix) = fileparse($file_location,qr"\..[^.]*$");
 	#archive: unzip
@@ -115,7 +120,11 @@ for(my $i=0;$i<scalar(@data_content);$i++){
 			my $ok = $ae->extract(to=>$target_unzip_dir);
 			$file_location = $target_unzip_dir;
 		}
+		# Trying to fix the 'infinite upload status' issue (Gitlab issue #1)
+		# Wait after uncompressing file
+		sleep 2;  
 	}
+
 
 	#ok, now check the file location,if it is a file, read contents and upload to data.
 	#if it is a directory, go over the files in it, and read their content.
