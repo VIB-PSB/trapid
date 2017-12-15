@@ -98,9 +98,10 @@ my @kaiju_options        = ("-o", $par{"temp_dir"}."kaiju",
 
 my $kaiju_exec           = $kaiju_command." ".join(" ",@kaiju_options);
 print STDOUT $kaiju_exec."\n";
-system($kaiju_exec);
+#system($kaiju_exec);
 
 
+# Perform similarity search
 my $similarity_output 	= &perform_similarity_search($multi_fasta_file,$par{"temp_dir"},$par{"experiment"},
 						     $par{"blast_location"},$par{"blast_directory"},$par{"evalue"},
 						     $par{"base_script_location"});
@@ -305,17 +306,17 @@ sub perform_similarity_search($ $ $ $ $){
 	my $blast_evalue        = $_[5];
 	my $base_script_location = $_[6];
 
-	my $output_file		= $tmp_dir."rapsearch_output_".$experiment;
+	my $output_file		= $tmp_dir."diamond_output_".$experiment;
 	my $return_file		= $output_file.".m8";
 	my $align_file		= $output_file.".aln";
 
-	my $RAPSEARCH_EXECUTABLE	= $base_script_location."bin/rapsearch";
-	my $RAPSEARCH_EVALUE		= $blast_evalue;
+	my $DIAMOND_EXECUTABLE	= "diamond blastx";
+	my $DIAMOND_EVALUE		= $blast_evalue;
 
 	my $blast_dir          = $blast_location.$blast_directory;
 	print STDOUT "Used RAPSEARCH database : ".$blast_dir."\n";
 
-	my $exec_command	= $RAPSEARCH_EXECUTABLE." -q ".$multi_fasta_file." -d ".$blast_dir." -z 1 -b 0 -e ".$RAPSEARCH_EVALUE." -o ".$output_file;
+	my $exec_command	= $DIAMOND_EXECUTABLE." --query ".$multi_fasta_file." --db ".$blast_dir." --evalue 1e".$DIAMOND_EVALUE." --out ".$output_file.".m8 -p 1 -k 100 --more-sensitive --log";
 	print STDOUT $exec_command."\n";
 
 	#perform similarity search
@@ -325,4 +326,38 @@ sub perform_similarity_search($ $ $ $ $){
 	system("rm -f ".$align_file);
 
 	return $return_file;
+}
+
+
+# Legacy function for similarity search (with RapSearch)
+# Function which performs the similarity search by calling the correct external program
+sub perform_similarity_search_rapsearch($ $ $ $ $){
+    my $multi_fasta_file	= $_[0];
+    my $tmp_dir		= $_[1];
+    my $experiment		= $_[2];
+    my $blast_location	= $_[3];
+    my $blast_directory	= $_[4];
+    my $blast_evalue        = $_[5];
+    my $base_script_location = $_[6];
+
+    my $output_file		= $tmp_dir."rapsearch_output_".$experiment;
+    my $return_file		= $output_file.".m8";
+    my $align_file		= $output_file.".aln";
+
+    my $RAPSEARCH_EXECUTABLE	= $base_script_location."bin/rapsearch";
+    my $RAPSEARCH_EVALUE		= $blast_evalue;
+
+    my $blast_dir          = $blast_location.$blast_directory;
+    print STDOUT "Used RAPSEARCH database : ".$blast_dir."\n";
+
+    my $exec_command	= $RAPSEARCH_EXECUTABLE." -q ".$multi_fasta_file." -d ".$blast_dir." -z 1 -b 0 -e ".$RAPSEARCH_EVALUE." -o ".$output_file;
+    print STDOUT $exec_command."\n";
+
+    #perform similarity search
+    system($exec_command);
+
+    #remove alignment file and input multi-fasta file
+    system("rm -f ".$align_file);
+
+    return $return_file;
 }

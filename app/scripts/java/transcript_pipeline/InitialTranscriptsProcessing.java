@@ -407,7 +407,9 @@ public class InitialTranscriptsProcessing {
 			StringBuffer buff		= new StringBuffer();
 			//transcript_id -> ({hit_gene,bitscore,query_start,query_stop,perc_identity,aln_length,log_e_val})
 			for(String[] simsearch_info : simsearch_data.get(transcript_id)){
-				double e_val	= Math.pow(10,Double.parseDouble(simsearch_info[6]));
+			    // No need for the transformation anymore since DIAMOND returns raw e-values
+				// double e_val	= Math.pow(10,Double.parseDouble(simsearch_info[6]));
+				double e_val	= Double.parseDouble(simsearch_info[6]);
 				String t = simsearch_info[0]+","+e_val+","+simsearch_info[1]+","+simsearch_info[5]+","+simsearch_info[4];
 				buff.append(t+";");
 			}

@@ -209,7 +209,7 @@ class TrapidController extends AppController{
     $this->layout = "external";  // Layout for external pages (i.e. not in experiment)
     $this -> set('title_for_layout', 'Experiments overview');
 
-    $MAX_USER_EXPERIMENTS	= 10;
+    $MAX_USER_EXPERIMENTS	= 20;  // Put back to 10 when releasing
     $this->set("max_user_experiments",$MAX_USER_EXPERIMENTS);
 
     //check whether valid user id.
@@ -1201,9 +1201,14 @@ class TrapidController extends AppController{
     $data_sources = $this->DataSources->find("first",array("conditions"=>array("db_name"=>$exp_info["used_plaza_database"])));
     $clades	= $this->TrapidUtils->valueToIndexArray(explode(";",$data_sources["DataSources"]["clades"]));
     ksort($clades);
-    $species_info	= $this->TrapidUtils->checkAvailableRapsearchDB($exp_info['used_plaza_database'],$species_info);
-    $clades		= $this->TrapidUtils->checkAvailableRapsearchDB($exp_info['used_plaza_database'],$clades);
-    $gf_representatives	= $this->TrapidUtils->checkAvailableRapsearchDB($exp_info['used_plaza_database'],array("gf_representatives"=>"Genefamily representatives"));
+    // Replace RapSearch2 by DIAMOND
+    // $species_info	= $this->TrapidUtils->checkAvailableRapsearchDB($exp_info['used_plaza_database'],$species_info);
+    // $clades		= $this->TrapidUtils->checkAvailableRapsearchDB($exp_info['used_plaza_database'],$clades);
+    // $gf_representatives	= $this->TrapidUtils->checkAvailableRapsearchDB($exp_info['used_plaza_database'],array("gf_representatives"=>"Genefamily representatives"));
+    $species_info	= $this->TrapidUtils->checkAvailableDiamondDB($exp_info['used_plaza_database'],$species_info);
+    $clades		= $this->TrapidUtils->checkAvailableDiamondDB($exp_info['used_plaza_database'],$clades);
+    $gf_representatives	= $this->TrapidUtils->checkAvailableDiamondDB($exp_info['used_plaza_database'],array("gf_representatives"=>"Genefamily representatives"));
+
 
     $this->set("available_species",$species_info);
     $this->set("clades_species",$clades);
@@ -1224,6 +1229,8 @@ class TrapidController extends AppController{
     $this->set("possible_gf_types",$possible_gf_types);
 
     //possible e-values
+    // Note: technically not true, as using evalue `-x` in RapSearch will put the threshold value at x = log10(e-value threshold).
+    // So the real threshold is rather 1e-x, not 10e-x
     $possible_evalues	= array("10e-2"=>"-2","10e-3"=>"-3","10e-4"=>"-4",
 				"10e-5"=>"-5","10e-6"=>"-6","10e-7"=>"-7",
 				"10e-8"=>"-8","10e-9"=>"-9","10e-10"=>"-10");

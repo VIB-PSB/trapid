@@ -154,6 +154,7 @@
             <li class="sidebar-text sidebar-disabled">Statistics</li>
             <li class="sidebar-text sidebar-disabled">Taxonomic binning</li>
             <li class="sidebar-text sidebar-disabled">Browse gene families</li>
+            <li class="sidebar-text sidebar-disabled">Core GF completeness</li>
             <li class="sidebar-text sidebar-disabled">Expanded/depleted GFs</li>
         <?php else :
             // Transcripts uploaded == 'statistics' + GFs available ?>
