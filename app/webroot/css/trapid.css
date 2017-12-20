@@ -1330,6 +1330,13 @@ body {
 	border:1px solid #aaaaaa;
 }
 
+
+/* Core GF completeness */
+.result_link {
+	cursor: pointer;
+}
+
+
 /* Lots of ugly borders: useful for debugging when things are not displayed as expected */
 
 /*body {*/

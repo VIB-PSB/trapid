@@ -1914,10 +1914,17 @@ function label_go_intersection($exp_id=null,$label=null){
         $this->set("exp_info",$exp_info);
         $this->set("active_sidebar_item", "Core GF");
         $this->set("exp_id",$exp_id);
-        $this -> set('title_for_layout', 'Core GF completeness module');
+        $this -> set('title_for_layout', 'Core GF completeness');
 
         // Get all previously run core GF analyses
-        $previous_completeness_jobs = $this->CompletenessResults->find("all", array("conditions"=>array("experiment_id"=>$exp_id), "fields"=>array("clade_txid", "used_method", "label", "completeness_score")));
+        $previous_completeness_jobs = $this->CompletenessResults->find("all", array("conditions"=>array("experiment_id"=>$exp_id), "fields"=>array("id", "clade_txid", "used_method", "label", "completeness_score")));
+        // Get name corresponding to tax_ids for proper display
+        foreach($previous_completeness_jobs as &$completeness_job){
+            $tax_id = $completeness_job["CompletenessResults"]['clade_txid'];
+            $tax_name = $this->FullTaxonomy->find("first", array("fields"=>array("scname"), "conditions"=>array("txid"=>$tax_id)));
+            $tax_name = $tax_name["FullTaxonomy"]["scname"];
+            $completeness_job["CompletenessResults"]['clade_name'] =  $tax_name;
+        }
         $this->set("previous_completeness_jobs", $previous_completeness_jobs);
 
         // Get transcript labels to populate submission form
@@ -1930,25 +1937,68 @@ function label_go_intersection($exp_id=null,$label=null){
             $current_job_number = $this->ExperimentJobs->getNumJobs($exp_id);
 //            if($current_job_number>=MAX_CLUSTER_JOBS){$this->redirect(array("controller"=>"gene_family","action"=>"gene_family",$exp_id,$gf_id));}
 
-            if($_POST){
-                $tmp_dir	= TMP."experiment_data/".$exp_id."/";
-
-                $qsub_file		= $this->TrapidUtils->create_qsub_script($exp_id);
-                $shell_file      		= $this->TrapidUtils->create_shell_script_completeness($exp_id);
-                if($shell_file == null || $qsub_file == null ){$this->set("error","problem creating program files");return;}
-                $qsub_out	= $tmp_dir."core_gf_completeness_".$exp_id.".out";
-                $qsub_err	= $tmp_dir."core_gf_completeness_".$exp_id.".err";
+            if($this->request->is('post')){
+                pr($this->request->data);
+                pr($this->request->data);
+                $clade_tax_id = $this->request->data['clade'];
+                $clade_db = $this->FullTaxonomy->find("first",array("conditions"=>array("txid"=>$clade_tax_id)));
+                // If clade not in `full_taxonomy`, do not launch job and return error message.
+                if(empty($clade_db)){
+                    $this->set("error","Invalid phylogenetic clade: '".$clade_tax_id."'.");return;
+                }
+                $transcript_label = "None";
+                if($this->request->data['transcripts-choice'] != "all"){
+                    $transcript_label = $this->request->data['transcripts-choice'];
+                }
+                $tax_source = "json";
+                if($this->request->data['tax-radio-ncbi'] == "on") {
+                    $tax_source = "ncbi";
+                }
+                // More checks to come ...
+                $species_perc = $this->request->data['species-perc'];
+                $top_hits = $this->request->data['top-hits'];
+                // Create and launch job
+                $tmp_dir = TMP."experiment_data/".$exp_id."/";
+                $completeness_dir		= $tmp_dir."completeness/";
+                $qsub_file = $this->TrapidUtils->create_qsub_script($exp_id);
+                $shell_file = $this->TrapidUtils->create_shell_script_completeness(
+                    $clade_tax_id,  // Clade tax id
+                    $exp_id,  // Experiment ID
+                    $transcript_label,  // Transcript label. 'None' if all transcripts were chosen.
+                    $species_perc, // `species_perc` (threshold to consider what is a core GF or not)
+                    $top_hits, // `tax_source` (can only be 'ncbi' for now
+                    $tax_source // `top_hits`, the number of top gits (by query) used for the core GF completeness analysis.
+                );
+                if($shell_file == null || $qsub_file == null ){$this->set("error","Problem creating program files. ");return;}
+                $qsub_out = $completeness_dir."core_gf_completeness_".$exp_id."_".$clade_tax_id."_sp".$species_perc."_th".$top_hits.".out";
+                $qsub_err = $completeness_dir."core_gf_completeness_".$exp_id."_".$clade_tax_id."_sp".$species_perc."_th".$top_hits.".err";
                 if(file_exists($qsub_out)){unlink($qsub_out);}
                 if(file_exists($qsub_err)){unlink($qsub_err);}
                 $command  	= "sh $qsub_file -q short -o $qsub_out -e $qsub_err $shell_file";
                 $output		= array();
                 exec($command,$output);
+                $cluster_job	= $this->TrapidUtils->getClusterJobId($output);
+                // Add job to the cluster queue, and then redirect the entire program.
+                $this->ExperimentJobs->addJob($exp_id, $cluster_job, "short", "core_gf_completeness ".$clade_tax_id);
+                $this->ExperimentLog->addAction($exp_id, "core_gf_completeness_".$clade_tax_id);
+//                $this->set("run_pipeline",true);
                 // Dummy redirect, just to test
-                $this->redirect(array("controller"=>"documentation", "action"=>"index"));
+//                $this->redirect(array("controller"=>"documentation", "action"=>"index"));
+
             }
     }
 
-
+    // TODO (more 'to think'): create a function to get the `id` field of the DB (and then just have to load that) or keep all parameters in URL? What is best?
+    // Load results of a core GF analysis. Clade + subset + method (top hits + species percent) gives a unique id
+    function load_core_gf_completeness($exp_id, $clade_tax_id, $label, $tax_source, $species_perc, $top_hits){
+        parent::check_user_exp($exp_id);
+        $this->layout = "";
+        $completeness_job = $this->CompletenessResults->find("first", array("conditions"=>array("experiment_id"=>$exp_id,
+            "clade_txid"=>$clade_tax_id, "label"=>$label,
+            "used_method"=>"sp=".$species_perc.";ts=".$tax_source.";th=".$top_hits)));
+        pr($completeness_job);
+        $this->set("identifier", "fffffff");
+    }
 
 
 
