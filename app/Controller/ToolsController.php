@@ -14,15 +14,16 @@ class ToolsController extends AppController{
   "DataSources",
   "Transcripts",
   "GeneFamilies",
-	"TranscriptsGo",
+  "TranscriptsGo",
   "TranscriptsInterpro",
   "TranscriptsLabels",
   "ExperimentLog",
-	"ExperimentJobs",
+  "ExperimentJobs",
   "FunctionalEnrichments",
   "FullTaxonomy",
+  "CompletenessResults",
   // Reference db
-	"AnnotSources",
+  "AnnotSources",
   "Annotation",
   "ExtendedGo",
   "ProteinMotifs",
@@ -1899,6 +1900,56 @@ function label_go_intersection($exp_id=null,$label=null){
         $this->set("krona_code", $json_string);
         $this->render('tax_binning_krona');
     }
+
+
+
+
+    /* Core GF completeness analysis controllers */
+
+    function core_gf_completeness($exp_id=null){
+        if(!$exp_id){$this->redirect(array("controller"=>"trapid","action"=>"experiments"));}
+        $exp_id	= mysql_real_escape_string($exp_id);
+        parent::check_user_exp($exp_id);
+        $exp_info	= $this->Experiments->getDefaultInformation($exp_id);
+        $this->set("exp_info",$exp_info);
+        $this->set("active_sidebar_item", "Core GF");
+        $this->set("exp_id",$exp_id);
+        $this -> set('title_for_layout', 'Core GF completeness module');
+
+        // Get all previously run core GF analyses
+        $previous_completeness_jobs = $this->CompletenessResults->find("all", array("conditions"=>array("experiment_id"=>$exp_id), "fields"=>array("clade_txid", "used_method", "label", "completeness_score")));
+        $this->set("previous_completeness_jobs", $previous_completeness_jobs);
+
+        // Get transcript labels to populate submission form
+        $subsets = $this->TranscriptsLabels->getLabels($exp_id);
+        $this->set("subsets", $subsets);
+
+
+        // Check whether the number of jobs in the queue for this experiment has not been reached.
+        // If there are already too many jobs running, it should not be possible to submit a new job
+            $current_job_number = $this->ExperimentJobs->getNumJobs($exp_id);
+//            if($current_job_number>=MAX_CLUSTER_JOBS){$this->redirect(array("controller"=>"gene_family","action"=>"gene_family",$exp_id,$gf_id));}
+
+            if($_POST){
+                $tmp_dir	= TMP."experiment_data/".$exp_id."/";
+
+                $qsub_file		= $this->TrapidUtils->create_qsub_script($exp_id);
+                $shell_file      		= $this->TrapidUtils->create_shell_script_completeness($exp_id);
+                if($shell_file == null || $qsub_file == null ){$this->set("error","problem creating program files");return;}
+                $qsub_out	= $tmp_dir."core_gf_completeness_".$exp_id.".out";
+                $qsub_err	= $tmp_dir."core_gf_completeness_".$exp_id.".err";
+                if(file_exists($qsub_out)){unlink($qsub_out);}
+                if(file_exists($qsub_err)){unlink($qsub_err);}
+                $command  	= "sh $qsub_file -q short -o $qsub_out -e $qsub_err $shell_file";
+                $output		= array();
+                exec($command,$output);
+                // Dummy redirect, just to test
+                $this->redirect(array("controller"=>"documentation", "action"=>"index"));
+            }
+    }
+
+
+
 
 
 

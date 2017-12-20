@@ -1201,6 +1201,35 @@ class TrapidUtilsComponent extends Component{
   }
 
 
+  /* Core GF completeness -- everything hardcoded now, just trying to get something submitted to the cluster  */
+    function create_shell_script_completeness($exp_id){
+        $base_scripts_location	= APP."scripts/";
+        $tmp_dir			= TMP."experiment_data/".$exp_id."/";
+        $completeness_dir		= $tmp_dir."completeness/";
+        if(!(file_exists($completeness_dir) && is_dir($completeness_dir))){
+            mkdir($completeness_dir);
+            shell_exec("chmod a+rw ".$completeness_dir);
+        }
+//        shell_exec("rm -rf ".$completeness_dir."*");
+        $necessary_modules		= array("python/x86_64/2.7.2");
+        // create actual shell script file
+        $shell_file			= $completeness_dir."run_core_gf_completeness_".$exp_id.".sh";
+        $fh				= fopen($shell_file,"w");
+        fwrite($fh,"#Loading necessary modules\n");
+        foreach($necessary_modules as $nm){
+            fwrite($fh,"module load ".$nm." \n");
+        }
+        //           TRAPID_DB_SERVER,TRAPID_DB_NAME,TRAPID_DB_USER,TRAPID_DB_PASSWORD,
+
+        fwrite($fh,"\n#DB_PWD environment variable.\nexport DB_PWD='".TRAPID_DB_PASSWORD."'\n");
+        fwrite($fh,"\n#Launching python wrapper for core GF analysis from TRAPID, with correct parameters. \n");
+        $program_location		= $base_scripts_location."python/run_core_gf_analysis_trapid.py";
+        $command_line		= "python ".$program_location;  // ." ".implode(" ",$parameters);
+        fwrite($fh,$command_line."\n");
+        fclose($fh);
+        shell_exec("chmod a+x ".$shell_file);
+        return $shell_file;
+    }
 
 
 
