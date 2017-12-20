@@ -23,6 +23,8 @@ from get_core_gfs import ResultIter, connect_to_db
 
 
 TIMESTAMP = time.strftime('%Y_%m_%d_%H%M%S')  # Get timestamp (for default output directory name)
+# Forced to define $DB_PWD here since it seems impossible to use environment variable on the web cluster
+os.environ["DB_PWD"] = "@Z%28ZwABf5pZ3jMUz"
 
 # Command-line arguments
 cmd_parser = argparse.ArgumentParser(
@@ -77,7 +79,7 @@ def read_trapid_data(db_conn, experiment_id, top_hits, transcript_label=None):
     `top_hits` is used here to avoid retrieveing more results than necessary. """
     sys.stderr.write('[' + time.strftime("%H:%M:%S") + '] Retrieving similarity search data from TRAPID database.\n')
     sim_list= []
-    if transcript_label:
+    if transcript_label not in [None, "None"]:  # Quickfix (ambiguity between None, and 'None' str).
         get_sim_data_query = "SELECT sim.transcript_id, sim.similarity_data " \
                              "FROM similarities sim INNER JOIN transcripts_labels tl " \
                              "ON sim.transcript_id = tl.transcript_id " \
@@ -157,6 +159,7 @@ def main(output_dir, trapid_db_name, trapid_db_user, trapid_db_host, experiment_
     # 2. Connect to TRAPID database, retrieve similarity search data and used reference database.
     db_trapid = connect_to_db(db_user=trapid_db_user, db_name=trapid_db_name, db_host=trapid_db_host)
     trapid_df = read_trapid_data(db_conn=db_trapid, experiment_id=experiment_id, top_hits=top_hits, transcript_label=transcript_label)
+    print trapid_df
     ref_db_name = get_ref_db_name(db_conn=db_trapid, experiment_id=experiment_id)
 
     # 3. Retrieve core GFs from reference database and create core GFs file.
