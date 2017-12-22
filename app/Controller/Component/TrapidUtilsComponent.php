@@ -1215,7 +1215,7 @@ class TrapidUtilsComponent extends Component{
         shell_exec("rm -rf ".$completeness_dir."*");
         $necessary_modules		= array("python/x86_64/2.7.2");
         // create actual shell script file
-        $shell_file = $completeness_dir."core_gf_completeness_".$exp_id."_".$clade_tax_id."_sp".$species_perc."_th".$top_hits.".sg";
+        $shell_file = $completeness_dir."core_gf_completeness_".$exp_id."_".$clade_tax_id."_sp".$species_perc."_th".$top_hits.".sh";
         $fh				= fopen($shell_file,"w");
         fwrite($fh,"# Loading necessary modules\n");
         foreach($necessary_modules as $nm){

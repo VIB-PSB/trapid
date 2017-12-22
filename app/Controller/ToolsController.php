@@ -1936,15 +1936,17 @@ function label_go_intersection($exp_id=null,$label=null){
         // If there are already too many jobs running, it should not be possible to submit a new job
             $current_job_number = $this->ExperimentJobs->getNumJobs($exp_id);
 //            if($current_job_number>=MAX_CLUSTER_JOBS){$this->redirect(array("controller"=>"gene_family","action"=>"gene_family",$exp_id,$gf_id));}
-
+            // Submission of new core GF completeness job.
             if($this->request->is('post')){
-                pr($this->request->data);
-                pr($this->request->data);
+                // pr($this->request->data);
                 $clade_tax_id = $this->request->data['clade'];
                 $clade_db = $this->FullTaxonomy->find("first",array("conditions"=>array("txid"=>$clade_tax_id)));
                 // If clade not in `full_taxonomy`, do not launch job and return error message.
                 if(empty($clade_db)){
-                    $this->set("error","Invalid phylogenetic clade: '".$clade_tax_id."'.");return;
+                    // To change (does not look clean). Move to 'job handling' function?
+                    $this->autoRender=false;
+                    return "Invalid clade, try again. ";
+//                    $this->set("error","Invalid phylogenetic clade: '".$clade_tax_id."'.");return;
                 }
                 $transcript_label = "None";
                 if($this->request->data['transcripts-choice'] != "all"){
@@ -1979,13 +1981,21 @@ function label_go_intersection($exp_id=null,$label=null){
                 exec($command,$output);
                 $cluster_job	= $this->TrapidUtils->getClusterJobId($output);
                 // Add job to the cluster queue, and then redirect the entire program.
-                $this->ExperimentJobs->addJob($exp_id, $cluster_job, "short", "core_gf_completeness ".$clade_tax_id);
-                $this->ExperimentLog->addAction($exp_id, "core_gf_completeness_".$clade_tax_id);
+//                $this->ExperimentJobs->addJob($exp_id, $cluster_job, "short", "core_gf_completeness ".$clade_tax_id);
+//                $this->ExperimentLog->addAction($exp_id, "core_gf_completeness_".$clade_tax_id);
 //                $this->set("run_pipeline",true);
                 // Dummy redirect, just to test
-//                $this->redirect(array("controller"=>"documentation", "action"=>"index"));
-
+                $this->redirect(array("controller"=>"tools", "action"=>"handle_core_gf_completeness", $exp_id, $cluster_job, $clade_tax_id, $transcript_label, $tax_source, $species_perc, $top_hits));
             }
+    }
+
+
+    // Wait for cluster job to finish. Once it is over, redirect to `load_core_gf_completeness`
+    function handle_core_gf_completeness($exp_id, $cluster_job_id, $clade_tax_id, $label, $tax_source, $species_perc, $top_hits) {
+        parent::check_user_exp($exp_id);
+        $this->autoRender=false;
+        $this->TrapidUtils->waitfor_cluster($exp_id, $cluster_job_id, 180, 5);
+        $this->redirect(array("controller"=>"tools", "action"=>"load_core_gf_completeness", $exp_id,  $clade_tax_id, $label, $tax_source, $species_perc, $top_hits));
     }
 
     // TODO (more 'to think'): create a function to get the `id` field of the DB (and then just have to load that) or keep all parameters in URL? What is best?
@@ -1993,11 +2003,49 @@ function label_go_intersection($exp_id=null,$label=null){
     function load_core_gf_completeness($exp_id, $clade_tax_id, $label, $tax_source, $species_perc, $top_hits){
         parent::check_user_exp($exp_id);
         $this->layout = "";
+        // Set clade tax name
+        $tax_name = $this->FullTaxonomy->find("first", array("fields"=>array("scname"), "conditions"=>array("txid"=>$clade_tax_id)));
+        $tax_name = $tax_name["FullTaxonomy"]["scname"];
+        // Retrieve data from database
         $completeness_job = $this->CompletenessResults->find("first", array("conditions"=>array("experiment_id"=>$exp_id,
             "clade_txid"=>$clade_tax_id, "label"=>$label,
             "used_method"=>"sp=".$species_perc.";ts=".$tax_source.";th=".$top_hits)));
-        pr($completeness_job);
-        $this->set("identifier", "fffffff");
+//        pr($completeness_job);
+        // Count number of missing/represented GFs. Done this way:
+        // get length of strings: if 0, return 0, otherwise give the length of string splitted by `;`
+        $n_missing = strlen($completeness_job['CompletenessResults']['missing_gfs']) ? sizeof(explode(";", $completeness_job['CompletenessResults']['missing_gfs'])) : 0;
+        $n_represented = strlen($completeness_job['CompletenessResults']['represented_gfs']) ? sizeof(explode(";", $completeness_job['CompletenessResults']['represented_gfs'])) : 0;
+//        pr(explode(";", $completeness_job['CompletenessResults']['represented_gfs']));
+        $n_total = $n_missing + $n_represented;
+        $missing_gfs_array = array();
+        $represented_gfs_array = array();
+        if($n_missing > 0) {
+            foreach (explode(";", $completeness_job['CompletenessResults']['missing_gfs']) as $missing_gf_str) {
+                $record = explode(":", $missing_gf_str);
+                array_push($missing_gfs_array, array("gf_id" => $record[0], "n_genes" => $record[1], "n_species" => $record[2], "gf_weight" => $record[3]));
+            }
+//            pr($missing_gfs_array);
+        }
+        if($n_represented > 0) {
+            foreach (explode(";", $completeness_job['CompletenessResults']['represented_gfs']) as $represented_gf_str) {
+                $record = explode(":", $represented_gf_str);
+                array_push($represented_gfs_array, array("gf_id" => $record[0], "n_genes" => $record[1], "n_species" => $record[2], "gf_weight" => $record[3], "queries"=> $record[4]));
+            }
+//            pr($represented_gfs_array);
+        }
+
+        // Set all variables used in the view
+        // TODO: find a way to NOT load all the data at once (will be particularly relevant when working with larger quantities of data ,i.e. EggNOG)
+        $this->set("label", $label);
+        $this->set("tax_name", $tax_name);
+        $this->set("n_missing", $n_missing);
+        $this->set("n_represented", $n_represented);
+        $this->set("n_total", $n_total);
+        $this->set("completeness_score", $completeness_job['CompletenessResults']['completeness_score']);
+        $this->set("missing_gfs_array", $missing_gfs_array);
+        $this->set("represented_gfs_array", $represented_gfs_array);
+        $this->set("species_perc", $species_perc);
+        $this->set("top_hits", $top_hits);
     }
 
 
@@ -2005,7 +2053,7 @@ function label_go_intersection($exp_id=null,$label=null){
 
   /*
    * Cookie setup:
-   * The entire TRAPID websit is based on user-defined data sets, and as such a method for
+   * The entire TRAPID website is based on user-defined data sets, and as such a method for
    * account handling and user identification is required.
    *
    * The 'beforeFilter' method is executed BEFORE each method, and as such ensures that the necessary

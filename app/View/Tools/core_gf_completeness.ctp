@@ -28,7 +28,7 @@
             echo "</div>";
             }
             ?>
-            <?php echo $this->Form->create(false, array("action" => "core_gf_completeness/" . $exp_id, "type" => "post")); ?>
+            <?php echo $this->Form->create(false, array("action" => "core_gf_completeness/" . $exp_id, "type" => "post", "default"=>"false", "id"=>"completeness-form")); ?>
 
             <div class="row">
                 <div class="col-lg-4">
@@ -80,7 +80,7 @@
                                     <div class="form-group">
                                         <label for="top-hits"><strong>Top hits</strong></label>
                                         <input class="form-control" id="top-hits" max="10" min="1" name="top-hits"
-                                               step="0.01" value="5" required type="number">
+                                               step="1" value="5" required type="number">
                                     </div>
                                 </div>
                                 <div class="col-md-4">
@@ -103,7 +103,7 @@
             </div> <!-- end .row -->
             <!-- Form submission -->
             <p class="text-center">
-                <input type="submit" class="btn btn-primary" value="Run analysis"/>
+                <input type="submit" class="btn btn-primary" id="completeness-submit" value="Run analysis"/>
                 | <a style="cursor: pointer;" onclick="alert('Reset not implemented yet');">Reset all</a>
 
             </p>
@@ -158,38 +158,68 @@
         <?php endif ?>
     </div>
     <br>
-    <div id="display-results" style="border: 1px red solid;"></div>
+    <div id="loading" style="display:none;">
+        <p class="text-center">
+        <img src="https://loading.io/spinners/fidget-spinner/lg.fidget-spinner.gif" style="width: 50px;"><br>
+        Spinning ...
+        </p>
+    </div>
+    <div id="display-results"></div>
 </div>
 
 <script type="text/javascript">
-    // Load completeness data when user clicks on a result link
+    // Load completeness data when user clicks on a result link ('previous jobs' table)
     $(function() {
         // Text areas id, as JS vars
         var display_div_id = "#display-results";
-        $(".result_link").click(function() {
+        var sub_form_id = "#completeness-form";
+        $(".result_link").click(function () {
             var param_list = $(this).attr("id").split("_").slice(1);
-            var ajax_url =  "<?php echo $this->Html->url(array("controller"=>"tools","action"=>"load_core_gf_completeness")) . "/" . $exp_id . "/"; ?>" + param_list.join('/');
+            var ajax_url = "<?php echo $this->Html->url(array("controller" => "tools", "action" => "load_core_gf_completeness")) . "/" . $exp_id . "/"; ?>" + param_list.join('/');
             // Load data!
             $.ajax({
                 type: "GET",
                 url: ajax_url,
                 contentType: "application/json;charset=UTF-8",
-                success: function(data) {
+                success: function (data) {
                     // alert("Success! ");
                     $(display_div_id).hide().html(data).fadeIn();
                     document.querySelector(display_div_id).scrollIntoView({
                         behavior: 'smooth'
                     });
                 },
-                error: function() {
+                error: function () {
                     // alert("Failure - Unable to retrieve transcripts count. ");
                     console.log("Failure - Unable to retrieve data for this core GF completeness analysis. ");
                 },
-                complete: function() {
+                complete: function () {
                     // Debug
                     // console.log(display_div_id);
                     // console.log(param_list);
                     // console.log(ajax_url);
+                }
+            });
+        });
+        $(sub_form_id).submit(function (e) {
+            console.log("Completeness job form was submitted! ");
+            $("#loading").css("display", "block");
+            $("#completeness-submit").attr("disabled", true);
+            e.preventDefault();
+            $.ajax({
+                url: "<?php echo $this->Html->url(array("controller" => "tools", "action" => "core_gf_completeness", $exp_id), array("escape" => false)); ?>",
+                type: 'POST',
+                data: $(this).serialize(),
+                dataType: 'html',
+                success: function (data) {
+                    $("#loading").css("display", "none");
+                    $("#completeness-submit").attr("disabled", false);
+                    $(display_div_id).fadeOut('slow', function () {
+                        $(display_div_id).hide().html(data).fadeIn();
+                        document.querySelector(display_div_id).scrollIntoView({behavior: 'smooth'});
+                    });
+                },
+                error: function () {
+                    alert('Unable to submit completeness job!');
                 }
             });
         });
