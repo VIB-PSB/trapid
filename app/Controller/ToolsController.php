@@ -1933,9 +1933,9 @@ function label_go_intersection($exp_id=null,$label=null){
 
 
         // Check whether the number of jobs in the queue for this experiment has not been reached.
-        // If there are already too many jobs running, it should not be possible to submit a new job
+        // If there are already too many jobs running, it should not be possible to submit a new job (TODO).
             $current_job_number = $this->ExperimentJobs->getNumJobs($exp_id);
-//            if($current_job_number>=MAX_CLUSTER_JOBS){$this->redirect(array("controller"=>"gene_family","action"=>"gene_family",$exp_id,$gf_id));}
+            // if($current_job_number>=MAX_CLUSTER_JOBS){$this->redirect(array("controller"=>"gene_family","action"=>"gene_family",$exp_id,$gf_id));}
             // Submission of new core GF completeness job.
             if($this->request->is('post')){
                 // pr($this->request->data);
@@ -1946,7 +1946,7 @@ function label_go_intersection($exp_id=null,$label=null){
                     // To change (does not look clean). Move to 'job handling' function?
                     $this->autoRender=false;
                     return "Invalid clade, try again. ";
-//                    $this->set("error","Invalid phylogenetic clade: '".$clade_tax_id."'.");return;
+                    // $this->set("error","Invalid phylogenetic clade: '".$clade_tax_id."'.");return;
                 }
                 $transcript_label = "None";
                 if($this->request->data['transcripts-choice'] != "all"){
@@ -1956,10 +1956,17 @@ function label_go_intersection($exp_id=null,$label=null){
                 if($this->request->data['tax-radio-ncbi'] == "on") {
                     $tax_source = "ncbi";
                 }
-                // More checks to come ...
                 $species_perc = $this->request->data['species-perc'];
                 $top_hits = $this->request->data['top-hits'];
-                // Create and launch job
+                // Check if an identical job exists. If yes, just load the existing completeness results.
+                // More checks to come ...
+                $previous_completeness_job = $this->CompletenessResults->find("first", array("conditions"=>array("experiment_id"=>$exp_id,
+                    "clade_txid"=>$clade_tax_id, "label"=>$transcript_label,
+                    "used_method"=>"sp=".$species_perc.";ts=".$tax_source.";th=".$top_hits)));
+                if(sizeof($previous_completeness_job) > 0){
+                    $this->redirect(array("controller"=>"tools", "action"=>"load_core_gf_completeness", $exp_id,  $clade_tax_id, $transcript_label, $tax_source, $species_perc, $top_hits));
+                }
+                // No similar job exists: create and launch job
                 $tmp_dir = TMP."experiment_data/".$exp_id."/";
                 $completeness_dir		= $tmp_dir."completeness/";
                 $qsub_file = $this->TrapidUtils->create_qsub_script($exp_id);
@@ -1979,12 +1986,11 @@ function label_go_intersection($exp_id=null,$label=null){
                 $command  	= "sh $qsub_file -q short -o $qsub_out -e $qsub_err $shell_file";
                 $output		= array();
                 exec($command,$output);
+                // Get cluster job ID
                 $cluster_job	= $this->TrapidUtils->getClusterJobId($output);
-                // Add job to the cluster queue, and then redirect the entire program.
-//                $this->ExperimentJobs->addJob($exp_id, $cluster_job, "short", "core_gf_completeness ".$clade_tax_id);
+                // Add job to the `experiment_jobs` table.
+                $this->ExperimentJobs->addJob($exp_id, $cluster_job, "short", "core_gf_completeness_".$clade_tax_id);
 //                $this->ExperimentLog->addAction($exp_id, "core_gf_completeness_".$clade_tax_id);
-//                $this->set("run_pipeline",true);
-                // Dummy redirect, just to test
                 $this->redirect(array("controller"=>"tools", "action"=>"handle_core_gf_completeness", $exp_id, $cluster_job, $clade_tax_id, $transcript_label, $tax_source, $species_perc, $top_hits));
             }
     }
@@ -1994,7 +2000,13 @@ function label_go_intersection($exp_id=null,$label=null){
     function handle_core_gf_completeness($exp_id, $cluster_job_id, $clade_tax_id, $label, $tax_source, $species_perc, $top_hits) {
         parent::check_user_exp($exp_id);
         $this->autoRender=false;
-        $this->TrapidUtils->waitfor_cluster($exp_id, $cluster_job_id, 180, 5);
+        $job_result = $this->TrapidUtils->waitfor_cluster($exp_id, $cluster_job_id, 200, 5);
+        // Once our job finished running (with error or not) remove it from the `experiment_jobs` table
+        $this->ExperimentJobs->deleteJob($exp_id, $cluster_job_id);
+        // Load results.
+        // if($job_result != "ok"){
+        //     $this->redirect(...);
+        // }
         $this->redirect(array("controller"=>"tools", "action"=>"load_core_gf_completeness", $exp_id,  $clade_tax_id, $label, $tax_source, $species_perc, $top_hits));
     }
 
@@ -2074,6 +2086,8 @@ function label_go_intersection($exp_id=null,$label=null){
         $clades_json = json_encode($clades_json);
         return($clades_json);
     }
+
+
 
 
   /*
