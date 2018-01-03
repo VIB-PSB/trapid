@@ -2049,6 +2049,31 @@ function label_go_intersection($exp_id=null,$label=null){
     }
 
 
+    /*
+     * A (test) function to search for phylogenetic clades, used in the core GF completeness submission form. It takes
+     * a prefix as input, and found phylogenetic clades from `full_taxonomy` table are return as JSON.
+     * Format of returned data: `{tax_id: scname, ...}`
+     */
+    // Should we restrict this to logged-in users?
+    function search_tax($clade_prefix) {
+        $this->autoRender = false;
+        $limit_results = 300;  // Retrieve only this amount of results
+        $min_length = 3;  // Minimum length of prefix to search, will return nothing if less than that.
+        if(strlen($clade_prefix) < $min_length){
+            return(null);
+            // throw new NotFoundException();
+        }
+        // Retrieve data
+        // Should we allow search by tax ID?
+        // $clades = $this->FullTaxonomy->find("all", array("fields"=>array("scname", "txid"), "conditions"=>array("OR"=>array("scname LIKE"=>$clade_prefix."%", "txid LIKE"=>$clade_prefix."%")), "limit"=>$limit_results));
+        $clades = $this->FullTaxonomy->find("all", array("fields"=>array("scname", "txid"), "conditions"=>array("scname LIKE"=>$clade_prefix."%"), "limit"=>$limit_results));
+        $clades_json = array();
+        foreach($clades as $clade){
+            $clades_json[$clade["FullTaxonomy"]["txid"]] = $clade["FullTaxonomy"]["scname"];
+        }
+        $clades_json = json_encode($clades_json);
+        return($clades_json);
+    }
 
 
   /*

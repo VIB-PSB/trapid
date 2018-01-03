@@ -1,3 +1,13 @@
+<?php
+// TODO: host locally
+// Highcharts
+echo $this->Html->script('http://code.highcharts.com/highcharts.js');
+echo $this->Html->script('http://code.highcharts.com/modules/exporting.js');
+// Choices JS (https://github.com/jshjohnson/Choices)
+echo $this->Html->script('https://cdn.rawgit.com/jshjohnson/Choices/3e889633/assets/scripts/dist/choices.min.js');
+echo $this->Html->css('https://cdn.rawgit.com/jshjohnson/Choices/3e889633/assets/styles/css/choices.min.css');
+?>
+
 <div class="page-header">
     <h1 class="text-primary">Core GF completeness</h1>
 </div>
@@ -54,8 +64,11 @@
 <!--                                        <label for="clade"><strong>Phylogenetic clade</strong>-->
 <!--                                            (<code>tax_id</code>)</label>-->
                                         <label for="clade"><strong>Phylogenetic clade</strong></label>
-                                        <input class="form-control" id="clade" name="clade" placeholder="Clade tax ID"
-                                               type="text" required>
+                                        <select class="form-control" id="clade" name="clade" placeholder="Hello" required>
+                                            <option placeholder>Select clade</option>
+                                        </select>
+<!--                                        <input class="form-control" id="clade" name="clade" placeholder="Clade tax ID"-->
+<!--                                               type="text" required>-->
                                     </div>
                                 </div>
                             </div>
@@ -104,7 +117,7 @@
             <!-- Form submission -->
             <p class="text-center">
                 <input type="submit" class="btn btn-primary" id="completeness-submit" value="Run analysis"/>
-                | <a style="cursor: pointer;" onclick="alert('Reset not implemented yet');">Reset all</a>
+                | <a id="completeness-reset" style="cursor: pointer;" onclick="document.getElementById('completeness-form').reset();">Reset all</a>
 
             </p>
             <?php echo $this->Form->end(); ?>
@@ -170,9 +183,12 @@
 <script type="text/javascript">
     // Load completeness data when user clicks on a result link ('previous jobs' table)
     $(function() {
-        // Text areas id, as JS vars
+        // Various elements id, as JS vars
         var display_div_id = "#display-results";
+        var loading_div_id = "#loading";
         var sub_form_id = "#completeness-form";
+        var sub_btn_id = "#completeness-submit";
+        var reset_btn_id = "#completeness-reset";
         $(".result_link").click(function () {
             var param_list = $(this).attr("id").split("_").slice(1);
             var ajax_url = "<?php echo $this->Html->url(array("controller" => "tools", "action" => "load_core_gf_completeness")) . "/" . $exp_id . "/"; ?>" + param_list.join('/');
@@ -202,8 +218,9 @@
         });
         $(sub_form_id).submit(function (e) {
             console.log("Completeness job form was submitted! ");
-            $("#loading").css("display", "block");
-            $("#completeness-submit").attr("disabled", true);
+            $(loading_div_id).css("display", "block");
+            $(sub_btn_id).attr("disabled", true);
+            $(display_div_id).empty();
             e.preventDefault();
             $.ajax({
                 url: "<?php echo $this->Html->url(array("controller" => "tools", "action" => "core_gf_completeness", $exp_id), array("escape" => false)); ?>",
@@ -211,8 +228,8 @@
                 data: $(this).serialize(),
                 dataType: 'html',
                 success: function (data) {
-                    $("#loading").css("display", "none");
-                    $("#completeness-submit").attr("disabled", false);
+                    $(loading_div_id).css("display", "none");
+                    $(sub_btn_id).attr("disabled", false);
                     $(display_div_id).fadeOut('slow', function () {
                         $(display_div_id).hide().html(data).fadeIn();
                         document.querySelector(display_div_id).scrollIntoView({behavior: 'smooth'});
@@ -223,5 +240,70 @@
                 }
             });
         });
+    });
+</script>
+
+
+<script type="text/javascript">
+    /* Quick test: choices-js for clade selection (with autocompletion).
+     * Adapted/simplified from: https://github.com/jshjohnson/Choices/issues/162 */
+
+    // Some configuration and variables for ajax calls
+    var ajaxUrl = "<?php echo $this->Html->url(array("controller" => "tools", "action" => "search_tax")); ?>";
+    var lookupDelay = 250;
+    var lookupTimeout = null;
+    var lookupCache = {};
+    var choices_elmt = document.getElementById("clade");
+    var config = {
+        searchFloor: 3,
+        searchChoices: false,
+        shouldSort: false,
+        itemSelectText: "Select",
+        searchPlaceholderValue: "Search a taxon name... "
+        // searchResultLimit: 100,
+    };
+
+    // Construct the Choices object
+    var choices = new Choices(choices_elmt, config);
+
+    // Function to perform the lookup.
+    var serverLookup = function () {
+        // we can't use choices.currentValue because this is blank if we set searchChoices
+        // to false. Instead we use the actual input field's value.
+        var query = choices.input.value;
+        if (query in lookupCache) {
+            populateOptions(lookupCache[query]);
+        } else {
+            // console.log("Data retrieval...");
+            $.get(ajaxUrl + "/" + query, function (data) {
+                var results = JSON.parse(data);
+                lookupCache[query] = results;
+                populateOptions(results);
+            });
+        }
+    };
+
+    // Function to actually populate the results from the lookup.
+    var populateOptions = function (options) {
+        // console.log("Populating Choices element. ");
+        // We removed the part about duplicate data removal from the original snippet because we should not have any
+        var toKeep = [];
+        for (var key in options) {
+            toKeep.push({value: key, label: options[key] + " [" + key + "]"});
+        }
+        // console.log(toKeep);  // Debug
+        // Now set results.
+        choices.setChoices(toKeep, 'value', 'label', true);
+    };
+
+    // Trigger the lookup when the user pauses after typing.
+    choices_elmt.addEventListener('search', function (event) {
+        clearTimeout(lookupTimeout);
+        lookupTimeout = setTimeout(serverLookup, lookupDelay);
+    });
+
+    // Clear the options when a choice is selected.
+    choices_elmt.addEventListener('choice', function (event) {
+        choices.setChoices([], 'value', 'label', true);
     });
 </script>
