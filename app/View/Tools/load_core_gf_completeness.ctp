@@ -18,15 +18,23 @@
 
     <div id="results-tab-content" class="tab-content"> <!-- style="border: 1px lightgray solid;"> -->
         <div id="core-gf-summary" class="tab-pane active"><br>
-            <ul>
-                <li><strong>Transcript subset</strong>: <code><?php echo $label;?></code></li>
-                <li><strong>Parameters</strong>: conservation threshold <code><?php echo $species_perc; ?></code> - top hits <code><?php echo $top_hits; ?></code></li>
-                <li><strong>Completeness score</strong>: <?php echo $completeness_score;?></li>
-                <li><strong>Represented core GFs</strong>: <?php echo $n_represented . " / " . $n_total;?></li>
-                <li><strong>Missing core GFs</strong>: <?php echo $n_missing . " / " . $n_total;?></li>
-            </ul>
+            <div class="row">
+                <div class="col-md-6">
+                    <?php echo $this->element("charts/bar_core_gfs", array("n_missing"=>$n_missing, "n_represented"=>$n_represented, "n_total"=>$n_total, "chart_div_id"=>"bar_core_gfs", "chart_title"=> $tax_name. " core gene families (GFs)", "chart_subtitle"=>"Represented and missing core GFs (".$label.")"));?>
+                </div>
+                <div class="col-md-6">
+                    <br>
+                <ul>
+                    <li><strong>Core GF completeness score</strong>: <?php echo $completeness_score;?></li>
+                    <li><strong>Represented core GFs</strong>: <?php echo $n_represented . " / " . $n_total;?></li>
+                    <li><strong>Missing core GFs</strong>: <?php echo $n_missing . " / " . $n_total;?></li>
+                    <li><strong>Transcript subset</strong>: <code><?php echo $label;?></code></li>
+                    <li><strong>Parameters</strong>: conservation threshold <code><?php echo $species_perc; ?></code> - top hits <code><?php echo $top_hits; ?></code></li>
+                </ul>
+                </div>
+            </div>
+            <br>
         </div>
-
         <div id="represented-gfs" class="tab-pane"><br>
 
             <?php
