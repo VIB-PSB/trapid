@@ -1,8 +1,6 @@
 <?php
-	//load the necessary javascript libraries			
-			
-	echo $this->Html->script(array('ftiens4.js','ua.js'));
-	echo $this->Html->script(array('prototype-1.7.0.0'));
+	// Load the necessary javascript libraries
+    echo $this->Html->script(array('ftiens4.js','ua.js'));
 ?>
 <div>
     <div class="page-header">
@@ -85,7 +83,7 @@
 	if($hide_options){		
 		$options_div_style	= " style='display:none;' ";
 		echo "<div id='rerun_div'>";
-		echo "<br/><br/><a href=\"javascript:void(0);\" onclick=\"javascript:$('options_div').style.display='block';$('rerun_div').style.display='none';return;\" >Create phylogenetic tree with different species</a><span style='margin-left:20px;'>(You may have to clear the Java cache to see the new result)</span>\n";
+		echo "<br/><br/><a href=\"javascript:void(0);\" onclick=\"javascript:toggleElementsNewMsa();\" >Create phylogenetic tree with different species</a><span style='margin-left:20px;'>(You may have to clear the Java cache to see the new result)</span>\n";
 		echo "</div>";
 	}		
 	?>
@@ -237,15 +235,18 @@
 	 		<noscript>Please enable Javascript in your browser</noscript>
  		</div>
 	    </div> <!-- End float -->
-	    <div style='float:left;width:300px;'>
+	    <div style='float:left;width:330px;'>
 		<?php if($exp_info['hit_results']):?>				
-		<span style="margin-left:10px;">Species similarity hits</span>
+            <span style="margin-left:10px;"><strong>Species similarity hits</strong></span>
 		<div style="margin-top:5px;" id="species_simsearch_selection_div">
-			<table cellpadding="0" cellspacing="0" style="width:290px;">
-				<tr>					
-					<th style="width:65%">Species</th>
-					<th style="width:35%">Hit count (global)</th>
-				</tr>
+			<table class="table table-condensed table-bordered table-striped table-hover" cellpadding="0" cellspacing="0" style="width:330px; font-size: 85%;">
+				<thead>
+                <tr>
+					<th style="width:60%">Species</th>
+					<th style="width:40%">Hit count (global)</th>
+                </tr>
+				</thead>
+                <tbody>
 				<?php
 					$hit_results	= explode(";",$exp_info['hit_results']);
 					$tmp		= array();	
@@ -268,6 +269,7 @@ $css6	= "background: -webkit-gradient(linear,left top,right top,color-stop(".($p
 						echo "</tr>\n";
 					}
 				?>
+                </tbody>
 			</table>	
 		</div>	
 		<?php endif;?>
@@ -284,7 +286,7 @@ $css6	= "background: -webkit-gradient(linear,left top,right top,color-stop(".($p
 		foreach($available_species_tax as $txid=>$spec_info){
 			$ng	= 0;
 			if(array_key_exists($spec_info['species'],$phylo_profile)){
-				$ng =  $phylo_profile[$spec_info['species']];
+				$ng =  (int) $phylo_profile[$spec_info['species']];
 			}	
 			$phylo_profile_tax[$txid] = $ng;
 		}
@@ -315,48 +317,50 @@ $css6	= "background: -webkit-gradient(linear,left top,right top,color-stop(".($p
 	    var species_phylo		= <?php echo json_encode($phylo_profile_tax);?>;
 	    var parent_child_clades	= <?php echo json_encode($parent_child_clades);?>;
 	    var MAX_GENES		= <?php echo $MAX_GENES;?>;
-		
-			
 
 	
-			function changeClade(clade){
-				var element	= document.getElementById(clade);			
-				clades_to_species[clade].each(function(sp){	
-					var sp_id		= "taxid_"+sp;		
-					var sp_el		= $(sp_id);
-					if(sp_el!=null){							
-					    if(element.checked){	//add new genes and species from total count
-						    if(sp_el.checked!=element.checked){
+			function changeClade(clade) {
+				var element	= document.getElementById(clade);
+                clades_to_species[clade].forEach(function (sp) {
+					var sp_el		= document.getElementById("taxid_"+sp);
+					if(sp_el!=null) {
+					    if(element.checked) {	// Add new genes and species from total count
+						    if(sp_el.checked!=element.checked) {
 							    total_selected_species++;							
 							    total_selected_genes+=species_phylo[sp];
 						    }
 					    }
-					    else{	//remove genes and species from total count
-						    if(sp_el.checked!=element.checked){
+					    else {	// Remove genes and species from total count
+						    if(sp_el.checked!=element.checked) {
 							    total_selected_species--;
 							    total_selected_genes-=species_phylo[sp];	
 						    }
 					    }
-    					    if(sp_el.disabled){}
-    					    else{sp_el.checked	= element.checked;}
+    					    if(sp_el.disabled) {}
+    					    else {
+    					        sp_el.checked	= element.checked;
+    					    }
 					}
 				});
-				//check or uncheck child-clades as well. This is purely for visualization purposes.
-				parent_child_clades[clade].each(function(child_clade){
-					try{
-						var cc		= $(child_clade);
-						if(cc!=null){
-							if(cc.disabled){}
-							else{cc.checked	= element.checked;}
+				// Check or uncheck child-clades as well. This is purely for visualization purposes.
+				parent_child_clades[clade].forEach(function(child_clade){
+					try {
+						var cc		= document.getElementById(child_clade);
+						if(cc!=null) {
+							if(cc.disabled) {}
+							else {
+							    cc.checked	= element.checked;
+							}
 						}
 					}
-					catch(exc){					
+					catch(exc) {
 					}
 				});
 													
 				updateCounts();	
 			}			
-	
+
+
 			function changeSpecies(sp_id){
 				var element	= document.getElementById(sp_id);			
 				var sp		= sp_id.substr(6);				
@@ -370,18 +374,19 @@ $css6	= "background: -webkit-gradient(linear,left top,right top,color-stop(".($p
 				}
 				updateCounts();
 			}
-		
+
+
 		function updateCounts(){
 			//alert(total_selected_genes);
-			$("num_species").innerHTML 	= total_selected_species;
-			$("num_genes").innerHTML	= total_selected_genes;
-			if(total_selected_genes > MAX_GENES){
-				$("status").innerHTML	= "<span class='error'>Error: too many genes selected (max: "+MAX_GENES+"). Deselect species to continue.</span>";
-				$("submit_button").disabled	= "disabled";
+            document.getElementById("num_species").innerHTML = total_selected_species;
+            document.getElementById("num_genes").innerHTML = total_selected_genes;
+			if(total_selected_genes > MAX_GENES) {
+                document.getElementById("status").innerHTML	= "<span class='error'>Error: too many genes selected (max: "+MAX_GENES+"). Deselect species to continue.</span>";
+                document.getElementById("submit_button").disabled = "disabled";
 			}
-			else{
-				$("status").innerHTML	= "OK";
-				$("submit_button").disabled	= false;
+			else {
+                document.getElementById("status").innerHTML	= "OK";
+                document.getElementById("submit_button").disabled = false;
 			}
 		}
 
@@ -401,62 +406,74 @@ $css6	= "background: -webkit-gradient(linear,left top,right top,color-stop(".($p
 		echo "<span style='margin-left:10px;'>Single transcript <u><b>exclusion</b></u></span>\n";		
 		?>
 		<div style="margin-top:10px;display:none;" id="transcript_select_div">					
-			<table cellpadding="0" cellspacing="0" style="width:400px;">
-				<tr>
+			<table class="table-bordered table table-condensed table-striped table-hover" cellpadding="0" cellspacing="0" style="width:400px;">
+				<thead>
+                <tr>
 					<th style="width:15%">Exclude</th>
 					<th style="width:45%">Transcript</th>
 					<th style="width:40%">Meta annotation</th>
 				</tr>
+                </thead>
+                <tbody>
 				<?php
 				foreach($gf_transcripts as $tr=>$met){
 					echo "<tr>";
-					echo "<td><input type='checkbox' name='exclude_".$tr."' id='exclude_".$tr."' /></td>";
+					echo "<td class='text-center'><input type='checkbox' name='exclude_".$tr."' id='exclude_".$tr."' /></td>";
 					echo "<td>".$this->Html->link($tr,array("controller"=>"trapid","action"=>"transcript",$exp_id,urlencode($tr)))."</td>";
 					echo "<td>".$met."</td>";
 					echo "</tr>";
 				}	
 				?>
+                </tbody>
 			</table>	
 		</div>
 		<script type="text/javascript">
 			//<![CDATA[
-			var transcript_meta	= new Hash(<?php echo json_encode($gf_transcripts);?>);
-			$("single_transcript_selection").observe("change",function(){
-				if($("single_transcript_selection").checked){
-					$("transcript_select_div").style.display="block";
+			var transcript_meta	= <?php echo json_encode($gf_transcripts);?>;
+			$("#single_transcript_selection").change(function(){
+				if(document.getElementById("single_transcript_selection").checked){
+                    document.getElementById("transcript_select_div").style.display="block";
 				}
 				else{
-					transcript_meta.keys().each(function(tr){
-						var cb	= "exclude_"+tr;							
-						$(cb).checked = null;
+					Object.keys(transcript_meta).forEach(function(tr){
+						var cb	= "exclude_"+tr;
+                        document.getElementById(cb).checked = null;
 					});
-					$("transcript_select_div").style.display="none";
+                    document.getElementById("transcript_select_div").style.display="none";
 				}	
 			});
-			$("no_partial_transcripts").observe("change",function(){
-				if($("no_partial_transcripts").checked){
-					$("single_transcript_selection").checked = "checked";
-					$("transcript_select_div").style.display="block";
-					transcript_meta.keys().each(function(tr){
-						var meta	= transcript_meta.get(tr);
-						if(meta=="Partial"){
-							var cb	= "exclude_"+tr;							
-							$(cb).checked = "checked";
+			$("#no_partial_transcripts").change(function(){
+				if(document.getElementById("no_partial_transcripts").checked){
+                    document.getElementById("single_transcript_selection").checked = "checked";
+                    document.getElementById("transcript_select_div").style.display="block";
+					Object.keys(transcript_meta).forEach(function(tr){
+						var meta = transcript_meta[tr];
+						if(meta === "Partial") {
+							var cb	= "exclude_"+tr;
+                            document.getElementById(cb).checked = "checked";
 						}
 					});					
 				}
 				else{
-					//$("single_transcript_selection").checked = null;
-					//$("transcript_select_div").style.display="none";
-					transcript_meta.keys().each(function(tr){
-						var meta	= transcript_meta.get(tr);
-						if(meta=="Partial"){
-							var cb	= "exclude_"+tr;							
-							$(cb).checked = null;
+					// document.getElementById("single_transcript_selection").checked = null;
+					// document.getElementById("transcript_select_div").style.display="none";
+					Object.keys(transcript_meta).forEach(function(tr){
+					    console.log(transcript_meta[tr]);
+						var meta = transcript_meta[tr];
+						if(meta === "Partial"){
+							var cb	= "exclude_"+tr;
+                            document.getElementById(cb).checked = null;
 						}
 					});				
 				}				
-			});	
+			});
+
+
+            // Toggle visibility of HTML elements if user chooses to re-run MSA generation.
+            function toggleElementsNewMsa() {
+                document.getElementById('options_div').style.display = 'block';
+                document.getElementById('rerun_div').style.display = 'none';
+            }
 			//]]>
 		</script>
 	</div>
@@ -464,7 +481,7 @@ $css6	= "background: -webkit-gradient(linear,left top,right top,color-stop(".($p
 
 	<h3>Overview and Options</h3>
 	<div class="subdiv">
-		<dl class="standard">
+		<dl class="standard dl-horizontal">
 		<dt>#Selected species</dt>
 		<dd><span id='num_species'><?php echo $total_selected_species;?></span></dd>
 		<dt>#Selected genes</dt>
@@ -558,9 +575,9 @@ $css6	= "background: -webkit-gradient(linear,left top,right top,color-stop(".($p
 
 	<div class="subdiv">
 		<br/>
-		<input type="submit" value="Create phylogenetic tree" id="submit_button" <?php if($no_sub){echo "disabled='disabled'";}?>/>
+		<input type="submit" value="Create phylogenetic tree" id="submit_button" <?php if($no_sub){echo "disabled='disabled'";}?> class="btn btn-primary"/>
 	</div>
-
+<br>
 	<?php endif;?>
 
 	</form>
