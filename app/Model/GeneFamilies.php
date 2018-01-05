@@ -40,6 +40,16 @@ class GeneFamilies extends AppModel{
   }
 
 
+    function gfExists($exp_id, $gf_id){
+        $exp_id	= mysql_real_escape_string($exp_id);
+        $gf_id = mysql_real_escape_string($gf_id);
+        $query = "SELECT * FROM `gene_families` WHERE `experiment_id`='".$exp_id."' AND `gf_id`='".$gf_id."';";
+        $res = $this->query($query);
+        if($res)
+            return true;
+        else
+            return false;
+    }
 
 
 }

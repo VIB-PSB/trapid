@@ -194,11 +194,45 @@ class ToolsController extends AppController{
   }
 
 
+    /**
+     * Get MSA (normal or stripped) for a given experiment and gene family from the DB, as raw text.
+     * The returned data gets formatted in the `get_msa` view and is then ready to visualize with BioJS's MSAViewer.
+     */
+    // When using an incorrect exp_id, some warnings are thrown: should disappear after debug mode is disabled?
+  function get_msa($exp_id=null, $gf_id=null, $type="normal"){
+    $this->layout = "";
+    $exp_id	= mysql_real_escape_string($exp_id);
+    parent::check_user_exp($exp_id);
+    if(!$gf_id) {
+        return;
+    }
+    if(!$this->GeneFamilies->gfExists($exp_id, $gf_id)) {
+        return;
+    }
+    // Get field that is storing the msa in the database, depending on `$type`
+      if($type == "stripped") {
+          $alignment_field = "msa_stripped";
+      }
+      else {
+          $alignment_field = "msa";
+      }
+      $gf_id = mysql_real_escape_string($gf_id);
+      // Retrieve data from the db and create a string. If not empty, return it.
+      $alignment = $this->GeneFamilies->find("first", array("fields"=>array($alignment_field), "conditions"=>array("experiment_id"=>$exp_id, "gf_id"=>$gf_id)));
+      $alignment_str = $alignment['GeneFamilies'][$alignment_field];
+      if(!$alignment_str) {
+          return;
+      }
+      $this->set("aln", $alignment_str);
+  }
+
+
 
  function create_msa($exp_id=null,$gf_id=null,$stripped=null){
     if(!$exp_id || !$gf_id){$this->redirect(array("controller"=>"trapid","action"=>"experiments"));}
     $exp_id	= mysql_real_escape_string($exp_id);
     parent::check_user_exp($exp_id);
+    $this -> set('title_for_layout', 'Multiple sequence alignment');
     $exp_info	= $this->Experiments->getDefaultInformation($exp_id);
     $this->set("exp_info",$exp_info);
     $this->set("exp_id",$exp_id);
@@ -1811,6 +1845,7 @@ function label_go_intersection($exp_id=null,$label=null){
     $this->set('GO', true);
     $this->render('sankey_intersection');
   }
+
 
 
   /* Taxonomic binning related controllers */
