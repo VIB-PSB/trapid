@@ -572,7 +572,9 @@ class TrapidUtilsComponent extends Component{
     }
     $java_location	 	= $base_scripts_location."java/";
 
-    $parameters_msa		= array(PLAZA_DB_SERVER,$plaza_db,PLAZA_DB_PORT,PLAZA_DB_USER,PLAZA_DB_PASSWORD,
+    $parameters_msa		= array(
+                    // PLAZA_DB_SERVER,$plaza_db,PLAZA_DB_PORT,PLAZA_DB_USER,PLAZA_DB_PASSWORD,
+                    TRAPID_DB_SERVER, $plaza_db, TRAPID_DB_PORT, TRAPID_DB_USER, TRAPID_DB_PASSWORD,
 					TRAPID_DB_SERVER,TRAPID_DB_NAME,TRAPID_DB_PORT,TRAPID_DB_USER,TRAPID_DB_PASSWORD,
 					$tmp_dir,$exp_id,$gf_id,
 					$base_scripts_location."perl/blosum62.txt",
@@ -582,7 +584,9 @@ class TrapidUtilsComponent extends Component{
     $parameters_tree		= array(TRAPID_DB_SERVER,TRAPID_DB_NAME,TRAPID_DB_PORT,TRAPID_DB_USER,TRAPID_DB_PASSWORD,
 					$tmp_dir,$exp_id,$gf_id,$bootstrap_mode,$tree_program);
 
-    $parameters_phyloxml	= array(PLAZA_DB_SERVER,$plaza_db,PLAZA_DB_USER,PLAZA_DB_PASSWORD,
+    $parameters_phyloxml	= array(
+                    // PLAZA_DB_SERVER,$plaza_db,PLAZA_DB_USER,PLAZA_DB_PASSWORD,
+                    TRAPID_DB_SERVER, $plaza_db, TRAPID_DB_USER, TRAPID_DB_PASSWORD,
 					TRAPID_DB_SERVER,TRAPID_DB_NAME,TRAPID_DB_USER,TRAPID_DB_PASSWORD,
 					"db_trapid_02",
 					// "db_trapid_01_taxonomy",
