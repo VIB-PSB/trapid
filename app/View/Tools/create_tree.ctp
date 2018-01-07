@@ -1,6 +1,7 @@
 <?php
 	// Load the necessary javascript libraries
-    echo $this->Html->script(array('ftiens4.js','ua.js'));
+    echo $this->Html->script(array('ftiens4.js', 'ua.js', 'd3-3.5.6.min.js', 'phyd3.min.js'));
+    echo $this->Html->css('phyd3.min.css');
 ?>
 <div>
     <div class="page-header">
