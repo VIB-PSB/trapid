@@ -473,6 +473,38 @@ class ToolsController extends AppController{
   }
 
 
+    /**
+     * Get computed phylogenetic tree for a given experiment and gene family from the DB, as raw text.
+     */
+    // When using an incorrect exp_id, some warnings are thrown: should disappear after debug mode is disabled?
+    // 2018-01-07: there seem to be a problem with phyloXML, so let's make PhyD3 work with newick tree for now.
+    function get_tree($exp_id=null, $gf_id=null, $format="newick"){
+        $this->layout = "";
+        $exp_id	= mysql_real_escape_string($exp_id);
+        parent::check_user_exp($exp_id);
+        if(!$gf_id) {
+            return;
+        }
+        if(!$this->GeneFamilies->gfExists($exp_id, $gf_id)) {
+            return;
+        }
+        // Get field that is storing the msa in the database, depending on `$type`
+        if($format == "newick") {
+            $tree_field = "tree";
+        }
+        else {
+            $tree_field = "xml_tree";
+        }
+        $gf_id = mysql_real_escape_string($gf_id);
+        // Retrieve data from the db and create a string. If not empty, return it.
+        $tree = $this->GeneFamilies->find("first", array("fields"=>array($tree_field), "conditions"=>array("experiment_id"=>$exp_id, "gf_id"=>$gf_id)));
+        $tree_str = $tree['GeneFamilies'][$tree_field];
+        if(!$tree_str) {
+            return;
+        }
+        $this->set("tree", $tree_str);
+    }
+
 
 
   function create_tree($exp_id=null, $gf_id=null){
