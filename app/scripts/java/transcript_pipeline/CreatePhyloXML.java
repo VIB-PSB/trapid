@@ -11,6 +11,8 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -20,6 +22,7 @@ import java.util.SortedMap;
 import java.util.SortedSet;
 import java.util.TreeMap;
 import java.util.TreeSet;
+
 
 import javax.xml.transform.Result;
 import javax.xml.transform.Source;
@@ -38,9 +41,9 @@ import com.sun.org.apache.xerces.internal.parsers.DOMParser;
 
 /**
  * Create phyloxml from the newick tree, for data in the TRAPID database.
- * This is done to color the genes of species differently, 
+ * This is done to color the genes of species differently,
  * and to also  include subset information if necessary.
- * 
+ *
  * @author mibel
  *
  */
@@ -50,60 +53,60 @@ import com.sun.org.apache.xerces.internal.parsers.DOMParser;
  */
 public class CreatePhyloXML {
 
-	
+
 	public static void main(String[] args){
 		String plaza_database_server		= args[0];	//normally psbsql03.psb.ugent.be
 		String plaza_database_name			= args[1];
 		String plaza_database_login			= args[2];
 		String plaza_database_password		= args[3];
-		
+
 		//workbench variables, necessary for storing homology/orthology information
 		String trapid_server				= args[4];
 		String trapid_name					= args[5];
 		String trapid_login					= args[6];
 		String trapid_password				= args[7];
-					
+
 		//taxonomy database --> same location as trapid, password is readonly plaza_web
-		String taxonomy_name				= args[8];		
-		
+		String taxonomy_name				= args[8];
+
 		//user experiment id
 		String trapid_experiment_id			= args[9];
-		
+
 		//Gene family
 		String gf_id						= args[10];
-		
+
 		//include subset
 		String inc_sub						= args[11];
-		
+
 		//include meta_annot
 		String inc_meta						= args[12];
-				
-		//Tmp dir 
+
+		//Tmp dir
 		String tmp_dir						= args[13];
 
 		//Forester jar file location
-		String forester_jar_location		= args[14];		
-		
+		String forester_jar_location		= args[14];
+
 		//Location basic configuration file
 		String basic_config_location		= args[15];
-		
-		
-		
-		
-		boolean include_subsets				= false; 
+
+
+
+
+		boolean include_subsets				= false;
 		if(inc_sub.equals("1")){include_subsets = true;}
-		
+
 		boolean include_meta				= false;
 		if(inc_meta.equals("1")){include_meta = true;}
-		
-				
-		try{		
+
+
+		try{
 			CreatePhyloXML cpx					= new CreatePhyloXML();
-			Class.forName("com.mysql.jdbc.Driver");	
+			Class.forName("com.mysql.jdbc.Driver");
 			Connection plaza_db_connection		= cpx.createDbConnection(plaza_database_server,plaza_database_name,plaza_database_login,plaza_database_password);
 			Connection trapid_db_connection		= cpx.createDbConnection(trapid_server,trapid_name,trapid_login,trapid_password);
 			Connection taxonomy_db_connection	= cpx.createDbConnection(trapid_server,taxonomy_name,plaza_database_login,plaza_database_password);
-			
+
 			//retrieve the information from the trapid database for this gene family.
 			Map<String,String> gf_information	= cpx.getGeneFamilyInfo(trapid_db_connection,trapid_experiment_id,gf_id);
 			if(gf_information==null){
@@ -111,51 +114,51 @@ public class CreatePhyloXML {
 				trapid_db_connection.close();
 				throw new Exception("Unable to retrieve gene family information for gf "+gf_id+" in  exp "+trapid_experiment_id);
 			}
-			
+
 			//step1. Create a phyloxml version of the newick tree. We use the ATV code for this.
 			String phyloxml_file_path			= cpx.newick2phyloxml(gf_information.get("tree"),gf_id,tmp_dir,forester_jar_location);
-			
+
 			//step2a. Retrieve mapping of species to taxids
-			Map<String,String> species_taxids	= cpx.species2taxid(plaza_db_connection);			
+			Map<String,String> species_taxids	= cpx.species2taxid(plaza_db_connection);
 			//step2b. Retrieve taxonomy information for the taxids, through species (species->taxinformation)
 			Map<String,String> species_taxinfo	= cpx.species2taxinfo(taxonomy_db_connection,species_taxids);
 			//step2c. Already close the taxonomy db connection, not needed anymore
 			taxonomy_db_connection.close();
-						
-			//step3. We generate a color for all species 
+
+			//step3. We generate a color for all species
 			Map<String,String> species_colors	= cpx.speciestax2color(species_taxids,species_taxinfo);
-			
+
 			//step4. Get the subsets for this experiment, and create colors for them
 			List<String> available_subsets			= cpx.getSubsets(trapid_db_connection,trapid_experiment_id);
 			Map<String,String> subset_colors		= cpx.subset2color(available_subsets);
-				
+
 			//step5. Retrieve species information for all species in the gene family.
 			Map<String,String> gene2species		= cpx.gene2species(plaza_db_connection,gf_information);
-						
+
 			//step6. Generate a configuration file containing all the necessary species color information and subset color information as well
 			//String configuration_file_location	= cpx.createConfigFile(basic_config_location,species_colors,subset_colors,tmp_dir);
 			cpx.createConfigFile(basic_config_location,species_colors,subset_colors,tmp_dir);
-			
+
 			//step7. Gather subset information
 			Map<String,Set<String>> transript2subsets	= null;
 			if(include_subsets){
 				transript2subsets			= cpx.getTranscriptSubsets(trapid_db_connection,trapid_experiment_id,gf_id);
 			}
-			
+
 			//step7b. Gather meta_annotation information for the transcripts.
-			//this data is automatically added			
+			//this data is automatically added
 			Map<String,String> transcript2meta	= null;
 			if(include_meta){
 				transcript2meta 			= cpx.getTranscriptTypes(trapid_db_connection,trapid_experiment_id,gf_id);
 			}
-			
-						
+
+
 			//step8. Adapt the phyloxml data
 			String phyloxml_data	= cpx.adaptPhyloXmlFile(gf_id,phyloxml_file_path,gene2species,transript2subsets,transcript2meta,include_subsets,include_meta,tmp_dir);
-				
+
 			//step9. Write phyloxml data to the database
 			cpx.storeXML(trapid_db_connection, trapid_experiment_id, gf_id, phyloxml_data);
-			
+
 			//step10. Remove newick and old xml file
 			File newick_file	= new File(tmp_dir+gf_id+".newick");
 			File xml_file		= new File(tmp_dir+gf_id+".xml");
@@ -169,15 +172,15 @@ public class CreatePhyloXML {
 			exc.printStackTrace();
 		}
 	}
-	
+
 	private void storeXML(Connection conn,String exp_id,String gf_id,String phyloxml) throws Exception{
 		Statement stmt	= conn.createStatement();
 		String sql		= "UPDATE `gene_families` SET `xml_tree`='"+phyloxml+"' WHERE `experiment_id`='"+exp_id+"' AND `gf_id`='"+gf_id+"' ";
-		stmt.execute(sql);		
+		stmt.execute(sql);
 		stmt.close();
 	}
-	
-	
+
+
 	private String adaptPhyloXmlFile(String gf_id,String phyloxml_file_path,Map<String,String>gene2species,
 			Map<String,Set<String>> transcript2subsets,Map<String,String> transcript2meta,
 			boolean include_subsets, boolean include_meta,
@@ -185,10 +188,10 @@ public class CreatePhyloXML {
 		DOMParser parser = new DOMParser();
 		parser.parse(phyloxml_file_path);
 		DocumentImpl doc = (DocumentImpl)parser.getDocument();
-		Node root = doc.getLastChild();			
+		Node root = doc.getLastChild();
 		AllElements filter = new AllElements();
 		TreeWalkerImpl tw =(TreeWalkerImpl)doc.createTreeWalker(root,NodeFilter.SHOW_ALL, (NodeFilter)filter, true);
-		
+
 		//mapping from subset to location
 		//only use the "used" subsets, as the image is otherwise distorted.
 		Map<String,Integer> subset_location		= new HashMap<String,Integer>();
@@ -200,10 +203,10 @@ public class CreatePhyloXML {
 			List<String> all_subsets			= new ArrayList<String>(all_subsets_set);
 			for(int i=0;i<all_subsets.size();i++){
 				String subset		= all_subsets.get(i);
-				subset_location.put(subset, i);				
+				subset_location.put(subset, i);
 			}
 		}
-		
+
 		//mapping from gene type to location
 		Map<String,Integer> meta_location	= new HashMap<String,Integer>();
 		if(transcript2meta!=null){
@@ -217,23 +220,23 @@ public class CreatePhyloXML {
 				meta_location.put(meta,i);
 			}
 		}
-		
-		
+
+
 		adaptPhyloXmlData(tw,doc,gene2species,
 				transcript2subsets,subset_location,include_subsets,
 				transcript2meta,meta_location,include_meta
 				);
-		
+
 		doc.normalizeDocument();
 		Source source 		= new DOMSource(doc);
 		Transformer xformer = TransformerFactory.newInstance().newTransformer();
-		
+
 		String tmp_xml_outputpath	= tmp_dir+gf_id+".tmp.xml";
 		File tmp_xml_output			= new File(tmp_xml_outputpath);
-		
+
 		Result result		= new StreamResult(tmp_xml_output);
 		xformer.transform(source, result);
-		
+
 		StringBuffer buff		= new StringBuffer();
 		BufferedReader reader	= new BufferedReader(new FileReader(tmp_xml_output));
 		String s				= reader.readLine();
@@ -242,17 +245,17 @@ public class CreatePhyloXML {
 			s					= reader.readLine();
 		}
 		reader.close();
-		String xml_data			= buff.toString().trim();						
+		String xml_data			= buff.toString().trim();
 		return xml_data;
 	}
-	
+
 	private void adaptPhyloXmlData(TreeWalkerImpl tw,DocumentImpl doc,Map<String,String>gene2species,
 			Map<String,Set<String>> transcript2subsets,Map<String,Integer> subset_location,boolean include_subsets,
 			Map<String,String> transcript2meta,Map<String,Integer>meta_location,boolean include_meta
 			)throws Exception{
 		Node n = tw.getCurrentNode();
 		if(n.hasChildNodes()){
-			for(Node child=tw.firstChild();child!=null;child=tw.nextSibling()){	
+			for(Node child=tw.firstChild();child!=null;child=tw.nextSibling()){
 				adaptPhyloXmlData(tw,doc,gene2species,transcript2subsets,subset_location,include_subsets,transcript2meta,meta_location,include_meta);
 			}
 		}
@@ -282,14 +285,14 @@ public class CreatePhyloXML {
 							this.addMetaData(greatParent,doc,nodeText,transcript2meta,meta_location);
 						}
 					}
-				}					
+				}
 			}
 		}
 		tw.setCurrentNode(n);
 	}
-	
-	
-	private void addSpeciesData(Node n,DocumentImpl doc,String gene_id,Map<String,String>gene2species){		
+
+
+	private void addSpeciesData(Node n,DocumentImpl doc,String gene_id,Map<String,String>gene2species){
 		if(n==null ||  doc==null){
 			return;
 		}
@@ -299,8 +302,8 @@ public class CreatePhyloXML {
 		taxonomyElement.appendChild(codeElement);
 		n.appendChild(taxonomyElement);
 	}
-	
-	private void addSubsetData(Node n,DocumentImpl doc,String transcript_id,Map<String,Set<String>> transcript2subsets,Map<String,Integer> subset_location){		
+
+	private void addSubsetData(Node n,DocumentImpl doc,String transcript_id,Map<String,Set<String>> transcript2subsets,Map<String,Integer> subset_location){
 		if(n==null || doc==null || subset_location.size()==0){
 			return;
 		}
@@ -308,13 +311,13 @@ public class CreatePhyloXML {
 			return;
 		}
 		Element sequenceElement = doc.createElement("sequence");
-		Element domainElement 	= doc.createElement("domain_architecture");		
+		Element domainElement 	= doc.createElement("domain_architecture");
 		//domainElement.setAttribute("length",""+(subset_location.size()+1));
 		domainElement.setAttribute("length",""+(subset_location.size()*100));
-		
+
 		for(String subset:transcript2subsets.get(transcript_id)){
 			int location_start	= subset_location.get(subset);
-			int location_stop	= location_start+1;			
+			int location_stop	= location_start+1;
 			Element iprElement = doc.createElement("domain");
 			iprElement.setAttribute("from",""+(location_start*100));
 			iprElement.setAttribute("to",""+(location_stop*100));
@@ -322,11 +325,11 @@ public class CreatePhyloXML {
 			iprElement.setTextContent(subset);
 			domainElement.appendChild(iprElement);
 		}
-		
+
 		sequenceElement.appendChild(domainElement);
-		n.appendChild(sequenceElement);		
+		n.appendChild(sequenceElement);
 	}
-	
+
 	private void addMetaData(Node n,DocumentImpl doc,String transcript_id,Map<String,String>transcript2meta,Map<String,Integer>meta_location){
 		if(n==null || doc==null || meta_location.size()==0){
 			return;
@@ -335,11 +338,11 @@ public class CreatePhyloXML {
 			return;
 		}
 		Element sequenceElement = doc.createElement("sequence");
-		Element domainElement 	= doc.createElement("domain_architecture");	
+		Element domainElement 	= doc.createElement("domain_architecture");
 		domainElement.setAttribute("length",""+(meta_location.size()*100));
 		String meta				= transcript2meta.get(transcript_id);
 		int location_start		= meta_location.get(meta);
-		int location_stop		= location_start+1;			
+		int location_stop		= location_start+1;
 		Element iprElement = doc.createElement("domain");
 		iprElement.setAttribute("from",""+(location_start*100));
 		iprElement.setAttribute("to",""+(location_stop*100));
@@ -347,11 +350,11 @@ public class CreatePhyloXML {
 		iprElement.setTextContent(meta);
 		domainElement.appendChild(iprElement);
 		sequenceElement.appendChild(domainElement);
-		n.appendChild(sequenceElement);		
+		n.appendChild(sequenceElement);
 	}
-	
-	
-	
+
+
+
 	class AllElements implements NodeFilter{
 		public short acceptNode (Node n){
 			if (n.getNodeType() == Node.ELEMENT_NODE){
@@ -360,11 +363,11 @@ public class CreatePhyloXML {
 		    return FILTER_ACCEPT;
 		}
 	}
-	
-	
+
+
 	private Map<String,String> getTranscriptTypes(Connection conn,String exp_id,String gf_id) throws Exception{
 		Map<String,String> result			= new HashMap<String,String>();
-		//get transcripts and their associated types		
+		//get transcripts and their associated types
 		String sql	= "SELECT `transcript_id`,`meta_annotation` FROM `transcripts` WHERE `experiment_id`='"+exp_id+"' AND `gf_id`='"+gf_id+"' ";
 		Statement stmt = conn.createStatement();
 		ResultSet set	= stmt.executeQuery(sql);
@@ -377,8 +380,8 @@ public class CreatePhyloXML {
 		stmt.close();
 		return result;
 	}
-	
-	
+
+
 	private Map<String,Set<String>> getTranscriptSubsets(Connection conn,String exp_id,String gf_id) throws Exception{
 		Map<String,Set<String>> result		= new HashMap<String,Set<String>>();
 		StringBuffer buff					= new StringBuffer();
@@ -406,18 +409,18 @@ public class CreatePhyloXML {
 			result.get(transcript_id).add(label);
 		}
 		set2.close();
-		stmt2.close();		
+		stmt2.close();
 		return result;
 	}
-	
+
 
 	private String createConfigFile(String basic_config_location,Map<String,String> species_colors,Map<String,String> subset_colors,String tmp_dir) throws Exception{
 		String config_location		= tmp_dir+"atv_config.cfg";
 		File config_file			= new File(config_location);
-		File basic_config_file		= new File(basic_config_location);		
+		File basic_config_file		= new File(basic_config_location);
 		if(config_file.exists()){config_file.delete();}
-		
-		//copy basic configuration file 
+
+		//copy basic configuration file
 		BufferedReader reader		= new BufferedReader(new FileReader(basic_config_file));
 		BufferedWriter writer		= new BufferedWriter(new FileWriter(config_file));
 		String s					= reader.readLine();
@@ -425,27 +428,27 @@ public class CreatePhyloXML {
 			writer.write(s+"\n");
 			s						= reader.readLine();
 		}
-		reader.close();		
+		reader.close();
 		writer.write("\n\n");
-		
+
 		//append color information for species and subsets
 		for(String species:species_colors.keySet()){
 			String color	= species_colors.get(species);
 			writer.write("species_color: "+species+"    0x"+color+"\n");
 		}
 		writer.write("\n\n");
-		
+
 		for(String subset:subset_colors.keySet()){
 			String color	= subset_colors.get(subset);
 			writer.write("domain_color: "+subset+"    0x"+color+"\n");
 		}
 		writer.write("\n");
 		writer.close();
-				
+
 		return config_location;
 	}
-	
-	
+
+
 	private Map<String,String> gene2species(Connection conn,Map<String,String> gf_information) throws Exception{
 		Map<String,String> result		= new HashMap<String,String>();
 		String plaza_gf_id				= gf_information.get("plaza_gf_id");
@@ -477,15 +480,15 @@ public class CreatePhyloXML {
 			}
 			set.close();
 			stmt.close();
-		}		
+		}
 		return result;
 	}
-	
-	
+
+
 	private Map<String,String> subset2color(List<String> subsets){
 		String[] colors	= {"FF0000","00FF00","0000FF","FF9900","FF0099","0099FF",
 				"9900FF","99FF00","00FF99","33FF33"};
-		
+
 		Map<String,String> result	= new HashMap<String,String>();
 		if(subsets.size()==0){return result;}
 		else if(subsets.size()<=10){
@@ -512,8 +515,8 @@ public class CreatePhyloXML {
 			int counter			= 0;
 			int start_red		= 60;
 			int start_green		= 120;
-			int start_blue		= 240;	
-			
+			int start_blue		= 240;
+
 			for(int i=10;i<subsets.size();i++){
 				String subset	= subsets.get(i);
 				int new_red		= Math.abs((start_red+counter*inc_red)%255);
@@ -524,29 +527,29 @@ public class CreatePhyloXML {
 				String color			= ""+Integer.toHexString(rgb).toUpperCase();
 				while(color.length()<6){color = "0"+color;}
 				result.put(subset, color);
-			}						
+			}
 			return result;
 		}
 	}
-	
-	
-	
+
+
+
 	private List<String> getSubsets(Connection conn,String exp_id) throws Exception{
 		SortedSet<String> result		= new TreeSet<String>();
 		Statement stmt					= conn.createStatement();
-		String sql						= "SELECT DISTINCT(`label`) FROM `transcripts_labels` WHERE `experiment_id`=' "+exp_id+"' ";		
+		String sql						= "SELECT DISTINCT(`label`) FROM `transcripts_labels` WHERE `experiment_id`=' "+exp_id+"' ";
 		ResultSet set					= stmt.executeQuery(sql);
 		while(set.next()){
 			String label				= set.getString(1);
 			result.add(label);
 		}
 		set.close();
-		stmt.close();	
+		stmt.close();
 		List<String> res	= new ArrayList<String>(result);
 		return res;
 	}
-	
-	
+
+
 	//species to tax id mapping.
 	private Map<String,String> species2taxid(Connection conn) throws Exception{
 		Map<String,String> result		= new HashMap<String,String>();
@@ -559,12 +562,12 @@ public class CreatePhyloXML {
 			result.put(species, tax_id);
 		}
 		set.close();
-		stmt.close();		
+		stmt.close();
 		return result;
 	}
-	
-	
-	//species to tax info through taxonomy database 
+
+
+	//species to tax info through taxonomy database
 	private Map<String,String> species2taxinfo(Connection conn,Map<String,String> species2taxids) throws Exception{
 		Map<String,String> result			= new HashMap<String,String>();
 		PreparedStatement stmt				= conn.prepareStatement("SELECT `tax` FROM `full_taxonomy` WHERE `txid`=?");
@@ -582,18 +585,18 @@ public class CreatePhyloXML {
 			set.close();
 		}
 		stmt.close();
-		return result;		
+		return result;
 	}
-	
-	
-	//Maps each tax id to a color 
+
+
+	//Maps each tax id to a color
 	private Map<String,String> speciestax2color(
 			Map<String,String> species2taxids,
 			Map<String,String> species2taxinfo
 			){
-		
+
 		Map<String,String> result	= new HashMap<String,String>();
-		
+
 		//parse the taxonomy information.
 		//depth->parent->children
 		SortedMap<Integer,Map<String,Set<String>>> parsed_taxonomy	= new TreeMap<Integer,Map<String,Set<String>>>();
@@ -601,21 +604,29 @@ public class CreatePhyloXML {
 
 		for(String species: species2taxinfo.keySet()){
 			String taxinfo			= species2taxinfo.get(species);
-			String new_taxinfo		= taxinfo+";"+species;
+            // String new_taxinfo		= taxinfo+";"+species;
+            String new_taxinfo		= species + ";" + taxinfo;
 			String[] split			= new_taxinfo.split(";");
+			// Structure of the `full_taxonomy` data changed compared to TRAPID 01
+            // Workaround to parse taxonomy without changing too much of the code, using a reversed list.
+			List<String> splitList = Arrays.asList(split);
+            Collections.reverse(splitList);
+            split = (String[]) splitList.toArray();
+			// System.out.println(new_taxinfo);
 			for(int i=0;i<split.length;i++){
 				String s			= split[i].trim();
+                System.out.println(s);
 				if(!parsed_taxonomy.containsKey(i)){parsed_taxonomy.put(i,new HashMap<String,Set<String>>());}
 				if(!parsed_taxonomy.get(i).containsKey(s)){parsed_taxonomy.get(i).put(s,new HashSet<String>());}
 				if(i!=(split.length-1)){
 					String child	= split[i+1].trim();
 					parsed_taxonomy.get(i).get(s).add(child);
-				}		
+				}
 				if(!full_taxonomy_count.containsKey(s)){full_taxonomy_count.put(s,0);}
 				full_taxonomy_count.put(s,(full_taxonomy_count.get(s)+1));
-			}			
+			}
 		}
-			
+
 		//now, use the taxonomy information to split up the color ranges.
 		//By doing so, species from the same clades will be displayed with similar schemes
 		int[] min_max_colors = {20,230,20,230,20,230};
@@ -633,19 +644,19 @@ public class CreatePhyloXML {
 			String color = ""+Integer.toHexString(rgb).toUpperCase();
 			result.put(species, color);
 		}
-		
+
 		/*
 		System.out.println("<html><head></head><body>");
 		for(String species:result.keySet()){
-			System.out.println("<div style='width:400px;height:50px;color:#"+result.get(species)+"'>"+species+"</div>");			
+			System.out.println("<div style='width:400px;height:50px;color:#"+result.get(species)+"'>"+species+"</div>");
 		}
 		System.out.println("</body></html>");
 		*/
-	
+
 		return result;
 	}
-	
-	
+
+
 	private Map<String,int[]> getColorRanges(
 			SortedMap<Integer,Map<String,Set<String>>> parsed_taxonomy,
 			Map<String,Integer> full_taxonomy_count,
@@ -653,9 +664,9 @@ public class CreatePhyloXML {
 			String current_clade,
 			int[] min_max_colors,
 			Map<String,int[]> current
-			){		
+			){
 		//first check: is this an species, if so, return the current min/max combination
-		if(parsed_taxonomy.get(current_depth).get(current_clade).size() == 0){			
+		if(parsed_taxonomy.get(current_depth).get(current_clade).size() == 0){
 			current.put(current_clade, min_max_colors);
 			return current;
 		}
@@ -666,34 +677,34 @@ public class CreatePhyloXML {
 			String next_clade			= child_clades.get(0);
 			return this.getColorRanges(parsed_taxonomy, full_taxonomy_count, next_depth, next_clade, min_max_colors, current);
 		}
-		
+
 		//ok, there are multiple child clades present
-		//split the available color range according to the number of species which can be present in the clade		
-		int total_species	= full_taxonomy_count.get(current_clade);		
-		
+		//split the available color range according to the number of species which can be present in the clade
+		int total_species	= full_taxonomy_count.get(current_clade);
+
 		int min_color_red	= min_max_colors[0]; int max_color_red	= min_max_colors[1];
 		int min_color_green	= min_max_colors[2]; int max_color_green= min_max_colors[3];
 		int min_color_blue	= min_max_colors[4]; int max_color_blue	= min_max_colors[5];
-		
+
 		int current_low_red		= min_color_red;
 		int current_low_green	= min_color_green;
 		int current_low_blue	= min_color_blue;
-		
+
 		List<String> child_clades	= new ArrayList<String>(parsed_taxonomy.get(current_depth).get(current_clade));
 		int start_red				= (current_depth%child_clades.size());
 		int start_green				= ((current_depth+1)%child_clades.size());
 		int start_blue				= ((current_depth+2)%child_clades.size());
-		
+
 		Map<String,int[]> color_maps	= new HashMap<String,int[]>();
 		for(String child_clade:child_clades){
 			int[] tmp				= new int[6];
 			color_maps.put(child_clade, tmp);
 		}
-		//red		
+		//red
 		for(int i=start_red;i<(child_clades.size()+start_red);i++){
 			int index				= i%(child_clades.size());
 			String child_clade		= child_clades.get(index);
-			int num_species			= full_taxonomy_count.get(child_clade);			
+			int num_species			= full_taxonomy_count.get(child_clade);
 			int new_min_color_red	= current_low_red;
 			int new_max_color_red	= current_low_red + (max_color_red-min_color_red)*num_species/total_species;
 			current_low_red			= new_max_color_red;
@@ -702,12 +713,12 @@ public class CreatePhyloXML {
 			val[1]					= new_max_color_red;
 			color_maps.put(child_clade, val);
 		}
-		
+
 		//green
 		for(int i=start_green;i<(child_clades.size()+start_green);i++){
 			int index				= i%(child_clades.size());
 			String child_clade		= child_clades.get(index);
-			int num_species			= full_taxonomy_count.get(child_clade);			
+			int num_species			= full_taxonomy_count.get(child_clade);
 			int new_min_color_green	= current_low_green;
 			int new_max_color_green	= current_low_green + (max_color_green-min_color_green)*num_species/total_species;
 			current_low_green		= new_max_color_green;
@@ -716,12 +727,12 @@ public class CreatePhyloXML {
 			val[3]					= new_max_color_green;
 			color_maps.put(child_clade, val);
 		}
-		
+
 		//blue
 		for(int i=start_blue;i<(child_clades.size()+start_blue);i++){
 			int index				= i%(child_clades.size());
 			String child_clade		= child_clades.get(index);
-			int num_species			= full_taxonomy_count.get(child_clade);			
+			int num_species			= full_taxonomy_count.get(child_clade);
 			int new_min_color_blue	= current_low_blue;
 			int new_max_color_blue	= current_low_blue + (max_color_blue-min_color_blue)*num_species/total_species;
 			current_low_blue		= new_max_color_blue;
@@ -730,17 +741,17 @@ public class CreatePhyloXML {
 			val[5]					= new_max_color_blue;
 			color_maps.put(child_clade, val);
 		}
-		
+
 		for(String child_clade:child_clades){
 			int next_depth				= current_depth+1;
 			int[] new_min_max_colors	= color_maps.get(child_clade);
 			Map<String,int[]> res		= this.getColorRanges(parsed_taxonomy, full_taxonomy_count, next_depth, child_clade, new_min_max_colors, current);
 			current.putAll(res);
 		}
-				
+
 		return current;
 	}
-	
+
 	/*
 	private Map<String,int[]> getColorRanges(
 			SortedMap<Integer,Map<String,Set<String>>> parsed_taxonomy,
@@ -750,7 +761,7 @@ public class CreatePhyloXML {
 			int min_color,
 			int max_color,
 			Map<String,int[]> current
-			){		
+			){
 		//first check: is this an species, if so, return the current min/max combination
 		if(parsed_taxonomy.get(current_depth).get(current_clade).size() == 0){
 			int[] res	= {min_color,max_color};
@@ -764,24 +775,24 @@ public class CreatePhyloXML {
 			String next_clade			= child_clades.get(0);
 			return this.getColorRanges(parsed_taxonomy, full_taxonomy_count, next_depth, next_clade, min_color, max_color, current);
 		}
-		
+
 		//ok, there are multiple child clades present
-		//split the available color range according to the number of species which can be present in the clade		
-		int total_species	= full_taxonomy_count.get(current_clade);		
+		//split the available color range according to the number of species which can be present in the clade
+		int total_species	= full_taxonomy_count.get(current_clade);
 		int current_low		= min_color;
 		for(String child_clade:parsed_taxonomy.get(current_depth).get(current_clade)){
 			int num_species				= full_taxonomy_count.get(child_clade);
 			int next_depth				= current_depth+1;
 			int new_min_color			= current_low;
 			int new_max_color			= current_low + (max_color-min_color)*num_species/total_species;
-			current_low					= new_max_color;			
+			current_low					= new_max_color;
 			Map<String,int[]> res		= this.getColorRanges(parsed_taxonomy, full_taxonomy_count, next_depth, child_clade, new_min_color, new_max_color, current);
 			current.putAll(res);
 		}
 		return current;
 	}*/
-	
-	
+
+
 	/*
 	 * Create phyloxml file from newick
 	 */
@@ -789,32 +800,32 @@ public class CreatePhyloXML {
 		if(newick==null || newick.length()==0){
 			throw new Exception("No newick tree present");
 		}
-		
+
 		String newick_file_path		= tmp_dir+gf_id+".newick";
-		String phyloxml_file_path	= tmp_dir+gf_id+".xml"; 
-		
+		String phyloxml_file_path	= tmp_dir+gf_id+".xml";
+
 		//write the content of the newick tree to the file
 		BufferedWriter newick_writer	= new BufferedWriter(new FileWriter(new File(newick_file_path)));
 		newick_writer.write(newick+"\n");
 		newick_writer.close();
-		
+
 		//execute forester jar file in order to create a basic XML file
 		Runtime rt			= Runtime.getRuntime();
 		String java_exec 	= "java -Djava.awt.headless=true -cp "+forester_jar_location+" org.forester.application.phyloxml_converter ";
 		String java_params	= "-f=nn -i -m "+newick_file_path+" "+phyloxml_file_path+" ";
 		Process p			= rt.exec(java_exec+" "+java_params);
 		p.waitFor();
-		
+
 		//ok, check whether or not the phyloxml file has actually been generated
 		File phyloxml_file	= new File(phyloxml_file_path);
 		if(!phyloxml_file.exists()){throw new Exception("Phyloxml file has not been generated!");}
-				
+
 		return phyloxml_file_path;
 	}
-	
-	
+
+
 	/**
-	 * 
+	 *
 	 * @param conn
 	 * @param exp_id
 	 * @param gf_id
@@ -822,7 +833,7 @@ public class CreatePhyloXML {
 	 * @throws Exception
 	 */
 	private Map<String,String> getGeneFamilyInfo(Connection conn,String exp_id,String gf_id) throws Exception{
-		Map<String,String> result		= null; 
+		Map<String,String> result		= null;
 		Statement stmt					= conn.createStatement();
 		String sql						= "SELECT * FROM `gene_families` WHERE `experiment_id`='"+exp_id+"' AND `gf_id`='"+gf_id+"' ";
 		ResultSet set					= stmt.executeQuery(sql);
@@ -841,14 +852,14 @@ public class CreatePhyloXML {
 		stmt.close();
 		return result;
 	}
-	
-	
-	
+
+
+
 	private Connection createDbConnection(String server,String database,String login,String password) throws Exception{
 		String url		= "jdbc:mysql://"+server+"/"+database;
 		Connection conn	= DriverManager.getConnection(url,login,password);
 		return conn;
 	}
-	
-	
+
+
 }
