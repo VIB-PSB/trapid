@@ -262,26 +262,32 @@
 /*ul.tabbed_header li a{*/
 	/*padding: 0 11px;*/
 /*}*/
-/*ul.tabbed_header li.selected_tab{*/
+
+ul.tabbed_header li.selected_tab{
 	/*background: none repeat scroll 0 0 #FFFFFF;*/
+	font-weight:bold;
 	/*border-color: #CCCCCC;*/
 	/*padding-bottom: 13px;*/
-/*}*/
-/*div.tabbed_div{*/
+}
+
+div.tabbed_div{
 	/*background: none repeat scroll 0 0 #FFFFFF;*/
 	/*border: 1px solid #CCCCCC;*/
-	/*margin-bottom: 5px;*/
-	/*padding-top: 15px;*/
-	/*width:620px;*/
-	/*display: none;*/
-	/*!*line-height:1.8em;*!*/
-/*}*/
-/*div.tabbed_div2{*/
-	/*margin-top:10px;*/
-/*}*/
-/*div.selected_tabbed_div{*/
-	/*display:block;*/
-/*}*/
+	margin-bottom: 5px;
+	padding-top: 15px;
+	width:620px;
+	display: none;
+	/*line-height:1.8em;*/
+}
+
+div.tabbed_div2{
+	margin-top:10px;
+}
+
+div.selected_tabbed_div{
+	display:block;
+}
+
 /*span.checkboxlabel{*/
 	/*padding-left:5px;*/
 /*}*/
@@ -1328,6 +1334,12 @@ body {
 	width:100%;
 	height:800px;
 	border:1px solid #aaaaaa;
+}
+
+
+/* To use to have text having a fixed-width font (for example in `textarea` elements) */
+.fixed-width-text {
+	font-family:Consolas,Monaco,Lucida Console,Liberation Mono,DejaVu Sans Mono,Bitstream Vera Sans Mono,Courier New, monospace;
 }
 
 /* Lots of ugly borders: useful for debugging when things are not displayed as expected */

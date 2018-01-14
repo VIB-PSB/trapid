@@ -14,7 +14,7 @@ class TrapidController extends AppController{
 				"AnnotSources","Annotation","ExtendedGo","ProteinMotifs","GfData"
 				);
 
-  var $components	= array("Cookie","TrapidUtils","Sequence");
+  var $components	= array("Cookie", "TrapidUtils", "Sequence", "Session");
   var $paginate		= array(
     "Transcripts"=>
 					array(
@@ -768,6 +768,7 @@ class TrapidController extends AppController{
     $this->set("available_subsets",$available_subsets);
     $this->set("transcript_subsets",$transcript_subsets);
 
+    $this -> set('title_for_layout', $transcript_id . ' &middot; Transcript');
 
   }
 
