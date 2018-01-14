@@ -1,9 +1,14 @@
-<div style="background-color:#D2D2D2;border:1px solid black;width:700px; padding-left:20px;padding-top:10px;">
-<?php
+<div class="panel panel-default" style="width:700px;">
+    <div class="panel-heading">
+        <h3 class="panel-title">Toolbox</h3>
+    </div>
+    <div class="panel-body">
+    <?php
 foreach($toolbox as $subtitle=>$content){
-echo "<h4 style='text-decoration:underline;'>".$subtitle."</h4>\n";
+//echo "<h4 style='text-decoration:underline;'>".$subtitle."</h4>\n";
+echo "<h5>".$subtitle."</h5>\n";
 echo "<div class='subdiv bottom'>\n";
-echo "<ul>";
+echo "<ul class='list-unstyled'>";
 foreach($content as $cont){
 	echo "<li>";
 	$desc		= $cont[0];
@@ -22,4 +27,5 @@ echo "</ul>\n";
 echo "</div>\n";
 }
 ?>
+    </div>
 </div>
