@@ -7,11 +7,11 @@
     <h1 class="text-primary">GO term</h1>
 </div>
 <div class="subdiv">
-	<?php echo $this->element("trapid_experiment");?>
+	<?php // echo $this->element("trapid_experiment"); ?>
 
 	<h3>Overview</h3>
 	<div class="subdiv">
-		<dl class="standard">
+		<dl class="standard dl-horizontal">
 			<dt>GO term</dt>
 			<dd>
 			<?php
@@ -32,7 +32,7 @@
 	</div>
 
 
-	<h3>Toolbox</h3>
+<!--	<h3>Toolbox</h3>-->
 	<div class="subdiv">
 	<?php
 	$toolbox	= array("Find"=>array(

@@ -3,11 +3,11 @@
     <h1 class="text-primary">Child GO terms</h1>
 </div>
 <div class="subdiv">
-	<?php echo $this->element("trapid_experiment"); ?>
+	<?php // echo $this->element("trapid_experiment"); ?>
 	
 	<h3>Parental GO term</h3>
 	<div class="subdiv">
-		<dl class="standard">
+		<dl class="standard dl-horizontal">
 			<dt>GO term</dt>
 			<dd><?php echo $this->Html->link($go,array("controller"=>"functional_annotation","action"=>"go",$exp_id,$go_web));?></dd>
 			<dt>GO description</dt>
@@ -37,12 +37,15 @@
 		<?php else: ?>
 		<?php echo $this->Html->script(array("sorttable")); ?>
 		<span style='font-size:x-small'>Click on table headers to sort columns</span>	
-		<table cellpadding="0" cellspacing="0" style="width:800px;" class='sortable altrow2'>
-			<tr>	
+		<table class='table table-striped table-condensed table-bordered table-hover sortable altrow2' cellpadding="0" cellspacing="0">
+			<thead>
+            <tr>
 				<th style="width:20%;">Child GO</th>
 				<th style="width:15%;">#transcripts</th>
 				<th style="width:60%;">Description</th>
 			</tr>
+            </thead>
+            <tbody>
 			<?php
 			$counter	= 1;
 			foreach($child_go_counts as $child_go=>$child_go_info){
@@ -54,6 +57,7 @@
 				echo "</tr>\n";
 			}	
 			?>
+            </tbody>
 		</table>
 		<?php endif; ?>	
 	</div>	
