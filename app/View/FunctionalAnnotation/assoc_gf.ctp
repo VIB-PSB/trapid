@@ -3,10 +3,10 @@
 <h1 class="text-primary">Associated gene families</h1>
     </div>
 <div class="subdiv">
-	<?php echo $this->element("trapid_experiment");?>
+	<?php // echo $this->element("trapid_experiment"); ?>
 	<h3>Overview</h3>
 	<div class="subdiv">
-		<dl class="standard">
+		<dl class="standard dl-horizontal">
 			<?php
 			if($type=="go"){
 				echo "<dt>GO term</dt>";
@@ -35,13 +35,16 @@
 
 		<?php echo $this->Html->script("sorttable");?>
 		<?php echo $this->element("sorttable");?>
-		<table cellpadding="0" cellspacing="0" class="sortable" style="width:900px;">
+		<table cellpadding="0" cellspacing="0" class='table table-striped table-condensed table-bordered table-hover sortable'>
+            <thead>
 			<tr>
 				<th style="width:15%">Gene family</th>
 				<th style="width:15%">#transcripts</th>
 				<th style="width:35%">GO terms</th>
 				<th style="width:35%">Protein domains</th>
 			</tr>
+            </thead>
+            <tbody>
 			<?php
 			$j=0;
 			foreach($gene_families as $gf_id=>$transcript_count){							
@@ -70,6 +73,7 @@
 				echo "</tr>\n";	
 			}
 			?>
+            </tbody>
 		</table>
 		<?php endif;?>
 	</div>

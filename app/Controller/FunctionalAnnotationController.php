@@ -254,7 +254,7 @@ class FunctionalAnnotationController extends AppController{
       //find whether any genes are associated (this also validates the go itself).
       $num_transcripts= $this->TranscriptsGo->find("count",array("conditions"=>array("experiment_id"=>$exp_id,"type"=>"go", "name"=>$go)));
       if($num_transcripts==0){$this->redirect(array("controller"=>"trapid","action"=>"experiment",$exp_id));}
-      $go_information	= $this->ExtendedGo->find("first",array("conditions"=>array("go"=>$go)));
+      $go_information	= $this->ExtendedGo->find("first",array("conditions"=>array("name"=>$go, "type"=>"go")));
       $this->set("description",$go_information["ExtendedGo"]["desc"]);
       $this->set("type","go");
       $this->set("go",$go);
@@ -271,10 +271,11 @@ class FunctionalAnnotationController extends AppController{
       //find whether any genes are associated (this also validates the interpro itself)
       $num_transcripts= $this->TranscriptsInterpro->find("count",array("conditions"=>array("experiment_id"=>$exp_id, "type"=>"ipr", "name"=>$interpro)));
       if($num_transcripts==0){$this->redirect(array("controller"=>"trapid","action"=>"experiment",$exp_id));}
-//      $interpro_information	= $this->ProteinMotifs->find("first",array("conditions"=>array("motif_id"=>$interpro)));
-//      $this->set("description",$interpro_information["ProteinMotifs"]["desc"]);
-        // TRAPID db structure changed
-      $interpro_information	= $this->ProteinMotifs->find("first",array("conditions"=>array("name"=>$interpro, "type"=>"ipr")));
+      // TRAPID db structure changed
+      // $interpro_information	= $this->ProteinMotifs->find("first",array("conditions"=>array("motif_id"=>$interpro)));
+      //  $this->set("description",$interpro_information["ProteinMotifs"]["desc"]);
+      // Note: `ipr`/`interpro` = not consistent???
+      $interpro_information	= $this->ProteinMotifs->find("first",array("conditions"=>array("name"=>$interpro, "type"=>"interpro")));
       $this->set("description",$interpro_information["ProteinMotifs"]["desc"]);
       $this->set("type","interpro");
       $this->set("interpro",$interpro);
@@ -328,7 +329,6 @@ class FunctionalAnnotationController extends AppController{
     $this->set("ipr_descriptions",$ipr_descriptions);
 
     $this -> set('title_for_layout', $identifier.' &middot; Associated gene families');
-
   }
 
 
