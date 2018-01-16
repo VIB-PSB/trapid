@@ -18,8 +18,13 @@ class TrapidController extends AppController{
   var $paginate		= array(
     "Transcripts"=>
 					array(
+					    // If we want to retrieve only fields that are actually used
+                        // 'fields' => array('Transcripts.transcript_id', 'Transcripts.gf_id', 'Transcripts.meta_annotation'),
 						"limit"=>10,
-			       			"order"=>array("Transcripts.transcript_id"=>"ASC")
+			       			"order"=>array(
+			       			    "Transcripts.experiment_id"=>"ASC",  // Extra sorting needed too (see gitlab issue #5)
+			       			    "Transcripts.transcript_id"=>"ASC"
+                            )
 				  	),
 				"TranscriptsPagination"=>
 					array(
@@ -437,7 +442,10 @@ class TrapidController extends AppController{
 
     if($standard_experiment_info['Experiments']['process_state']!="empty"){
 	// Retrieve information for table at bottom of page
-	$transcripts_p	= $this->paginate("Transcripts",array("Transcripts.experiment_id"=>$exp_id));
+    // The query used to retrieve transcripts to display was modified (see gitlab issue #5 for more details)
+    // The previous one was not using `experiment_id` index and taking a very long time.
+	// $transcripts_p	= $this->paginate("Transcripts",array("Transcripts.experiment_id"=>$exp_id));
+    $transcripts_p = $this->paginate("Transcripts",array("Transcripts.experiment_id = '" . $exp_id . "'"));
 	$transcript_ids	= $this->TrapidUtils->reduceArray($transcripts_p,"Transcripts","transcript_id");
     $this->set("transcript_ids", $transcript_ids);
 

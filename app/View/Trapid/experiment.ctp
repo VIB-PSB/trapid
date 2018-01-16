@@ -659,3 +659,4 @@ if ($standard_experiment_info['Experiments']['process_state'] == "finished" && $
 </div>
 
 
+<?php // echo $this->element('sql_dump');  // Dump all MySQL queries (debug) ?>

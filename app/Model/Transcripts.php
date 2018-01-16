@@ -269,6 +269,101 @@ class Transcripts extends AppModel{
     return $result;
   }
 
+
+    /* Unused code: quick test to write custom queries when overriding pagination */
+
+//    /* Create custom query, optionally forcing to use a certain index */
+//    // TODO: Upgrade function to make it work with a selection of fields as well (not using `*`)
+//    function createQuery($parameters,$count=FALSE, $chosen_index=null) {
+//        // `SELECT` string pieces, concatenated at the end to create the custom query
+//        $query_select = "SELECT ";
+//        $query_from = "FROM transcripts ";
+//        $query_where = "WHERE ";
+//        // Handle parameters
+//        $num_parameters = count($parameters);
+//        $exp_id = mysql_real_escape_string($parameters["Transcripts.experiment_id"]);
+//        $parameters_keys = array_keys($parameters);
+//        $prefix = false;
+//        if (strpos($parameters_keys[0], "Transcripts") === 0) {
+//            $prefix = true;
+//        };
+//        // Parse parameters
+//        foreach ($parameters as $col => $value) {
+//            if ($col != end($parameters_keys)) {
+//                $query_where = $query_where . $col . " = '" . $value . "' AND ";
+//            } else {
+//                $query_where = $query_where . $col . " = '" . $value . "' ";
+//            }
+//        }
+//        // Put table alias if there is a prefix
+//        if($prefix) {
+//            $query_from = $query_from . " as Transcripts ";
+//        }
+//        // If we chose to force use an index (`chosen_index`), append it
+//        if ($chosen_index) {
+//            $query_from = $query_from . "FORCE INDEX (" . $chosen_index . ") ";
+//        }
+//        // Append data to select (depending on count/prefix)
+//        if ($count) {
+//            if ($prefix) {
+//                $query_select = $query_select . "COUNT(Transcripts.transcript_id) as count ";
+//            } else {
+//                $query_select = $query_select . "COUNT(transcript_id) as count ";
+//            }
+//        }
+//        else {
+//          $query_select	= $query_select ." * ";
+//        }
+//        // Create full query string and return it
+//        $query_full = $query_select . $query_from . $query_where;
+//        return $query_full;
+//    }
+//
+//
+//    /* Override `paginate()` function */
+//    function paginate($conditions,$fields,$order,$limit,$page=1,$recursive=null,$extra=array()){
+//        $custom_query = $this->createQuery($conditions,false, $chosen_index="experiment_id");
+//        // pr("custom_query:".$custom_query);
+//        if($custom_query === false) {
+//          return null;
+//        }
+//        $limit_start = ($page-1)*$limit;
+//        $limit_end = $limit;
+//        if($limit_start<0) {
+//            $limit_start = 0;
+//        }
+//        $use_limit = true;
+//
+//        if($order) {
+//            $custom_query = $custom_query." ORDER BY ";
+//            foreach($order as $key=>$value){
+//                $custom_query = $custom_query . "" . $key . " " . $value . " ";
+//            }
+//        }
+//        if($use_limit) {
+//            $custom_query = $custom_query . " LIMIT " . $limit_start . "," . $limit_end;
+//        }
+//        // pr("custom_query:".$custom_query);
+//        $res = $this->query($custom_query);
+//        $result	= array();
+//        foreach($res as $r){
+//            $result[] = $r;
+//        }
+//        return $result;
+//    }
+//
+//
+//    /* Override `paginateCount()` function */
+//    function paginateCount($conditions=null,$recursive=0,$extra=array()){
+//        $custom_query = $this->createQuery($conditions,true);
+//        if($custom_query === false) {
+//            return 0;
+//        }
+//        $res = $this->query($custom_query);
+//        $result = $res[0][0]['count'];
+//        return $result;
+//    }
+
 }
 
 
