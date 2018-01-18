@@ -225,7 +225,8 @@ sub send_email_outdated_experiments($ $ $){
 		my $content	= "Dear,\nYour TRAPID experiment with title '".$oe_title."' and id '".$oe."' has not been accessed in ".$no_access." months.\n";
 		$content	= $content."In order to save valuable disk space this experiment will be deleted in one month.\n";
 		$content	= $content."This can be prevented by logging into the TRAPID system again, and simply accessing the experiment, which will update the access data for this experiment\n";
-		$content	= $content."You can access TRAPID at http://bioinformatics.psb.ugent.be/webtools/trapid/ \n";
+		# $content	= $content."You can access TRAPID at http://bioinformatics.psb.ugent.be/webtools/trapid/ \n";
+		$content	= $content."You can access TRAPID at http://bioinformatics.psb.ugent.be/testix/trapid_frbuc/ \n";
 		$content	= $content."\n\nThank you for your interest in TRAPID\n";
 		my $send_to	= "To: ".$user_email."\n";
 		open(SENDMAIL, "|$sendmail") or die "Cannot open $sendmail: $!";

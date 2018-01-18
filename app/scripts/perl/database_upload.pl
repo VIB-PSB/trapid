@@ -206,7 +206,8 @@ sub send_email($ $ $ $ $ $){
 	  my $content		= "Dear user,\nYour TRAPID experiment titled '".$experiment_title."' has finished its upload phase.\n";
 	  $content		= $content."A total of ".$transcript_count." transcripts has been uploaded in your TRAPID experiment.\n";
 	  $content		= $content."You can now log in into TRAPID, and begin the analysis of your transcriptome dataset.\n";
-	  $content		= $content."You can access TRAPID at http://bioinformatics.psb.ugent.be/webtools/trapid/ \n";
+	  # $content		= $content."You can access TRAPID at http://bioinformatics.psb.ugent.be/webtools/trapid/ \n";
+	  $content		= $content."You can access TRAPID athttp://bioinformatics.psb.ugent.be/testix/trapid_frbuc/ \n";
 	  $content		= $content."\n\nThank you for your interest in TRAPID\n";
 	  my $send_to		= "To: ".$user_email."\n";
 	  open(SENDMAIL, "|$sendmail") or die "Cannot open $sendmail: $!";
