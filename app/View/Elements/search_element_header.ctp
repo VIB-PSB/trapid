@@ -3,7 +3,7 @@
 /* Quick rewrite of TRAPID's original search function (to put in experiment header's bar + bootstrap style + rewritten
 JS with jQuery). Not very practical for multiple values though... Need to think of a better way to perform searches. */
 
-echo $this->Form->create(null, array("controller" => "trapid", "action" => "search/" . $exp_id, "type" => "post", "class" => "navbar-form navbar-left", "role" => "search"));
+echo $this->Form->create(false, array("url"=>array("controller" => "trapid", "action" => "search/" . $exp_id), "type" => "post", "class" => "navbar-form navbar-left", "role" => "search"));
 $search_types = array(
     "transcript" => "Transcript identifier",
     "gene" => "Gene identifier", "GO" => "GO description",

@@ -188,11 +188,11 @@
         <?php endif; ?>
 
 
-        <h3>Perform new search</h3>
-        <div class="subdiv">
-            <br/>
-            <?php echo $this->element("search_element"); ?>
-        </div>
+<!--        <h3>Perform new search</h3>-->
+<!--        <div class="subdiv">-->
+<!--            <br/>-->
+<!--            --><?php //echo $this->element("search_element"); ?>
+<!--        </div>-->
 
     </div>
 </div>

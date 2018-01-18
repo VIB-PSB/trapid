@@ -1077,9 +1077,10 @@ class TrapidController extends AppController{
       //check on length of search value.
       if(strlen($sv) < 3){$this->set("search_result","bad_search");$this->set("error","Description should be 3 characters or more");return;}
       //find GO terms with this description
-      $go_terms	= $this->ExtendedGo->find("all",array("conditions"=>array("`ExtendedGo.desc` LIKE '%$sv%'")));
+      $go_terms	= $this->ExtendedGo->find("all",array("conditions"=>array("`ExtendedGo.desc` LIKE '%$sv%'", "type"=>"go")));
       if(!$go_terms){$this->set("search_result","bad_search");$this->set("error","Unknown GO description");return;}
-      $go_terms = $this->TrapidUtils->indexArraySimple($go_terms,"ExtendedGo","go","desc");
+      // $go_terms = $this->TrapidUtils->indexArraySimple($go_terms,"ExtendedGo","go","desc");
+      $go_terms = $this->TrapidUtils->indexArraySimple($go_terms,"ExtendedGo","name","desc");
       //ok, now find possible associated transcripts
       $transcripts_info = $this->TranscriptsGo->findTranscriptsFromGo($exp_id,$go_terms);
       if(!$transcripts_info){$this->set("search_result","bad_search");return;}
