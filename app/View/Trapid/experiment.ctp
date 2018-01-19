@@ -16,6 +16,7 @@
 <!--                                </ul>-->
 <!--                            </span>-->
 
+<?php if(isset($admin)) : ?>
 <!-- Sidebar options div -->
 <div id="sidebar-stuff" style="border: gray 2px dashed; background-color: white;">
     <h3>Sidebar tools
@@ -48,6 +49,7 @@
         <!--            </select>-->
     </p>
 </div>
+<?php endif; ?>
 
 <div class='page-header'>
     <h1 class="text-primary">Overview
