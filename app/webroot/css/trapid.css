@@ -1337,10 +1337,27 @@ body {
 }
 
 
+/* Core GF completeness */
+.result_link {
+	cursor: pointer;
+}
+
+.gf-table a {
+    cursor: pointer;
+}
+
+.gf-table a:after {
+	content: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAoAAAAKCAYAAACNMs+9AAAAQElEQVR42qXKwQkAIAxDUUdxtO6/RBQkQZvSi8I/pL4BoGw/XPkh4XigPmsUgh0626AjRsgxHTkUThsG2T/sIlzdTsp52kSS1wAAAABJRU5ErkJggg==);
+	margin: 0 3px 0 5px;
+}
+
+
 /* To use to have text having a fixed-width font (for example in `textarea` elements) */
 .fixed-width-text {
 	font-family:Consolas,Monaco,Lucida Console,Liberation Mono,DejaVu Sans Mono,Bitstream Vera Sans Mono,Courier New, monospace;
 }
+
+
 
 /* Lots of ugly borders: useful for debugging when things are not displayed as expected */
 
