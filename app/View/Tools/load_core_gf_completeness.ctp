@@ -6,7 +6,6 @@
  * Time: 8:20 PM
  */
 ?>
-
 <hr>
 <h4>Core GF completeness results <small><em><?php echo $tax_name; ?></em></small></h4>
 <div id="results-content">
@@ -39,7 +38,7 @@
 
             <?php
             if($n_represented > 0) {
-                echo "<table class=\"table table-compact table-striped table-hover table-bordered\">
+                echo "<table class=\"table table-compact table-striped table-hover table-bordered table-responsive gf-table\">
                 <thead>
                     <th>GF identifier</th>
                     <th># genes</th>
@@ -50,11 +49,26 @@
                 <tbody>";
                 foreach ($represented_gfs_array as $represented_gf) {
                     echo "<tr>";
-                    echo "<td>" . $represented_gf["gf_id"] . "</td>";
+                    if($linkout_prefix) {
+                        echo "<td><a>" .$represented_gf["gf_id"] . "</a></td>";
+                    }
+                    else {
+                        echo "<td>" . $represented_gf["gf_id"] . "</td>";
+                    }
                     echo "<td>" . $represented_gf["n_genes"] . "</td>";
                     echo "<td>" . $represented_gf["n_species"] . "</td>";
-                    echo "<td>" . $represented_gf["gf_weight"] . "</td>";
-                    echo "<td>" . $represented_gf["queries"] . "</td>";
+                    echo "<td>" . number_format((float)$represented_gf["gf_weight"], 3, '.', '') . "</td>";
+                    echo "<td>";
+                    $queries = explode(',', $represented_gf["queries"]);
+                    if(sizeof($queries) <= 5) {
+                        foreach($queries as $query) {
+                            echo $query . " ";
+                        }
+                    }
+                    else {
+                        echo sizeof($queries) . " transcripts";
+                    }
+                    echo "</td>";
                     echo "</tr>";
                 }
                 echo "</tbody>
@@ -69,7 +83,7 @@
         <div id="missing-gfs" class="tab-pane"><br>
             <?php
             if($n_missing > 0) {
-                echo "<table class=\"table table-compact table-striped table-hover table-bordered\">
+                echo "<table class=\"table table-compact table-striped table-hover table-bordered gf-table\">
                 <thead>
                     <th>GF identifier</th>
                     <th># genes</th>
@@ -79,10 +93,16 @@
                 <tbody>";
                 foreach ($missing_gfs_array as $missing_gf) {
                     echo "<tr>";
-                    echo "<td>" . $missing_gf["gf_id"] . "</td>";
+                    echo "<tr>";
+                    if($linkout_prefix) {
+                        echo "<td><a>" .$missing_gf["gf_id"] . "</a></td>";
+                    }
+                    else {
+                        echo "<td>" . $missing_gf["gf_id"] . "</td>";
+                    }
                     echo "<td>" . $missing_gf["n_genes"] . "</td>";
                     echo "<td>" . $missing_gf["n_species"] . "</td>";
-                    echo "<td>" . $missing_gf["gf_weight"] . "</td>";
+                    echo "<td>" . number_format((float)$represented_gf["gf_weight"], 3, '.', '') . "</td>";
                     echo "</tr>";
                 }
                 echo "</tbody>
@@ -95,3 +115,20 @@
         </div>
     </div>
 </div>
+<?php if($linkout_prefix) : ?>
+    <script>
+        // Redirect to external GF page
+        function redirectToPage(gf_id) {
+            var linkout_url = "<?php echo $linkout_prefix; ?>gene_families/view/" + gf_id;
+            window.open(linkout_url, '_blank');
+        }
+        // On click of a gf in a `.gf-table`, trigger the redirect cuntion
+        $(function() {
+            $(".gf-table tr td:first-child").click(function(e){
+                redirectToPage(gf_txt);
+                var gf_txt = $(e.target).text();
+            });
+        });
+
+    </script>
+<? endif; ?>

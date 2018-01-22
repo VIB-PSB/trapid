@@ -2010,10 +2010,13 @@ function label_go_intersection($exp_id=null,$label=null){
         $this->redirect(array("controller"=>"tools", "action"=>"load_core_gf_completeness", $exp_id,  $clade_tax_id, $label, $tax_source, $species_perc, $top_hits));
     }
 
-    // TODO (more 'to think'): create a function to get the `id` field of the DB (and then just have to load that) or keep all parameters in URL? What is best?
+
     // Load results of a core GF analysis. Clade + subset + method (top hits + species percent) gives a unique id
+    // TODO (more 'to think'): create a function to get the `id` field of the DB (and then just have to load that) or keep all parameters in URL? What is best?
+    // TODO: find a way to NOT load all the data at once (will be particularly relevant when working with larger quantities of data ,i.e. EggNOG)
     function load_core_gf_completeness($exp_id, $clade_tax_id, $label, $tax_source, $species_perc, $top_hits){
         parent::check_user_exp($exp_id);
+        $exp_info	= $this->Experiments->getDefaultInformation($exp_id);
         $this->layout = "";
         // Set clade tax name
         $tax_name = $this->FullTaxonomy->find("first", array("fields"=>array("scname"), "conditions"=>array("txid"=>$clade_tax_id)));
@@ -2022,12 +2025,12 @@ function label_go_intersection($exp_id=null,$label=null){
         $completeness_job = $this->CompletenessResults->find("first", array("conditions"=>array("experiment_id"=>$exp_id,
             "clade_txid"=>$clade_tax_id, "label"=>$label,
             "used_method"=>"sp=".$species_perc.";ts=".$tax_source.";th=".$top_hits)));
-//        pr($completeness_job);
+        // pr($completeness_job);
         // Count number of missing/represented GFs. Done this way:
         // get length of strings: if 0, return 0, otherwise give the length of string splitted by `;`
         $n_missing = strlen($completeness_job['CompletenessResults']['missing_gfs']) ? sizeof(explode(";", $completeness_job['CompletenessResults']['missing_gfs'])) : 0;
         $n_represented = strlen($completeness_job['CompletenessResults']['represented_gfs']) ? sizeof(explode(";", $completeness_job['CompletenessResults']['represented_gfs'])) : 0;
-//        pr(explode(";", $completeness_job['CompletenessResults']['represented_gfs']));
+        // pr(explode(";", $completeness_job['CompletenessResults']['represented_gfs']));
         $n_total = $n_missing + $n_represented;
         $missing_gfs_array = array();
         $represented_gfs_array = array();
@@ -2036,18 +2039,25 @@ function label_go_intersection($exp_id=null,$label=null){
                 $record = explode(":", $missing_gf_str);
                 array_push($missing_gfs_array, array("gf_id" => $record[0], "n_genes" => $record[1], "n_species" => $record[2], "gf_weight" => $record[3]));
             }
-//            pr($missing_gfs_array);
+            // pr($missing_gfs_array);
         }
         if($n_represented > 0) {
             foreach (explode(";", $completeness_job['CompletenessResults']['represented_gfs']) as $represented_gf_str) {
                 $record = explode(":", $represented_gf_str);
                 array_push($represented_gfs_array, array("gf_id" => $record[0], "n_genes" => $record[1], "n_species" => $record[2], "gf_weight" => $record[3], "queries"=> $record[4]));
             }
-//            pr($represented_gfs_array);
+            // pr($represented_gfs_array);
         }
 
-        // Set all variables used in the view
-        // TODO: find a way to NOT load all the data at once (will be particularly relevant when working with larger quantities of data ,i.e. EggNOG)
+        // Get linkout prefix if it is allowed, otherwise return null
+        if($exp_info['allow_linkout']){
+            $linkout_prefix =  $exp_info['datasource_URL'];
+        }
+        else {
+            $linkout_prefix = null;
+        }
+
+        // Finally, set all variables used in the view
         $this->set("label", $label);
         $this->set("tax_name", $tax_name);
         $this->set("n_missing", $n_missing);
@@ -2058,6 +2068,7 @@ function label_go_intersection($exp_id=null,$label=null){
         $this->set("represented_gfs_array", $represented_gfs_array);
         $this->set("species_perc", $species_perc);
         $this->set("top_hits", $top_hits);
+        $this->set("linkout_prefix", $linkout_prefix);
     }
 
 
