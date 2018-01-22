@@ -57,10 +57,9 @@
     </h1> <?php // echo $standard_experiment_info['Experiments']['title'];?>
 </div>
 
-
 <script type="text/javascript">
     $(document).ready(function () {
-        console.log("GONNA PROCESS!");
+//        console.log("GONNA PROCESS!");
         $('#transcriptsTable').dataTable({
             "bServerSide": true,
             "bProcessing": true,
@@ -322,11 +321,22 @@ if ($standard_experiment_info['Experiments']['process_state'] == "finished" && $
     <?php if(isset($admin)) : ?>
     <div style='height:50px;'></div><hr>
     <h2 class="text-danger">Experimental zone!</h2>
-    <?php
-    echo "<pre>";
-    print_r($_REQUEST);
-    echo "</pre>";
-    ?>
+
+    <h3>Tooltip tests</h3>
+    <div id="tooltip-container">
+        <?php
+            echo $this->element("help_tooltips/create_tooltip", array("tooltip_text"=>"This is some text with <strong>HTML</strong>", "use_html"=>"true"));
+            echo $this->element("help_tooltips/create_tooltip", array("tooltip_text"=>$tooltip_text_test, "tooltip_placement"=>"left"));
+            echo $this->element("help_tooltips/create_tooltip", array("tooltip_text"=>$tooltip_text_test, "tooltip_placement"=>"top"));
+            echo $this->element("help_tooltips/create_tooltip", array("tooltip_text"=>$tooltip_text_test, "tooltip_placement"=>"right"));
+            echo $this->element("help_tooltips/create_tooltip", array("tooltip_text"=>$tooltip_text_test, "tooltip_placement"=>"bottom"));
+            echo $this->element("help_tooltips/create_tooltip", array("tooltip_text"=>$tooltip_text_test, "tooltip_placement"=>"left", "override_span_class"=>"glyphicon glyphicon-console help-tooltip-icon small-icon"));
+            // This should display nothing as we do not have any tooltip text to display
+            echo $this->element("help_tooltips/create_tooltip", array("tooltip_text"=>null));
+        ?>
+    </div>
+    <?php echo $this->element("help_tooltips/enable_tooltips",  array("container"=>"#tooltip-container")); ?>
+
     <!--a name='transcripts' /-->
     <h2>Transcripts (jQuery datatables)</h2>
     <!-- table id="browserList" class="table table-striped table-hover"-->

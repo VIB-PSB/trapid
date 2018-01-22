@@ -11,7 +11,7 @@ class TrapidController extends AppController{
   var $uses		= array("Authentication","Experiments","DataSources","Transcripts","GeneFamilies","ExperimentLog",
 				"TranscriptsGo","TranscriptsInterpro","TranscriptsLabels","TranscriptsPagination","Similarities",
 				"SharedExperiments","DataUploads","ExperimentJobs","CleanupDate","CleanupExperiments",
-				"AnnotSources","Annotation","ExtendedGo","ProteinMotifs","GfData"
+				"AnnotSources","Annotation","ExtendedGo","ProteinMotifs","GfData", "HelpTooltips"
 				);
 
   var $components	= array("Cookie", "TrapidUtils", "Sequence", "Session");
@@ -419,7 +419,6 @@ class TrapidController extends AppController{
     // Set the edit date
     $this->Experiments->updateAll(array("last_edit_date"=>"'".date("Y-m-d H:i:s")."'"),array("experiment_id"=>$exp_id));
 
-
     $this->set("exp_id",$exp_id);
     $user_group=$this->Authentication->find("first",array("fields"=>array("group"),"conditions"=>array("user_id"=>parent::check_user())));
     if($user_group['Authentication']['group'] == "admin"){$this->set("admin", 1);}
@@ -479,9 +478,12 @@ class TrapidController extends AppController{
 	$this->set("go_info",$go_info);
 	$this->set("ipr_info",$ipr_info);
     }
-    // TODO: To change as we now get experiment information twice... Not very smart but will do for protatyping.
+    // TODO: To change as we now get experiment information twice... Not very smart but will do for prototyping.
       $exp_info	= $this->Experiments->getDefaultInformation($exp_id);
       $this->set("exp_info",$exp_info);
+      // Test HelpTooltips model
+      $tooltip_text_test = $this->HelpTooltips->getTooltipText("test_tooltip");
+      $this->set("tooltip_text_test", $tooltip_text_test);
       $this -> set('title_for_layout', 'Experiment overview &middot; ' . $standard_experiment_info['Experiments']['title']);
   }
 

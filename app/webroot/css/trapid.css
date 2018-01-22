@@ -1359,6 +1359,21 @@ body {
 
 
 
+/* ICONS */
+/* Help icons: gray, stuck on the right */
+.help-tooltip-icon {
+	color : #777;
+	cursor: default;
+	float: right;
+}
+
+
+/* And smaller icon size when needed */
+.small-icon {
+	font-size: 88%;
+}
+
+
 /* Lots of ugly borders: useful for debugging when things are not displayed as expected */
 
 /*body {*/
