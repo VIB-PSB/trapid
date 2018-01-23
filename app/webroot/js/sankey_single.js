@@ -13,11 +13,10 @@ function calculate_good_height(){
 // TODO: update to fit new TRAPID layout!
 function calculate_good_width(){
     // return Math.min(window.innerWidth - margin.left - margin.right - 80,Math.log2(sankey_data.length + 1)* 300);
-    return Math.min(window.innerWidth - margin.left - margin.right - 80 - 300, Math.log2(sankey_data.length + 1)* 300);
+    return Math.min(window.innerWidth - margin.left - margin.right - 80 - 300, Math.log2(sankey_data.length + 1)* 400);
 }
 
 document.getElementById('sankey').setAttribute("style","display:block;");
-
 
 /* Run everything on page loading */
 $(document).ready(function () {
@@ -145,13 +144,13 @@ function draw_sankey() {
    
     var sankey_data_copy =JSON.parse(JSON.stringify(sankey_data));
     var min_flow = 0;
-    if(parseInt($(dropdown_id + " option:selected").val()) !== -1){
+    var n_options = $(dropdown_id + ' option').length;  // Should not be zero if dropdown was populated
+    if(n_options != 0 && parseInt($(dropdown_id + " option:selected").val()) !== -1){
         min_flow = +$(dropdown_id + " option:selected").val();
     }
-    var links = sankey_data_copy.filter(function(link){        
+    var links = sankey_data_copy.filter(function(link){
         return +link[2] >= min_flow;        
     });
-
     var graph = {"nodes" : [], "links" : []};
     
     var good_links = links;

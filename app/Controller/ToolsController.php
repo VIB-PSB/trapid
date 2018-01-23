@@ -1683,8 +1683,9 @@ class ToolsController extends AppController{
     $go = str_replace('-',':',$go_web);
     $place_holder = '###';
 
-    $urls = array(Router::url(array("controller"=>"functional_annotation","action"=>"go",$exp_id,$place_holder)),
-                  Router::url(array("controller"=>"gene_family","action"=>"gene_family",$exp_id,$place_holder))
+    // Need to use `urldecode()` otherwise `#` gets encoded.
+    $urls = array(urldecode(Router::url(array("controller"=>"functional_annotation","action"=>"go",$exp_id,$place_holder))),
+                  urldecode(Router::url(array("controller"=>"gene_family","action"=>"gene_family",$exp_id,$place_holder)))
     );
     $rows	= $this->Transcripts->getOneGOToGFMapping($exp_id,$go);
 
@@ -1694,15 +1695,18 @@ class ToolsController extends AppController{
     $this->set("titleIsAKeyword", 'GO');
     $this->set("place_holder", $place_holder);
 
+    $this -> set('title_for_layout', "GO term - gene family");
     $this->render('sankey_single');
+
   }
 
   function interproSankey($exp_id=null,$interpro=null){
     $this->general_set_up($exp_id);
     $place_holder = '###';
 
-    $urls = array(Router::url(array("controller"=>"functional_annotation","action"=>"interpro",$exp_id,$place_holder)),
-                  Router::url(array("controller"=>"gene_family","action"=>"gene_family",$exp_id,$place_holder))
+    // Need to use `urldecode()` otherwise `#` gets encoded.
+    $urls = array(urldecode(Router::url(array("controller"=>"functional_annotation","action"=>"interpro",$exp_id,$place_holder))),
+                  urldecode(Router::url(array("controller"=>"gene_family","action"=>"gene_family",$exp_id,$place_holder)))
     );
     $rows	= $this->Transcripts->getOneInterproToGFMapping($exp_id,$interpro);
 
@@ -1712,7 +1716,8 @@ class ToolsController extends AppController{
     $this->set('titleIsAKeyword', 'Interpro');
     $this->set("place_holder", $place_holder);
 
-    $this->render('sankey_single');
+      $this -> set('title_for_layout', "Protein domain - gene family");
+      $this->render('sankey_single');
   }
 
 

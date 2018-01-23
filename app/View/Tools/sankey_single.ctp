@@ -1,18 +1,17 @@
 <div>
     <div class="page-header">
-<h1 class="text-primary"><?php echo $titleIsAKeyword;?> to gene family</h1>
+        <h1 class="text-primary"><?php echo $titleIsAKeyword;?> to gene family</h1>
     </div>
-<div class="subdiv">
-	<?php echo $this->element("trapid_experiment");?>
+	    <?php // echo $this->element("trapid_experiment"); ?>
 
     <div id="sankey" class="subdiv">
 
 <?php
     echo '<script type="text/javascript">';
-    echo "var sankey_data = " . $mapping .";";
-    echo "var descriptions = " . $descriptions .";";
-    echo "var urls = " . $urls.";";
-    echo "var place_holder = '" . $place_holder ."';";
+    echo "var sankey_data = " . $mapping .";\n";
+    echo "var descriptions = " . $descriptions .";\n";
+    echo "var urls = " . $urls.";\n";
+    echo "var place_holder = '" . $place_holder ."';\n";
     echo '</script>';	
 
 	echo $this->Html->css('sankey');
@@ -27,6 +26,5 @@
     echo '</div>';
 
 ?>
-</div>
 </div>
 </div>
