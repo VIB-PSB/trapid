@@ -119,6 +119,8 @@ class TrapidController extends AppController{
       }
       $this->redirect(array("controller"=>"trapid","action"=>"manage_jobs",$exp_id));
     }
+      $this->set("active_header_item", "Manage jobs");
+      $this->set('title_for_layout', 'Jobs');
   }
 
 
@@ -484,6 +486,7 @@ class TrapidController extends AppController{
       // Test HelpTooltips model
       $tooltip_text_test = $this->HelpTooltips->getTooltipText("test_tooltip");
       $this->set("tooltip_text_test", $tooltip_text_test);
+      $this->set("active_sidebar_item", "Overview");
       $this -> set('title_for_layout', 'Experiment overview &middot; ' . $standard_experiment_info['Experiments']['title']);
   }
 

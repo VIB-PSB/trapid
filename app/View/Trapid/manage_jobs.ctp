@@ -2,27 +2,30 @@
     <h1 class="text-primary">Manage TRAPID jobs</h1>
 </div>
 <div class="subdiv">
-    <?php echo $this->element("trapid_experiment"); ?>
+    <?php // echo $this->element("trapid_experiment"); ?>
 
-    <h3>Job control</h3>
-    <div class="subdiv">
+<!--    <h3>Job control</h3>-->
+<!--    <div class="subdiv">-->
 
         <?php
         //pr($running_jobs);
         if (count($running_jobs) == 0) {
-            echo "<span>No jobs are currently running for this experiment</span>\n";
+            echo "<p class='lead'>No jobs are currently running for this experiment. </p>\n";
         } else {
             echo $this->Form->create("Experiments", array("url" => array("controller" => "trapid", "action" => "manage_jobs", $exp_id),
                 "type" => "post"));
             $found_done = false;
-            echo "<table cellpadding='0' cellspacing='0' style='width:800px;'>\n";
+            echo "<table cellpadding='0' cellspacing='0' style='width:800px;' class='table table-striped table-condensed table-bordered table-hover'>\n";
+            echo "<thead>";
             echo "<tr>";
             echo "<th style='width:15%'>Job id</th>";
             echo "<th style='width:22%'>Date</th>";
             echo "<th style='width:20%'>Status</th>";
             echo "<th style='width:30%'>Description</th>";
-            echo "<th style='width:10%'>Delete</th>";
-            echo "</tr>\n";
+            echo "<th style='width:10%'>Select</th>";
+            echo "</tr>";
+            echo "</thead>\n";
+            echo "<tbody>\n";
             $counter = 0;
             foreach ($running_jobs as $job) {
                 $altrow = null;
@@ -39,17 +42,18 @@
                     $checked = " checked='checked' ";
                     $found_done = true;
                 }
-                echo "<td><input type='checkbox' name='job_" . $job['job_id'] . "' $checked /></td>";
+                echo "<td class='text-center'><input type='checkbox' name='job_" . $job['job_id'] . "' $checked /></td>";
                 echo "</tr>\n";
             }
+            echo "</tbody>\n";
             echo "</table>\n";
             if ($found_done) {
-                echo "<span style='font-weight:bold;'>If a job is in status <i>'done'</i> this job can deleted without repercussions. <br/>This is most likely a remnant of a job which was not cleaned up properly. </span><br/><br/>\n";
+                echo "<p class='text-justify'><strong>If a job is in status <em>'done'</em> this job can deleted without repercussions. <br/>This is most likely a remnant of a job which was not cleaned up properly. </strong></p>\n";
             }
-            echo "<input type='submit' value='Delete selected jobs' style='width:200px;' />\n";
+            echo "<input type='submit' value='Delete selected jobs' class='btn btn-default'/>\n";
             echo "</form>\n";
         }
 
         ?>
-    </div>
+<!--    </div>-->
 </div>

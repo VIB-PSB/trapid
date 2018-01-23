@@ -122,11 +122,11 @@
             var linkout_url = "<?php echo $linkout_prefix; ?>gene_families/view/" + gf_id;
             window.open(linkout_url, '_blank');
         }
-        // On click of a gf in a `.gf-table`, trigger the redirect cuntion
+        // On click of a gf in a `.gf-table`, trigger the redirect function
         $(function() {
             $(".gf-table tr td:first-child").click(function(e){
-                redirectToPage(gf_txt);
                 var gf_txt = $(e.target).text();
+                redirectToPage(gf_txt);
             });
         });
 
