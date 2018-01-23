@@ -8,7 +8,7 @@
 <!--</ol>-->
 <div class="subdiv">
     <?php echo $this->element("trapid_experiment"); ?>
-    <h2>Overview</h2>
+<!--    <h2>Overview</h2>-->
     <div class="subdiv">
         <?php $this->Paginator->options(array("url" => $this->passedArgs)); ?>
         <!--		<table cellpadding="0" cellspacing="0" style="width:900px">-->
@@ -41,7 +41,7 @@
 
                 if ($exp_info['genefamily_type'] == "HOM") {
                     if ($exp_info['allow_linkout']) {
-                        echo "<td>" . $this->Html->link($gene_family['GeneFamilies']['plaza_gf_id'], $exp_info["datasource_URL"] . "/gene_families/view/" . $gene_family['GeneFamilies']['plaza_gf_id'], array("target"=>"_blank")) . "</td>\n";
+                        echo "<td>" . $this->Html->link($gene_family['GeneFamilies']['plaza_gf_id'], $exp_info["datasource_URL"] . "/gene_families/view/" . $gene_family['GeneFamilies']['plaza_gf_id'], array("target"=>"_blank", "class"=>"linkout")) . "</td>\n";
                     } else {
                         echo "<td>" . $gene_family['GeneFamilies']['plaza_gf_id'] . "</td>\n";
                     }
@@ -81,3 +81,5 @@
     </div>
 </div>
 </div>
+
+<?php // echo $this->element('sql_dump');  // Dump all MySQL queries (debug) ?>

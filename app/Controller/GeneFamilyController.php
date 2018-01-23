@@ -22,7 +22,10 @@ class GeneFamilyController extends AppController{
 				"GeneFamilies"=>
 				array(
 					"limit"=>20,
-			       		"order"=>array("GeneFamilies.gf_id"=>"ASC")
+			       		"order"=>array(
+                            "GeneFamilies.experiment_id"=>"ASC", // Needed to force use of `experiment_id` index
+			       		    "GeneFamilies.gf_id"=>"ASC"
+                        )
 				)
 			  );
 
@@ -120,7 +123,7 @@ class GeneFamilyController extends AppController{
 
 
 
-  //paginated table with gene families, with cake sorting allowed
+  // Paginated table with gene families, with cake sorting allowed
   function index($exp_id=null){
     if(!$exp_id){$this->redirect(array("controller"=>"trapid","action"=>"experiments"));}
     $exp_id	= mysql_real_escape_string($exp_id);
@@ -129,7 +132,7 @@ class GeneFamilyController extends AppController{
     $this->set("exp_info",$exp_info);
     $this->set("exp_id",$exp_id);
 
-    $gene_families_p	= $this->paginate("GeneFamilies",array("GeneFamilies.experiment_id"=>$exp_id));
+    $gene_families_p	= $this->paginate("GeneFamilies",array("GeneFamilies.experiment_id = '" . $exp_id . "'"));
     $this->set("gene_families",$gene_families_p);
     $gene_families_ids_original	= $this->TrapidUtils->reduceArray($gene_families_p,'GeneFamilies','plaza_gf_id');
 
@@ -153,6 +156,7 @@ class GeneFamilyController extends AppController{
     $this->set("gf_species_counts",$gf_species_counts);
     //pr($gf_species_counts);
 
+    $this->set("active_sidebar_item", "Browse gene families");
     $this -> set('title_for_layout', 'Gene families');
 
   }

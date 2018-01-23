@@ -64,7 +64,23 @@ class GfData extends AppModel{
   }
 
 
-  function getSpeciesCount($gf_ids){
+    function getSpeciesCount($gf_ids){
+        $result		= array();
+        $string_gf_ids	= "('".implode("','",$gf_ids)."')";
+        // We now have a `species` field in the `gf_data` table directly.
+        $query		= "SELECT `gf_id`, count(distinct `species`) as count FROM `gf_data` WHERE `gf_id` IN ".$string_gf_ids." GROUP BY `gf_id` ";
+        $res		= $this->query($query);
+        foreach($res as $r){
+            $gf_id		= $r['gf_data']['gf_id'];
+            $count		= $r[0]['count'];
+            $result[$gf_id]	= $count;
+        }
+        return $result;
+    }
+
+
+  // This still works but should be slower than the method defined above
+  function getSpeciesCountOldTrapid($gf_ids){
     $gf_genes		= $this->getGenes($gf_ids);
     $result		= array();
     foreach($gf_ids as $gf_id){

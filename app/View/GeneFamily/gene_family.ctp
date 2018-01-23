@@ -1,13 +1,14 @@
 <div>
     <div class="page-header">
-<h1 class="text-primary">Gene Family</h1>
+        <h1 class="text-primary"><?php echo $gf_info['gf_id']; ?> <small>gene family</small></h1>
+<!--        <h1 class="text-primary">Gene Family</h1>-->
     </div>
 <div class="subdiv">
-	<?php echo $this->element("trapid_experiment");?>	
+	<?php // echo $this->element("trapid_experiment");?>
 	
 	<h3>Overview</h3>
 	<div class="subdiv">
-		<dl class="standard">
+		<dl class="standard dl-horizontal">
 			<dt>Gene Family</dt>
 			<dd><?php echo $gf_info['gf_id'];?></dd>
 			<dt>Transcript count</dt>
@@ -17,7 +18,7 @@
 			    echo "<dt>Original Gene Family</dt>\n";
 			    echo "<dd>";
 			    if($exp_info['allow_linkout']){
-				 echo $this->Html->link($gf_info['plaza_gf_id'],$exp_info["datasource_URL"]."/gene_families/view/".$gf_info['plaza_gf_id']);
+				 echo $this->Html->link($gf_info['plaza_gf_id'],$exp_info["datasource_URL"]."/gene_families/view/".$gf_info['plaza_gf_id'], array("target"=>"_blank", "class"=>"linkout"));
 			    }
 			    else{
 				echo $gf_info['plaza_gf_id'];
@@ -55,8 +56,7 @@
 		</dl>			
 	</div>
 	
-	<h3>Toolbox</h3>
-	<div class="subdiv">		
+	<div class="subdiv">
 		<?php
 		$disable_cluster_tools	= false;
 		if(isset($max_number_jobs_reached)){
@@ -70,8 +70,8 @@
 		
 		$msa_string	= "Create multiple sequence alignment";
 		$tree_string	= "Create phylogenetic tree";
-		if($gf_info['msa']){$msa_string = $msa_string."/View current alignment";}
-		if($gf_info['tree']){$tree_string = $tree_string."/View current tree";}		
+		if($gf_info['msa']){$msa_string = "View current alignment / ". $msa_string;}
+		if($gf_info['tree']){$tree_string = "View current tree / ". $tree_string;}
 
 
 		$toolbox= array("Structural data"=>array(
