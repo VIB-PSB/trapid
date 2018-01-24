@@ -717,7 +717,6 @@ public class InitialTranscriptsProcessing {
 	}
 
 
-
 	/**
 	 * Performs the meta-annotation of transcripts. This is done in order to get a clear idea on
 	 * how long the transcripts are compared to their background frequency.
@@ -2033,6 +2032,7 @@ public class InitialTranscriptsProcessing {
 			query = "SELECT `gene_id`, `seq_length` FROM `annotation` USE INDEX(PRIMARY) WHERE `type`='coding' ";
 		}
 		Statement stmt				= plaza_conn.createStatement();
+		stmt.setFetchSize(1000);
 		ResultSet set				= stmt.executeQuery(query);
 		while(set.next()){
 			String gene_id			= set.getString(1);
@@ -2128,7 +2128,8 @@ public class InitialTranscriptsProcessing {
 	 * @throws Exception
 	 */
 	private Connection createDbConnection(String server,String database,String login,String password) throws Exception{
-		String url		= "jdbc:mysql://"+server+"/"+database;
+		// String url		= "jdbc:mysql://"+server+"/"+database;
+		String url		= "jdbc:mysql://"+server+"/"+database+"?rewriteBatchedStatements=true";
 		Connection conn	= DriverManager.getConnection(url,login,password);
 		return conn;
 	}
@@ -2420,7 +2421,7 @@ public class InitialTranscriptsProcessing {
                 // Otherwise, just proceed with getting the max level + OGs
                 else {
                     // The best hit will now at least be in a group at the root.
-                    List<String> levels_to_keep = new ArrayList<>();
+                    List<String> levels_to_keep = new ArrayList<String>();
                     String max_level = "";
                     // System.out.println("Found OGs levels: " + scopes.toString());
                     if(tax_scope.equals("auto")) {
@@ -2451,7 +2452,7 @@ public class InitialTranscriptsProcessing {
                     // System.out.println(levels_to_keep);
                     // System.out.println(max_level);
                     // Return results (chosen OGs + max level)
-                    List<String> chosen_ogs = new ArrayList<>();
+                    List<String> chosen_ogs = new ArrayList<String>();
                     for(int i=0; i < all_ogs.size() ; i++) {
                         if(levels_to_keep.contains(all_scopes.get(i))) {
                             // System.out.println("CHOSEN: " + all_ogs.get(i) + " " + all_scopes.get(i));
@@ -2659,14 +2660,16 @@ public class InitialTranscriptsProcessing {
      */
     // NOTE: this method is not optimized at all. Ideas to optimize: find a way to cahce data,
 	// rework og-transcript map, or create og_go table in the db (would limit the number of queries)
+    // Problem if using `IN` clauses: some OGs have A LOT of members (for example: COG4886 with 26124 members)
     private Map<String,Set<String>> assignGoTranscriptsEggnog_GF(Connection plaza_connection,
                                                                  Map<String,List<String>>transcript2ogs,
                                                                  Map<String,List<String>>ogs2transcripts
     ) throws Exception {
 
-        double min_freq = 0.33;
+        double min_freq = 0.33;  // Minimum frequency of GO term in OG to consider it
         Map<String,Set<String>> transcript_go = new HashMap<String,Set<String>>();
-        Map<String,Set<String>> gene_go_cache = new HashMap<String,Set<String>>();
+//        Map<String,Set<String>> gene_go_cache = new HashMap<String,Set<String>>();
+        Map<String,Set<String>> og_go_cache = new HashMap<String,Set<String>>();
         Map<String,Set<String>> og_gene_cache = new HashMap<String,Set<String>>();
         long t11	= System.currentTimeMillis();
 
@@ -2677,7 +2680,7 @@ public class InitialTranscriptsProcessing {
         long t12	= System.currentTimeMillis();
         timing("Loading GO graph",t11,t12,2);
 
-        // We cannot cache `gene_go` data as it is too heavy.
+        // We cannot cache `gene_go` data as it is too heavy?
         // long t21	= System.currentTimeMillis();
         // Map<String,Set<String>> gene_go = this.loadGoData(plaza_connection);
         // long t22	= System.currentTimeMillis();
@@ -2686,96 +2689,153 @@ public class InitialTranscriptsProcessing {
         // Necessary queries
         // Go OG members
         String query_og_genes = "SELECT `gene_id` FROM `gf_data` WHERE `gf_id` = ? ;";
-        String query_go_terms = "SELECT `go` FROM `gene_go` WHERE `gene_id` = ? ;";
+        // Tying to use `IN` clause instead
+        // String query_go_terms = "SELECT `go` FROM `gene_go` WHERE `gene_id` = ? ;";
+        String query_go_terms = "SELECT `gene_id`,`go` FROM `gene_go` WHERE `gene_id` IN ";
         PreparedStatement stmt_og_genes	= plaza_connection.prepareStatement(query_og_genes);
-        PreparedStatement stmt_go_terms	= plaza_connection.prepareStatement(query_go_terms);
-
+        // PreparedStatement stmt_go_terms	= plaza_connection.prepareStatement(query_go_terms);
+        // Higher `setFetchSize()` should help.
+		stmt_og_genes.setFetchSize(4000);
+		// stmt_go_terms.setFetchSize(500);
         long t41	= System.currentTimeMillis();
+        // Remove `None` for later. No need to get annotation.
+        if(ogs2transcripts.keySet().contains("None")) {
+            ogs2transcripts.remove("None");
+        }
+        int remaining_og_strings = ogs2transcripts.keySet().size();
         for(String og_string : ogs2transcripts.keySet()){
+//            System.out.println(og_string);
+        long t411	= System.currentTimeMillis();
         	// Set of all selected GOs for this set of OGs
 			Set<String> selected_gos	= new HashSet<String>();
 			// For each selected OG, get: members, and their associated GO terms
 			String[] ogs = og_string.split(",");
 			for(String og: ogs) {
-				Set<String> genes = null;
-				genes = new HashSet<String>();
-				String og_id = og.split("@")[0];
-				// 1. Get members of current OG
-				if(!og_gene_cache.keySet().contains(og_id)) {
-					stmt_og_genes.setString(1, og_id);
-					ResultSet set = stmt_og_genes.executeQuery();
-					while (set.next()) {
-						genes.add(set.getString(1));
-					}
+                Set<String> genes = null;
+                genes = new HashSet<String>();
+                String og_id = og.split("@")[0];
+                // 1. Get members of current OG
+                if (!og_gene_cache.keySet().contains(og_id)) {
+                    stmt_og_genes.setString(1, og_id);
+                    ResultSet set = stmt_og_genes.executeQuery();
+                    while (set.next()) {
+                        genes.add(set.getString(1));
+                    }
 //				System.out.println(og + "\t" + genes.toString());
-					og_gene_cache.put(og_id, genes);
-					set.close();
-				}
-				else {
-					System.err.println("[Message] Already in cache! " + og);
-					genes = og_gene_cache.get(og_id);
-				}
-				// 2. Retrieve GO terms associated to these genes
-            	Map<String,Set<String>> go_genes = new HashMap<String,Set<String>>();
-            	// For each gene of the current OG: check if the gene is in or 'gene go' cache,
-				// and if not retrieve GO terms from the db
-				for(String gene: genes) {
-					Set<String> go_terms = new HashSet<String>();
-					if (!gene_go_cache.keySet().contains(gene)) {
-						stmt_go_terms.setString(1, gene);
-						ResultSet set_go = stmt_go_terms.executeQuery();
-						while (set_go.next()) {
-							go_terms.add(set_go.getString(1));
-						}
-						gene_go_cache.put(gene, go_terms);
-						set_go.close();
-					} else {
-						// System.out.println("We got you "+gene);
-						// System.out.println(gene_go_cache.get(gene).toString());
-						go_terms = gene_go_cache.get(gene);
-					}
-					// 3. For each retrieved GO term, populate go->genes map, adding parental terms as well.
-					for (String go : go_terms) {
-						if (!go_genes.containsKey(go)) {
-							go_genes.put(go, new HashSet<String>());
-						}
-						go_genes.get(go).add(gene);
-						if (go_child2parents.containsKey(go)) {
-							for (String go_parent : go_child2parents.get(go)) {
-								if (!go_genes.containsKey(go_parent)) {
-									go_genes.put(go_parent, new HashSet<String>());
-								}
-								go_genes.get(go_parent).add(gene);
-							}
-						}
-					}
-					// 4. Remove the 3 top GO terms (BP/CC/MF).
-					if (go_genes.containsKey("GO:0003674")) {
-						go_genes.remove("GO:0003674");
-					}
-					if (go_genes.containsKey("GO:0008150")) {
-						go_genes.remove("GO:0008150");
-					}
-					if (go_genes.containsKey("GO:0005575")) {
-						go_genes.remove("GO:0005575");
-					}
-				}
-            // 5. Now, iterate over all the GO identifiers, and select those who are present in at least
-            // `min_freq` of the genes associated with this gene family
-            double gene_gf_count = (double) genes.size(); // Minimum count considered to select a GO term
-            for(String go_id:go_genes.keySet()){
-                double gene_go_count = go_genes.get(go_id).size();
-                if(gene_go_count/gene_gf_count >= min_freq){
-                    selected_gos.add(go_id);
+                    og_gene_cache.put(og_id, genes);
+                    set.close();
+                } else {
+                    System.err.println("[Message] Already in cache! " + og);
+                    genes = og_gene_cache.get(og_id);
                 }
-            }
+
+                // 2. Retrieve GO terms associated to these genes
+                Map<String, Set<String>> go_genes = new HashMap<String, Set<String>>();
+                // If there are too many genes (> 6000), get the data in multiple chunks.
+                int chunk_size = 1000;
+                if (genes.size() > 2000) {
+                    // We need a list?
+                    System.out.println(og_id + ": it's too big! ");
+                    List<String> gene_list = new ArrayList<String>(genes);
+                    for(int i=0;i<genes.size();i+=chunk_size) {
+                        String in_clause = "(";
+                        int limit = Math.min(genes.size(), i+chunk_size);
+                        for(int j=i;j<limit;j++) {
+                                if (!(j == limit-1)) {
+                                    in_clause += "'" + gene_list.get(j) + "', ";
+                                } else {
+                                    in_clause += "'" + gene_list.get(j) + "')";
+                                }
+                            }
+                            Statement stmt_go_terms = plaza_connection.createStatement();
+                            stmt_go_terms.setFetchSize(2000);
+//                            System.out.println(query_go_terms + in_clause);
+                            ResultSet set_go = stmt_go_terms.executeQuery(query_go_terms + in_clause);
+                            while (set_go.next()) {
+                                String gene = set_go.getString(1);
+                                String go_term = set_go.getString(2);
+                                if (!(go_genes.containsKey(go_term))) {
+                                    go_genes.put(go_term, new HashSet<String>());
+                                }
+                                go_genes.get(go_term).add(gene);
+                                // Also add parental terms
+                                if (go_child2parents.containsKey(go_term)) {
+                                    for (String go_parent : go_child2parents.get(go_term)) {
+                                        if (!go_genes.containsKey(go_parent)) {
+                                            go_genes.put(go_parent, new HashSet<String>());
+                                        }
+                                        go_genes.get(go_parent).add(gene);
+                                    }
+                                }
+                            }
+                            set_go.close();
+                        }
+                } else {
+                    String in_clause = "(";
+                    int remaining_genes = genes.size();
+                    for (String gene_id : genes) {
+                        remaining_genes--;
+                        if (!(remaining_genes == 0)) {
+                            in_clause += "'" + gene_id + "', ";
+                        } else {
+                            in_clause += "'" + gene_id + "')";
+                        }
+                    }
+                    Statement stmt_go_terms = plaza_connection.createStatement();
+                    stmt_go_terms.setFetchSize(1000);
+//                    System.out.println(og_id);
+//                    System.out.println(genes.size());
+                    // System.out.println(query_go_terms + in_clause);
+                    ResultSet set_go = stmt_go_terms.executeQuery(query_go_terms + in_clause);
+                    while (set_go.next()) {
+                        String gene = set_go.getString(1);
+                        String go_term = set_go.getString(2);
+                        if (!(go_genes.containsKey(go_term))) {
+                            go_genes.put(go_term, new HashSet<String>());
+                        }
+                        go_genes.get(go_term).add(gene);
+                        // Also add parental terms
+                        if (go_child2parents.containsKey(go_term)) {
+                            for (String go_parent : go_child2parents.get(go_term)) {
+                                if (!go_genes.containsKey(go_parent)) {
+                                    go_genes.put(go_parent, new HashSet<String>());
+                                }
+                                go_genes.get(go_parent).add(gene);
+                            }
+                        }
+                    }
+                    set_go.close();
+                }
+                // 4. Remove the 3 top GO terms (BP/CC/MF).
+				if (go_genes.containsKey("GO:0003674")) {
+					go_genes.remove("GO:0003674");
+				}
+				if (go_genes.containsKey("GO:0008150")) {
+					go_genes.remove("GO:0008150");
+				}
+				if (go_genes.containsKey("GO:0005575")) {
+					go_genes.remove("GO:0005575");
+				}
+				// 5. Now, iterate over all the GO identifiers, and select those who are present in at least
+				// `min_freq` of the genes associated with this gene family
+				double gene_gf_count = (double) genes.size(); // Minimum count considered to select a GO term
+				for (String go_id : go_genes.keySet()) {
+					double gene_go_count = go_genes.get(go_id).size();
+					if (gene_go_count / gene_gf_count >= min_freq) {
+						selected_gos.add(go_id);
+					}
+				}
 				// Clear the temporary storage for this gene family.
 				go_genes.clear();
-			} // End 'for each OG of OG string'
+            }  // End 'for each OG of OG string'
 			// 6. Finally, add GOs to transcripts that have this string
             for(String transcript_id: ogs2transcripts.get(og_string)) {
                 transcript_go.put(transcript_id,new HashSet<String>(selected_gos));
             }
+            // Debug timing
+			long t412	= System.currentTimeMillis();
+			remaining_og_strings--;
+			timing("Dealt with OG string '"+og_string+"'. Still remaining: "+remaining_og_strings, t411, t412,3);
 		} // End 'for each OG string'
 
         long t42	= System.currentTimeMillis();
@@ -2785,7 +2845,7 @@ public class InitialTranscriptsProcessing {
         go_child2parents.clear();
         go_parent2children.clear();
         go_graph_data.clear();
-		gene_go_cache.clear();
+		// gene_go_cache.clear();
 		og_gene_cache.clear();
         System.gc();
         long t62	= System.currentTimeMillis();
