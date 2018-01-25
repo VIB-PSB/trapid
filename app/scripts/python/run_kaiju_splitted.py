@@ -15,6 +15,7 @@ import json
 import MySQLdb as MS
 import merge_kaiju_splitted_results
 import kaiju_viz
+import common
 
 # Constants
 KAIJU_BIN_PATH = "kaiju"  # "/group/transreg/frbuc/tax_binning_benchmark/kaiju/bin/kaiju"
@@ -39,13 +40,13 @@ cmd_parser.add_argument('splitted_db_dir',
 cmd_parser.add_argument('input_file', type=str,
                         help='Input file (transcriptome or reads). ')
 # Optional arguments
-cmd_parser.add_argument('-o', metavar='--output_dir', dest='output_dir', type=str,
+cmd_parser.add_argument('-o', '--output_dir', dest='output_dir', type=str,
                         help='Directory name for the output files of the splitted kaiju runs. ',
                         default='_'.join(["kaiju_splitted_results", TIMESTAMP]))
-cmd_parser.add_argument('-s', metavar='--output_script', dest='output_script', type=str,
+cmd_parser.add_argument('-s', '--output_script', dest='output_script', type=str,
                         help='Filename for the output shell script. If none provided, will output to STDOUT.',
                         default=None)
-cmd_parser.add_argument('-kp', metavar='--kaiju_parameters', dest='kaiju_parameters', type=str,
+cmd_parser.add_argument('-kp', '--kaiju_parameters', dest='kaiju_parameters', type=str,
                         help='A string of extra parameters to append to the kaiju command, separated with blank spaces. ',
                         default=None, nargs='+')
 
@@ -115,7 +116,7 @@ def db_connect(username="trapid_website", password="@Z%28ZwABf5pZ3jMUz", host="p
     return db_connection
 
 
-# TODO: insert data chunk by chunk for speed increase. :)
+# TODO: insert data chunk by chunk for speed increase.
 def kaiju_output_to_db(exp_id, kaiju_output_file, db_connection, chunk_size=2000):
     """Simple function to parse kaiju's result to fill the `transcripts_tax` table for the current experiment. """
     cursor = db_connection.cursor()
@@ -147,13 +148,17 @@ def kaiju_output_to_db(exp_id, kaiju_output_file, db_connection, chunk_size=2000
             )
             cursor.execute(sql_insert)
     db_connection.commit()
-    db_connection.close()
+    # db_connection.close()
 
 
 ### Script execution
 
 if __name__ == '__main__':
     sys.stderr.write('[Message] Starting kaiju procedure: %s\n'  % time.strftime('%Y/%m/%d %H:%M:%S'))
+    # Update experiment log
+    db_connection = db_connect()
+    common.update_experiment_log(experiment_id=cmd_args.exp_id, action='start_tax_binning', params='kaiju_mem', depth=2, db_conn=db_connection)
+    # Create and run shell script that will run kaiju.
     kaiju_splitted_script = create_shell_script(db_file_list=get_splitted_db_files(file_path=cmd_args.splitted_db_dir),
         output_dir=os.path.join(cmd_args.output_dir, "splitted_results"),
         output_script_name=cmd_args.output_script,
@@ -183,6 +188,7 @@ if __name__ == '__main__':
         'treeview_json': os.path.join(KAIJU_DATA_DIR, 'kaiju_merged.to_treeview.json')
     }
     # Generate everything!
+    # 1. Krona
     try:
         kaiju_viz.kaiju_to_krona(
             kaiju_output_file=DATA_DICT['kaiju_output'],
@@ -193,6 +199,7 @@ if __name__ == '__main__':
     except Exception as e:
         print(e)
         sys.stderr.write("[Error] Unable to produce Krona output. \n")
+    # 2. Treeview JSON data
     try:
         kaiju_viz.kaiju_to_treeview(kaiju_output_file=DATA_DICT['kaiju_output'],
             names_tax_file=DATA_DICT['names_dmp'],
@@ -201,6 +208,7 @@ if __name__ == '__main__':
     except Exception as e:
         print(e)
         sys.stderr.write("[Error] Unable to produce Treeview JSON file. \n")
+    # 3. Pie/barcharts summaries data
     try:
         kaiju_viz.kaiju_to_tax_piechart_data(kaiju_tsv_output_file=DATA_DICT['kaiju_tsv_output'],
             names_tax_file=DATA_DICT['names_dmp'],
@@ -215,7 +223,9 @@ if __name__ == '__main__':
     except Exception as e:
         print(e)
         sys.stderr.write("[Error] Unable to produce Domain/phylum summaries. \n")
-    sys.stderr.write('[Message] Finished kaiju procedure: %s\n'  % time.strftime('%Y/%m/%d %H:%M:%S'))
     # Now, let's store results in the TRAPID database
-    db_connection = db_connect()
     kaiju_output_to_db(exp_id=cmd_args.exp_id, kaiju_output_file=DATA_DICT['kaiju_output'], db_connection=db_connection)
+    # Also update experiment log
+    common.update_experiment_log(experiment_id=cmd_args.exp_id, action='stop_tax_binning', params='kaiju_mem', depth=2, db_conn=db_connection)
+    db_connection.close()
+    sys.stderr.write('[Message] Finished kaiju procedure: %s\n'  % time.strftime('%Y/%m/%d %H:%M:%S'))
