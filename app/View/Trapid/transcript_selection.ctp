@@ -67,15 +67,17 @@
     ?>
 <?php else: ?>
     <div>
-        <h2>Transcript subsets</h2>
+        <div class="page-header">
+        <h1 class="text-primary">Transcript subsets</h1>
+        </div>
         <div class="subdiv">
-            <?php echo $this->element("trapid_experiment"); ?>
+            <?php // echo $this->element("trapid_experiment"); ?>
             <h3>Parameters</h3>
             <div class="subdiv">
                 <?php
                 //pr($parameters);
                 ?>
-                <dl class="standard">
+                <dl class="standard dl-horizontal">
                     <?php
                     foreach ($parameters as $key => $values) {
                         echo "<dt>" . $key . "</dt>";
@@ -130,7 +132,7 @@
                 <?php echo $this->element("table_func"); ?>
             </div>
 
-            <h3>Download</h3>
+<!--            <h3>Download</h3>-->
             <div class="subdiv">
                 <?php
                 $download_url = "";

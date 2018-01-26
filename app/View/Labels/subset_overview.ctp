@@ -8,8 +8,8 @@
     <h1 class="text-primary">Subsets overview </h1>
 </div>
 <div class="subdiv">
-	<?php echo $this->element("trapid_experiment");?>
-	
+    <?php // echo $this->element("trapid_experiment");?>
+
 	<?php
 	$full_counts	= array();
 	foreach($data_venn as $intersection=>$count){
@@ -81,15 +81,17 @@
 	
 	?>
 
-	<h3>Non-intersection subsets</h3>
-	<div class="subdiv">	
-		<div style="float:left;width:500px;">
+	<h3>Subsets table</h3>
+    <p class="text-justify">Selected subsets in the <code>Show</code> column are shown on the Venn diagram. </p>
+	<div class="subdiv">
+        <div class="row">
 <!--		<table class="table table-striped table-bordered">-->
-		<table cellspacing="0" cellpadding="0" style="width:400px;" id="label_table">
+            <div class="col-md-4">
+		<table style="font-size:88%;" id="label_table" class="table table-striped table-hover table-condensed table-bordered">
 			<thead>
-				<th style="width:10%">Select</th>
 				<th style="width:60%">Label</th>
 				<th style="width:30%">#Transcripts</th>
+				<th style="width:10%">Show</th>
 			</thead>
             <tbody>
 			<?php
@@ -98,26 +100,31 @@
 				$alt	= null; if($i++%2==0){$alt=" class='altrow2'";}
 				$sel	= " checked='checked' "; if($i>4){$sel=null;}
 				echo "<tr $alt>\n";
-				echo "<td><input type='checkbox' class='label_select' id='".$fc."' $sel></td>";
 				echo "<td>".$this->Html->link($fc,array("controller"=>"labels","action"=>"view",$exp_id,urlencode($fc)))."</td>";
 				echo "<td>".$count."</td>";
+				echo "<td class='text-center'><input type='checkbox' class='label_select' id='".$fc."' $sel></td>";
 				echo "</tr>\n";
 			}
 			?>
             </tbody>
 		</table>
-		</div>
-		<div style="float:left;width:200px;"><span class="text-danger" style='font-weight:bold;' id='comment'></span></div>
-		<div style="clear:both;width:700px;">&nbsp;</div>
-	</div>
-	
-	<h3>Intersection subsets</h3>
+            </div>
+            <div class="col-md-offset-2 col-md-4">
+                <span class="text-danger" style='font-weight:bold;' id='comment'></span>
+                <div id="canvas_container" style="height:500px;    margin-left: auto;    margin-right: auto;"><canvas id="venn_canvas" width="600" height="500"></canvas></div>
+            </div>
+
+        </div>
+	<h3>Subset intersections</h3>
+        <p class="text-justify">Click on any of the links in the table below to view transcripts that are in the corresponding subset(s). </p>
 	<div class="subdiv">
-		<table cellspacing="0" cellpadding="0" style="width:400px;">
+		<table style="font-size:88%;" class="table table-striped table-hover table-condensed table-bordered">
+            <thead>
 			<tr>
-				<th style="width:70%">Label(s)</th>
-				<th style="width:30%">#Transcripts</th>
+				<th>Label(s)</th>
+				<th>#Transcripts</th>
 			</tr>
+            </thead>
 			<?php
 			$i=0;		
 			foreach($data_venn as $intersection=>$count){
@@ -125,8 +132,8 @@
 				echo "<tr $alt>\n";
 				$labels		= explode(";;;",$intersection);
 				$labels_url	= implode("/label/",$labels);
-				$label_string	= implode(" + ",$labels);				
-				echo "<td>".$this->Html->link($label_string,array("controller"=>"trapid","action"=>"transcript_selection",$exp_id,"label",$labels_url))."</td>";
+				$label_string	= implode(" + ",$labels);
+				echo "<td><a href='".urldecode($this->Html->url(array("controller"=>"trapid","action"=>"transcript_selection",$exp_id,"label",$labels_url)))."'>".$label_string."</a></td>";
 				echo "<td>".$count."</td>";
 				echo "</tr>\n";
 			}
@@ -134,7 +141,6 @@
 		</table>
 	</div>
 
-	<div id="canvas_container" style="height:500px;"><canvas id="venn_canvas" width="600" height="500"></canvas></div>
 	<script type="text/javascript">
 		// Trying to get rid of prototype...
 		//<![CDATA[

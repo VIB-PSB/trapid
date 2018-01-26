@@ -135,7 +135,7 @@ class TranscriptsPagination extends AppModel{
 
   function paginate($conditions,$fields,$order,$limit,$page=1,$recursive=null,$extra=array()){
     $custom_query		= $this->createQuery($conditions,FALSE);
-    //pr("custom_query:".$custom_query);
+    // pr("custom_query:".$custom_query);
     if($custom_query===FALSE){return null;}
     $limit_start = ($page-1)*$limit;
     $limit_end = $limit;
@@ -145,8 +145,17 @@ class TranscriptsPagination extends AppModel{
     if($order){
       $custom_query		= $custom_query." ORDER BY ";
       foreach($order as $k=>$v){
-	$custom_query		= $custom_query." a.`".$k."` ".$v." ";
+          // CakePHP may add the class name as prefix, causing the queries defined here to fail.
+          if(strpos($k, $this->name)==0) {
+              $field_split = explode('.', $k);
+              $correct_field = $field_split[1];
+        	$custom_query		= $custom_query." a.`".$correct_field."` ".$v." ";
+          }
+          else {
+        	$custom_query		= $custom_query." a.`".$k."` ".$v." ";
+          }
       }
+      // pr($custom_query);
     }
     if($use_limit){
 	$custom_query		= $custom_query." LIMIT ".$limit_start.",".$limit_end;
