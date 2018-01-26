@@ -2,13 +2,13 @@
     <h1 class="text-primary">Log history</h1>
 </div>
 <div class="subdiv">
-    <?php echo $this->element("trapid_experiment"); ?>
+<!--    --><?php //echo $this->element("trapid_experiment"); ?>
 
-    <h2>Log history</h2>
+<!--    <h2>Log history</h2>-->
     <div class="subdiv">
 
 
-        <div style='border:1px solid black;background-color:white;width:700px;padding:10px;font-family:monospace;'>
+        <div class="well" style='font-family:monospace; font-size:88%;'>
             <?php
             $colors = array(0 => "#000000", 1 => "#202020", 2 => "#404040", 3 => "#606060");
             foreach ($log_info as $li) {

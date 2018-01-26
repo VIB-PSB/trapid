@@ -1,5 +1,5 @@
 <div class='page-header'>
-    <h1 class="text-primary">Gene families and phylogenetic profile</h1>
+    <h1 class="text-primary">Gene families</h1>
 </div>
 <!--<ol class="breadcrumb breadcrumb-sm">-->
 <!--  <li><a href="#">Experiment</a></li>-->

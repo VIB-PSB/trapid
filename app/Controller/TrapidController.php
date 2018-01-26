@@ -132,6 +132,7 @@ class TrapidController extends AppController{
     $exp_info	= $this->Experiments->getDefaultInformation($exp_id);
     $this->set("exp_info",$exp_info);
     $this->set("exp_id",$exp_id);
+    $this->set('title_for_layout', 'Experiment status');
 
     $tmp_dir	= TMP."experiment_data/".$exp_id."/";
     $usage	= "0M";
@@ -309,6 +310,8 @@ class TrapidController extends AppController{
     $log_info	= $this->ExperimentLog->find("all",array("conditions"=>array("experiment_id"=>$exp_id),
 							"order"=>array("ExperimentLog.id ASC")));
     $this->set("log_info",$log_info);
+    $this->set("active_header_item", "Settings");
+    $this->set('title_for_layout', 'Log');
   }
 
 
@@ -800,7 +803,8 @@ class TrapidController extends AppController{
     $exp_id		= mysql_real_escape_string($parameters[0]);
     parent::check_user_exp($exp_id);
     $exp_info	= $this->Experiments->getDefaultInformation($exp_id);
-    $this->TrapidUtils->checkPageAccess($exp_info['title'],$exp_info["process_state"],$this->process_states["default"]);
+
+      $this->TrapidUtils->checkPageAccess($exp_info['title'],$exp_info["process_state"],$this->process_states["default"]);
     $this->set("exp_info",$exp_info);
     $this->set("exp_id",$exp_id);
 
@@ -834,9 +838,8 @@ class TrapidController extends AppController{
       $this->set("download_type",$download_type);
       $this->paginate['TranscriptsPagination']['limit'] = $exp_info['transcript_count'];
     }
-
     //ok, now retrieve the transcripts
-    $transcript_ids	= $this->paginate("TranscriptsPagination",$parameters);
+    $transcript_ids	= $this->paginate("TranscriptsPagination", $parameters);
     $transcripts	= $this->Transcripts->find("all",array("conditions"=>array("experiment_id"=>$exp_id,"transcript_id"=>$transcript_ids)));
      $this->set("transcript_data",$transcripts);
     //if there is a download option, we should see now whether or not extra data retrieval is necessary.
@@ -1698,6 +1701,7 @@ class TrapidController extends AppController{
     $this->TrapidUtils->checkPageAccess($exp_info['title'],$exp_info["process_state"],$this->process_states["default"]);
     $this->set("exp_info",$exp_info);
     $this->set("exp_id",$exp_id);
+    $this -> set('title_for_layout', "Import labels");
 
     $MAX_FILE_SIZE_NORMAL		= 2000000;
 

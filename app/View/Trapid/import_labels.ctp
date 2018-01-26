@@ -2,28 +2,28 @@
     <h1 class="text-primary">Import labels</h1>
 </div>
 <div class="subdiv">
-    <?php echo $this->element("trapid_experiment"); ?>
+    <?php // echo $this->element("trapid_experiment"); ?>
 
-    <h3>Import labels</h3>
+<!--    <h3>Import labels</h3>-->
     <div class="subdiv">
         <?php if (isset($error)) {
-            echo "<span class='error'>" . $error . "</span><br/><br/>\n";
+            echo "<span class='text-danger'><strong>Error:</strong> " . $error . "</span><br>\n";
         } ?>
         <?php if (isset($message)) {
-            echo "<span class='message'>" . $message . "</span><br/><br/>\n";
+            echo "<span class='text-primary'><strong>Message: </strong>" . $message . "</span><br>\n";
         } ?>
 
         <div style="margin-bottom:10px;font-weight:bold;width:700px;">
         </div>
         <div style="margin-bottom:10px;">
-            <div style="width:700px;margin-bottom:10px;">
-                Please enter a file containing transcript identifiers which should have the same label.
+                <p class="text-justify">Please upload a file containing transcript identifiers which should have the same label.</p>
+                <p class="text-justify">Each line of the file must contain a transcript identifier. For example:</p>
             </div>
-            <div style="font:monospace;background-color:white;padding:5px;width:500px;">
+            <div class="fixed-width-text well well-sm">
                 transcript1<br/>
                 transcript3<br/>
                 transcript1012<br/>
-                ...<br/>
+                [...]<br/>
             </div>
             <br/>
 
@@ -35,11 +35,10 @@
             ?>
 
             <input name="uploadedfile" type="file"/>
+            <br/>
+            <input type="text" placeholder="New label" name="label"/> <span>Label for the transcripts</span>
             <br/><br/>
-            <input type="text" name="label"/> <span>Label for the transcripts</span>
-            <br/><br/>
-            <input type="submit" value="Import labels"
-                   style="width:200px;margin-bottom:10px;margin-top:5px;"/>
+            <input type="submit" value="Import labels" class="btn btn-primary btn-sm"/>
             </form>
         </div>
     </div>

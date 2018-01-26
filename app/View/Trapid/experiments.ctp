@@ -94,11 +94,11 @@
 			    	else{
 				    echo "<td>".$experiment['DataSources']['name']."</td>";
 			    	}
-				echo "<td></td>";
-				echo "<td></td>";
 				echo "<td>".$this->Html->link("View log",array("controller"=>"trapid","action"=>"view_log",$e['experiment_id']))."</td>\n";
 				if(count($experiment['experiment_jobs'])==0){echo "<td>NA</td>";}
 				else{echo "<td>".$this->Html->link(count($experiment['experiment_jobs'])." jobs",array("controller"=>"trapid","action"=>"manage_jobs",$e['experiment_id']))."</td>";}
+				echo "<td class='text-center'> - </td>";
+				echo "<td class='text-center'> - </td>";
 			    	echo "</tr>\n";
 			}
 			else if ($e['process_state']=="loading_db"){
@@ -115,11 +115,11 @@
 			    	else{
 				    echo "<td>".$experiment['DataSources']['name']."</td>";
 			    	}
-				echo "<td></td>";
-				echo "<td></td>";
 				echo "<td>".$this->Html->link("View log",array("controller"=>"trapid","action"=>"view_log",$e['experiment_id']))."</td>\n";
 				if(count($experiment['experiment_jobs'])==0){echo "<td>NA</td>";}
 				else{echo "<td>".$this->Html->link(count($experiment['experiment_jobs'])." jobs",array("controller"=>"trapid","action"=>"manage_jobs",$e['experiment_id']))."</td>";}
+                echo "<td class='text-center'> - </td>";
+                echo "<td class='text-center'> - </td>";
 			    	echo "</tr>\n";
 			}
 			else if ($e['process_state']=="processing"){
@@ -135,11 +135,11 @@
 			    	else{
 				    echo "<td>".$experiment['DataSources']['name']."</td>";
 			    	}
-				echo "<td></td>";
-				echo "<td></td>";
 				echo "<td>".$this->Html->link("View log",array("controller"=>"trapid","action"=>"view_log",$e['experiment_id']))."</td>\n";
 				if(count($experiment['experiment_jobs'])==0){echo "<td>NA</td>";}
 				else{echo "<td>".$this->Html->link(count($experiment['experiment_jobs'])." jobs",array("controller"=>"trapid","action"=>"manage_jobs",$e['experiment_id']))."</td>";}
+                echo "<td class='text-center'> - </td>";
+                echo "<td class='text-center'> - </td>";
 			    	echo "</tr>\n";
 			}
 			else{
@@ -217,16 +217,21 @@
 	</dd>
 
 	<?php if(count($shared_experiments)!=0): ?>
-	<dt>Shared experiments</dt>
-	<dd>
+        <br>
+        <p class="text-justify">Experiments shared with <strong><?php echo $user_email['Authentication']['email'];?></strong>: </p>
+
+        <dd>
 	<div>
-		<table cellspacing="0" cellpadding="0" style="width:900px;">
-		<tr>
+		<table class="table table-hover table-striped">
+		<thead>
+        <tr>
 			<th style="width:30%;">Name</th>
 			<th style="width:40%;">Owner</th>
 			<th style="width:20%;">PLAZA version</th>
 			<th style="width:10%;">Log</th>
 		</tr>
+        </thead>
+        <tbody>
 		<?php
 		foreach($shared_experiments as $experiment){
 			$e	= $experiment['Experiments'];
@@ -244,6 +249,7 @@
 			echo "</tr>\n";
 		}
 		?>
+        </tbody>
 		</table>
 	</div>
 	</dd>
@@ -293,7 +299,8 @@
 								}
 								?>
 								</select>
-                <p class="help-block"><strong>Note:</strong> GO annotations are only available for the PLAZA reference database</p>
+<!--                <p class="help-block"><strong>Note:</strong> GO annotations are only available for the PLAZA reference database</p>-->
+                <p class="help-block" style="font-size: 88%;"><strong>Note:</strong> Protein domain annotations are only available for the PLAZA reference databases</p>
               </div>
 							<p class="text-center">
               <button type="submit" class="btn btn-primary">Create experiment</button></p>
