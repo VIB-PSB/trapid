@@ -28,7 +28,9 @@ class ToolsController extends AppController{
   "ExtendedGo",
   "ProteinMotifs",
   "GfData",
-  "GoParents"
+  "GoParents",
+  "HelpTooltips",
+  "TranscriptsTax"
 	);
 
   var $components	= array("Cookie","TrapidUtils","Statistics");
@@ -1911,9 +1913,10 @@ function label_go_intersection($exp_id=null,$label=null){
         $this->set("domain_sum_transcripts", $domain_sum_transcripts);
         $this->set("top_tax_phylum", $top_tax_phylum);
         $this->set("phylum_sum_transcripts", $phylum_sum_transcripts);
+        $tooltip_text_subset_name = $this->HelpTooltips->getTooltipText("tax_binning_subset_name");
+        $this->set("tooltip_text_subset_name", $tooltip_text_subset_name);
         $this->set("active_sidebar_item", "Tax");
         $this -> set('title_for_layout', 'Taxonomic binning');
-        return;
     }
 
 
@@ -1974,6 +1977,99 @@ function label_go_intersection($exp_id=null,$label=null){
     }
 
 
+    // Create a transcript subset based on user-selected phylogenetic clades, by inspecting the `transcripts_tax` table.
+    function create_tax_subset($exp_id=null) {
+        $this->autoRender = false;
+        $exp_id	= mysql_real_escape_string($exp_id);
+        parent::check_user_exp($exp_id);
+        if($this->request->is('post')) {
+            $unclassified_str = "Unclassified";
+            $max_tax = 20;
+            // 1. Check subset name. If it already exists, return error message.
+            $subset_name = mysql_real_escape_string($this->request->data['subset-name']);
+            if(empty($subset_name)){
+                return("<label class=\"label label-warning\">Error: incorrect subset name</label>");
+            }
+            $exp_subsets = $this->TranscriptsLabels->find("all",array("fields"=>array("label"), "conditions"=>array("experiment_id"=>$exp_id)));
+            $subset_exists = false;
+            foreach($exp_subsets as $subset) {
+                $subset_to_test = $subset["TranscriptsLabels"]["label"];
+                if($subset_to_test == $subset_name) {
+                    $subset_exists = true;
+                    break;
+                }
+            }
+            if($subset_exists) {
+                return "<label class=\"label label-warning\">Error: subset already exists</label>";
+            }
+
+            $tax_names = array_slice(json_decode($this->request->data['tax-list']), 0, $max_tax);
+            // 2. Look for redundancies in the selected clades and create a list of tax names to lookup
+            $tax_lookup = array();
+            // pr($tax_names);
+            foreach ($tax_names as $tn){
+                // pr($tn);
+                if($tn == $unclassified_str) {
+                    array_push($tax_lookup, $tn);
+                }
+                else {
+                    $lineage = $this->FullTaxonomy->find("first", array("fields" => array("tax"), "conditions" => array("scname" => $tn)));
+                    // Is any of its parent there? Yes = we do not want to look it up (redundant).
+                    $parents_list = array_slice(explode('; ', $lineage["FullTaxonomy"]["tax"]), 1);
+                    // pr($parents_list);
+                    if(sizeof(array_intersect($parents_list, $tax_names)) == 0) {
+                        array_push($tax_lookup, $tn);
+                    }
+                }
+            }
+            // pr($tax_lookup);
+            // 3. Retrieve tax binning results
+            $tax_binning_summary = $this->TranscriptsTax->getSummaryAndLineages($exp_id);
+            // If unable to retrieve the results, return an error message!
+            if(empty($tax_binning_summary)){
+                return "<label class=\"label label-danger\">Error: unable to read results</label>";
+            }
+            // 4. iterate on tax binning results to retrieve sequence identifiers that match with user's choice
+            $transcripts = array();
+            $all_tax_ids = array_keys($tax_binning_summary);
+            // For each result, check if lineage has an intersection with list of clades to lookup.
+            // If yes, append transcripts to `$transcripts`
+            foreach($all_tax_ids as $tax_id) {
+                // If user chose `$unclassified_str`, handle it
+                if($tax_id == 0 && in_array($unclassified_str, $tax_lookup)) {
+                    $transcripts = array_merge($transcripts, $tax_binning_summary[$tax_id]["transcripts"]);
+                }
+                if(sizeof(array_intersect($tax_binning_summary[$tax_id]["lineage"], $tax_lookup)) != 0) {
+                    $transcripts = array_merge($transcripts, $tax_binning_summary[$tax_id]["transcripts"]);
+                }
+            }
+            // 5. Create the new subset with these transcripts
+            if(sizeof($transcripts)>0) {
+                // Here I tried multiple ways to save the data
+                // Would it be faster to use one of Cake's built-in saving functions?
+                // Way 1: `INSERT` statements, looping on selected transcripts (w/o data check implemented in `enterTranscripts` method
+                // $counter = $this->TranscriptsLabels->enterTranscriptsNoCheck($exp_id, $transcripts, $subset_name);
+                // Way 2: usuing CakePHP's `saveMany()` function
+                // $counter = 0;
+                // $to_save = array();
+                // foreach($transcripts as $transcript) {
+                //     $counter += 1;
+                //     array_push($to_save, array("transcript_id"=>$transcript, "experiment_id"=>$exp_id, "label"=>$subset_name));
+                // }
+                // $this->TranscriptsLabels->saveMany($to_save, array("callbacks"=>false));
+                // pr($to_save);
+
+                // Way 3: using DboSource's `insertMulti()` method: seems to be the fastest as of now.
+                $counter = $this->TranscriptsLabels->enterTranscriptsInsertMulti($exp_id, $transcripts, $subset_name);
+                return "<label class=\"label label-success\">Subset created (".$counter." transcripts)</label>";
+            }
+            return null; // meh?
+        }
+        // Should be a 404 error page
+        else {
+            return null;
+        }
+    }
 
 
     /* Core GF completeness analysis controllers */

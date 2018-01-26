@@ -37,7 +37,19 @@
                 pointFormat: '<strong>{point.y}</strong> transcripts',
                 backgroundColor: "white"
             },
-            plotOptions: {},
+            plotOptions: {
+                column: {
+                    events: {
+                        click: function (event) {
+                            if(ctrlIsPressed && ctrlIsPressed==true) {
+                            var selected_tax = this.points[event.point.category].name;
+                            update_tax_list(tax_list, selected_tax);
+                            console.log(selected_tax);
+                            }
+                        }
+                    }
+                }
+            },
             legend: {
                 enabled:false
             },

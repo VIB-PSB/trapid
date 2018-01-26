@@ -36,7 +36,16 @@
                         enabled: true
                     },
                     showInLegend: true,
-                    borderWidth: 0
+                    borderWidth: 0,
+                    events: {
+                        click: function (event) {
+                            if(ctrlIsPressed && ctrlIsPressed==true) {
+                                var selected_tax = event.point.options.name;
+                                update_tax_list(tax_list, selected_tax);
+                                console.log(selected_tax);
+                            }
+                        }
+                    }
                 }
             },
             legend: {

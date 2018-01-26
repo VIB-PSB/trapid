@@ -100,6 +100,31 @@ class TranscriptsLabels extends AppModel{
   }
 
 
+    function enterTranscriptsNoCheck($exp_id,$transcripts,$label){
+        $counter = 0;
+        foreach($transcripts as $transcript_id){
+              $counter++;
+              $statement	= "INSERT INTO `transcripts_labels` (`experiment_id`,`transcript_id`,`label`) VALUES
+              ('".$exp_id."','".$transcript_id."','".$label."');";
+              $this->query($statement);
+        }
+        return $counter;
+    }
+
+    function enterTranscriptsInsertMulti($exp_id, $transcripts, $label) {
+        $trapid_db = ConnectionManager::getDataSource('default');
+        $fields = array('transcript_id', 'experiment_id', 'label');
+        $to_save = array();
+        $counter = 0;
+        foreach($transcripts as $transcript) {
+            $counter += 1;
+            array_push($to_save, array($transcript, $exp_id, $label));
+        }
+
+        $result = $trapid_db->insertMulti("transcripts_labels", $fields, $to_save);
+        return $counter;
+    }
+
 }
 
 
