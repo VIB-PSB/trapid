@@ -476,7 +476,9 @@ class TrapidUtilsComponent extends Component{
   function create_qsub_script($exp_id){
 	$tmp_dir		= TMP."experiment_data/".$exp_id."/";
 	//remove all the files older than 3 days in this directory, to save disk space.
-	shell_exec("find $tmp_dir".'.'." -maxdepth 2 -atime +3 -type f -exec rm -f {} \\;");
+	// shell_exec("find $tmp_dir".'.'." -maxdepth 2 -atime +3 -type f -exec rm -f {} \\;");
+    // Quick fix to avoid deleting tax. binning visualizations (in the future we'll store them in TRAPID's db)
+	shell_exec("find $tmp_dir".'.'." -maxdepth 2 -atime +3 -type f -not -path \"*/kaiju/*\" -exec rm -f {} \\;");
 	$qsub_file		= $tmp_dir."qsub.sh";
 	if(!file_exists($qsub_file)){
 	    $fh			= fopen($qsub_file,"w");
