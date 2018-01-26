@@ -154,7 +154,7 @@
             <li class="sidebar-text sidebar-disabled">Statistics</li>
             <li class="sidebar-text sidebar-disabled">Taxonomic binning</li>
             <li class="sidebar-text sidebar-disabled">Browse gene families</li>
-            <li class="sidebar-text sidebar-disabled">Expanded/depleted GFs</li>
+<!--            <li class="sidebar-text sidebar-disabled">Expanded/depleted GFs</li>-->
             <li class="sidebar-text sidebar-disabled">Core GF completeness</li>
         <?php else :
             // Transcripts uploaded == 'statistics' + GFs available ?>
@@ -181,9 +181,9 @@
             <li>
                 <?php echo $this->Html->link("Browse gene families", array("controller" => "gene_family", "action" => "index", $exp_id)); ?>
             </li>
-            <li>
-                <?php echo $this->Html->link("Expanded/depleted GFs", array("controller" => "gene_family", "action" => "expansion", $exp_id)); ?>
-            </li>
+<!--            <li>-->
+<!--                --><?php //echo $this->Html->link("Expanded/depleted GFs", array("controller" => "gene_family", "action" => "expansion", $exp_id)); ?>
+<!--            </li>-->
         <?php endif ?>
         <?php
         // Some items should be unavailable until the experiment is fully finished? For example tax binning
