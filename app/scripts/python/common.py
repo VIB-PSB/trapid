@@ -15,7 +15,7 @@ def update_experiment_log(experiment_id, action, params, depth, db_conn):
     current_time = time.strftime('%Y-%m-%d %H:%M:%S')
     # Format value string, then try to update the experiment log
     current_values = values_str.format(exp_id=experiment_id, date_time=current_time, action=action, params=params, depth=depth)
-    print sql_str.format(values_str=current_values)
+    # print sql_str.format(values_str=current_values)
     try:
         cursor = db_conn.cursor()
         cursor.execute(sql_str.format(values_str=current_values))

@@ -1,7 +1,7 @@
 #!/usr/bin/python
 
 '''
-Run kaiju, merge results, stor results in db, generate visualizations.
+Run kaiju, merge results, store results in DB, generate visualizations.
 '''
 
 # Import modules
@@ -22,6 +22,7 @@ KAIJU_BIN_PATH = "kaiju"  # "/group/transreg/frbuc/tax_binning_benchmark/kaiju/b
 KAIJU_TO_KRONA_PATH = "kaiju2krona"
 # KT_IMPORT_TEXT_PATH = "/www/blastdb/biocomp/moderated/trapid_02/kaiju_files/tools/krona/bin/ktImportText"
 TIMESTAMP = time.strftime('%Y_%m_%d_%H%M%S')  # Get timestamp (for default output directory naming)
+
 
 ### Parse command-line arguments
 cmd_parser = argparse.ArgumentParser(
@@ -116,18 +117,28 @@ def db_connect(username="trapid_website", password="@Z%28ZwABf5pZ3jMUz", host="p
     return db_connection
 
 
-# TODO: insert data chunk by chunk for speed increase.
+def clear_db_content(exp_id, db_connection):
+    """Cleanup exepriment's taxonomic binning results, stored in the `transcript_tax` table. """
+    sys.stderr.write("[Message] Cleanup `transcripts_tax` for experiment \'%s\'.\n" % str(exp_id))
+    cursor = db_connection.cursor()
+    delete_query = "DELETE FROM transcripts_tax WHERE experiment_id = \'{exp_id}\';"
+    cursor.execute(delete_query.format(exp_id=str(exp_id)))
+    db_connection.commit()
+    cursor.close()
+
+
+# TODO: insert data chunk by chunk for speed increase?
 def kaiju_output_to_db(exp_id, kaiju_output_file, db_connection, chunk_size=2000):
     """Simple function to parse kaiju's result to fill the `transcripts_tax` table for the current experiment. """
-    cursor = db_connection.cursor()
     sys.stderr.write("[Message] Insert kaiju results in `transcripts_tax`.\n")
+    insert_query = "INSERT INTO transcripts_tax(experiment_id, transcript_id, txid, tax_results) VALUES ({exp_id}, '{transcript_id}', {tax_id}, '{kaiju_str}');"
+    cursor = db_connection.cursor()
     with open(kaiju_output_file, 'r') as in_file:
         for line in in_file:
             splitted = line.strip().split('\t')
             transcript_id = splitted[1]
             tax_id = 0 if splitted[0]=='U' else int(splitted[2])  # If unclassified, tax_id is set to 0.
-            # A string summarizing kaiju results
-            # Works because we use verbose output.
+            # Create a string summarizing current kaiju results (works because we use verbose output).
             # kaiju_str = '' if splitted[0]=='U' else "score={score};match_tax={taxs};match_seq_ids={seq_ids}".format(
             #     score=str(splitted[3]),
             #     taxs=splitted[4],
@@ -139,16 +150,12 @@ def kaiju_output_to_db(exp_id, kaiju_output_file, db_connection, chunk_size=2000
                 taxs=str(len(splitted[4])),
                 seq_ids=str(len(splitted[5]))
             )
-
-            sql_insert="insert into transcripts_tax(experiment_id, transcript_id, txid, tax_results) values({exp_id}, '{transcript_id}', {tax_id}, '{kaiju_str}');".format(
-                exp_id=str(exp_id),
-                transcript_id=transcript_id,
-                tax_id=str(tax_id),
-                kaiju_str=kaiju_str
-            )
-            cursor.execute(sql_insert)
+            # Insert current results in `transcript_tax`
+            insert_kaiju_result = insert_query.format(exp_id=str(exp_id), transcript_id=transcript_id,
+                                                      tax_id=str(tax_id), kaiju_str=kaiju_str)
+            cursor.execute(insert_kaiju_result)
     db_connection.commit()
-    # db_connection.close()
+    cursor.close()
 
 
 ### Script execution
@@ -158,6 +165,7 @@ if __name__ == '__main__':
     # Update experiment log
     db_connection = db_connect()
     common.update_experiment_log(experiment_id=cmd_args.exp_id, action='start_tax_binning', params='kaiju_mem', depth=2, db_conn=db_connection)
+    db_connection.close()
     # Create and run shell script that will run kaiju.
     kaiju_splitted_script = create_shell_script(db_file_list=get_splitted_db_files(file_path=cmd_args.splitted_db_dir),
         output_dir=os.path.join(cmd_args.output_dir, "splitted_results"),
@@ -223,9 +231,15 @@ if __name__ == '__main__':
     except Exception as e:
         print(e)
         sys.stderr.write("[Error] Unable to produce Domain/phylum summaries. \n")
-    # Now, let's store results in the TRAPID database
+    # Now, let's cleanup existing results and store current results in the TRAPID database
+    db_connection = db_connect()
+    clear_db_content(exp_id=cmd_args.exp_id, db_connection=db_connection)
+    db_connection.close()
+    db_connection = db_connect()
     kaiju_output_to_db(exp_id=cmd_args.exp_id, kaiju_output_file=DATA_DICT['kaiju_output'], db_connection=db_connection)
+    db_connection.close()
     # Also update experiment log
+    db_connection = db_connect()
     common.update_experiment_log(experiment_id=cmd_args.exp_id, action='stop_tax_binning', params='kaiju_mem', depth=2, db_conn=db_connection)
     db_connection.close()
     sys.stderr.write('[Message] Finished kaiju procedure: %s\n'  % time.strftime('%Y/%m/%d %H:%M:%S'))
