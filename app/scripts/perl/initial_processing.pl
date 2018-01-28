@@ -10,7 +10,7 @@ use FindBin qw{$Bin};
 ### transcript-data.
 
 ### Current order
-### 1) similarity search (RapSearch2)
+### 1) similarity search (DIAMOND)
 ### 2) gf-assignment
 ### 3) ORF verification
 ### 4) transfer of functional annotation
@@ -59,22 +59,20 @@ $par{"func_annot"}              = $ARGV[17];
 #location of executables
 $par{"base_script_location"}    = $ARGV[18];
 
+# Tax. binning user choice ('true' = perform it, 'false' = don't perform it)
+$par{"tax_binning"}    = $ARGV[19];
+
 
 my $DELETE_TEMP_DATA = 1;
 
 
 #=======================================================================================================
 #=======================================================================================================
-# FIRST STEP :: perform similarity search using RAPSEARCH2
+# FIRST STEP :: perform similarity search using DIAMOND
 #=======================================================================================================
 #=======================================================================================================
 
-#Create multi-fasta file containing the transcripts
-
-&update_log($par{"trapid_db_server"},$par{"trapid_db_name"},$par{"trapid_db_port"},
-	    $par{"trapid_db_user"},$par{"trapid_db_password"},$par{"experiment"},
-            "start_similarity_search","RAPSearch2",2);
-my $stime1		= time();
+# Create multi-fasta file containing the transcripts
 my $multi_fasta_file 	= &create_experiment_multifasta($par{"trapid_db_server"},$par{"trapid_db_name"},$par{"trapid_db_port"},
 				$par{"trapid_db_user"},$par{"trapid_db_password"},$par{"temp_dir"},$par{"experiment"});
 
@@ -82,35 +80,44 @@ my $multi_fasta_file 	= &create_experiment_multifasta($par{"trapid_db_server"},$
 ###
 # Extra step: before the similarity search, run kaiju! First trial: unparalellized, quick, dirty
 ###
-my $kaiju_program	= "run_kaiju_splitted.py";
-my $python_location	= $par{"base_script_location"}."python/";
-my $kaiju_command        = "python ".$python_location.$kaiju_program;
-my @kaiju_options        = ("-o", $par{"temp_dir"}."kaiju",
-	"-s", $par{"temp_dir"}."run_kaiju_splitted.sh", "-kp=\"-v -z 1 -x\"",
-	$par{"experiment"},
-	"/www/blastdb/biocomp/moderated/trapid_02/kaiju_files/ncbi_tax_2017_09/nodes.dmp",
-	"/www/blastdb/biocomp/moderated/trapid_02/kaiju_files/ncbi_tax_2017_09/names.dmp",
-	"/www/blastdb/biocomp/moderated/trapid_02/kaiju_files/ncbi_nr_2017_09_splitted/",
-	$multi_fasta_file);
-#my @kaiju_options        = ($par{"plaza_db_server"},$par{"plaza_db_name"},$par{"plaza_db_user"},$par{"plaza_db_password"},
-#	$par{"trapid_db_server"},$par{"trapid_db_name"},$par{"trapid_db_user"},$par{"trapid_db_password"},
-#	$par{"experiment"},$similarity_output,$par{"gf_type"},$par{"num_top_hits"},$par{"func_annot"});
 
-my $kaiju_exec           = $kaiju_command." ".join(" ",@kaiju_options);
-print STDOUT $kaiju_exec."\n";
-#system($kaiju_exec);
+if($par{"tax_binning"} eq "false") {
+    print STDERR "Do not perform taxonomic binning!\n";
+}
 
+else {
+    print STDERR "Perform taxonomic binning!\n";
+    my $kaiju_program	= "run_kaiju_splitted.py";
+    my $python_location	= $par{"base_script_location"}."python/";
+    my $kaiju_command        = "python ".$python_location.$kaiju_program;
+    my @kaiju_options        = ("-o", $par{"temp_dir"}."kaiju",
+    	"-s", $par{"temp_dir"}."run_kaiju_splitted.sh", "-kp=\"-v -z 1 -x\"",
+    	$par{"experiment"},
+    	"/www/blastdb/biocomp/moderated/trapid_02/kaiju_files/ncbi_tax_2017_09/nodes.dmp",
+    	"/www/blastdb/biocomp/moderated/trapid_02/kaiju_files/ncbi_tax_2017_09/names.dmp",
+    	"/www/blastdb/biocomp/moderated/trapid_02/kaiju_files/ncbi_nr_2017_09_splitted/",
+    	$multi_fasta_file);
 
+    my $kaiju_exec           = $kaiju_command." ".join(" ",@kaiju_options);
+    print STDOUT $kaiju_exec."\n";
+    system($kaiju_exec);
+}
+
+# Update experiment log (start similarity search)
+&update_log($par{"trapid_db_server"},$par{"trapid_db_name"},$par{"trapid_db_port"},
+	$par{"trapid_db_user"},$par{"trapid_db_password"},$par{"experiment"},
+	"start_similarity_search","DIAMOND",2);
+my $stime1		= time();
 # Perform similarity search
 my $similarity_output 	= &perform_similarity_search($multi_fasta_file,$par{"temp_dir"},$par{"experiment"},
 						     $par{"blast_location"},$par{"blast_directory"},$par{"evalue"},
 						     $par{"base_script_location"});
 
 my $stime2		= time();
-print STDOUT "###Time used for Rapsearch: ".($stime2-$stime1)."s \n";
+print STDOUT "###Time used for DIAMOND: ".($stime2-$stime1)."s \n";
 &update_log($par{"trapid_db_server"},$par{"trapid_db_name"},$par{"trapid_db_port"},
 	    $par{"trapid_db_user"},$par{"trapid_db_password"},$par{"experiment"},
-            "stop_similarity_search","RAPSearch2",2);
+            "stop_similarity_search","DIAMOND",2);
 #clear
 
 
@@ -131,7 +138,7 @@ my $java_location	= $par{"base_script_location"}."java/";
 my $java_command        = "java -cp .:..:".$java_location.":".$java_location."mysql.jar ".$java_program;
 my @java_options        = ($par{"plaza_db_server"},$par{"plaza_db_name"},$par{"plaza_db_user"},$par{"plaza_db_password"},
 			   $par{"trapid_db_server"},$par{"trapid_db_name"},$par{"trapid_db_user"},$par{"trapid_db_password"},
-			   $par{"experiment"},$similarity_output,$par{"gf_type"},$par{"num_top_hits"},$par{"func_annot"});
+			   $par{"experiment"},$similarity_output,$par{"gf_type"},$par{"num_top_hits"},$par{"func_annot"}, "auto");
 
 &update_log($par{"trapid_db_server"},$par{"trapid_db_name"},$par{"trapid_db_port"},
 	    $par{"trapid_db_user"},$par{"trapid_db_password"},$par{"experiment"},
@@ -314,7 +321,7 @@ sub perform_similarity_search($ $ $ $ $){
 	my $DIAMOND_EVALUE		= $blast_evalue;
 
 	my $blast_dir          = $blast_location.$blast_directory;
-	print STDOUT "Used RAPSEARCH database : ".$blast_dir."\n";
+	print STDOUT "Used DIAMOND database : ".$blast_dir."\n";
 
 	my $exec_command	= $DIAMOND_EXECUTABLE." --query ".$multi_fasta_file." --db ".$blast_dir." --evalue 1e".$DIAMOND_EVALUE." --out ".$output_file.".m8 -p 1 -k 100 --more-sensitive --log";
 	print STDOUT $exec_command."\n";

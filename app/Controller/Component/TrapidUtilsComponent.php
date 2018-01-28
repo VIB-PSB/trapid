@@ -1044,12 +1044,14 @@ class TrapidUtilsComponent extends Component{
 
 
   // Function to create the necessary shell files for initial processing
-  function create_shell_file_initial($exp_id, $plaza_db, $blast_db, $gf_type, $num_top_hits, $evalue, $func_annot){
+  function create_shell_file_initial($exp_id, $plaza_db, $blast_db, $gf_type, $num_top_hits, $evalue, $func_annot, $tax_binning){
 	$num_training_framedp	= 50;
 
     $base_scripts_location  = APP."scripts/";
 	$tmp_dir		= TMP."experiment_data/".$exp_id."/";
 	$final_blast_dir	= BLAST_DB_DIR."".$plaza_db."/";
+	// Convert tax binning boolean to string
+	$tax_binning_str = ($tax_binning) ? 'true' : 'false';
     	// $necessary_modules	= array("perl","java","framedp");
       // kaiju needs to be loaded, and I will write my extra scripts in python 2.7
       // 2017-12-15: add diamond to the module list (time to switch form RapSearch2 to DIAMOND).
@@ -1065,7 +1067,7 @@ class TrapidUtilsComponent extends Component{
     			TRAPID_DB_SERVER,TRAPID_DB_NAME,TRAPID_DB_PORT,TRAPID_DB_USER,TRAPID_DB_PASSWORD,
     			// $tmp_dir,$exp_id,$final_blast_dir,$blast_db.".rap",$gf_type,$num_top_hits,$evalue,$func_annot,
     			$tmp_dir,$exp_id,$final_blast_dir,$blast_db.".dmnd",$gf_type,$num_top_hits,$evalue,$func_annot,
-    			$base_scripts_location
+    			$base_scripts_location, $tax_binning_str
     			);
 
 	//create actual file

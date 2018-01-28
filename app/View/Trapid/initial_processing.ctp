@@ -5,19 +5,16 @@
     <div class="page-header">
         <h1 class="text-primary">Process transcripts</h1>
     </div>
-    <div class="subdiv">
-        <?php echo $this->element("trapid_experiment"); ?>
-
-        <h2>Overview</h2>
-        <div class="subdiv">
-            <p class="text-justify">The transcript pipeline of the PLAZA workbench can be used to analyze transcripts (provided by the user) of
-            species not present in the PLAZA database. This is useful for e.g. transcriptome analyzes during specific
-            conditions or for species for which no genome is present, only a transcriptome. Transcripts are initially
+        <?php // echo $this->element("trapid_experiment"); ?>
+    <section class="page-section">
+            <p class="text-justify">TRAPID's transcriptome pipeline can be used to annotate and analyze user-provided transcripts  of
+            species that are not present in the selected reference database. This is useful for e.g. transcriptome analyzes during specific
+            conditions or for species for which no genome is available. Transcripts are initially
             associated with PLAZA gene families using a translational approach. Further analyzes are then done on a
                 per-family basis.</p>
-        </div>
+    </section>
 <section class="page-section">
-        <h2>Options</h2>
+        <h2>Initial processing options</h2>
 <!--    <form class="form-horizontal">-->
 <!--        <div class="form-group">-->
 <!--            <label for="" class="col-sm-2 control-label">Email</label>-->
@@ -52,15 +49,15 @@
                 echo "<span class='error'>" . $error . "</span>\n";
             }
             ?>
-
             <?php
-            echo $this->Form->create(false, array("url" => array("controller" => "trapid", "action" => "initial_processing", $exp_id), "type" => "post"));
+            echo $this->Form->create(false, array("url" => array("controller" => "trapid", "action" => "initial_processing", $exp_id), "type" => "post", "id"=>"initial-processing-form"));
             ?>
             <dl class="standard2">
                 <dt>&nbsp;</dt>
                 <dd><span>
-					Use <a href='http://www.ncbi.nlm.nih.gov/taxonomy' target='_blank'>NCBI Taxonomy</a> to find the closest relative species or best clade.
+					<strong>Nb:</strong> Use <a href='http://www.ncbi.nlm.nih.gov/taxonomy' target='_blank' class="linkout">NCBI Taxonomy</a> to find the closest relative species or best clade.
 				</span>
+                    <br><br>
                 </dd>
                 <dt>
                     Similarity Search Database Type
@@ -76,7 +73,7 @@
                 </dd>
 
                 <dt>
-                    Similarity Search Database
+                    Similarity Search Database  &nbsp;<?php echo $this->element("help_tooltips/create_tooltip", array("tooltip_text"=>$tooltips['initial_processing_db'], "tooltip_placement"=>"top", "override_span_class"=>"glyphicon glyphicon-question-sign")); ?>
                 </dt>
                 <dd>
                     <select name="blast_db" id="blast_db" style="width:300px;">
@@ -89,7 +86,7 @@
                 </dd>
 
                 <dt>
-                    Similarity Search E-value
+                    Similarity Search E-value &nbsp;<?php echo $this->element("help_tooltips/create_tooltip", array("tooltip_text"=>$tooltips['initial_processing_evalue'], "tooltip_placement"=>"top", "override_span_class"=>"glyphicon glyphicon-question-sign")); ?>
                 </dt>
                 <dd>
                     <select name="blast_evalue" id="blast_evalue" style="width:300px;">
@@ -118,7 +115,7 @@
                     </select>
                 </dd>
                 <dt>
-                    Functional annotation
+                    Functional annotation &nbsp;<?php echo $this->element("help_tooltips/create_tooltip", array("tooltip_text"=>$tooltips['initial_processing_annotation'], "tooltip_placement"=>"top", "override_span_class"=>"glyphicon glyphicon-question-sign")); ?>
                 </dt>
                 <dd>
                     <select name="functional_annotation" id="functional_annotation" style="width:300px;">
@@ -129,13 +126,19 @@
                         ?>
                     </select>
                 </dd>
+                <dt></dt>
+                <dd style="max-width:300px; padding-top:5px;">
+                    <label for="tax-binning"><strong>Perform taxonomic binning</strong></label> &nbsp;<?php echo $this->element("help_tooltips/create_tooltip", array("tooltip_text"=>$tooltips['initial_processing_tax_binning'], "tooltip_placement"=>"top", "override_span_class"=>"glyphicon glyphicon-question-sign")); ?>
+                <span class="pull-right"><input checked id="tax-binning" name="tax-binning" value="y" type="checkbox"></span>
+                </dd>
             </dl>
-            <br/>
+<!--            <br/>-->
             <button class="btn btn-lg btn-primary" type="submit"><span class="glyphicon glyphicon-chevron-right"></span> Start transcriptome pipeline</button>
             </form>
         </div>
     </section>
     </div>
+
 
     <script type="text/javascript">
         // Modified to jQuery
@@ -236,7 +239,22 @@
             <?php endif;?>
         }
 
+        // Do it also at page load, in case no species are available (otherwise the 'select' element remains empty)
+        $( document ).ready(function() {
+            var blast_db_type = $("#blast_db_type").val();
+            if (blast_db_type == "SINGLE_SPECIES") {
+                setSingleSpeciesData();
+            }
+            else if (blast_db_type == "CLADE") {
+                setCladeData();
+            }
+            else if (blast_db_type == "GF_REP") {
+                setGfRepData();
+            }
+        });
+
         //]]>
     </script>
 
 </div>
+<?php echo $this->element("help_tooltips/enable_tooltips",  array("container"=>"#initial-processing-form")); ?>

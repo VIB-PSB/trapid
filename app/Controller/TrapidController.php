@@ -1202,17 +1202,23 @@ class TrapidController extends AppController{
   function initial_processing($exp_id=null){
     $exp_id	= mysql_real_escape_string($exp_id);
     parent::check_user_exp($exp_id);
-      $this -> set('title_for_layout', "Perform initial processing");
-      $exp_info	= $this->Experiments->getDefaultInformation($exp_id);
+    $exp_info	= $this->Experiments->getDefaultInformation($exp_id);
+     $tooltips = $this->TrapidUtils->indexArraySimple(
+        $this->HelpTooltips->find("all", array("conditions"=>array("tooltip_id LIKE 'initial_processing%'"))),
+        "HelpTooltips","tooltip_id","tooltip_text"
+    );
     $user_group=$this->Authentication->find("first",array("fields"=>array("group"),"conditions"=>array("user_id"=>parent::check_user())));
     if($user_group['Authentication']['group'] != "admin"){
       $this->TrapidUtils->checkPageAccess($exp_info['title'],$exp_info["process_state"],$this->process_states["upload"]);
     }
-    $this->set("exp_info",$exp_info);
     $this->set("exp_id",$exp_id);
+    $this->set("exp_info",$exp_info);
+    $this -> set('title_for_layout', "Perform initial processing");
+    $this->set("tooltips", $tooltips);
 
     $possible_db_types	= array("SINGLE_SPECIES"=>"Single Species","CLADE"=>"Phylogenetic Clade","GF_REP"=>"Gene Family Representatives");
     $possible_gf_types	= array("HOM"=>"Gene Families","IORTHO"=>"Integrative Orthology");
+    // $possible_gf_types	= array("HOM"=>"Gene Families");  // ,"IORTHO"=>"Integrative Orthology");
 
     //retrieve species information for BLAST info
     $species_info = $this->AnnotSources->getSpeciesCommonNames();
@@ -1277,6 +1283,7 @@ class TrapidController extends AppController{
       $blast_evalue	= mysql_real_escape_string($_POST['blast_evalue']);
       $gf_type		= mysql_real_escape_string($_POST['gf_type']);
       $func_annot	= mysql_real_escape_string($_POST['functional_annotation']);
+      $perform_tax_binning = false;
       $used_blast_desc	= "";
       if(!(array_key_exists($blast_db_type,$possible_db_types) &&
 	   array_key_exists($gf_type,$possible_gf_types) &&
@@ -1304,8 +1311,12 @@ class TrapidController extends AppController{
       else if($blast_db_type=="CLADE"){$num_blast_hits=1;}
       else if($blast_db_type=="GF_REP"){$num_blast_hits=5;}
 
-      //pr($_POST);
-      //return;
+      // Tax binning
+        if(isset($_POST['tax-binning']) && $_POST['tax-binning'] == 'y') {
+          $perform_tax_binning = true;
+        }
+//      pr($_POST);
+//      return;
 
 
       // Parameters are ok: we can now proceed with the actual pipeline organization.
@@ -1314,7 +1325,7 @@ class TrapidController extends AppController{
       // as well as the correct name for the global perl-file.
       // A single "initial processing" job should only run on a single cluster node
       $qsub_file  = $this->TrapidUtils->create_qsub_script($exp_id);
-      $shell_file = $this->TrapidUtils->create_shell_file_initial($exp_id,$exp_info['used_plaza_database'],$blast_db,$gf_type,$num_blast_hits,$possible_evalues[$blast_evalue],$func_annot);
+      $shell_file = $this->TrapidUtils->create_shell_file_initial($exp_id,$exp_info['used_plaza_database'],$blast_db,$gf_type,$num_blast_hits,$possible_evalues[$blast_evalue],$func_annot, $perform_tax_binning);
       if($shell_file == null || $qsub_file == null ){$this->set("error","problem creating program files");return;}
 
       //ok, now we submit this program to the web-cluster
@@ -1748,6 +1759,7 @@ class TrapidController extends AppController{
     $this->TrapidUtils->checkPageAccess($exp_info['title'],$exp_info["process_state"],$this->process_states["default"]);
     $this->set("exp_info",$exp_info);
     $this->set("exp_id",$exp_id);
+    $this->set("active_sidebar_item", "Export data");
     $this -> set('title_for_layout', "Export data");
 
       $structural_export = array("transcript_id"=>"Transcript identifier","frame_info"=>"Frame information","frameshift_info"=>"Frameshift information","orf"=>"ORF information","meta_annotation"=>"Meta annotation");
