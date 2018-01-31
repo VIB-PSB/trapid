@@ -18,7 +18,12 @@
 			    echo "<dt>Original Gene Family</dt>\n";
 			    echo "<dd>";
 			    if($exp_info['allow_linkout']){
-				 echo $this->Html->link($gf_info['plaza_gf_id'],$exp_info["datasource_URL"]."/gene_families/view/".$gf_info['plaza_gf_id'], array("target"=>"_blank", "class"=>"linkout"));
+                    if(isset($eggnog_og_linkout)) {
+                        echo $this->Html->link($gf_info['plaza_gf_id'], $exp_info["datasource_URL"] . "#/app/results?target_nogs=" . $gf_info['plaza_gf_id'], array("target"=>"_blank", "class"=>"linkout"));
+                    }
+                    else {
+                        echo $this->Html->link($gf_info['plaza_gf_id'], $exp_info["datasource_URL"] . "/gene_families/view/" . $gf_info['plaza_gf_id'], array("target" => "_blank", "class" => "linkout"));
+                    }
 			    }
 			    else{
 				echo $gf_info['plaza_gf_id'];

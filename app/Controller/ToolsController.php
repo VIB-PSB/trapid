@@ -2218,6 +2218,7 @@ function label_go_intersection($exp_id=null,$label=null){
         }
 
         // Get linkout prefix if it is allowed, otherwise return null
+        // TODO: adapt linkouts to EggNOG
         if($exp_info['allow_linkout']){
             $linkout_prefix =  $exp_info['datasource_URL'];
         }

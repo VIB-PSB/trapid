@@ -130,6 +130,11 @@ class FunctionalAnnotationController extends AppController{
     $exp_id	= mysql_real_escape_string($exp_id);
     parent::check_user_exp($exp_id);
     $exp_info	= $this->Experiments->getDefaultInformation($exp_id);
+    // Disable linkout if we use eggnog (they do not have dedicated pages to functional annotations).
+    // Not clean but will do for the workshop
+    if(strpos($exp_info['used_plaza_database'], "eggnog") !== false) {
+        $exp_info['allow_linkout'] = 0;
+    }
     $this->set("exp_info",$exp_info);
     $this->set("exp_id",$exp_id);
     $this->TrapidUtils->checkPageAccess($exp_info['title'],$exp_info["process_state"],$this->process_states["default"]);
@@ -245,11 +250,20 @@ class FunctionalAnnotationController extends AppController{
     $exp_id	= mysql_real_escape_string($exp_id);
     parent::check_user_exp($exp_id);
     $exp_info	= $this->Experiments->getDefaultInformation($exp_id);
-    $this->set("exp_info",$exp_info);
+
+      // Disable linkout if we use eggnog (they do not have dedicated pages to functional annotations).
+      // Not clean but will do for the workshop
+      if(strpos($exp_info['used_plaza_database'], "eggnog") !== false) {
+          $exp_info['allow_linkout'] = 0;
+      }
+
+      $this->set("exp_info",$exp_info);
     $this->set("exp_id",$exp_id);
     if(!$type||!$identifier||!($type=="go"||$type=="interpro")){$this->redirect(array("controller"=>"trapid","action"=>"experiment",$exp_id));}
     $gene_families	= array();
-    if($type=="go"){
+
+
+      if($type=="go"){
       $go	= str_replace("-",":",mysql_real_escape_string($identifier));
       //find whether any genes are associated (this also validates the go itself).
       $num_transcripts= $this->TranscriptsGo->find("count",array("conditions"=>array("experiment_id"=>$exp_id,"type"=>"go", "name"=>$go)));

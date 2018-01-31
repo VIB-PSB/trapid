@@ -12,8 +12,12 @@
 				echo "<dt>GO term</dt>";
 				echo "<dd>";
 				$go_web	= str_replace(":","-",$go); 			
-			    	if(!$exp_info['allow_linkout']){echo $go;}			    
-			    	else{echo $this->Html->link($go,$exp_info['datasource_URL']."go/view/".$go_web);}
+			    	if(!$exp_info['allow_linkout']) {
+			    	    echo $go;
+			    	}
+			    	else {
+			    	    echo $this->Html->link($go,$exp_info['datasource_URL']."go/view/".$go_web);
+			    	}
 				echo "</dd>\n";
 			}
 			else if($type=="ipr"){

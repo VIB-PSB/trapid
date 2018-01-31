@@ -155,7 +155,10 @@ class GeneFamilyController extends AppController{
     $this->set("gf_gene_counts",$gf_gene_counts);
     $this->set("gf_species_counts",$gf_species_counts);
     //pr($gf_species_counts);
-
+    // Not clean but will do for the workshop
+    if(strpos($exp_info['used_plaza_database'], "eggnog") !== false) {
+        $this->set("eggnog_og_linkout", true);
+    }
     $this->set("active_sidebar_item", "Browse gene families");
     $this -> set('title_for_layout', 'Gene families');
 
@@ -357,6 +360,11 @@ class GeneFamilyController extends AppController{
     //retrieve subset/label information
     $transcripts_labels	= $this->TrapidUtils->indexArray($this->TranscriptsLabels->find("all",array("conditions"=>array("experiment_id"=>$exp_id,"transcript_id"=>$transcript_ids))),"TranscriptsLabels","transcript_id","label");
 
+
+    // Adapt linkout if we use eggnog. Not clean but will do for the workshop.
+    if(strpos($exp_info['used_plaza_database'], "eggnog") !== false) {
+        $this->set("eggnog_og_linkout", true);
+    }
 
     $this->set("transcript_data",$transcripts);
     $this->set("transcripts_go",$transcripts_go);

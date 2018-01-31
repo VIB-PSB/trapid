@@ -17,7 +17,7 @@
 			<?php
 			    $go_web	= str_replace(":","-",$go_info["name"]);
 			    if(!$exp_info['allow_linkout']){
-				echo $go_info["go"];
+				echo $go_info["name"];
 			    }
 			    else{
 			       echo $this->Html->link($go_info["name"],$exp_info['datasource_URL']."go/view/".$go_web);

@@ -41,8 +41,14 @@
 
                 if ($exp_info['genefamily_type'] == "HOM") {
                     if ($exp_info['allow_linkout']) {
-                        echo "<td>" . $this->Html->link($gene_family['GeneFamilies']['plaza_gf_id'], $exp_info["datasource_URL"] . "/gene_families/view/" . $gene_family['GeneFamilies']['plaza_gf_id'], array("target"=>"_blank", "class"=>"linkout")) . "</td>\n";
-                    } else {
+                        if(isset($eggnog_og_linkout)) {
+                            echo "<td>" . $this->Html->link($gene_family['GeneFamilies']['plaza_gf_id'], $exp_info["datasource_URL"] . "#/app/results?target_nogs=" . $gene_family['GeneFamilies']['plaza_gf_id'], array("target"=>"_blank", "class"=>"linkout")) . "</td>\n";
+                        }
+                        else {
+                            echo "<td>" . $this->Html->link($gene_family['GeneFamilies']['plaza_gf_id'], $exp_info["datasource_URL"] . "/gene_families/view/" . $gene_family['GeneFamilies']['plaza_gf_id'], array("target"=>"_blank", "class"=>"linkout")) . "</td>\n";
+                        }
+                    }
+                    else {
                         echo "<td>" . $gene_family['GeneFamilies']['plaza_gf_id'] . "</td>\n";
                     }
                     echo "<td>" . $gf_gene_counts[$gene_family['GeneFamilies']['plaza_gf_id']] . "</td>\n";
@@ -82,4 +88,4 @@
 </div>
 </div>
 
-<?php // echo $this->element('sql_dump');  // Dump all MySQL queries (debug) ?>
+<?php echo $this->element('sql_dump');  // Dump all MySQL queries (debug) ?>
