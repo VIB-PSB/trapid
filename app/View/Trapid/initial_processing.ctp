@@ -1,7 +1,3 @@
-<div>
-    <?php
-    //echo $this->Html->script(array('prototype-1.7.0.0'));
-    ?>
     <div class="page-header">
         <h1 class="text-primary">Process transcripts</h1>
     </div>
@@ -10,39 +6,149 @@
             <p class="text-justify">TRAPID's transcriptome pipeline can be used to annotate and analyze user-provided transcripts  of
             species that are not present in the selected reference database. This is useful for e.g. transcriptome analyzes during specific
             conditions or for species for which no genome is available. Transcripts are initially
-            associated with PLAZA gene families using a translational approach. Further analyzes are then done on a
+            associated with gene families using a translational approach. Further analyzes are then done on a
                 per-family basis.</p>
+        <p class="text-justify">Adjust the parameters that TRAPID should use for initial processing by adjusting the values below. </p>
     </section>
+
+    <!-- Initial processing form -->
+    <?php
+        echo $this->Form->create(false, array(
+                "url" => array("controller" => "trapid", "action" => "initial_processing", $exp_id),
+                "type" => "post", "id"=>"initial-processing-form"));
+    ?>
+
+    <div class="row">
+        <!-- Similarity search -->
+        <div class="col-md-4">
+            <div class="panel panel-default">
+                <div class="panel-heading">
+                    <h3 class="panel-title">Similarity search options</h3>
+                </div>
+                <div class="panel-body">
+                            <div class="form-group">
+                                <label for=""><strong>Similarity search database</strong></label>
+                                <?php echo $this->element("help_tooltips/create_tooltip", array("tooltip_text"=>$tooltips['initial_processing_db'], "tooltip_placement"=>"top")); ?>
+                                <br>
+                                <label class="radio-inline">
+                                        <input id="blast_db_type_clade" name="blast_db_type" type="radio" value="CLADE" checked> Phylogenetic clade &nbsp;
+                                    </label>
+                                <?php if(isset($no_species_available)): ?>
+                                <label class="radio-inline">
+                                    <input id="blast_db_type_species" name="blast_db_type" type="radio" value="SINGLE_SPECIES" disabled> Single species
+                                </label>
+                                <?php else: ?>
+                                <label class="radio-inline">
+                                    <input id="blast_db_type_species" name="blast_db_type" type="radio" value="SINGLE_SPECIES"> Single species
+                                </label>
+                                <?php endif; ?>
+                                <br>
+                                <select class="form-control" id="blast_db" name="blast_db">
+                                    <option disabled>Loading list...</option>
+                                </select>
+                            </div>
+                    <p class="text-justify" style="font-size: 88%; margin-top: 10px;"><strong>Nb:</strong> Use <a href='http://www.ncbi.nlm.nih.gov/taxonomy' target='_blank' class="linkout">NCBI Taxonomy</a> to find the closest relative species or best clade.            </p>
+                    <div class="form-group">
+                                <label for=""><strong>Maximum E-value threshold</strong> (-log<sub>10</sub>)</label>
+                                <?php echo $this->element("help_tooltips/create_tooltip", array("tooltip_text"=>$tooltips['initial_processing_evalue'], "tooltip_placement"=>"top", "use_html"=>"true")); ?>
+                                <input class="form-control" id="blast_evalue" max="10" min="2" name="blast_evalue" step="1" value="5" type="number" required></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- GF + annotation -->
+        <div class="col-md-4">
+            <div class="panel panel-default">
+                <div class="panel-heading">
+                    <h3 class="panel-title">Gene families and annotation options</h3>
+                </div>
+                <div class="panel-body">
+                    <div class="form-group">
+                        <label for=""><strong>Gene family type</strong></label>
+                        <?php echo $this->element("help_tooltips/create_tooltip", array("tooltip_text"=>$tooltips['initial_processing_gf_type'], "tooltip_placement"=>"top")); ?>
+                        <br>
+                        <label class="radio-inline">
+                            <input checked="checked" id="gf_type_hom" name="gf_type" type="radio" value="HOM"> Gene families  &nbsp;
+                        </label>
+                        <label class="radio-inline">
+                            <input id="gf_type_iortho" name="gf_type" type="radio" value="IORTHO" disabled> Integrative orthology
+                        </label><br>
+                    </div>
+                    <div class="form-group">
+                        <label for=""><strong>Functional annotation</strong></label>
+                        <?php echo $this->element("help_tooltips/create_tooltip", array("tooltip_text"=>$tooltips['initial_processing_annotation'], "tooltip_placement"=>"top")); ?>
+                        <br>
+                        <label class="radio-inline">
+                            <input checked="checked" id="functional_annotation_besthit" name="functional_annotation" type="radio" value="besthit"> Best similarity hit  &nbsp;
+                        </label>
+                        <label class="radio-inline">
+                            <input id="functional_annotation_gf" name="functional_annotation" type="radio" value="gf"> Gene families &nbsp;
+                        </label>
+                        <label class="radio-inline">
+                            <input id="functional_annotation_gf_besthit" name="functional_annotation" type="radio" value="gf_besthit"> Both
+                        </label>
+                        <br>
+                    </div>
+                    <?php
+                    // If `tax_scope_data` is set, display it.
+                    if($tax_scope_data): ?>
+                    <div class="form-group">
+                        <label for=""><strong>Taxonomic scope</strong> (EggNOG)</label>
+                        <?php echo $this->element("help_tooltips/create_tooltip", array("tooltip_text"=>$tooltips['initial_processing_tax_scope'], "tooltip_placement"=>"top")); ?>
+                        <select class="form-control" id="tax-scope" name="tax-scope">
+                            <option value="auto">Adjust automatically (recommended)</option>
+                            <?php
+                            foreach ($tax_scope_data as $level => $name) {
+                                echo "<option value='" . $level . "'>" . $name . " </option>\n";
+                            }
+                            ?>
+                        </select>
+                    </div>
+                    <?php endif; ?>
+
+                </div>
+            </div>
+        </div>
+
+        <!-- Extra: tax. binning, RNA genes annotation -->
+        <div class="col-md-4">
+            <div class="panel panel-default">
+                <div class="panel-heading">
+                    <h3 class="panel-title">Taxonomic binning options</h3>
+                </div>
+                <div class="panel-body">
+                    <div class="form-group">
+                        <label for="tax-binning"><strong>Perform taxonomic binning</strong></label> &nbsp;<?php echo $this->element("help_tooltips/create_tooltip", array("tooltip_text"=>$tooltips['initial_processing_tax_binning'], "tooltip_placement"=>"top")); ?>
+                        <span class="pull-right" style="margin-right:12%;"><input checked id="tax-binning" name="tax-binning" value="y" type="checkbox"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="tax-binning" class="text-muted"><strong>Stop after taxonomic binning</strong></label> &nbsp;<?php echo $this->element("help_tooltips/create_tooltip", array("tooltip_text"=>$tooltips['initial_processing_stop_tax_binning'], "tooltip_placement"=>"top")); ?>
+                        <span class="pull-right" style="margin-right:12%;"><input id="not-yet" name="not-yet" value="y" type="checkbox" disabled></span>
+                    </div>
+
+
+                </div>
+            </div>
+        </div>
+
+    </div>
+    <?php
+    if (isset($error)) {
+        echo "<span class='error'><strong>" . $error . "</strong></span>\n";
+        echo "<br>";
+    }
+    ?>
+
+    <p class="text-center" style="margin-top: 18px;"><button type="submit" class="btn btn-primary">Run initial processing </button> | <a style="cursor: pointer;" onclick="reset_form('initial-processing-form');">Reset all</a></p>
+    </form> <!-- Eng initial processing form -->
+
+    <?php
+    /*
+     * Keep the original form as the new one is still experimental
+     *
 <section class="page-section">
         <h2>Initial processing options</h2>
-<!--    <form class="form-horizontal">-->
-<!--        <div class="form-group">-->
-<!--            <label for="" class="col-sm-2 control-label">Email</label>-->
-<!--            <div class="col-sm-8">-->
-<!--                <input type="email" class="form-control" id="inputEmail3" placeholder="Email">-->
-<!--            </div>-->
-<!--        </div>-->
-<!--        <div class="form-group">-->
-<!--            <label for="inputPassword3" class="col-sm-4 control-label">Password</label>-->
-<!--            <div class="col-sm-7">-->
-<!--                <input type="password" class="form-control" id="inputPassword3" placeholder="Password">-->
-<!--            </div>-->
-<!--        </div>-->
-<!--        <div class="form-group">-->
-<!--            <div class="col-sm-offset-4 col-sm-7">-->
-<!--                <div class="checkbox">-->
-<!--                    <label>-->
-<!--                        <input type="checkbox"> Remember me-->
-<!--                    </label>-->
-<!--                </div>-->
-<!--            </div>-->
-<!--        </div>-->
-<!--        <div class="form-group">-->
-<!--            <div class="col-sm-offset-4 col-sm-7">-->
-<!--                <button type="submit" class="btn btn-default">Sign in</button>-->
-<!--            </div>-->
-<!--        </div>-->
-<!--    </form>-->
         <div class="subdiv">
             <?php
             if (isset($error)) {
@@ -137,60 +243,32 @@
             </form>
         </div>
     </section>
+    */
+    ?>
     </div>
 
 
     <script type="text/javascript">
         // Modified to jQuery
         //<![CDATA[
-//        console.log("TEST");
-        $("#blast_db_type").change(function () {
-            var blast_db_type = $("#blast_db_type").val();
-//            console.log(blast_db_type);
-            if (blast_db_type == "SINGLE_SPECIES") {
-                setSingleSpeciesData();
-            }
-            else if (blast_db_type == "CLADE") {
-                setCladeData();
-            }
-            else if (blast_db_type == "GF_REP") {
-                setGfRepData();
-            }
+
+        $('input[type=radio][name=blast_db_type]').change(function() {
+            var blast_db_type = $("input[name='blast_db_type']:checked").val();
+            setBlastDbChoices(blast_db_type)
         });
 
 
         function clearDBSelect() {
             $("#blast_db").empty();
-//            var counter = 0;
-//            while ($("#blast_db").options.length > 0) {
-//                counter++;
-//                if (counter > 1000) {
-//                    alert("?");
-//                    break;
-//                }
-//                $("#blast_db").remove(0);
-//            }
         }
 
         function clearGFSelect() {
             $("#gf_type").empty();
-//            var counter = 0;
-//            while ($("gf_type").options.length > 0) {
-//                counter++;
-//                if (counter > 1000) {
-//                    alert("?");
-//                    break;
-//                }
-//                $("gf_type").remove(0);
-//            }
         }
 
         function createOption(value, text) {
             // Return select element option having `value` and labelled with `text`.
             var option = new Option(text, value)
-//            var option = document.createElement("option");
-//            option.text = text;
-//            option.value = value;
             return option;
         }
 
@@ -210,6 +288,7 @@
             ?>
             <?php endif;?>
         }
+
         function setCladeData() {
             <?php if(array_key_exists("CLADE", $possible_db_types)) : ?>
             clearDBSelect();
@@ -224,6 +303,7 @@
             ?>
             <?php endif;?>
         }
+
         function setGfRepData() {
             <?php if(array_key_exists("GF_REP", $possible_db_types)):?>
             clearDBSelect();
@@ -239,9 +319,7 @@
             <?php endif;?>
         }
 
-        // Do it also at page load, in case no species are available (otherwise the 'select' element remains empty)
-        $( document ).ready(function() {
-            var blast_db_type = $("#blast_db_type").val();
+        function setBlastDbChoices(blast_db_type) {
             if (blast_db_type == "SINGLE_SPECIES") {
                 setSingleSpeciesData();
             }
@@ -251,8 +329,24 @@
             else if (blast_db_type == "GF_REP") {
                 setGfRepData();
             }
-        });
+        }
 
+
+        // Reset submission form
+        function reset_form(form_id) {
+            var form_elmt = document.getElementById(form_id);
+            form_elmt.reset();
+            var blast_db_type =  $("input[name='blast_db_type']:checked").val();
+            setBlastDbChoices(blast_db_type);
+
+        }
+
+
+        // On page load, populate input similarity search database list
+        $( document ).ready(function() {
+            var blast_db_type =  $("input[name='blast_db_type']:checked").val(); // $("#blast_db_type").val();
+            setBlastDbChoices(blast_db_type)
+        });
         //]]>
     </script>
 

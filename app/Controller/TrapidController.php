@@ -119,7 +119,7 @@ class TrapidController extends AppController{
       }
       $this->redirect(array("controller"=>"trapid","action"=>"manage_jobs",$exp_id));
     }
-      $this->set("active_header_item", "Manage jobs");
+      $this->set("active_header_item", "Jobs");
       $this->set('title_for_layout', 'Jobs');
   }
 
@@ -1199,6 +1199,7 @@ class TrapidController extends AppController{
 
 
 
+  // TODO: modify logic to display/disable/hide some elements of the page to make function cleaner
   function initial_processing($exp_id=null){
     $exp_id	= mysql_real_escape_string($exp_id);
     parent::check_user_exp($exp_id);
@@ -1237,8 +1238,11 @@ class TrapidController extends AppController{
     $this->set("available_species",$species_info);
     $this->set("clades_species",$clades);
     $this->set("gf_representatives",$gf_representatives);
-    if(count($species_info)==0){$this->set("error","No valid species databases found. Please contact webadmin");}
-    if(count($clades)==0 && count($species_info)>0){$this->set("error","No valid clades databases found. Please contact webadmin");}
+    if(count($species_info)==0) {
+        $this->set("error","No valid species similarity search databases found. ");
+        $this->set("no_species_available", true);
+    }
+    if(count($clades)==0 && count($species_info)>0){$this->set("error","No valid clades similarity search databases found. ");}
     if(count($species_info)==0){unset($possible_db_types["SINGLE_SPECIES"]);}
     if(count($clades)==0){unset($possible_db_types["CLADE"]);}
     if(count($gf_representatives)==0){unset($possible_db_types["GF_REP"]);}
@@ -1255,9 +1259,11 @@ class TrapidController extends AppController{
     //possible e-values
     // Note: technically not true, as using evalue `-x` in RapSearch will put the threshold value at x = log10(e-value threshold).
     // So the real threshold is rather 1e-x, not 10e-x
-    $possible_evalues	= array("10e-2"=>"-2","10e-3"=>"-3","10e-4"=>"-4",
+/*    $possible_evalues	= array("10e-2"=>"-2","10e-3"=>"-3","10e-4"=>"-4",
 				"10e-5"=>"-5","10e-6"=>"-6","10e-7"=>"-7",
-				"10e-8"=>"-8","10e-9"=>"-9","10e-10"=>"-10");
+				"10e-8"=>"-8","10e-9"=>"-9","10e-10"=>"-10");*/
+    // Replace possible e-values by -log10 values
+    $possible_evalues = array("2", "3", "4", "5", "6", "7", "8", "9", "10");
     $this->set("possible_evalues",$possible_evalues);
 
     //possible func annots
@@ -1268,8 +1274,17 @@ class TrapidController extends AppController{
 				);
     $this->set("possible_func_annot",$possible_func_annot);
 
+    // If we are using EggNOG data, set taxonomic scope data
+      $tax_scope_data = null;
+      if(strpos($exp_info["used_plaza_database"], "eggnog")!== false) {
+          // Populate `$tax_scope_data` with all possible values
+          $tax_scope_data = $this->AnnotSources->getEggnogTaxLevels();
+      }
+
+      $this->set("tax_scope_data", $tax_scope_data);
+
     if($_POST){
-      //pr($_POST);
+      // pr($_POST);
       //parameter checking.
       if(!(array_key_exists("blast_db_type",$_POST) && array_key_exists("blast_db",$_POST)
 	   && array_key_exists("blast_evalue",$_POST) && array_key_exists("gf_type",$_POST)
@@ -1283,11 +1298,15 @@ class TrapidController extends AppController{
       $blast_evalue	= mysql_real_escape_string($_POST['blast_evalue']);
       $gf_type		= mysql_real_escape_string($_POST['gf_type']);
       $func_annot	= mysql_real_escape_string($_POST['functional_annotation']);
+      $tax_scope = "";
+      if(isset($_POST['tax-scope'])) {
+          $tax_scope = mysql_real_escape_string($_POST['tax-scope']);
+      }
       $perform_tax_binning = false;
       $used_blast_desc	= "";
       if(!(array_key_exists($blast_db_type,$possible_db_types) &&
 	   array_key_exists($gf_type,$possible_gf_types) &&
-	   array_key_exists($blast_evalue,$possible_evalues) &&
+	   in_array($blast_evalue,$possible_evalues) &&
 	   array_key_exists($func_annot,$possible_func_annot)
 	)){
 	$this->set("error","Incorrect parameters: faulty parameters");return;
@@ -1315,8 +1334,19 @@ class TrapidController extends AppController{
         if(isset($_POST['tax-binning']) && $_POST['tax-binning'] == 'y') {
           $perform_tax_binning = true;
         }
-//      pr($_POST);
-//      return;
+
+      // EggNOG taxonomic scope data check (should be in the list of possible choice or 'auto')
+      // `$tax_scope` not empty == we are working with EggNOG
+        if($tax_scope) {
+          $possible_scopes = array_keys($tax_scope_data);
+          array_push($possible_scopes, "auto");
+          if(!in_array($tax_scope, $possible_scopes)) {
+              $this->set("error","Incorrect parameters: unrecognized taxonomic scope - ".$tax_scope);
+              return;
+          }
+        }
+       // pr($_POST);
+       // return;
 
 
       // Parameters are ok: we can now proceed with the actual pipeline organization.
@@ -1325,7 +1355,8 @@ class TrapidController extends AppController{
       // as well as the correct name for the global perl-file.
       // A single "initial processing" job should only run on a single cluster node
       $qsub_file  = $this->TrapidUtils->create_qsub_script($exp_id);
-      $shell_file = $this->TrapidUtils->create_shell_file_initial($exp_id,$exp_info['used_plaza_database'],$blast_db,$gf_type,$num_blast_hits,$possible_evalues[$blast_evalue],$func_annot, $perform_tax_binning);
+      // $shell_file = $this->TrapidUtils->create_shell_file_initial($exp_id,$exp_info['used_plaza_database'],$blast_db,$gf_type,$num_blast_hits,$possible_evalues[$blast_evalue],$func_annot, $perform_tax_binning);
+      $shell_file = $this->TrapidUtils->create_shell_file_initial($exp_id,$exp_info['used_plaza_database'],$blast_db,$gf_type,$num_blast_hits,$blast_evalue, $func_annot, $perform_tax_binning, $tax_scope);
       if($shell_file == null || $qsub_file == null ){$this->set("error","problem creating program files");return;}
 
       //ok, now we submit this program to the web-cluster
@@ -1344,7 +1375,7 @@ class TrapidController extends AppController{
       $this->ExperimentJobs->addJob($exp_id,$job_id,"long","initial_processing");
 
       //indicate in the database that the current experiment is "busy", and should as such not be accesible.
-      $this->Experiments->updateAll(array("process_state"=>"'processing'","genefamily_type"=>"'".$gf_type."'","last_edit_date"=>"'".date("Y-m-d H:i:s")."'","used_blast_database"=>"'".$possible_db_types[$blast_db_type]."/".$used_blast_desc."'"),array("experiment_id"=>$exp_id));
+      $this->Experiments->updateAll(array("process_state"=>"'processing'","genefamily_type"=>"'".$gf_type."'","last_edit_date"=>"'".date("Y-m-d H:i:s")."'","used_blast_database"=>"'".$possible_db_types[$blast_db_type]."/".$used_blast_desc."'", "perform_tax_binning"=>(int)$perform_tax_binning),array("experiment_id"=>$exp_id));
       if($gf_type=="IORTHO"){
 	$this->Experiments->updateAll(array("target_species"=>"'".$blast_db."'"),array("experiment_id"=>$exp_id));
       }
@@ -1353,9 +1384,12 @@ class TrapidController extends AppController{
       $this->ExperimentLog->addAction($exp_id,"initial_processing","options",1);
       $this->ExperimentLog->addAction($exp_id,"initial_processing_options","blast_db_type=".$blast_db_type,2);
       $this->ExperimentLog->addAction($exp_id,"initial_processing_options","blast_db=".$blast_db,2);
-      $this->ExperimentLog->addAction($exp_id,"initial_processing_options","e_value=".$blast_evalue,2);
+      $this->ExperimentLog->addAction($exp_id,"initial_processing_options","e_value=1e-".$blast_evalue,2);
       $this->ExperimentLog->addAction($exp_id,"initial_processing_options","gf_type=".$gf_type,2);
       $this->ExperimentLog->addAction($exp_id,"initial_processing_options","func_annot=".$func_annot,2);
+      if($tax_scope) {
+          $this->ExperimentLog->addAction($exp_id,"initial_processing_options","taxonomic_scope=".$tax_scope, 2);
+      }
       $this->ExperimentLog->addAction($exp_id,"initial_processing","start",1);
 
       //finally, redirect
@@ -1863,6 +1897,15 @@ class TrapidController extends AppController{
   }
 
 
+// // Test: A function to perform actual export?
+// function perform_data_export($exp_id=null, $export_type) {
+// //      $this->redirect("http://perdu.com");
+//     $this->autoRender = false;
+//     $this->response->file(
+//         "img/ajax-loader.gif",
+//         array('download' => true, 'name' => 'foo')
+//     );
+// }
 
 
 

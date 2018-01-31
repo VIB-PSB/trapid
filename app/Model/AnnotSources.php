@@ -4,7 +4,6 @@
 class AnnotSources extends AppModel{
   var $name		= "AnnotSources";
   var $useTable		= "annot_sources";
-  // var $useDbConfig 	= "db_plaza_public_02_5";
   var $useDbConfig 	= "db_trapid_ref_plaza_monocots_03_test";
 
 
@@ -33,6 +32,18 @@ class AnnotSources extends AppModel{
     return $result;
   }
 
+
+  // Eggnog specific: parse `taxonomic_levels` table to get NOG_leve (i.e. tax scope) -> Name correspondence
+  // TODO: move this somewhere else?
+    function getEggnogTaxLevels() {
+        $tax_levels = array();
+        $query = "SELECT `scope`,`name` FROM `taxonomic_levels`;";
+        $res = $this->query($query);
+        foreach($res as $r){
+            $tax_levels[$r['taxonomic_levels']['scope']] = $r['taxonomic_levels']['name'];
+        }
+        return $tax_levels;
+    }
 
 }
 ?>

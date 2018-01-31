@@ -1044,7 +1044,7 @@ class TrapidUtilsComponent extends Component{
 
 
   // Function to create the necessary shell files for initial processing
-  function create_shell_file_initial($exp_id, $plaza_db, $blast_db, $gf_type, $num_top_hits, $evalue, $func_annot, $tax_binning){
+  function create_shell_file_initial($exp_id, $plaza_db, $blast_db, $gf_type, $num_top_hits, $evalue, $func_annot, $tax_binning, $tax_scope){
 	$num_training_framedp	= 50;
 
     $base_scripts_location  = APP."scripts/";
@@ -1052,6 +1052,10 @@ class TrapidUtilsComponent extends Component{
 	$final_blast_dir	= BLAST_DB_DIR."".$plaza_db."/";
 	// Convert tax binning boolean to string
 	$tax_binning_str = ($tax_binning) ? 'true' : 'false';
+	// Tax scope -> 'None' if empty. Unclean?
+	$tax_scope_str = ($tax_scope) ? $tax_scope : 'None';
+	// Add a `-` in front of e-value (as we now provide it as -log10)
+    $evalue_str = "-" . $evalue;
     	// $necessary_modules	= array("perl","java","framedp");
       // kaiju needs to be loaded, and I will write my extra scripts in python 2.7
       // 2017-12-15: add diamond to the module list (time to switch form RapSearch2 to DIAMOND).
@@ -1066,8 +1070,8 @@ class TrapidUtilsComponent extends Component{
       $necessary_parameters	= array("psbsql01", $plaza_db, PLAZA_DB_PORT, TRAPID_DB_USER, TRAPID_DB_PASSWORD,
     			TRAPID_DB_SERVER,TRAPID_DB_NAME,TRAPID_DB_PORT,TRAPID_DB_USER,TRAPID_DB_PASSWORD,
     			// $tmp_dir,$exp_id,$final_blast_dir,$blast_db.".rap",$gf_type,$num_top_hits,$evalue,$func_annot,
-    			$tmp_dir,$exp_id,$final_blast_dir,$blast_db.".dmnd",$gf_type,$num_top_hits,$evalue,$func_annot,
-    			$base_scripts_location, $tax_binning_str
+    			$tmp_dir,$exp_id,$final_blast_dir,$blast_db.".dmnd",$gf_type,$num_top_hits,$evalue_str,$func_annot,
+    			$base_scripts_location, $tax_binning_str, $tax_scope_str
     			);
 
 	//create actual file
@@ -1225,6 +1229,7 @@ class TrapidUtilsComponent extends Component{
         // create actual shell script file
         $shell_file = $completeness_dir."core_gf_completeness_".$exp_id."_".$clade_tax_id."_sp".$species_perc."_th".$top_hits.".sh";
         $fh				= fopen($shell_file,"w");
+        fwrite($fh,"# Print starting date/time \ndate\n\n");
         fwrite($fh,"# Loading necessary modules\n");
         foreach($necessary_modules as $nm){
             fwrite($fh,"module load ".$nm." \n");
