@@ -151,12 +151,12 @@ public class InitialTranscriptsProcessing {
 
             // Step 2c: determine for the similarity search what the best hitting species are
             // species -> hitcount
-            plaza_db_connection = itp.createDbConnection(plaza_database_server, plaza_database_name, plaza_database_login, plaza_database_password);
-            trapid_db_connection = itp.createDbConnection(trapid_server, trapid_name, trapid_login, trapid_password);
-            Map<String, Integer> species_hit_count = itp.getSpeciesHitCount(plaza_db_connection, simsearch_data);
-            itp.storeBestSpeciesHitData(trapid_db_connection, trapid_experiment_id, species_hit_count);
-            plaza_db_connection.close();
-            trapid_db_connection.close();
+//            plaza_db_connection = itp.createDbConnection(plaza_database_server, plaza_database_name, plaza_database_login, plaza_database_password);
+//            trapid_db_connection = itp.createDbConnection(trapid_server, trapid_name, trapid_login, trapid_password);
+//            Map<String, Integer> species_hit_count = itp.getSpeciesHitCount(plaza_db_connection, simsearch_data);
+//            itp.storeBestSpeciesHitData(trapid_db_connection, trapid_experiment_id, species_hit_count);
+//            plaza_db_connection.close();
+//            trapid_db_connection.close();
 
 
 			// Step 3: create the transcript to gene family mapping, with extra info kept for later
@@ -214,7 +214,7 @@ public class InitialTranscriptsProcessing {
 				Map<String,Set<String>> transcript_go			= null;
 				switch(func_annot){
 					case BESTHIT: transcript_go = itp.assignGoTranscriptsEggnog_BESTHIT(plaza_db_connection, simsearch_data); break;
-					case GF: transcript_go 	= itp.assignGoTranscriptsEggnog_GF(plaza_db_connection, transcript2ogs, ogs2transcripts);break;
+					case GF: transcript_go 	= itp.assignGoTranscriptsEggnog_GF_precomputed(plaza_db_connection, transcript2ogs, ogs2transcripts);break;
 					case GF_BESTHIT: transcript_go 	= itp.assignGoTranscriptsEggnog_GF_BESTHIT(plaza_db_connection, transcript2ogs, ogs2transcripts, simsearch_data);break;
 					default: System.err.println("Illegal func annot indicator: "+func_annot); System.exit(1);
 				}
@@ -307,11 +307,6 @@ public class InitialTranscriptsProcessing {
 			trapid_db_connection.close();
 
 			} // End 'normal' separated processing
-
-			// Stop here for EggNOG processing
-//			if(plaza_database_name.equals("db_trapid_ref_eggnog_test")) {
-//				System.exit(1);
-//			}
 
 
 			// Step 5: perform putative frameshift detection and store best frame.
@@ -1830,18 +1825,18 @@ public class InitialTranscriptsProcessing {
 	private Map<String,Integer> getSpeciesHitCount(Connection plaza_db_connection,Map<String,List<String[]>> simsearch_data)throws Exception{
 		Map<String,Integer> result			= new HashMap<String,Integer>();
 		//gather a default mapping of genes to species for all content in plaza database
-		Map<String,String> gene2species		= new HashMap<String,String>();
+		Map<String,String> gene2species		= new HashMap<String,String>(14875530);
 		String query						= "SELECT `gene_id`,`species` FROM `annotation` ";
 		Statement stmt						= plaza_db_connection.createStatement();
 		stmt.setFetchSize(2000);
 		ResultSet set						= stmt.executeQuery(query);
-		// int counter = 0;
-		// System.out.println("I was still alive");
+		 int counter = 0;
+		 System.out.println("I was still alive");
 		while(set.next()){
-//		    if((counter % 1000000) == 0) {
-//                System.out.println(counter + " rows...");
-//            }
-//		    counter +=1;
+		    if((counter % 1000000) == 0) {
+                System.out.println(counter + " rows...");
+            }
+		    counter +=1;
 			String gene_id					= set.getString(1);
 			String species					= set.getString(2);
 			 gene2species.put(gene_id, species);
@@ -2522,7 +2517,7 @@ public class InitialTranscriptsProcessing {
                     stmt.setString(1, og_name);
                     ResultSet set	= stmt.executeQuery();
                     while(set.next()) {
-                        String current_gf_id = set.getString("gf_id") + "@" + max_level;
+                        String current_gf_id = set.getString("gf_id");  //  + "@" + max_level;
                         // Get GF size from parsed information in `method` field.
                         // Format: `eggNOG 4.5|species:n,genes:n`
                         int current_gf_size = Integer.parseInt(set.getString("method").split(",")[1].split(":")[1]);
@@ -2854,6 +2849,109 @@ public class InitialTranscriptsProcessing {
     }
 
 
+	/**
+	 * Assign GO terms to each transcript, based on the associated ortholog groups (+ min. frequency rule), using the
+     * `gf_functional_data` table (taht contains precomputed redundant go+frequency for each gene family).
+	 * @param plaza_connection Connection to PLAZA database
+	 * @param transcript2ogs Mapping from transcripts to OGs
+	 * @param ogs2transcripts Mapping from OGs to transcripts
+	 * @return Mapping from transcript to GO terms
+	 * @throws Exception
+	 */
+	private Map<String,Set<String>> assignGoTranscriptsEggnog_GF_precomputed(Connection plaza_connection,
+																 Map<String,List<String>>transcript2ogs,
+																 Map<String,List<String>>ogs2transcripts
+	) throws Exception {
+
+		double min_freq = 0.33;  // Minimum frequency of GO term in OG to consider it
+		Map<String,Set<String>> transcript_go = new HashMap<String,Set<String>>();
+		Map<String,Set<String>> og_go_cache = new HashMap<String,Set<String>>();
+		long t11	= System.currentTimeMillis();
+
+		// Load the GO parents table into memory to prevent unnecessary queries
+		Map<String,Map<String,Set<String>>> go_graph_data	= this.loadGOGraph(plaza_connection);
+		Map<String,Set<String>> go_child2parents			= go_graph_data.get("child2parents");
+		Map<String,Set<String>> go_parent2children			= go_graph_data.get("parent2children");
+		long t12	= System.currentTimeMillis();
+		timing("Loading GO graph",t11,t12,2);
+
+		// We cannot cache `gene_go` data as it is too heavy?
+		// long t21	= System.currentTimeMillis();
+		// Map<String,Set<String>> gene_go = this.loadGoData(plaza_connection);
+		// long t22	= System.currentTimeMillis();
+		// timing("Caching GO data",t21,t22,2);
+
+		// Necessary queries
+		String query_go_terms = "SELECT `name` FROM `gf_functional_data` WHERE `gf_id` = ? and `type`='go' and freq >=" + min_freq +";";
+		PreparedStatement stmt_go_terms	= plaza_connection.prepareStatement(query_go_terms);
+		// Higher `setFetchSize()` should help.
+		stmt_go_terms.setFetchSize(1000);
+		long t41	= System.currentTimeMillis();
+		// Remove `None` for later. No need to get annotation.
+		if(ogs2transcripts.keySet().contains("None")) {
+			ogs2transcripts.remove("None");
+		}
+		int remaining_og_strings = ogs2transcripts.keySet().size();
+		for(String og_string : ogs2transcripts.keySet()){
+			long t411	= System.currentTimeMillis();
+			// Set of all selected GOs for this set of OGs
+			Set<String> selected_gos	= new HashSet<String>();
+			// For each selected OG, get: members, and their associated GO terms
+			String[] ogs = og_string.split(",");
+			for(String og: ogs) {
+				String og_id = og.split("@")[0];
+				// 1. Retrieve GO terms associated to genes of current OG (precomputed in `gf_functional_data` table
+                Set<String> og_go = new HashSet<String>();
+				// If there are too many genes (> 6000), get the data in multiple chunks.
+                if (!og_go_cache.keySet().contains(og_id)) {
+                    stmt_go_terms.setString(1, og_id);
+                    ResultSet set = stmt_go_terms.executeQuery();
+                    while (set.next()) {
+                        og_go.add(set.getString(1));
+                    }
+				System.out.println(og + "\t" + og_go.toString());
+                    og_go_cache.put(og_id, og_go);
+                    set.close();
+                } else {
+                    System.err.println("[Message] Already in cache! " + og);
+                    og_go = og_go_cache.get(og_id);
+                }
+				// 5. Now, iterate over all the GO identifiers, and select those who are present in at least
+				// `min_freq` of the genes associated with this gene family
+				for (String go_id : og_go) {
+                    if(!selected_gos.contains(go_id)) {
+						selected_gos.add(go_id);
+                    }
+				}
+				// Clear the temporary storage for this gene family.
+				og_go.clear();
+			}  // End 'for each OG of OG string'
+			// 2. Add GOs to transcripts that have this OG string
+			for(String transcript_id: ogs2transcripts.get(og_string)) {
+				transcript_go.put(transcript_id,new HashSet<String>(selected_gos));
+			}
+			// Debug timing
+			long t412	= System.currentTimeMillis();
+			remaining_og_strings--;
+			timing("Dealt with OG string '"+og_string+"'. Still remaining: "+remaining_og_strings, t411, t412,3);
+		} // End 'for each OG string'
+
+		long t42	= System.currentTimeMillis();
+		timing("Inferring functional annotation per gene family",t41,t42,2);
+		// Clear unnecessary data structures
+		long t61	= System.currentTimeMillis();
+		go_child2parents.clear();
+		go_parent2children.clear();
+		go_graph_data.clear();
+		// gene_go_cache.clear();
+		og_go_cache.clear();
+		System.gc();
+		long t62	= System.currentTimeMillis();
+		timing("Clearing local cache data structures", t61, t62,2);
+		return transcript_go;
+	}
+
+
 
     /**
      * Assign GO terms to each transcript, based on both Eggnog OGs and the best similarity hit. Call the
@@ -2873,7 +2971,7 @@ public class InitialTranscriptsProcessing {
         Map<String,Set<String>> transcript_go	= new HashMap<String,Set<String>>();
         // 1. Get best hit GO annotation and GF/OGs GO annotation
         Map<String,Set<String>> transcript_go_besthit = this.assignGoTranscriptsEggnog_BESTHIT(plaza_connection, simsearch_data);
-        Map<String,Set<String>> transcript_go_gf = this.assignGoTranscriptsEggnog_GF(plaza_connection, transcript2ogs, ogs2transcripts);
+        Map<String,Set<String>> transcript_go_gf = this.assignGoTranscriptsEggnog_GF_precomputed(plaza_connection, transcript2ogs, ogs2transcripts);
         // 2. Populate and return `transcript_go`
         transcript_go.putAll(transcript_go_besthit);
         for(String transcript: transcript_go_gf.keySet()) {
