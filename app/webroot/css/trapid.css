@@ -1403,6 +1403,24 @@ a.linkout:after {
 }
 
 
+.badge-header {
+	display: inline-block;
+	min-width: 9px;
+	height: 13px;
+	padding: 4px 6px 4px;
+	/*padding: 3px 7px;*/
+	font-size: 9px;
+	font-weight: bold;
+	color: #0c7cd5;
+	line-height: 0.6;
+	vertical-align: middle;
+	white-space: nowrap;
+	text-align: center;
+	background-color: #ffffff;
+	border-radius: 5px;
+}
+
+
 /* Lots of ugly borders: useful for debugging when things are not displayed as expected */
 
 /*body {*/

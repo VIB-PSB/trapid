@@ -17,8 +17,14 @@
         </li>
     </ul>
     <ul class="nav navbar-nav navbar-right">
-        <?php echo $this->element("search_element_header");?>
-        <li><?php echo $this->Html->link("Manage jobs",array("controller"=>"trapid","action"=>"manage_jobs", $exp_id)); ?></li>
+        <?php echo $this->element("search_element_header"); ?>
+        <li>
+            <a href="<?php echo $this->Html->Url(array("controller"=>"trapid","action"=>"manage_jobs", $exp_id));?>">Jobs&nbsp;
+                <?php if($job_count != 0): ?>
+                <span class="badge-header"><?php echo $job_count; ?></span>
+                <?php endif; ?>
+            </a>
+        </li>
         <li><a href="#" class="dropdown-toggle" data-toggle="dropdown">
                 <!--                    <span class="glyphicon glyphicon-cog"></span> -->
                 Settings <span class="caret"></span></a>

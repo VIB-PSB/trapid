@@ -60,9 +60,10 @@ class Experiments extends AppModel{
 //    $query	= "SELECT exp.*, tr.`transcript_count`, ds.`name`, ds.`URL`, ds.`plaza_linkout`, ds.`gf_prefix` FROM `experiments` exp LEFT JOIN (SELECT `experiment_id`, COUNT(`transcript_id`) AS transcript_count FROM `transcripts` where experiment_id='".$exp_id."') AS tr ON exp.`experiment_id`=tr.`experiment_id` JOIN `data_sources` ds ON exp.`used_plaza_database`=ds.`db_name` WHERE exp.`experiment_id`='".$exp_id."'";
     // Other idea: retrieving the number of labels too? Gets slower but still faster than the original query (while getting more information)
     // TODO/NOTE: inelegant query.
-    $query = "SELECT exp.*, tr.`transcript_count` AS transcript_count, tl.`label_count` AS label_count, ds.`name`, ds.`URL`, ds.`plaza_linkout`, ds.`gf_prefix` FROM `experiments` exp JOIN `data_sources` ds ON exp.`used_plaza_database`=ds.`db_name`,"
+    $query = "SELECT exp.*, exp_jobs.job_count AS job_count, tr.`transcript_count` AS transcript_count, tl.`label_count` AS label_count, ds.`name`, ds.`URL`, ds.`plaza_linkout`, ds.`gf_prefix` FROM `experiments` exp JOIN `data_sources` ds ON exp.`used_plaza_database`=ds.`db_name`,"
         ."(SELECT COUNT(transcript_id) AS transcript_count FROM transcripts WHERE experiment_id='".$exp_id."') tr, ".
-        "(SELECT COUNT(DISTINCT `label`) AS label_count FROM `transcripts_labels` WHERE `experiment_id`='".$exp_id."') tl ".
+        "(SELECT COUNT(DISTINCT `label`) AS label_count FROM `transcripts_labels` WHERE `experiment_id`='".$exp_id."') tl, ".
+        "(SELECT COUNT(id) AS job_count FROM `experiment_jobs` WHERE `experiment_id` = '".$exp_id."') exp_jobs ".
         "WHERE exp.`experiment_id`='".$exp_id."'";
 
     $res = $this->query($query);
@@ -77,6 +78,7 @@ class Experiments extends AppModel{
 	$result["datasource_URL"] = $res[0]['ds']['URL'];
 	$result["allow_linkout"]  = $res[0]['ds']['plaza_linkout'];
 	$result["gf_prefix"]	  = $res[0]['ds']['gf_prefix'];
+	$result["job_count"] = $res[0]['exp_jobs']['job_count'];
     }
     return $result;
   }

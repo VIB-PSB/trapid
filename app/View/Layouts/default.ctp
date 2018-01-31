@@ -47,7 +47,7 @@
 <div class="content-wrapper">
     <?php
     echo $this->element('header_experiment',
-        array("exp_id" => $exp_id, "exp_title" => $exp_info['title'])); //, "active_navbar_item" => "")
+        array("exp_id" => $exp_id, "exp_title" => $exp_info['title'], "job_count"=>$exp_info["job_count"])); //, "active_navbar_item" => "")
     ?>
     <div class="side-content">
         <div class="container-fluid">
