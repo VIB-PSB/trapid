@@ -319,6 +319,31 @@ class TrapidUtilsComponent extends Component{
   }
 
 
+  function getFinishedJobIds($exp_id ,$jobs_data){
+        $qstat_script	= $this->create_qstat_script($exp_id);
+        $result		= array();
+        //get overview of all jobs on webcluster?
+        $shell_output_all	= array();
+        $command_all	= "sh $qstat_script -u apache 2>&1";
+        exec($command_all,$shell_output_all);
+        $job_details	= array();
+        for($i=2;$i< count($shell_output_all);$i++){
+            $job_det		= explode(" ",$shell_output_all[$i]);
+            $jd		= array();
+            foreach($job_det as $jde){if($jde){$jd[]  = $jde;}}
+            $job_details[$jd[0]] = $jd[4];
+        }
+        $finished_jobs = array();
+        foreach($jobs_data as $t=>$jd){
+            $job_id		= $jd['job_id'];
+            if(!array_key_exists($job_id, $job_details)){
+                array_push($finished_jobs, $job_id);
+            }
+        }
+        return $finished_jobs;
+    }
+
+
 
     function checkAvailableDiamondDB($plaza_db, $data){
         $result		= array();

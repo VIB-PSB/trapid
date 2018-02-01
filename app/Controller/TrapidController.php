@@ -93,13 +93,30 @@ class TrapidController extends AppController{
     if(!$exp_id){$this->redirect(array("controller"=>"trapid","action"=>"experiments"));}
     $exp_id	= mysql_real_escape_string($exp_id);
     parent::check_user_exp($exp_id);
-    $exp_info	= $this->Experiments->getDefaultInformation($exp_id);
+
+    // Delete jobs that already finished but that may still be in `experiment_jobs` table, before getting `$exp_info`
+    $experiment_jobs = $this->ExperimentJobs->getJobs($exp_id);
+    $finished_jobs = $this->TrapidUtils->getFinishedJobIds($exp_id, $experiment_jobs);
+    // pr($finished_jobs);
+    foreach($finished_jobs as $finished_job_id) {
+        // pr("Delete job ". $finished_job_id);
+        $this->ExperimentJobs->deleteJob($exp_id, $finished_job_id);
+        // Remove from `$experiment_jobs`
+        // I am doing this because although the value is deleted from the DB, it is still in the array
+        // (and would be shown on the page)
+        foreach($experiment_jobs as $k=>$v) {
+            if($v['job_id'] == $finished_job_id) {
+                unset($experiment_jobs[$k]);
+            }
+        }
+    }
+
+    $exp_info = $this->Experiments->getDefaultInformation($exp_id);
     $this->set("exp_info",$exp_info);
     $this->set("exp_id",$exp_id);
 
-    $running_jobs	= $this->ExperimentJobs->getJobs($exp_id);
+    $running_jobs	= $this->TrapidUtils->checkJobStatus($exp_id, $experiment_jobs);
     //if(count($running_jobs)==0){$this->redirect(array("controller"=>"trapid","action"=>"experiments"));}
-    $running_jobs	= $this->TrapidUtils->checkJobStatus($exp_id,$running_jobs);
     $this->set("running_jobs",$running_jobs);
 
     $jobs_to_delete	= array();
@@ -235,7 +252,30 @@ class TrapidController extends AppController{
 
     //retrieve current user experiments.
     $experiments	= $this->Experiments->getUserExperiments($user_id);
-    //pr($experiments);
+
+    // Delete jobs that already finished but that may still be in `experiment_jobs` table, for each experiment
+    // If slowing down page loading, find another solution.
+    // This code can be improved by retrieving job IDs of all experiments before looping: consider if things get slow.
+    foreach ($experiments as $key=>$value) {
+        $current_exp_id = $experiments[$key]['Experiments']['experiment_id'];
+        $experiment_jobs = $this->ExperimentJobs->getJobs($current_exp_id);
+        $finished_jobs = $this->TrapidUtils->getFinishedJobIds($current_exp_id, $experiment_jobs);
+        foreach($finished_jobs as $finished_job_id) {
+            // Remove from experiment_jobs
+            $this->ExperimentJobs->deleteJob($current_exp_id, $finished_job_id);
+        }
+        $exp_jobs = $experiments[$key]['experiment_jobs'];
+        // Also remove from `$experiments`
+        // I am doing this because although the value is deleted from the DB, it is still in the array (and still on the page)
+        foreach($exp_jobs as $k=>$v) {
+            if(in_array($v['job_id'], $finished_jobs)) {
+                // pr("remove ". $v['job_id'] . ", key ". $k);
+                unset($experiments[$key]['experiment_jobs'][$k]);
+            }
+        }
+    }
+
+    // pr($experiments);
     $this->set("experiments",$experiments);
 
     //shared experiments
@@ -418,6 +458,15 @@ class TrapidController extends AppController{
   function experiment($exp_id=null){
     $exp_id	= mysql_real_escape_string($exp_id);
     parent::check_user_exp($exp_id);
+
+    // Delete jobs that already finished but that may still be in `experiment_jobs` table, before getting `$exp_info`
+    // If slowing down page loading, find another solution.
+    $experiment_jobs = $this->ExperimentJobs->getJobs($exp_id);
+    $finished_jobs = $this->TrapidUtils->getFinishedJobIds($exp_id, $experiment_jobs);
+    foreach($finished_jobs as $finished_job_id) {
+        $this->ExperimentJobs->deleteJob($exp_id, $finished_job_id);
+    }
+
     $standard_experiment_info	= $this->Experiments->find("first",array("conditions"=>array("experiment_id"=>$exp_id)));
     $this->TrapidUtils->checkPageAccess($standard_experiment_info['Experiments']['title'], $standard_experiment_info['Experiments']['process_state'], $this->process_states["default"]);
 
@@ -1785,6 +1834,7 @@ class TrapidController extends AppController{
 
 
   function export_data($exp_id=null){
+
     // Configure::write("debug",2);
     $exp_id	= mysql_real_escape_string($exp_id);
     parent::check_user_exp($exp_id);
@@ -1811,8 +1861,8 @@ class TrapidController extends AppController{
     if($_POST){
       // pr($_POST);
       set_time_limit(180);
+      $timestamp = date('Ymd_his');
       $user_id		= $this->Cookie->read("email");
-
       if(!array_key_exists("export_type",$_POST)){return;}
       $export_type	= $_POST["export_type"];
       $this->set("export_type",$export_type);
@@ -1826,7 +1876,8 @@ class TrapidController extends AppController{
 	$columns_string	= implode(',',$columns);
 	$file_path	= $this->TrapidUtils->performExport($plaza_database,$user_id,$exp_id,"STRUCTURAL","structural_data_exp".$exp_id.".txt",$columns_string);
 	$this->set("file_path",$file_path);
-	return;
+    $this->redirect($file_path);
+          return;
       }
       else if($export_type=="sequence"){
 
@@ -1843,7 +1894,8 @@ class TrapidController extends AppController{
 	 $file_path = $this->TrapidUtils->performExport($plaza_database,$user_id,$exp_id,"SEQ_AA","proteins_exp".$exp_id.".fasta");
 	}
 	$this->set("file_path",$file_path);
-        return;
+    $this->redirect($file_path);
+          return;
       }
       else if($export_type=="gf"){
 	if(!array_key_exists("gf_type",$_POST)){return;}
@@ -1860,7 +1912,8 @@ class TrapidController extends AppController{
 	}
 
 	$this->set("file_path",$file_path);
-        return;
+    $this->redirect($file_path);
+          return;
       }
       else if($export_type=="go" || $export_type=="interpro"){
 	if(!array_key_exists("functional_type",$_POST)){return;}
@@ -1879,7 +1932,8 @@ class TrapidController extends AppController{
 	 $file_path = $this->TrapidUtils->performExport($plaza_database,$user_id,$exp_id,"INTERPRO_TRANSCRIPT","interpro_transcripts_exp".$exp_id.".txt");
 	}
 	$this->set("file_path",$file_path);
-        return;
+    $this->redirect($file_path);
+    return;
       }
       else if($export_type=="subsets"){
 	if(!array_key_exists("subset_label",$_POST)){return;}
@@ -1888,6 +1942,7 @@ class TrapidController extends AppController{
         $file_path = $this->TrapidUtils->performExport($plaza_database,$user_id,$exp_id,"TRANSCRIPT_LABEL",$subset_label."_transcripts_exp".$exp_id.".txt",$subset_label);
 	//pr($file_path);
 	$this->set("file_path",$file_path);
+    $this->redirect($file_path);
       }
       else{
 	return;
@@ -1895,21 +1950,6 @@ class TrapidController extends AppController{
     }
 
   }
-
-
-// // Test: A function to perform actual export?
-// function perform_data_export($exp_id=null, $export_type) {
-// //      $this->redirect("http://perdu.com");
-//     $this->autoRender = false;
-//     $this->response->file(
-//         "img/ajax-loader.gif",
-//         array('download' => true, 'name' => 'foo')
-//     );
-// }
-
-
-
-
 
 
 
