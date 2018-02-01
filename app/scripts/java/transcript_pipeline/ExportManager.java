@@ -393,7 +393,7 @@ public class ExportManager {
 		SortedMap<String,Set<String>> tmp	= new TreeMap<String,Set<String>>();
 		while(set.next()){
 			String transcript_id		= set.getString("transcript_id");
-			String go					= set.getString("go");
+			String go					= set.getString("name");
 			if(!tmp.containsKey(go)){tmp.put(go,new HashSet<String>());}
 			tmp.get(go).add(transcript_id);
 		}
@@ -427,7 +427,7 @@ public class ExportManager {
 		while(set.next()){
 			counter++;
 			String transcript_id		= set.getString("transcript_id");
-			String interpro				= set.getString("interpro");
+			String interpro				= set.getString("name");
 			String desc					= interpro_descriptions.get(interpro);
 			writer.write(counter+"\t"+transcript_id+"\t"+interpro+"\t"+desc+"\n");
 		}
@@ -439,7 +439,7 @@ public class ExportManager {
 
 	public void exportInterproTranscript(Connection plaza_connection,Connection conn,String exp_id,String output_file) throws Exception{
 		Map<String,String> interpro_descriptions	= this.getProteinDomainDescriptions(plaza_connection);
-		String sql				= "SELECT `transcript_id`,`interpro` FROM `transcripts_annotation` WHERE `experiment_id`='"+exp_id+"' AND `type`='ipr'";
+		String sql				= "SELECT `transcript_id`,`name` FROM `transcripts_annotation` WHERE `experiment_id`='"+exp_id+"' AND `type`='ipr'";
 		// TRAPID v2 database does not have this structure anymore
 		// String sql				= "SELECT `transcript_id`,`interpro` FROM `transcripts_interpro` WHERE `experiment_id`='"+exp_id+"' ";
 		Statement stmt			= conn.createStatement();
@@ -447,7 +447,7 @@ public class ExportManager {
 		SortedMap<String,Set<String>> tmp	= new TreeMap<String,Set<String>>();
 		while(set.next()){
 			String transcript_id		= set.getString("transcript_id");
-			String interpro				= set.getString("interpro");
+			String interpro				= set.getString("name");
 			if(!tmp.containsKey(interpro)){tmp.put(interpro,new HashSet<String>());}
 			tmp.get(interpro).add(transcript_id);
 		}
