@@ -151,12 +151,12 @@ public class InitialTranscriptsProcessing {
 
             // Step 2c: determine for the similarity search what the best hitting species are
             // species -> hitcount
-//            plaza_db_connection = itp.createDbConnection(plaza_database_server, plaza_database_name, plaza_database_login, plaza_database_password);
-//            trapid_db_connection = itp.createDbConnection(trapid_server, trapid_name, trapid_login, trapid_password);
-//            Map<String, Integer> species_hit_count = itp.getSpeciesHitCount(plaza_db_connection, simsearch_data);
-//            itp.storeBestSpeciesHitData(trapid_db_connection, trapid_experiment_id, species_hit_count);
-//            plaza_db_connection.close();
-//            trapid_db_connection.close();
+             plaza_db_connection = itp.createDbConnection(plaza_database_server, plaza_database_name, plaza_database_login, plaza_database_password);
+             trapid_db_connection = itp.createDbConnection(trapid_server, trapid_name, trapid_login, trapid_password);
+             Map<String, Integer> species_hit_count = itp.getSpeciesHitCount(plaza_db_connection, simsearch_data);
+             itp.storeBestSpeciesHitData(trapid_db_connection, trapid_experiment_id, species_hit_count);
+             plaza_db_connection.close();
+             trapid_db_connection.close();
 
 
 			// Step 3: create the transcript to gene family mapping, with extra info kept for later
