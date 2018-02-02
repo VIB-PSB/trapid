@@ -1,16 +1,20 @@
 <div>
-<h2><?php echo $available_types[$type];?> ratios subsets</h2>
+
+    <div class="page-header">
+        <h1 class="text-primary"><?php echo $available_types[$type];?> ratios subsets</h1>
+    </div>
+
 <div class="subdiv">
-	<?php echo $this->element("trapid_experiment");?>
+	<?php // echo $this->element("trapid_experiment");?>
+	<section class="page-section">
 	<h3>Subset selection</h3>
-	<div class="subdiv">
 		<?php
-		if(isset($error)){echo "<span class='error'>".$error."</span>\n";}
-		echo $this->Form->create(false,array("action"=>"compare_ratios/".$exp_id."/".$type,"type"=>"post"));
-		echo "<dl class='standard'>";	
-		echo "<dt>Subset 1</dt>";
-		echo "<dd>";
-		echo "<select name='subset1' style='width:300px;'>";
+		if(isset($error)){echo "<span class='error text-danger'><strong>Error: </strong>".$error."</span><br>\n";}
+		echo $this->Form->create(false,array("action"=>"compare_ratios/".$exp_id."/".$type,"type"=>"post", "id"=>"compare-ratios-form", "class"=>"form-inline"));
+//		echo "<dl class='standard dl-horizontal'>";
+        echo "<div class='form-group' style='margin-right: 20px;'>";
+		echo "<label for='subset1'><strong>Subset 1</strong></label><br>";
+		echo "<select name='subset1' style='' class='form-control'>";
 		foreach($subsets as $subset=>$count){
 			if(isset($subset1) && $subset1==$subset){
 				echo "<option value='".$subset."' selected='selected'>".$subset." (".$count." transcripts)</option>\n";	
@@ -20,10 +24,10 @@
 			}
 		}		
 		echo "</select>";
-		echo "</dd>";
-		echo "<dt>Subset 2</dt>";
-		echo "<dd>";
-		echo "<select name='subset2' style='width:300px;'>";
+		echo "</div>";
+        echo "<div class='form-group'>";
+		echo "<label for=''subset2'><strong>Subset 2</strong></label><br>";
+		echo "<select name='subset2' style='' class='form-control'>";
 		foreach($subsets as $subset=>$count){
 			if(isset($subset2) && $subset2==$subset){
 				echo "<option value='".$subset."' selected='selected'>".$subset." (".$count." transcripts)</option>\n";	
@@ -33,45 +37,55 @@
 			}
 		}		
 		echo "</select>";
-		echo "</dd>";
-		echo "</dl>\n";
-		echo "<br/><br/>";
-		echo "<input type='submit' style='width:200px;' value='Compute ".$available_types[$type]." ratios' />\n";	
+		echo "</div>";
+//		echo "</dl>\n";
+//		echo "<br/><br/>";
+        echo "<br><div class='form-group' style='margin-top: 20px;'>";
+		echo "&nbsp;<input type='submit' class='btn btn-primary' value='Compute ".$available_types[$type]." ratios' />\n";
+		echo "</div>";
 		echo "</form>\n";
 		?>	
-	</div>
+	</section>
 
 
 	<?php
 	//indication that results are present
 	if(isset($data_subset1)){
 		echo $this->Html->script("sorttable");
-		echo "<h3>Results</h3>\n";
-		echo "<div class='subdiv'>\n";
+		echo "<hr>\n";
+		echo "<section class='page-section'>\n";
+		echo "<h2>Results</h2>\n";
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 		if($type=="ipr"){
 
-		    echo "<a href='#both'>View functional annotation present in both subsets</a><br/>\n";
-		    echo "<a href='#subset1specific'>View functional annotation specific to subset ".$subset1."</a><br/>\n";
-		    echo "<a href='#subset2specific'>View functional annotation specific to subset ".$subset2."</a><br/>\n";
-		    echo "<br/><br/>";	
+		    echo "<p class='text-justify'><strong>Jump to:</strong>\n";
+		    echo "<ul>\n";
+		    echo "<li><a href='#both'>Functional annotation present in both subsets</a></li>\n";
+		    echo "<li><a href='#subset1specific'>Functional annotation specific to subset '".$subset1."'</a></li>\n";
+		    echo "<li><a href='#subset2specific'>Functional annotation specific to subset '".$subset2."'</a></li>\n";
+		    echo "</ul>\n";
+		    echo "</p>\n";
+		    echo "<br>";
 
 		    echo "<a name='both'></a>\n";
-		    echo "<h4><u>".$available_types[$type]." present in ".$subset1." and ".$subset2."</u></h4>\n";
+		    echo "<h3>".$available_types[$type]." present in ".$subset1." and ".$subset2."</h3>\n";
 		    echo "<div class='subdiv' style='margin-bottom:30px;'>\n";
 		    echo "<span style='font-size:x-small;margin-left:30px;'>Click table-header(s) to enable sorting</span>\n";
-		    echo "<table cellpadding='0' cellspacing='0' style='width:900px;' class='sortable'>\n";
+		    echo "<table class='table table-condensed table-hover table-striped table-bordered sortable'>\n";
+		    echo "<thead>";
 		    echo "<tr>";
 		    echo "<th>".$available_types[$type]."</th>";
-		    echo "<th style='width:40%'>Description</th>";
+		    echo "<th>Description</th>";
 		    echo "<th>Subset 1</th>";
 		    echo "<th>Subset 2</th>";		
 		    echo "<th>Ratio subset 1</th>";
 		    echo "<th>Ratio subset 2</th>";
 		    echo "<th>Ratio subset 1/2</th>";
 		    echo "</tr>\n";
+            echo "</thead>";
+            echo "<tbody>";
 		    $counter	= 0;
 		    foreach($data_subset1 as $k=>$v){
 			if(array_key_exists($k,$data_subset2)){
@@ -95,27 +109,31 @@
 				echo "</tr>\n";			
 			}
 		    }		
+		    echo "</tbody>\n";
 		    echo "</table>\n";
-		
+
 		    
 		    echo $this->Html->link("Download data",
 				array("controller"=>"tools","action"=>"compare_ratios_download",$exp_id,"ipr","1",urlencode($subset1),urlencode($subset2)),
-				array("style"=>"margin-left:10px;padding-bottom:5px;"));
+				array("style"=>"margin-left:10px;padding-bottom:5px;",  "class"=>"btn btn-default btn-sm"));
 
 		    echo "</div>\n";
 
-
+            echo "<hr>";
 		    echo "<a name='subset1specific'></a>\n";
-		    echo "<h4><u>".$available_types[$type]." present in ".$subset1." and not in ".$subset2."</u></h4>\n";
+		    echo "<h3>".$available_types[$type]." present in ".$subset1." and not in ".$subset2."</h3>\n";
 		    echo "<div class='subdiv' style='margin-bottom:30px;'>\n";
 		    echo "<span style='font-size:x-small;margin-left:30px;'>Click table-header(s) to enable sorting</span>\n";
-		    echo "<table cellpadding='0' cellspacing='0' style='width:700px;' class='sortable'>\n";
+		    echo "<table class='table table-condensed table-hover table-striped table-bordered sortable'>\n";
+		    echo "<thead>";
 		    echo "<tr>";
 		    echo "<th>".$available_types[$type]."</th>";
-		    echo "<th style='width:40%'>Description</th>";
-		    echo "<th>Subset 1</th>";				
-		    echo "<th>Ratio subset 1</th>";				
+		    echo "<th>Description</th>";
+		    echo "<th>Subset 1</th>";
+		    echo "<th>Ratio subset 1</th>";
 		    echo "</tr>\n";
+		    echo "</thead>";
+		    echo "<tbody>";
 		    $counter	= 0;
 		    foreach($data_subset1 as $k=>$v){
 			if(!array_key_exists($k,$data_subset2)){
@@ -137,25 +155,29 @@
 			}
 		    }
 
+		    echo "</tbody>\n";
 		    echo "</table>\n";
 		    echo $this->Html->link("Download data",
 				array("controller"=>"tools","action"=>"compare_ratios_download",$exp_id,"ipr","2",urlencode($subset1),urlencode($subset2)),
-				array("style"=>"margin-left:10px;padding-bottom:5px;"));
+				array("style"=>"margin-left:10px;padding-bottom:5px;",  "class"=>"btn btn-default btn-sm"));
 
 		    echo "</div>\n";
 
-
+            echo "<hr>";
 		    echo "<a name='subset2specific'></a>\n";
-		    echo "<h4><u>".$available_types[$type]." present in ".$subset2." and not in ".$subset1."</u></h4>\n";
+		    echo "<h3>".$available_types[$type]." present in ".$subset2." and not in ".$subset1."</h3>\n";
 		    echo "<div class='subdiv' style='margin-bottom:30px;' >\n";
 		    echo "<span style='font-size:x-small;margin-left:30px;'>Click table-header(s) to enable sorting</span>\n";
-		    echo "<table cellpadding='0' cellspacing='0' style='width:700px;' class='sortable'>\n";
+		    echo "<table class='table table-condensed table-hover table-striped table-bordered sortable'>\n";
+            echo "<thead>";
 		    echo "<tr>";
 		    echo "<th>".$available_types[$type]."</th>";
-		    echo "<th style='width:40%'>Description</th>";		
+		    echo "<th>Description</th>";
 		    echo "<th>Subset 2</th>";		
 		    echo "<th>Ratio subset 2</th>";		
 		    echo "</tr>\n";
+            echo "</thead>";
+            echo "<tbody>";
 		    $counter	= 0;
 		    foreach($data_subset2 as $k=>$v){
 			if(!array_key_exists($k,$data_subset1)){
@@ -177,10 +199,11 @@
 			}
 		    }
 
+		    echo "</tbody>\n";
 		    echo "</table>\n";
 		    echo $this->Html->link("Download data",
 				array("controller"=>"tools","action"=>"compare_ratios_download",$exp_id,"ipr","3",urlencode($subset1),urlencode($subset2)),
-				array("style"=>"margin-left:10px;padding-bottom:5px;"));
+				array("style"=>"margin-left:10px;padding-bottom:5px;",  "class"=>"btn btn-default btn-sm"));
 
 		    echo "</div>\n";
 		}
@@ -189,17 +212,19 @@
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 		else if($type=="go"){
-		    echo "<a href='#both'>View functional annotation present in both subsets</a>\n";    		  	
-    		    echo "<br/>\n";
-		    echo "<a href='#subset1specific'>View functional annotation specific to subset ".$subset1."</a>\n";    
-    		    echo "<br/>\n";
-		    echo "<a href='#subset2specific'>View functional annotation specific to subset ".$subset2."</a>\n";    		
-    		    echo "<br/>\n";
-		    echo "<br/><br/>";	
-       		
+            echo "<p class='text-justify'><strong>Jump to:</strong>\n";
+            echo "<ul>\n";
+            echo "<li><a href='#both'>Functional annotation present in both subsets</a></li>\n";
+            echo "<li><a href='#subset1specific'>Functional annotation specific to subset '".$subset1."'</a></li>\n";
+            echo "<li><a href='#subset2specific'>Functional annotation specific to subset '".$subset2."'</a></li>\n";
+            echo "</ul>\n";
+            echo "</p>\n";
+		    echo "<br>";
+
+            echo "<hr>";
 		    echo "<a name='both'></a>\n";
     		    		      			
-		    echo "<h4><u>".$available_types[$type]." present in ".$subset1." and ".$subset2."</u></h4>\n";
+		    echo "<h3>".$available_types[$type]." present in ".$subset1." and ".$subset2."</h3>\n";
 		    echo "<div class='subdiv' style='margin-bottom:30px;'>\n";
 		    echo "<span style='font-size:x-small;margin-left:30px;'>Click table-header(s) to enable sorting</span><br/><br/>\n";
     		
@@ -213,19 +238,22 @@
     		    foreach($type_desc as $go_type=>$go_type_desc){
 			//file for download is written immediately at the same time		
 			$style	= null;
-			if($go_type=="BP"){$style=" style='display:block;width:950px;' ";}			
+			if($go_type=="BP"){$style=" style='display:block;' ";}
     			echo "<div id='tabdiv_both_".$go_type."' class='tabbed_div tabdiv_both tabbed_div2' $style>\n";    
     			echo "<center>\n";
-			echo "<table cellpadding='0' cellspacing='0' style='width:900px;' class='sortable'>\n";
+			echo "<table class='table table-condensed table-hover table-striped table-bordered sortable'>\n";
+			echo "<thead>";
 			echo "<tr>";
 			echo "<th>".$available_types[$type]."</th>";
-			echo "<th style='width:40%'>Description</th>";
+			echo "<th>Description</th>";
 			echo "<th>Subset 1</th>";
 			echo "<th>Subset 2</th>";
 			echo "<th>Ratio subset 1</th>";
 			echo "<th>Ratio subset 2</th>";
 			echo "<th>Ratio subset 1/2</th>";
 			echo "</tr>\n";
+            echo "</thead>";
+            echo "<tbody>";
 			$counter	= 0;
 			foreach($data_subset1 as $k=>$v){
 			    if(array_key_exists($k,$data_subset2) && $go_types[$k]==$go_type){
@@ -244,18 +272,20 @@
 				    echo "</tr>\n";			
 			    }
 			}		    		
+			echo "</tbody>\n";
 			echo "</table>\n";
 			echo "</center>\n";
 			echo $this->Html->link("Download data",
 				array("controller"=>"tools","action"=>"compare_ratios_download",$exp_id,"go","1",urlencode($subset1),urlencode($subset2),$go_type),
-				array("style"=>"margin-left:10px;padding-bottom:5px;"));			
+				array("style"=>"margin-left:10px;padding-bottom:5px;",  "class"=>"btn btn-default btn-sm"));
     			echo "</div>\n";
     		    } 		     
 		    echo "</div>\n";
-		   
-		    
+
+
+            echo "<hr>";
 		    echo "<a name='subset1specific'></a>\n";
-		    echo "<h4><u>".$available_types[$type]." present in ".$subset1." and not in ".$subset2."</u></h4>\n";
+		    echo "<h3>".$available_types[$type]." present in ".$subset1." and not in ".$subset2."</h3>\n";
 		    echo "<div class='subdiv' style='margin-bottom:30px;'>\n";
 		    echo "<span style='font-size:x-small;margin-left:30px;'>Click table-header(s) to enable sorting</span><br/><br/>\n";
     
@@ -267,17 +297,20 @@
     		
     		    foreach($type_desc as $go_type=>$go_type_desc){
 			$style	= null;
-			if($go_type=="BP"){$style=" style='display:block;width:950px;' ";}			
+			if($go_type=="BP"){$style=" style='display:block;' ";}
     			echo "<div id='tabdiv_sub1_".$go_type."' class='tabbed_div tabdiv_sub1 tabbed_div2' $style>\n";    
     			echo "<center>\n";
  
-			echo "<table cellpadding='0' cellspacing='0' style='width:700px;' class='sortable'>\n";
+			echo "<table class='table table-condensed table-hover table-striped table-bordered sortable'>\n";
+			echo "<thead>";
 			echo "<tr>";
 			echo "<th>".$available_types[$type]."</th>";
-			echo "<th style='width:40%'>Description</th>";
+			echo "<th>Description</th>";
 			echo "<th>Subset 1</th>";				
 			echo "<th>Ratio subset 1</th>";				
 			echo "</tr>\n";
+			echo "</thead>";
+			echo "<tbody>";
 			$counter	= 0;
 			foreach($data_subset1 as $k=>$v){
 			    if(!array_key_exists($k,$data_subset2) && $go_types[$k]==$go_type){
@@ -292,23 +325,24 @@
 				    echo "</tr>\n";			
 			    }
 			}
+			echo "</tbody>\n";
 			echo "</table>\n";
     			echo "</center>\n";
 
 			echo $this->Html->link("Download data",
 				array("controller"=>"tools","action"=>"compare_ratios_download",$exp_id,"go","2",urlencode($subset1),urlencode($subset2),$go_type),
-				array("style"=>"margin-left:10px;padding-bottom:5px;"));
+				array("style"=>"margin-left:10px;padding-bottom:5px;",  "class"=>"btn btn-default btn-sm"));
     			echo "</div>\n";
     		    }
     
-		    echo "</div>\n";	
+		    echo "</div>\n";
 
 
 
 
-		
+            echo "<hr>";
 		    echo "<a name='subset2specific'></a>\n";
-		    echo "<h4><u>".$available_types[$type]." present in ".$subset2." and not in ".$subset1."</u></h4>\n";
+		    echo "<h3>".$available_types[$type]." present in ".$subset2." and not in ".$subset1."</h3>\n";
 		    echo "<div class='subdiv' style='margin-bottom:30px;'>\n";
 		    echo "<span style='font-size:x-small;margin-left:30px;'>Click table-header(s) to enable sorting</span><br/><br/>\n";
     
@@ -320,17 +354,20 @@
     		
     		    foreach($type_desc as $go_type=>$go_type_desc){
 			$style	= null;
-			if($go_type=="BP"){$style=" style='display:block;width:950px;' ";}			
+			if($go_type=="BP"){$style=" style='display:block;' ";}
     			echo "<div id='tabdiv_sub2_".$go_type."' class='tabbed_div tabdiv_sub2 tabbed_div2' $style>\n";    
     			echo "<center>\n";
     
-			echo "<table cellpadding='0' cellspacing='0' style='width:700px;' class='sortable'>\n";
+			echo "<table class='table table-condensed table-hover table-striped table-bordered sortable'>\n";
+			echo "<thead>";
 			echo "<tr>";
 			echo "<th>".$available_types[$type]."</th>";
-			echo "<th style='width:40%'>Description</th>";		
+			echo "<th>Description</th>";
 			echo "<th>Subset 2</th>";		
 			echo "<th>Ratio subset 2</th>";		
 			echo "</tr>\n";
+			echo "</thead>";
+			echo "<tbody>";
 			$counter	= 0;
 			foreach($data_subset2 as $k=>$v){
 			    if(!array_key_exists($k,$data_subset1) && $go_types[$k]==$go_type){
@@ -345,43 +382,43 @@
 				    echo "</tr>\n";			
 			    }
 			}
+			echo "</tbody>\n";
 			echo "</table>\n";
 			echo "</center>\n";
 			
 			echo $this->Html->link("Download data",
 				array("controller"=>"tools","action"=>"compare_ratios_download",$exp_id,"go","3",urlencode($subset1),urlencode($subset2),$go_type),
-				array("style"=>"margin-left:10px;padding-bottom:5px;"));
+				array("style"=>"margin-left:10px;padding-bottom:5px;", "class"=>"btn btn-default btn-sm"));
 
 			echo "</div>\n";
     		    }
 		    echo "</div>\n";	
 
-
-
-		    echo "<script type='text/javascript'>\n";
-		    echo "//<![CDATA[\n";
-		    echo "function switchtab(tabid,tabclass,divid,divclass){\n";
-		    echo "$$(divclass).each(function(entity){\n";
-		    echo "entity.style.display='none';\n";	
-		    echo "});\n";
-		    echo "$(divid).style.display='block';\n";
-		    echo "$(divid).style.width='950px';\n";
-	
-		    echo "$$(tabclass).each(function(entity){\n";
-		    echo "try{entity.removeClassName('selected_tab');}catch(exception){}\n";
-		    echo "});\n";
-		    echo "$(tabid).addClassName('selected_tab');\n";		   
-
-		    echo "}\n";		    
-		    echo "//]]>\n";
-    		    echo "</script>\n";
-    
-
-		}		
+		}
 
 		echo "</div>\n";
 	}	
-	?>
+?>
 
 </div>
 </div>
+
+<script type='text/javascript'>
+    //<![CDATA[
+    // Toggle table visibility depending on user's choice
+    function switchtab(tabid, tabclass, divid, divclass) {
+        $(divclass).each(function() {
+            $(this).css("display", "none");
+        });
+        $("#" + divid).css("display", "block");
+        $(tabclass).each(function(entity) {
+            try {
+                $(this).removeClass('selected_tab');
+            }
+            catch(exception) {}
+        });
+        $("#" + tabid).addClass('selected_tab');
+        console.log("Hej");
+    }
+    //]]>
+</script>
