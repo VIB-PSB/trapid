@@ -8,6 +8,28 @@ echo $this->Html->script('https://cdn.rawgit.com/jshjohnson/Choices/3e889633/ass
 echo $this->Html->css('https://cdn.rawgit.com/jshjohnson/Choices/3e889633/assets/styles/css/choices.min.css');
 ?>
 
+<style>
+    .choices__inner {
+        display: inline-block;
+        vertical-align: top;
+        width: 100%;
+        background-color: #f9f9f9;
+        padding: 3.75px 7.5px 3.75px;
+    }
+    .choices * {
+        font-size: 13px;
+    }
+    .choices__list * {
+        font-size: 13px;
+    }
+    .choices__list--dropdown .choices__item--selectable {
+        padding-right: 52px;
+    }
+    #core-gf-settings {
+        min-height: 158px;
+    }
+</style>
+
 <div class="page-header">
     <h1 class="text-primary">Core GF completeness</h1>
 </div>
@@ -41,15 +63,16 @@ echo $this->Html->css('https://cdn.rawgit.com/jshjohnson/Choices/3e889633/assets
             <?php echo $this->Form->create(false, array("action" => "core_gf_completeness/" . $exp_id, "type" => "post", "default"=>"false", "id"=>"completeness-form")); ?>
 
             <div class="row">
-                <div class="col-lg-4">
                     <!-- Data -->
+                <div class="col-lg-5">
                     <div class="panel panel-default">
                         <div class="panel-heading"><h3 class="panel-title">Data</h3></div>
                         <div class="panel-body">
                             <div class="row">
-                                <div class="col-md-6">
+                                <div class="col-md-5">
                                     <div class="form-group">
                                         <label for="transcripts-choice"><strong>Transcript selection</strong></label>
+                                        <?php echo $this->element("help_tooltips/create_tooltip", array("tooltip_text"=>$tooltips['core_gf_transcripts'], "tooltip_placement"=>"top")); ?>
                                         <select id="transcripts-choice" name="transcripts-choice" class="form-control">
                                             <option value="all" selected="selected">All transcripts</option>
                                             <?php foreach ($subsets as $subset_name => $n_transcripts)
@@ -59,12 +82,11 @@ echo $this->Html->css('https://cdn.rawgit.com/jshjohnson/Choices/3e889633/assets
                                         </select>
                                     </div>
                                 </div>
-                                <div class="col-md-6">
+                                <div class="col-md-7">
                                     <div class="form-group">
-<!--                                        <label for="clade"><strong>Phylogenetic clade</strong>-->
-<!--                                            (<code>tax_id</code>)</label>-->
                                         <label for="clade"><strong>Phylogenetic clade</strong></label>
-                                        <select class="form-control" id="clade" name="clade" placeholder="Hello" required>
+                                        <?php echo $this->element("help_tooltips/create_tooltip", array("tooltip_text"=>$tooltips['core_gf_clade'], "tooltip_placement"=>"top", "use_html"=>true)); ?>
+                                        <select class="form-control" id="clade" name="clade" placeholder="Clade selection" required>
                                             <option placeholder>Select clade</option>
                                         </select>
 <!--                                        <input class="form-control" id="clade" name="clade" placeholder="Clade tax ID"-->
@@ -76,15 +98,16 @@ echo $this->Html->css('https://cdn.rawgit.com/jshjohnson/Choices/3e889633/assets
                     </div>
                 </div>
 
-                <div class="col-lg-8">
                     <!-- Settings -->
-                    <div class="panel panel-default">
+                <div class="col-lg-7">
+                    <div class="panel panel-default" id="core-gf-settings">
                         <div class="panel-heading"><h3 class="panel-title">Settings</h3></div>
                         <div class="panel-body">
                             <div class="row">
                                 <div class="col-md-4">
                                     <div class="form-group">
-                                        <label for="species-perc"><strong>Conservation threshold</strong></label>
+                                        <label for="species-perc"><strong>Conservation %</strong></label>
+                                        <?php echo $this->element("help_tooltips/create_tooltip", array("tooltip_text"=>$tooltips['core_gf_species_perc'], "tooltip_placement"=>"top")); ?>
                                         <input class="form-control" id="species-perc" max="1" min="0.5"
                                                name="species-perc" step="0.01" value="0.9" required type="number">
                                     </div>
@@ -92,6 +115,7 @@ echo $this->Html->css('https://cdn.rawgit.com/jshjohnson/Choices/3e889633/assets
                                 <div class="col-md-4">
                                     <div class="form-group">
                                         <label for="top-hits"><strong>Top hits</strong></label>
+                                        <?php echo $this->element("help_tooltips/create_tooltip", array("tooltip_text"=>$tooltips['core_gf_top_hits'], "tooltip_placement"=>"top")); ?>
                                         <input class="form-control" id="top-hits" max="10" min="1" name="top-hits"
                                                step="1" value="5" required type="number">
                                     </div>
@@ -99,10 +123,10 @@ echo $this->Html->css('https://cdn.rawgit.com/jshjohnson/Choices/3e889633/assets
                                 <div class="col-md-4">
                                     <div class="form-group">
                                         <label for="tax-radio"><strong>Taxonomy source</strong></label>
+                                        <?php echo $this->element("help_tooltips/create_tooltip", array("tooltip_text"=>$tooltips['core_gf_tax_source'], "tooltip_placement"=>"top")); ?>
                                         <div class="radio" id="tax-radio" name="tax-radio">
                                             <label><input type="radio" name="tax-radio-ncbi" checked>NCBI</label>
-                                            <label><input type="radio" name="tax-radio-db" disabled>PLAZA config.
-                                            </label>
+                                            <label><input type="radio" name="tax-radio-db" disabled>PLAZA</label>
                                         </div>
                                     </div>
                                 </div>
@@ -306,4 +330,22 @@ echo $this->Html->css('https://cdn.rawgit.com/jshjohnson/Choices/3e889633/assets
     choices_elmt.addEventListener('choice', function (event) {
         choices.setChoices([], 'value', 'label', true);
     });
+
+    // Resize bar chart on toggling of the side menu
+    // TODO: implement that everywhere where we have highcharts?
+    function resize_charts() {
+        setTimeout(function() {
+            jQuery( ".hc" ).each(function() { // target each element with the .hc class
+                var chart = jQuery(this).highcharts(); // target the chart itself
+                console.log(chart);
+                chart.reflow()  // reflow that chart
+            });
+        }, 420);
+    }
+
+    $('.sidebar-toggle').on('click', function () {
+        resize_charts();
+    });
+
 </script>
+<?php echo $this->element("help_tooltips/enable_tooltips",  array("container"=>"#completeness-form")); ?>

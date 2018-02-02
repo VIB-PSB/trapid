@@ -1290,6 +1290,9 @@ class ToolsController extends AppController{
     	$go_data		= $this->ExtendedGo->find("all",array("conditions"=>array("name"=>array_keys($result), "type"=>"go")));
     	$go_descriptions	= $this->TrapidUtils->indexArray($go_data,"ExtendedGo","name","desc");
     	$go_types		= array("MF"=>array(),"BP"=>array(),"CC"=>array());
+//    	pr($go_data);
+//    	pr($go_types);
+//    	pr($go_descriptions);
     	foreach($go_data as $gd){
 //      		$go_type	= $gd['ExtendedGo']['type'];
 //      		$go_types[$go_type][] = $gd['ExtendedGo']['go'];
@@ -1377,6 +1380,7 @@ class ToolsController extends AppController{
       }
     }
     $this->set("result",$result);
+//      pr($result);
 
 
     //get extra information
@@ -1987,6 +1991,8 @@ function label_go_intersection($exp_id=null,$label=null){
             $max_tax = 20;
             // 1. Check subset name. If it already exists, return error message.
             $subset_name = mysql_real_escape_string($this->request->data['subset-name']);
+            // Strip + replace blank spaces by underscores
+            $subset_name = preg_replace('/\s+/', '_', trim($subset_name));
             if(empty($subset_name)){
                 return("<label class=\"label label-warning\">Error: incorrect subset name</label>");
             }
@@ -2038,6 +2044,7 @@ function label_go_intersection($exp_id=null,$label=null){
                 // If user chose `$unclassified_str`, handle it
                 if($tax_id == 0 && in_array($unclassified_str, $tax_lookup)) {
                     $transcripts = array_merge($transcripts, $tax_binning_summary[$tax_id]["transcripts"]);
+                    // pr($tax_binning_summary[$tax_id]["transcripts"]);
                 }
                 if(sizeof(array_intersect($tax_binning_summary[$tax_id]["lineage"], $tax_lookup)) != 0) {
                     $transcripts = array_merge($transcripts, $tax_binning_summary[$tax_id]["transcripts"]);
@@ -2083,6 +2090,13 @@ function label_go_intersection($exp_id=null,$label=null){
         $this->set("active_sidebar_item", "Core GF");
         $this->set("exp_id",$exp_id);
         $this -> set('title_for_layout', 'Core GF completeness');
+
+        // Get tooltip content
+        $tooltips = $this->TrapidUtils->indexArraySimple(
+            $this->HelpTooltips->find("all", array("conditions"=>array("tooltip_id LIKE 'core_gf_%'"))),
+            "HelpTooltips","tooltip_id","tooltip_text"
+        );
+        $this->set("tooltips", $tooltips);
 
         // Get all previously run core GF analyses
         $previous_completeness_jobs = $this->CompletenessResults->find("all", array("conditions"=>array("experiment_id"=>$exp_id), "fields"=>array("id", "clade_txid", "used_method", "label", "completeness_score")));
@@ -2249,7 +2263,7 @@ function label_go_intersection($exp_id=null,$label=null){
     // Should we restrict this to logged-in users?
     function search_tax($clade_prefix) {
         $this->autoRender = false;
-        $limit_results = 300;  // Retrieve only this amount of results
+        $limit_results = 250;  // Retrieve only this amount of results
         $min_length = 3;  // Minimum length of prefix to search, will return nothing if less than that.
         if(strlen($clade_prefix) < $min_length){
             return(null);
