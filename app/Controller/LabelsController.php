@@ -79,8 +79,25 @@ class LabelsController extends AppController{
     $data_venn			= $this->Statistics->makeVennOverview($data_raw);
     $this->set("data_venn",$data_venn);
 
+    $this->set("active_sidebar_item", "Explore subsets");
     $this -> set('title_for_layout', 'Subsets overview');
   }
+
+
+    // Delete label `$label_id` and associated data from experiment `$exp_id`.
+    function delete_label($exp_id=null, $label_id=null){
+        $exp_id	= mysql_real_escape_string($exp_id);
+        $label_id = mysql_real_escape_string($label_id);
+        parent::check_user_exp($exp_id);
+        // TODO: check if nothing is running before deleting labels?
+        $this->TranscriptsLabels->query("DELETE FROM `transcripts_labels` WHERE `experiment_id`='".$exp_id."' AND `label` = '".$label_id."';");
+        // Also delete all extra data using these labels...
+        // Core GF completeness results
+        $this->TranscriptsLabels->query("DELETE FROM `completeness_results` WHERE `experiment_id`='".$exp_id."' AND `label` = '".$label_id."';");
+        // Functional enrichment results
+        $this->TranscriptsLabels->query("DELETE FROM `functional_enrichments` WHERE `experiment_id`='".$exp_id."' AND `label` = '".$label_id."';");
+        $this->redirect(array("controller"=>"labels","action"=>"subset_overview", $exp_id));
+    }
 
 
 

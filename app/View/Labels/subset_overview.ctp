@@ -89,9 +89,10 @@
             <div class="col-md-4">
 		<table style="font-size:88%;" id="label_table" class="table table-striped table-hover table-condensed table-bordered">
 			<thead>
-				<th style="width:60%">Label</th>
-				<th style="width:30%">#Transcripts</th>
-				<th style="width:10%">Show</th>
+				<th>Label</th>
+				<th>#Transcripts</th>
+				<th style="width:6%;">Show</th>
+				<th style="width:7%;">Delete</th>
 			</thead>
             <tbody>
 			<?php
@@ -103,6 +104,10 @@
 				echo "<td>".$this->Html->link($fc,array("controller"=>"labels","action"=>"view",$exp_id,urlencode($fc)))."</td>";
 				echo "<td>".$count."</td>";
 				echo "<td class='text-center'><input type='checkbox' class='label_select' id='".$fc."' $sel></td>";
+                echo "<td style=\"text-align:center;\">".$this->Html->link("<span class='material-icons'>delete</span>",
+                        array("controller"=>"labels","action"=>"delete_label", $exp_id, $fc),
+                        array("style"=>"color: #666;", "escape"=>false, "title"=>"Delete label"),
+                        "Are you sure you want to delete label '".$fc."'?")."</td>";
 				echo "</tr>\n";
 			}
 			?>
