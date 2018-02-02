@@ -3,26 +3,75 @@ if(isset($error)){
 	echo "<span class='error'>".$error."</span><br/>\n"; 
 }
 else if(!isset($result)){
-	echo "<span class='error'>Undefined error: no output data</span><br/>\n";
+	echo "<span class='error text-danger'>Undefined error: no output data</span><br/>\n";
 }
 else if(count($result)==0){
-	echo "<span class='message'>No enriched terms found for this subset</span><br/>\n";	
+	echo "<span class='message text-primary'>No enriched terms found for this subset</span><br/>\n";
 }
 else{	
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////
-	if($type=="go"){	
-	//CHARTS	
+	if($type=="go"){
+		?>
+		<section class="page-section-sm">
+			<p class="text-justify"><strong>Jump to:</strong>
+		<ul>
+				<li><a href="#go-charts">GO enrichment charts</a></li>
+				<li><a href="#go-table">Go enrichment table</a></li>
+		</ul>
+			</p>
+		</section>
+
+<?php
+	//CHARTS
 	echo "<div style='margin-bottom:20px;'>\n";
-	echo "<h4>GO enrichment charts</h4>\n";
-	echo "<div style='width:860px;background-color:white;padding:20px;margin-top:10px;border:1px solid black;'>";
-	$go_types_titles	= array("MF"=>"Molecular Function","CC"=>"Cellular Component","BP"=>"Biological Process");	
+	echo "<h4>GO enrichment charts</h4><br>\n";
+	// echo "<div style='width:860px;background-color:white;padding:20px;margin-top:10px;border:1px solid black;' id='go-charts'>";
+	echo "<div class='page-section' id='go-charts'>";
+	$go_types_titles	= array("MF"=>"Molecular Function","CC"=>"Cellular Component","BP"=>"Biological Process");
 	foreach($go_types as $go_type=>$gos){
 		$data_chart	= array("GO enrichment"=>array("color"=>"#123987","font_size"=>11,"graph_style"=>"bar"),
 					"p-value"=>array("color"=>"#789321","font_size"=>11,"graph_style"=>"lines")
-					);		
-	
-		$enrich_data	= array();
+					);
+
+        echo "<div class='row'><div class='col-md-10 col-md-offset-1'>";
+        echo "<div class='panel panel-default'>";
+        echo "<div class='panel-heading'>";
+        echo "<h3 class='panel-title'>".$go_types_titles[$go_type]."</h3>";
+        echo "</div>";
+        echo "<div class='panel-body'>";
+        $order_pval = array();
+        $n_results = 0;
+        foreach ($gos as $go)
+        {
+            $order_pval[$go] = $result[$go]['p-value'];
+            if($result[$go]['is_hidden'] == 0) {
+                $n_results +=1;
+            }
+        }
+        array_multisort($order_pval, SORT_ASC, $gos);
+
+
+        if($n_results > 0) {
+            echo "<div style='max-width:98%; margin: 0 auto;'>";
+            echo $this->element('charts/bar_go_enrichment', array("chart_title"=>"GO enrichment results (".$subset.")" , "chart_subtitle"=>"GO category: ".$go_types_titles[$go_type], "enrichment_results"=>$result, "descriptions"=>$go_descriptions, "go_type"=>$go_type, "go_terms"=>$gos, "chart_div_id"=>"go_enrichment_chart_".$go_type, "linkout"=>$this->Html->Url(array("controller"=>"functional_annotation","action"=>"go",$exp_id))));
+            echo "</div>";
+        }
+
+        else {
+            echo "<p class='text-justify'><strong>No GO enrichment results chart to show for that category: no non-redundant GO term was found. </strong></p>";
+        }
+        echo "</div>";
+        echo "<div class='panel-footer'>";
+        echo $this->Html->link("View GO enrichment graph",array("controller"=>"tools","action"=>"go_enrichment_graph",$exp_id,$subset,$go_type,$selected_pvalue));
+        echo "</div>";
+        echo "</div>";
+        echo "</div>";
+        echo "</div>";
+
+
+
+        $enrich_data	= array();
 		$pval_data	= array();
 		$links		= array();
 		$tips		= array();
@@ -84,8 +133,11 @@ else{
 		$data_chart["p-value"]["links"]			= $links;
 		$data_chart["p-value"]["tips"]			= $tips;
 		
-		echo "<center><span style='color:#153E7E;text-decoration:underline;'>".$go_types_titles[$go_type]."</span></center><br/><br/>";
-		echo "<center>";
+		// echo "<center><span style='color:#153E7E;text-decoration:underline;'>".$go_types_titles[$go_type]."</span></center><br/><br/>";
+
+        // Comment legacy flash charts but keep the code
+
+        /*		echo "<center>";
 		$this->FlashChart->begin(750,250,"GO terms","Log2 enrichment",false);
 		if($min_val==0){$min_val = 1;}
 		$this->FlashChart->setRange("y",intval($min_val)-1,intval($max_val)+1);
@@ -100,14 +152,14 @@ else{
 		$this->FlashChart->addToRightYAxis(2);
 		$this->FlashChart->setNewToolTip("#x_label#<br>#tip#<br>#val#");
 		echo $this->FlashChart->render();
-		echo $this->Html->link("View GO enrichment graph",array("controller"=>"tools","action"=>"go_enrichment_graph",$exp_id,$subset,$go_type,$selected_pvalue));	
+		echo $this->Html->link("View GO enrichment graph",array("controller"=>"tools","action"=>"go_enrichment_graph",$exp_id,$subset,$go_type,$selected_pvalue));
 		echo "</center>\n";
 		if($go_type!="CC"){
-			echo "<br/><br/>\n";		
+			echo "<br/><br/>\n";
 			echo "<hr/>\n";
 			echo "<br/><br/>\n";
-		}
-	}			
+		}*/
+	}
 
 	echo "</div>\n";
 	echo "</div>\n";
@@ -116,9 +168,9 @@ else{
 
 	//TABLE 
 	echo "<div>\n";
-	echo "<h4>GO enrichment data table</h4>\n";
+	echo "<h4>GO enrichment data table</h4><br>\n";
 //	echo "<table class='table table-bordered table-striped' cellpadding='0' cellspacing='0' style='width:900px;'>\n";
-	echo "<table class='table table-bordered table-striped' style=''>\n";
+	echo "<table id='go-table' class='table table-bordered table-striped' style=''>\n";
 	echo "<thead>";
 	echo "<th style='width:5%'>GO type</th>";
 	echo "<th style='width:10%'>GO term</th>";
@@ -155,8 +207,8 @@ else{
 			echo "<td $lower_row>".$p_value."</td>";
 			echo "<td $lower_row>".$this->Html->link(number_format($res["subset_ratio"],2)."%",array("controller"=>"trapid","action"=>"transcript_selection",$exp_id,"go",$go_web_id,"label",$subset))."</td>";
 			echo "<td $lower_row>".$go_descriptions[$go_id][0]."</td>";
-			if($res['is_hidden']){echo "<td $lower_row><span class='error'>X</span></td>";}
-			else{echo "<td $lower_row><span class='message'>V</span></td>";}			
+			if($res['is_hidden']){echo "<td $lower_row><span class='error text-danger'>X</span></td>";}
+			else{echo "<td $lower_row><span class='message text-success'>V</span></td>";}
 			echo "</tr>\n";
 		}
 	}				
@@ -168,11 +220,49 @@ else{
 	else if($type=="ipr"){
 		//CHARTS	
 		echo "<div style='margin-bottom:20px;'>\n";
-		echo "<h4>Protein domain enrichment chart</h4>\n";
-		echo "<div style='width:860px;background-color:white;padding:20px;margin-top:10px;border:1px solid black;'>";
+//		echo "<h4>Protein domain enrichment chart</h4><br>\n";
+//		echo "<div style='width:860px;background-color:white;padding:20px;margin-top:10px;border:1px solid black;'>";
 
 
-		$data_chart	= array("Protein domain enrichment"=>array("color"=>"#123987","font_size"=>11,"graph_style"=>"bar"),
+//        pr($result);
+//        pr($ipr_descriptions);
+        echo "<div class='row'><div class='col-lg-10 col-lg-offset-1'>";
+        echo "<div class='panel panel-default'>";
+        echo "<div class='panel-heading'><h3 class='panel-title'>Protein domain enrichment chart</h3></div>";
+        echo "<div class='panel-body'>";
+        $order_pval = array();
+        $n_results = 0;
+        foreach ($result as $res)
+        {
+            $order_pval[$res['ipr']] = $res['p-value'];
+            if($res['is_hidden'] == 0) {
+                $n_results +=1;
+            }
+        }
+        pr($n_results);
+        pr($order_pval);
+        array_multisort($order_pval, SORT_ASC, $result);
+        pr($result);
+
+
+        if($n_results > 0) {
+//            echo "<div style='max-width:98%; margin: 0 auto;'>";
+//            echo $this->element('charts/bar_ipr_enrichment', array("chart_title"=>"Enrichment results (".$subset.")" , "chart_subtitle"=>"Interpro domains", "enrichment_results"=>$result, "descriptions"=>$ipr_descriptions, "chart_div_id"=>"ipr_enrichment_chart", "linkout"=>$this->Html->Url(array("controller"=>"functional_annotation","action"=>"interpro",$exp_id))));
+//            echo "</div>";
+        }
+
+        else {
+            echo "<p class='text-justify'><strong>No GO enrichment results chart to show for that category: no non-redundant GO term was found. </strong></p>";
+        }
+        echo "</div>";
+        echo "</div>";
+        echo "</div>";
+        echo "</div>";
+
+
+
+
+        $data_chart	= array("Protein domain enrichment"=>array("color"=>"#123987","font_size"=>11,"graph_style"=>"bar"),
 					"p-value"=>array("color"=>"#789321","font_size"=>11,"graph_style"=>"lines")
 					);		
 	
@@ -184,7 +274,7 @@ else{
 		$max_val 	= 0;
 		$min_val 	= 0;
 		$max_p_val 	= 5;
-		foreach($result as $ipr=>$res){	
+		foreach($result as $ipr=>$res){
 			$desc		= $ipr_descriptions[$ipr][0];	
 			if(!$res['is_hidden']){
 				$val		= number_format($res['enrichment'],2);	
@@ -235,7 +325,8 @@ else{
 		$data_chart["p-value"]["data"]			= $pval_data;
 		$data_chart["p-value"]["links"]			= $links;
 		$data_chart["p-value"]["tips"]			= $tips;
-			
+
+		// Comment but keep flash cahrt code
 		echo "<center>";
 		$this->FlashChart->begin(750,250,"Protein domains","Log2 enrichment",false);
 		if($min_val==0){$min_val = 1;}
@@ -251,7 +342,7 @@ else{
 		$this->FlashChart->addToRightYAxis(2);
 		$this->FlashChart->setNewToolTip("#x_label#<br>#tip#<br>#val#");
 		echo $this->FlashChart->render();
-		echo "</center>\n";	
+		echo "</center>\n";
 				
 
 		echo "</div>\n";
@@ -261,16 +352,19 @@ else{
 
 		//TABLE 
 		echo "<div>\n";
-		echo "<h4>Protein domain enrichment data table</h4>\n";
-		echo "<table cellpadding='0' cellspacing='0' style='width:900px;'>\n";
+		echo "<h4>Protein domain enrichment data table</h4><br>\n";
+		echo "<table id='ipr-table' class='table table-bordered table-striped'>\n";
+		echo "<thead>";
 		echo "<tr>";	
-		echo "<th style='width:10%'>Protein domain</th>";
-		echo "<th style='width:10%'>Enrichment</th>";
-		echo "<th style='width:10%'>p-value</th>";
-		echo "<th style='width:10%'>Subset ratio</th>";
-		echo "<th style='width:50%'>Description</th>";
-		echo "<th style='width:5%'>Shown</th>";
+		echo "<th>Protein domain</th>";
+		echo "<th>Enrichment</th>";
+		echo "<th>P-value</th>";
+		echo "<th>Subset ratio</th>";
+		echo "<th>Description</th>";
+		echo "<th style='width:4%'>Shown</th>";
 		echo "</tr>\n";
+		echo "</thead>";
+		echo "<tbody>";
 		$i	= 0;
 	
 		foreach($result as $ipr=>$res){
@@ -294,11 +388,12 @@ else{
 			echo "<td $lower_row>".$p_value."</td>";
 			echo "<td $lower_row>".$this->Html->link(number_format($res["subset_ratio"],2)."%",array("controller"=>"trapid","action"=>"transcript_selection",$exp_id,"interpro",$ipr,"label",$subset))."</td>";
 			echo "<td $lower_row>".$ipr_descriptions[$ipr][0]."</td>";
-			if($res['is_hidden']){echo "<td $lower_row><span class='error'>X</span></td>";}
-			else{echo "<td $lower_row><span class='message'>V</span></td>";}			
+			if($res['is_hidden']){echo "<td class='text-center' $lower_row><span class='error text-danger'>X</span></td>";}
+			else{echo "<td class='text-center' $lower_row><span class='message text-success'>V</span></td>";}
 			echo "</tr>\n";
 		}
 					
+		echo "</tbody>\n";
 		echo "</table>\n";
 		echo "</div>\n";
 	
@@ -308,10 +403,10 @@ else{
 	}
 
 	//create a download option
-	echo "<h4>Download table</h4>\n";
+	// echo "<h4>Download table</h4>\n";
 	$download_url = $this->Html->url(array("controller"=>"tools","action"=>"download_enrichment",$exp_id,$type,$subset,$selected_pvalue),true);
 	echo "<form action='".$download_url."' method='post' >\n";
-	echo "<input type='submit' value='Download' />\n";
-	echo "</form>";
+	echo "<input type='submit' class='btn btn-default' value='Download table' />\n";
+	echo "</form><br>";
 }
 ?>

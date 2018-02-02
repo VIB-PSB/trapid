@@ -1,17 +1,20 @@
-<div>
-<h2>GO enrichment graph</h2>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prototype/1.7.0.0/prototype.min.js"></script>
+
+<div class="page-header">
+<h1 class="text-primary">GO enrichment graph</h1>
+</div>
 <div class="subdiv">
 	<?php echo $this->element("trapid_experiment");?>
 	
-	<h3>GO enrichment</h3>
-	<div class="subdiv">
+<!--	<h3>GO enrichment</h3>-->
+<!--	<div class="subdiv">-->
 		<?php
-		echo $this->Html->link("Return to GO enrichment overview",array("controller"=>"tools","action"=>"go_enrichment",$exp_id));
+//		echo $this->Html->link("Return to GO enrichment overview",array("controller"=>"tools","action"=>"go_enrichment",$exp_id));
 		?>
-		<br/><br/>
-	</div>	
+<!--		<br/><br/>-->
+<!--	</div>	-->
 
-	<h3>GO enrichment graph</h3>	
+<!--	<h3>GO enrichment graph</h3>	-->
 	<div class="subdiv">
 	<br/><br/>
 	<center>

@@ -1,5 +1,9 @@
 <?php
     echo $this->Html->script("canvasXpress/canvasXpress.min.js");
+    // TODO: host locally
+    // Highcharts
+    echo $this->Html->script('http://code.highcharts.com/highcharts.js');
+    echo $this->Html->script('http://code.highcharts.com/modules/exporting.js');
     echo $this->Html->script("swfobject");
 ?>
 
@@ -7,7 +11,6 @@
     <div class="page-header">
         <h1 class="text-primary"><?php echo $available_types[$type]; ?> enrichment</h1>
     </div>
-    <div class="alert alert-success"><strong>Vizualisation work ongoing.</strong> Bear with the old (flash) charts until we are done implementing the new ones.     </div>
     <div class="subdiv">
 <!--        <div class="row">-->
 <!--            <div class="col-sm-8" style="border: 1px red solid;">-->
@@ -144,3 +147,20 @@
     <?php endif; ?>
     </div>
 </div>
+<script>
+    // Resize bar chart on toggling of the side menu
+    // TODO: implement that everywhere where we have highcharts?
+    function resize_charts() {
+        setTimeout(function() {
+            jQuery( ".hc" ).each(function() { // target each element with the .hc class
+                var chart = jQuery(this).highcharts(); // target the chart itself
+                console.log(chart);
+                chart.reflow()  // reflow that chart
+            });
+        }, 410);
+    }
+
+    $('.sidebar-toggle').on('click', function () {
+        resize_charts();
+    });
+</script>
