@@ -90,6 +90,7 @@
 <!--                </tr>-->
 <!--            </thead>-->
 <!--        </table>-->
+<section class="page-section-sm">
 <div class='row'>
     <div class='col-lg-12'>
         <div class="panel panel-primary">
@@ -146,13 +147,13 @@
     <!--                            </div>-->
     <!--                        </div>-->
 </div>
-<hr>
+</section>
 
 <?php
 if ($standard_experiment_info['Experiments']['process_state'] == "upload" || isset($admin)) {
-    echo "<h2>Initial processing</h2>\n";
-    echo "<div class='subdiv'>\n";
-    echo "<dl class='standard'>\n";
+    echo "<h3>Initial processing</h3>\n";
+    echo "<div class='page-section-sm'>\n";
+    echo "<dl class='standard dl-horizontal'>\n";
     if ($standard_experiment_info['Experiments']['process_state'] != "upload") {
         echo "<dt><span style='color:red'>Override</span></dt>\n";
         echo "<dd><span style='color:red'>Experiment is not in upload state. Override at own risk</span></dd>\n";
@@ -163,7 +164,7 @@ if ($standard_experiment_info['Experiments']['process_state'] == "upload" || iss
         array("controller" => "trapid", "action" => "initial_processing", $exp_id));
     echo "</dd>\n";
     echo "</dl>\n";
-    echo "</div><br/>\n";
+    echo "</div>\n";
 }
 ?>
 
@@ -181,14 +182,14 @@ if ($standard_experiment_info['Experiments']['process_state'] == "upload" || iss
  */
 if ($standard_experiment_info['Experiments']['process_state'] == "finished" && $num_subsets > 0) {    //(1) and (2)
     if ($standard_experiment_info['Experiments']['enrichment_state'] != 'processing') {    //(4)
-        echo "<h2>GO enrichment preprocessing</h2>\n";
+        echo "<h3>Functional enrichment preprocessing</h3>\n";
         echo "<div class='subdiv'>\n";
-        echo "<dl class='standard'>\n";
+        echo "<dl class='standard dl-horizontal'>\n";
         echo "<dt>Process</dt>\n";
         echo "<dd>";
-        $link_text = "Perform GO enrichment preprocessing for " . $num_subsets . " labels";
+        $link_text = "Perform functional enrichment preprocessing for " . $num_subsets . " subsets";
         if ($standard_experiment_info['Experiments']['enrichment_state'] == "finished") {
-            $link_text = "Rerun GO enrichment preprocessing for " . $num_subsets . " labels";
+            $link_text = "Rerun functional enrichment preprocessing for " . $num_subsets . " subsets";
         }
         echo $this->Html->link($link_text,
             array("controller" => "trapid", "action" => "enrichment_preprocessing", $exp_id));

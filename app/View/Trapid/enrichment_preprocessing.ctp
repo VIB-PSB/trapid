@@ -3,36 +3,31 @@
 <h1 class="text-primary">Preprocess functional enrichments</h1>
 </div>
 <div class="subdiv">
-	<?php echo $this->element("trapid_experiment");?>
+	<?php // echo $this->element("trapid_experiment");?>
 	
-	<h3>Overview</h3>
-	<div class="subdiv" style="width:700px;">
-		The preprocessing of functional enrichments within the TRAPID framework is only available when at least 1 label is defined for the data set: indeed, the enrichments are computed by taking the ratio of transcripts assigned to a label, with the transcripts in the entire data set. <br/>
-		The preprocessing of the functional enrichments is required when viewing the Sankey diagrams, because of the otherwise long waiting times.
-		<br/>
-		The preprocessing of the functional enrichments is not done during the 'initial processing' phase because labels can be added afterwards, and they do not play a role in the initial processing.
-	</div>
+	<section class="page-section">
+        <p class="text-justify">The preprocessing of functional enrichments within the TRAPID framework is <strong>only available when at least 1 transcript subset is defined</strong>: indeed, the enrichments are computed by taking the ratio of transcripts assigned to a label, with the transcripts in the entire data set. </p>
+        <p class="text-justify">Preprocessing the functional enrichments is required when viewing the Sankey diagrams (computing enrichments on-the-fly would make loading the Sankey diagrams very long). </p>
+        <p class="text-justify"><strong>Nb: </strong>the preprocessing of the functional enrichments is not done during the 'initial processing' phase because labels can be added afterwards, and they do not play a role in the initial processing.</p>
+	</section>
 
 	
-	<h3>Options</h3>
+	<h3>Enrichment preprocessing options</h3>
 	<div class="subdiv">
 		<?php
 		echo $this->Form->create(false,array("url"=>array("controller"=>"trapid","action"=>"enrichment_preprocessing",$exp_id),"type"=>"post"));
 		?>
-			<dl class="standard2">
-				<dt>Data Type</dt>
-				<dd>
-					<select name="type" id="type" style="width:300px;">
+			<div class="form-group">
+                <label for="type"><strong>Data Type</strong></label><br>
+					<select name="type" id="type" style="float:left;max-width:200px;" class="form-control">
 						<?php
 						foreach($possible_types as $k=>$v){
 							echo "<option value='".$k."' >".$v."</option>\n";
 						}
 						?>
 					</select>	
-				</dd>
-			</dl>
-			<br/>
-			<input type="submit" value="Start enrichment preprocessing" style="width:200px;" />	
+			<input class='btn btn-primary' type="submit" value="Run enrichment preprocessing" style="clear:both; margin-left: 25px;"/>
+			</div>
 		</form>
 	</div>
 
