@@ -239,20 +239,20 @@ else{
                 $n_results +=1;
             }
         }
-        pr($n_results);
-        pr($order_pval);
+//        pr($n_results);
+//        pr($order_pval);
         array_multisort($order_pval, SORT_ASC, $result);
-        pr($result);
+//        pr($result);
 
 
         if($n_results > 0) {
-//            echo "<div style='max-width:98%; margin: 0 auto;'>";
-//            echo $this->element('charts/bar_ipr_enrichment', array("chart_title"=>"Enrichment results (".$subset.")" , "chart_subtitle"=>"Interpro domains", "enrichment_results"=>$result, "descriptions"=>$ipr_descriptions, "chart_div_id"=>"ipr_enrichment_chart", "linkout"=>$this->Html->Url(array("controller"=>"functional_annotation","action"=>"interpro",$exp_id))));
-//            echo "</div>";
+            echo "<div style='max-width:98%; margin: 0 auto;'>";
+            echo $this->element('charts/bar_ipr_enrichment', array("chart_title"=>"Enrichment results (".$subset.")" , "chart_subtitle"=>"Interpro domains", "enrichment_results"=>$result, "descriptions"=>$ipr_descriptions, "chart_div_id"=>"ipr_enrichment_chart", "linkout"=>$this->Html->Url(array("controller"=>"functional_annotation","action"=>"interpro",$exp_id))));
+            echo "</div>";
         }
 
         else {
-            echo "<p class='text-justify'><strong>No GO enrichment results chart to show for that category: no non-redundant GO term was found. </strong></p>";
+            echo "<p class='text-justify'><strong>No protein domain enrichment results chart to show for that category: no non-redundant GO term was found. </strong></p>";
         }
         echo "</div>";
         echo "</div>";
@@ -327,7 +327,7 @@ else{
 		$data_chart["p-value"]["tips"]			= $tips;
 
 		// Comment but keep flash cahrt code
-		echo "<center>";
+/*		echo "<center>";
 		$this->FlashChart->begin(750,250,"Protein domains","Log2 enrichment",false);
 		if($min_val==0){$min_val = 1;}
 		$this->FlashChart->setRange("y",intval($min_val)-1,intval($max_val)+1);
@@ -343,7 +343,7 @@ else{
 		$this->FlashChart->setNewToolTip("#x_label#<br>#tip#<br>#val#");
 		echo $this->FlashChart->render();
 		echo "</center>\n";
-				
+				*/
 
 		echo "</div>\n";
 		echo "</div>\n";
