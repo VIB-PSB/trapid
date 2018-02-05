@@ -320,7 +320,14 @@ class TrapidUtilsComponent extends Component{
 
 
   function getFinishedJobIds($exp_id ,$jobs_data){
-        $qstat_script	= $this->create_qstat_script($exp_id);
+      $tmp_dir		= TMP."experiment_data/".$exp_id."/";
+      $finished_jobs = array();
+      // Experiment directory does not exist = we did not do anything with it yet.
+      // So no need to check for finished jobs
+      if(!file_exists($tmp_dir)) {
+          return array();
+      }
+      $qstat_script	= $this->create_qstat_script($exp_id);
         $result		= array();
         //get overview of all jobs on webcluster?
         $shell_output_all	= array();
@@ -333,7 +340,6 @@ class TrapidUtilsComponent extends Component{
             foreach($job_det as $jde){if($jde){$jd[]  = $jde;}}
             $job_details[$jd[0]] = $jd[4];
         }
-        $finished_jobs = array();
         foreach($jobs_data as $t=>$jd){
             $job_id		= $jd['job_id'];
             if(!array_key_exists($job_id, $job_details)){

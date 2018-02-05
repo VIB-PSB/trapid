@@ -259,18 +259,22 @@ class TrapidController extends AppController{
     foreach ($experiments as $key=>$value) {
         $current_exp_id = $experiments[$key]['Experiments']['experiment_id'];
         $experiment_jobs = $this->ExperimentJobs->getJobs($current_exp_id);
-        $finished_jobs = $this->TrapidUtils->getFinishedJobIds($current_exp_id, $experiment_jobs);
-        foreach($finished_jobs as $finished_job_id) {
-            // Remove from experiment_jobs
-            $this->ExperimentJobs->deleteJob($current_exp_id, $finished_job_id);
-        }
-        $exp_jobs = $experiments[$key]['experiment_jobs'];
-        // Also remove from `$experiments`
-        // I am doing this because although the value is deleted from the DB, it is still in the array (and still on the page)
-        foreach($exp_jobs as $k=>$v) {
-            if(in_array($v['job_id'], $finished_jobs)) {
-                // pr("remove ". $v['job_id'] . ", key ". $k);
-                unset($experiments[$key]['experiment_jobs'][$k]);
+        // If there are experiments, check if they need to be deleted or not
+        // No need to check if it is not the case.
+        if(!empty($experiment_jobs)) {
+            $finished_jobs = $this->TrapidUtils->getFinishedJobIds($current_exp_id, $experiment_jobs);
+            foreach($finished_jobs as $finished_job_id) {
+                // Remove from experiment_jobs
+                $this->ExperimentJobs->deleteJob($current_exp_id, $finished_job_id);
+            }
+            $exp_jobs = $experiments[$key]['experiment_jobs'];
+            // Also remove from `$experiments`
+            // I am doing this because although the value is deleted from the DB, it is still in the array (and still on the page)
+            foreach($exp_jobs as $k=>$v) {
+                if(in_array($v['job_id'], $finished_jobs)) {
+                    // pr("remove ". $v['job_id'] . ", key ". $k);
+                    unset($experiments[$key]['experiment_jobs'][$k]);
+                }
             }
         }
     }
