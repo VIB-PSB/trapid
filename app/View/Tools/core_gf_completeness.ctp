@@ -33,12 +33,10 @@ echo $this->Html->css('https://cdn.rawgit.com/jshjohnson/Choices/3e889633/assets
 <div class="page-header">
     <h1 class="text-primary">Core GF completeness</h1>
 </div>
-<p class="text-justify">Core GFs are a set of gene families that you expect to find at a given taxonomic level. They are
-    defined as gene families that are present in at least a certain percentage of species, at a given taxonomic level.
-    Give more explanations here.
-    For more details, please have a look at
-    the <?php echo $this->Html->link("documentation", array("controller" => "documentation", "action" => "index")); ?>.
-</p>
+    <p class="text-justify">Core gene families (core GFs) are defined as a set of gene families that we expect to be represented in the species of a given taxonomic level.
+        They correspond to gene families that are present in at least a certain percentage of species (referred as the conservation threshold), at a given taxonomic level. </p>
+    <p class="text-justify">The core GF completeness score provides a quick measurement of how complete the gene space is, at a certain taxonomic level. Exploring the list of missing and represented core GFs can also give an idea of the function of missing/represented core GFs. </p>
+    <p class="text-justify">For more details and explanations about the methods, please have a look at the <?php echo $this->Html->link("documentation", array("controller" => "documentation", "action" => "index")); ?>.</p>
 <br>
 
 <div id="content">
@@ -152,8 +150,8 @@ echo $this->Html->css('https://cdn.rawgit.com/jshjohnson/Choices/3e889633/assets
 
         <?php if (!empty($previous_completeness_jobs)): ?>
             <div id="previous-jobs" class="tab-pane"><br>
-                <p class="text-justify">Here a table summarizing all the core GF completeness analyses performed for
-                    that experiment. The plan is to add links to visualize the results of previous jobs. </p>
+                <p class="text-justify">This table summarizes the core GF completeness analyses performed for
+                    that experiment. </p>
                 <table class="table table-responsive table-striped table-hover table-bordered">
                     <thead>
                     <th>Phylogenetic clade</th>
@@ -162,7 +160,8 @@ echo $this->Html->css('https://cdn.rawgit.com/jshjohnson/Choices/3e889633/assets
                     <th>Conservation threshold</th>
                     <th>Top hits</th>
                     <th>Completeness score</th>
-                    <th>Link</th>
+                    <th>View</th>
+                    <th>Delete</th>
                     </thead>
                     <tbody>
                     <?php
@@ -186,6 +185,13 @@ echo $this->Html->css('https://cdn.rawgit.com/jshjohnson/Choices/3e889633/assets
                         echo "<td>" . $top_hits ."</td>";
                         echo "<td>" . $completeness_job['CompletenessResults']['completeness_score'] . "</td>";
                         echo "<td><a class=\"result_link\" id=\"" . "results_".implode("_", array($completeness_job['CompletenessResults']['clade_txid'], $completeness_job['CompletenessResults']['label'], $tax_source, $species_perc, $top_hits)) . "\">View results</a></td>";
+                        echo "<td style=\"text-align:center;\">".$this->Html->link("<span class='material-icons'>delete</span>",
+                                array("controller"=>"tools","action"=>"delete_core_gf_results", $exp_id,
+                                    $completeness_job['CompletenessResults']['clade_txid'],
+                                    $completeness_job['CompletenessResults']['label'],
+                                    $tax_source, $species_perc, $top_hits),
+                                array("style"=>"color: #666;", "escape"=>false, "title"=>"Delete results"),
+                                "Are you sure you want to delete these core GF completeness results? This action is permanent. ")."</td>";
                         echo "</tr>";
                     }
                     ?>
@@ -197,8 +203,8 @@ echo $this->Html->css('https://cdn.rawgit.com/jshjohnson/Choices/3e889633/assets
     <br>
     <div id="loading" style="display:none;">
         <p class="text-center">
-        <img src="https://loading.io/spinners/fidget-spinner/lg.fidget-spinner.gif" style="width: 50px;"><br>
-        Spinning ...
+            <?php echo $this->Html->image('ajax-loader.gif'); ?><br>
+        Loading... Please wait.
         </p>
     </div>
     <div id="display-results"></div>

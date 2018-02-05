@@ -2182,13 +2182,17 @@ function label_go_intersection($exp_id=null,$label=null){
     function handle_core_gf_completeness($exp_id, $cluster_job_id, $clade_tax_id, $label, $tax_source, $species_perc, $top_hits) {
         parent::check_user_exp($exp_id);
         $this->autoRender=false;
-        $job_result = $this->TrapidUtils->waitfor_cluster($exp_id, $cluster_job_id, 200, 5);
+        $job_result = $this->TrapidUtils->waitfor_cluster($exp_id, $cluster_job_id, 300, 5);
         // Once our job finished running (with error or not) remove it from the `experiment_jobs` table
         $this->ExperimentJobs->deleteJob($exp_id, $cluster_job_id);
         // Load results.
         // if($job_result != "ok"){
         //     $this->redirect(...);
         // }
+
+        if($job_result != 0) {
+            return "<p class='text-danger'>Error! Check chosen clade & parameters?</p>";
+        }
         $this->redirect(array("controller"=>"tools", "action"=>"load_core_gf_completeness", $exp_id,  $clade_tax_id, $label, $tax_source, $species_perc, $top_hits));
     }
 
@@ -2255,6 +2259,24 @@ function label_go_intersection($exp_id=null,$label=null){
     }
 
 
+    // Delete coreF completeness results
+    function delete_core_gf_results($exp_id=null, $clade_tax_id=null, $label=null, $tax_source=null, $species_perc=null, $top_hits=null){
+        $exp_id	= mysql_real_escape_string($exp_id);
+        parent::check_user_exp($exp_id);
+        // Build query to delete core GF completeness analysis results
+        $delete_query = "DELETE FROM `completeness_results` WHERE `experiment_id`='" . $exp_id . "' AND `label` = '" . $label .
+            "' AND `clade_txid` = '" . $clade_tax_id . "'";
+            " AND `used_method` = 'sp=" . $species_perc . ";ts=" . $tax_source . ";th=" . $top_hits . "';";
+        pr($delete_query);
+        pr($delete_query);
+        pr($delete_query);
+        pr($delete_query);
+        // Execute it and redirect to core GF page
+        $this->CompletenessResults->query($delete_query);
+        $this->redirect(array("controller"=>"tools","action"=>"core_gf_completeness", $exp_id));
+    }
+
+
     /*
      * A (test) function to search for phylogenetic clades, used in the core GF completeness submission form. It takes
      * a prefix as input, and found phylogenetic clades from `full_taxonomy` table are return as JSON.
@@ -2263,7 +2285,7 @@ function label_go_intersection($exp_id=null,$label=null){
     // Should we restrict this to logged-in users?
     function search_tax($clade_prefix) {
         $this->autoRender = false;
-        $limit_results = 250;  // Retrieve only this amount of results
+        $limit_results = 200;  // Retrieve only this amount of results
         $min_length = 3;  // Minimum length of prefix to search, will return nothing if less than that.
         if(strlen($clade_prefix) < $min_length){
             return(null);
