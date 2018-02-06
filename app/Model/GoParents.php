@@ -1,12 +1,11 @@
 <?php
   /*
    */
-class GoParents extends AppModel{
+class GoParents extends AppModel {
   var $name		= "GoParents";
   // var $useTable		= "go_parents";
-  // var $useDbConfig 	= "db_plaza_public_02_5";
+//   var $useDbConfig 	= "db_plaza_public_02_5";
   var $useTable		= "functional_parents";
-  var $useDbConfig 	= "db_trapid_ref_plaza_monocots_03_test";
 
 
 

@@ -6,7 +6,7 @@ class ExtendedGo extends AppModel{
   // var $useTable		= "extended_go";
   // var $useDbConfig 	= "db_plaza_public_02_5";
   var $useTable		= "functional_data";
-  var $useDbConfig 	= "db_trapid_ref_plaza_monocots_03_test";
+  // var $useDbConfig 	= "db_trapid_ref_plaza_monocots_03_test";
 
 
 

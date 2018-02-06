@@ -4,7 +4,7 @@
 class AnnotSources extends AppModel{
   var $name		= "AnnotSources";
   var $useTable		= "annot_sources";
-  var $useDbConfig 	= "db_trapid_ref_plaza_monocots_03_test";
+  // var $useDbConfig 	= "db_trapid_ref_plaza_monocots_03_test";
 
 
   function getSpeciesCommonNames(){

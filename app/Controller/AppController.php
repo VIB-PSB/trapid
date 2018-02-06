@@ -199,11 +199,12 @@ class AppController extends Controller {
    function changeDbConfigs($exp_id){
      //first of all, get the associated non-trapid database for the experiment.
      $non_trapid_db	= $this->Experiments->find("first",array("conditions"=>array("experiment_id"=>$exp_id),"fields"=>"used_plaza_database"));
-     $non_trapid_db	= $non_trapid_db['Experiments']['used_plaza_database'];     
+     $non_trapid_db	= $non_trapid_db['Experiments']['used_plaza_database'];
      //set new useDBConfigs for models
      $this->AnnotSources->useDbConfig=$non_trapid_db;
      $this->Annotation->useDbConfig=$non_trapid_db;  
      $this->ExtendedGo->useDbConfig=$non_trapid_db;
+     $this->GoParents->useDbConfig=$non_trapid_db;
      $this->ProteinMotifs->useDbConfig=$non_trapid_db;
      $this->GfData->useDbConfig=$non_trapid_db;     
      //is equal to setDataSource($non_trapid_db);
