@@ -467,7 +467,9 @@ class TrapidUtilsComponent extends Component{
 	$qstat_file		= $tmp_dir."qstat.sh";
 	$fh			= fopen($qstat_file,"w");
 	fwrite($fh,"#!/bin/bash \n");
-	fwrite($fh,". /etc/profile.d/settings.sh\n");
+//	 fwrite($fh,". /etc/profile.d/settings.sh\n");
+    // Update settings (tanith webcluster workshop)
+	fwrite($fh,". /opt/sge/default/common/settings.sh\n");
 	fwrite($fh,"qstat $* \n");
 	fclose($fh);
 	shell_exec("chmod a+x ".$qstat_file);
@@ -480,7 +482,9 @@ class TrapidUtilsComponent extends Component{
 	$qdel_file		= $tmp_dir."qdel.sh";
 	$fh			= fopen($qdel_file,"w");
 	fwrite($fh,"#!/bin/bash \n");
-	fwrite($fh,". /etc/profile.d/settings.sh\n");
+//     fwrite($fh,". /etc/profile.d/settings.sh\n");
+    // Update settings (tanith webcluster workshop)
+    fwrite($fh,". /opt/sge/default/common/settings.sh\n");
 	fwrite($fh,"qdel $* \n");
 	fclose($fh);
 	shell_exec("chmod a+x ".$qdel_file);
@@ -495,7 +499,9 @@ class TrapidUtilsComponent extends Component{
 	if(!file_exists($qsub_file)){
 	    $fh			= fopen($qsub_file,"w");
 	    fwrite($fh,"#!/bin/bash \n");
-	    fwrite($fh,". /etc/profile.d/settings.sh\n");
+//         fwrite($fh,". /etc/profile.d/settings.sh\n");
+        // Update settings (tanith webcluster workshop)
+        fwrite($fh,". /opt/sge/default/common/settings.sh\n");
 	    fwrite($fh,"qsub $* \n");
 	    fclose($fh);
 	    shell_exec("chmod a+x ".$qsub_file);
@@ -514,7 +520,9 @@ class TrapidUtilsComponent extends Component{
 	if(!file_exists($qsub_file)){
 	    $fh			= fopen($qsub_file,"w");
 	    fwrite($fh,"#!/bin/bash \n");
-	    fwrite($fh,". /etc/profile.d/settings.sh\n");
+//         fwrite($fh,". /etc/profile.d/settings.sh\n");
+        // Update settings (tanith webcluster workshop)
+        fwrite($fh,". /opt/sge/default/common/settings.sh\n");
 	    fwrite($fh,"qsub $* \n");
 	    fclose($fh);
 	    shell_exec("chmod a+x ".$qsub_file);
@@ -1091,7 +1099,7 @@ class TrapidUtilsComponent extends Component{
       // kaiju needs to be loaded, and I will write my extra scripts in python 2.7
       // 2017-12-15: add diamond to the module list (time to switch form RapSearch2 to DIAMOND).
       // $necessary_modules	= array("perl","java","framedp",  "python/x86_64/2.7.2", "kaiju");
-      $necessary_modules = array("perl", "java", "framedp", "python/x86_64/2.7.2", "kaiju", "diamond");
+      $necessary_modules = array("perl", "java", "framedp", "python/x86_64/2.7.2", "gcc", "kaiju", "diamond");
     	/* $necessary_parameters	= array(PLAZA_DB_SERVER,$plaza_db,PLAZA_DB_PORT,PLAZA_DB_USER,PLAZA_DB_PASSWORD,
 					TRAPID_DB_SERVER,TRAPID_DB_NAME,TRAPID_DB_PORT,TRAPID_DB_USER,TRAPID_DB_PASSWORD,
 					$tmp_dir,$exp_id,$final_blast_dir,$blast_db.".rap",$gf_type,$num_top_hits,$evalue,$func_annot,
@@ -1112,6 +1120,8 @@ class TrapidUtilsComponent extends Component{
 	foreach($necessary_modules as $nm){
 	  fwrite($fh,"module load ".$nm." \n");
 	}
+	fwrite($fh,"\n# Java parameters...\nexport _JAVA_OPTIONS=\"-Xmx8g\" \n");
+	fwrite($fh,"\n#Launching perl script for initial processing, with necessary parameters\n");
 	fwrite($fh,"\n#Launching perl script for initial processing, with necessary parameters\n");
 	//$program_location	= "/www/group/biocomp/extra/bioinformatics_prod/webtools/trapid/app/scripts/perl/initial_processing.pl";
 	$program_location	= $base_scripts_location."perl/initial_processing.pl";
