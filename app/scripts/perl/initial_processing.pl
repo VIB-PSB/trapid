@@ -93,7 +93,7 @@ else {
     my $python_location	= $par{"base_script_location"}."python/";
     my $kaiju_command        = "python ".$python_location.$kaiju_program;
     my @kaiju_options        = ("-o", $par{"temp_dir"}."kaiju",
-    	"-s", $par{"temp_dir"}."run_kaiju_splitted.sh", "-kp=\"-v -z 1 -x\"",
+    	"-s", $par{"temp_dir"}."run_kaiju_splitted.sh", "-kp=\"-v -z 2 -x\"",
     	$par{"experiment"},
     	"/www/blastdb/biocomp/moderated/trapid_02/kaiju_files/ncbi_tax_2017_09/nodes.dmp",
     	"/www/blastdb/biocomp/moderated/trapid_02/kaiju_files/ncbi_tax_2017_09/names.dmp",
@@ -325,7 +325,7 @@ sub perform_similarity_search($ $ $ $ $){
 	my $blast_dir          = $blast_location.$blast_directory;
 	print STDOUT "Used DIAMOND database : ".$blast_dir."\n";
 
-	my $exec_command	= $DIAMOND_EXECUTABLE." --query ".$multi_fasta_file." --db ".$blast_dir." --evalue 1e".$DIAMOND_EVALUE." --out ".$output_file.".m8 -p 1 -k 100 --more-sensitive --log";
+	my $exec_command	= $DIAMOND_EXECUTABLE." --query ".$multi_fasta_file." --db ".$blast_dir." --evalue 1e".$DIAMOND_EVALUE." --out ".$output_file.".m8 -p 2 -k 100 --more-sensitive --log";
 	print STDOUT $exec_command."\n";
 
 	#perform similarity search
