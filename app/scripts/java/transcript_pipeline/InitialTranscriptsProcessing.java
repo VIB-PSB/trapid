@@ -2418,13 +2418,19 @@ public class InitialTranscriptsProcessing {
                     // The best hit will now at least be in a group at the root.
                     List<String> levels_to_keep = new ArrayList<String>();
                     String max_level = "";
-                    // System.out.println("Found OGs levels: " + scopes.toString());
+                     System.out.println("Found OGs levels: " + scopes.toString());
                     if(tax_scope.equals("auto")) {
                         for(String level: taxonomic_resolution) {
                             if(scopes.contains(level)) {
                                 // Get level content
                                 // It should be an ArrayList from start, no??
-                                levels_to_keep = new ArrayList<String>(level_content_map.get(level));
+								// System.out.println(level);
+								// System.out.println("LEVEL CONTENT");
+								// System.out.println(level_content_map.get(level));
+                                levels_to_keep = new ArrayList<String>();
+								if(level_content_map.keySet().contains(level)) {
+                                    levels_to_keep.addAll(level_content_map.get(level));
+                                }
                                 levels_to_keep.add(level);  // Add level to level list
                                 max_level = level;
                                 break;
