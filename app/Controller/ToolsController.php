@@ -360,6 +360,8 @@ class ToolsController extends AppController{
       if(file_exists($qsub_out)){unlink($qsub_out);}
       if(file_exists($qsub_err)){unlink($qsub_err);}
       $command  	= "sh $qsub_file -q short -o $qsub_out -e $qsub_err $shell_file";
+      pr("\n\n\n" . $command);
+      return;
       $output		= array();
       exec($command,$output);
       $cluster_job	= $this->TrapidUtils->getClusterJobId($output);
@@ -1050,6 +1052,12 @@ class ToolsController extends AppController{
     $this->set("exp_id",$exp_id);
 
     $this -> set('title_for_layout', "Subset enrichment");
+    // Get tooltip content
+    $tooltips = $this->TrapidUtils->indexArraySimple(
+        $this->HelpTooltips->find("all", array("conditions"=>array("tooltip_id LIKE 'enrichment_%'"))),
+        "HelpTooltips","tooltip_id","tooltip_text"
+    );
+    $this->set("tooltips", $tooltips);
 
     $possible_types	= array("go"=>"GO","ipr"=>"Protein domain");
     //check type
@@ -1185,6 +1193,9 @@ class ToolsController extends AppController{
     $go_types		= $this->TrapidUtils->indexArraySimple($go_data,"ExtendedGo","name","info");
     $go_sptr		= $this->TrapidUtils->indexArraySimple($go_data,"ExtendedGo","name","num_sptr_steps");
 
+//    pr($go_data);
+//    pr($go_types);
+//    pr($go_sptr);
 
     $sptr_array		= array();
     $max_sptr		= 0;
@@ -1207,12 +1218,15 @@ class ToolsController extends AppController{
       if(array_key_exists($i, $sptr_array)){
 	  $level_gos 		= $sptr_array[$i];
 	  foreach($level_gos as $level_go){
+//	      pr($level_go);
 	    if(count($all_graphs) > 0){
 	      //check the already present graphs in the array, to determine whether or not the given GO term is already accounted for
     	      $done = false;
     	      foreach($all_graphs as $ag){
 //    	          pr("BEFORE");
-//    	          pr($ag['desc']);
+//                  if($level_go == "GO:0034621") {
+//    	          pr($ag);
+//                  }
 //    	          pr("AFTER");
 		if(array_key_exists($level_go, $ag['desc'])){$done = true; break 1;}
 	      }
@@ -1576,6 +1590,7 @@ class ToolsController extends AppController{
     //get transcript information
     $num_transcripts	= $this->Transcripts->find("count",array("conditions"=>array("experiment_id"=>$exp_id)));
     $seq_stats		= $this->Transcripts->getSequenceStats($exp_id);
+    $num_orfs	= $this->Transcripts->getOrfCount($exp_id);
     $num_start_codons	= $this->Transcripts->find("count",array("conditions"=>array("experiment_id"=>$exp_id,"orf_contains_start_codon"=>1)));
     $num_stop_codons	= $this->Transcripts->find("count",array("conditions"=>array("experiment_id"=>$exp_id,"orf_contains_stop_codon"=>1)));
     $num_putative_fs	= $this->Transcripts->find("count",array("conditions"=>array("experiment_id"=>$exp_id,"putative_frameshift"=>1)));
@@ -1587,6 +1602,7 @@ class ToolsController extends AppController{
 
     $this->set("num_transcripts",$num_transcripts);
     $this->set("seq_stats",$seq_stats);
+    $this->set("num_orfs",$num_orfs);
     $this->set("num_start_codons",$num_start_codons);
     $this->set("num_stop_codons",$num_stop_codons);
     $this->set("num_putative_fs",$num_putative_fs);
@@ -2172,7 +2188,11 @@ function label_go_intersection($exp_id=null,$label=null){
                 $cluster_job	= $this->TrapidUtils->getClusterJobId($output);
                 // Add job to the `experiment_jobs` table.
                 $this->ExperimentJobs->addJob($exp_id, $cluster_job, "short", "core_gf_completeness_".$clade_tax_id);
-//                $this->ExperimentLog->addAction($exp_id, "core_gf_completeness_".$clade_tax_id);
+                $this->ExperimentLog->addAction($exp_id, "core_gf_completeness_".$clade_tax_id, "");
+                $this->ExperimentLog->addAction($exp_id,"core_gf_completeness","options", 1);
+                $this->ExperimentLog->addAction($exp_id,"core_gf_completeness_options","conservation_threshold=".$species_perc,2);
+                $this->ExperimentLog->addAction($exp_id,"core_gf_completeness_options","top_hits=".$top_hits, 2);
+                $this->ExperimentLog->addAction($exp_id,"core_gf_completeness_options","tax_source"." ncbi", 2);
                 $this->redirect(array("controller"=>"tools", "action"=>"handle_core_gf_completeness", $exp_id, $cluster_job, $clade_tax_id, $transcript_label, $tax_source, $species_perc, $top_hits));
             }
     }
@@ -2190,9 +2210,9 @@ function label_go_intersection($exp_id=null,$label=null){
         //     $this->redirect(...);
         // }
 
-        if($job_result != 0) {
-            return "<p class='text-danger'>Error! Check chosen clade & parameters?</p>";
-        }
+//        if($job_result != 0) {
+//            return "<p class='text-danger'>Error! Check chosen clade & parameters?</p>";
+//        }
         $this->redirect(array("controller"=>"tools", "action"=>"load_core_gf_completeness", $exp_id,  $clade_tax_id, $label, $tax_source, $species_perc, $top_hits));
     }
 

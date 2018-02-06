@@ -175,9 +175,13 @@
                     </li>
                 </ul>
             </li>
+            <?php if($exp_info['perform_tax_binning'] == 1): ?>
             <li>
-                <?php echo $this->Html->link("Taxonomic binning <span class=\"label label-primary\">test</span>", array("controller" => "tools", "action" => "tax_binning", $exp_id), array("escape" => false)); ?>
+                <?php echo $this->Html->link("Taxonomic binning", array("controller" => "tools", "action" => "tax_binning", $exp_id), array("escape" => false)); ?>
             </li>
+            <?php else: ?>
+                <li class="sidebar-text sidebar-disabled">Taxonomic binning</li>
+            <?php endif; ?>
             <li>
                 <?php echo $this->Html->link("Browse gene families", array("controller" => "gene_family", "action" => "index", $exp_id)); ?>
             </li>
@@ -189,7 +193,7 @@
         // Some items should be unavailable until the experiment is fully finished? For example tax binning
         if ($process_state == "finished"): ?>
             <li>
-                <?php echo $this->Html->link("Core GF completeness <span class=\"label label-primary\">test</span>", array("controller" => "tools", "action" => "core_gf_completeness", $exp_id), array("escape" => false)); ?>
+                <?php echo $this->Html->link("Core GF completeness", array("controller" => "tools", "action" => "core_gf_completeness", $exp_id), array("escape" => false)); ?>
             </li>
         <?php    // Some elements are still disabled
         else: ?>

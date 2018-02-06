@@ -362,7 +362,7 @@
 		$options_div_style	= " style='display:none;' ";
 		echo "<div id='rerun_div'>";
 		// echo "<br/><br/><a href=\"javascript:void(0);\" onclick=\"javascript:toggleElementsNewMsa();\" >Create phylogenetic tree with different species</a><span style='margin-left:20px;'>(You may have to clear the Java cache to see the new result)</span>\n";
-		echo "<br><a href=\"javascript:void(0);\" onclick=\"javascript:toggleElementsNewMsa();\" >Create phylogenetic tree with different species or settingsgit add</a>\n";
+		echo "<br><a href=\"javascript:void(0);\" onclick=\"javascript:toggleElementsNewMsa();\" >Create phylogenetic tree with different species or settings</a>\n";
 		echo "</div>";
 		echo "<br>\n";
 	}
@@ -868,7 +868,8 @@ $css6	= "background: -webkit-gradient(linear,left top,right top,color-stop(".($p
 </div>
 <?php if(isset($previous_result) && $previous_result==true && $stripped_msa_length!=0): ?>
     <script type="text/javascript">
-        var treeUrl = "<?php echo $this->Html->url(array("controller"=>"tools","action"=>"get_tree",$exp_id, $gf_id)); ?>";
+        var treeUrl = "<?php echo $this->Html->url(array("controller"=>"tools","action"=>"get_tree",$exp_id, $gf_id)); ?>"; // , "xml_tree"
+        console.log(treeUrl);
         var phyD3Elmt = "phyd3-viewer";
         var opts = {
             dynamicHide: true,
@@ -900,12 +901,28 @@ $css6	= "background: -webkit-gradient(linear,left top,right top,color-stop(".($p
             jQuery('#foregroundColorButton').colorpicker({color: opts.foregroundColor});
             jQuery('#backgroundColorButton').colorpicker({color: opts.backgroundColor});
             d3.select("#" + phyD3Elmt).text("Loading tree viewer... ");
-            d3.text(treeUrl, function(data) {
+            d3.text(treeUrl, function (data) {
                 d3.select("#" + phyD3Elmt).text(null);
                 var tree = phyd3.newick.parse(data);
                 phyd3.phylogram.build("#" + phyD3Elmt, tree, opts);
+
+            });
+        }
+/*
+            d3.xml(treeUrl, "application/xml", function(xml) {
+                d3.select("#" + phyD3Elmt).text(null);
+                if(xml == null) {
+                    d3.select("#phyd3").text("Error while reading PhyloXML file from the server");
+                }
+                else {
+                    console.log(phyd3.phyloxml.parse(xml));
+                    console.log("wqdqwdqw");
+                    var tree = phyd3.phyloxml.parse(xml);
+                    phyd3.phylogram.build("#" + phyD3Elmt, tree, opts);
+                }
             });
         };
+*/
 
         $(document).ready(function () {
             loadPhyd3();

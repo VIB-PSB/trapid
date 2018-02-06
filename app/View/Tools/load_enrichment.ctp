@@ -17,7 +17,7 @@ else{
 			<p class="text-justify"><strong>Jump to:</strong>
 		<ul>
 				<li><a href="#go-charts">GO enrichment charts</a></li>
-				<li><a href="#go-table">Go enrichment table</a></li>
+				<li><a href="#go-table">GO enrichment table</a></li>
 		</ul>
 			</p>
 		</section>

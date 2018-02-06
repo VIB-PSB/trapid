@@ -33,14 +33,16 @@
 <div class="subdiv">
 	<?php echo $this->element("trapid_experiment");?>
 	<h3>Transcript information</h3>
-	<div class="subdiv">
-		<dl class="standard extra">
+	<div class="subdiv page-section">
+		<dl class="standard extra dl-horizontal-lg">
 			<dt>#Transcripts</dt>
 			<dd><?php echo $num_transcripts; ?></dd>
 			<dt>Average sequence length</dt>
 			<dd><?php echo $seq_stats["transcript"];?></dd>
-			<dt>Average ORF length</dt>
-			<dd><?php echo $seq_stats["orf"];?></dd>
+            <dt>#Transcripts with ORF</dt>
+            <dd><?php echo $num_orfs;?></dd>
+            <dt>Average ORF length</dt>
+            <dd><?php echo $seq_stats["orf"];?></dd>
 			<dt>#ORFs with a start codon</dt>
 			<dd><?php echo gradDiv(perc($num_start_codons,$num_transcripts,0,false),$num_start_codons.perc($num_start_codons,$num_transcripts,1));?></dd>
 			<dt>#ORFs with a stop codon</dt>
@@ -49,8 +51,8 @@
 	</div>
 
 	<h3>Frameshift information</h3>
-	<div class="subdiv">
-		<dl class="standard extra">
+	<div class="subdiv page-section">
+		<dl class="standard extra dl-horizontal-lg">
 			<dt>#Transcripts with putative frameshift</dt>
 			<dd><?php echo gradDiv(perc($num_putative_fs,$num_transcripts,0,false),$num_putative_fs.perc($num_putative_fs,$num_transcripts,1));?></dd>
 			<dt>#Transcripts with corrected frameshift</dt>
@@ -59,8 +61,8 @@
 	</div>
 
 	<h3>Meta annotation information</h3>
-	<div class="subdiv">
-		<dl class="standard extra">
+	<div class="subdiv page-section">
+		<dl class="standard extra dl-horizontal-lg">
 			<dt>#Meta annotation full-length</dt>
 			<dd><?php echo gradDiv(perc($meta_annot_fulllength,$num_transcripts,0,false),$meta_annot_fulllength.perc($meta_annot_fulllength,$num_transcripts,1));?></dd>
 			<dt>#Meta annotation quasi full-length</dt>
@@ -73,9 +75,9 @@
 	</div>
 
 	<h3>Similarity search information</h3>
-	<div class="subdiv">
+	<div class="subdiv page-section">
 		Best similarity search hit for each transcript.
-		<dl class="standard extra">
+		<dl class="standard extra dl-horizontal-lg">
 		<?php
 			$split	= explode(";",$exp_info['hit_results']);
 			$tmp	= array();
@@ -94,8 +96,8 @@
 
 
 	<h3>Gene family information</h3>
-	<div class="subdiv">
-		<dl class="standard extra">
+	<div class="subdiv page-section">
+		<dl class="standard extra dl-horizontal-lg">
 			<dt>#Gene families</dt>
 			<dd><?php echo $num_gf;?></dd>
 			<dt>#Transcripts in GF</dt>
@@ -108,16 +110,16 @@
 	</div>
 
 	<h3>Functional annotation information</h3>
-	<div class="subdiv">
+	<div class="subdiv page-section">
 		<h4>Gene Ontology</h4>
-		<dl class="standard extra">
+		<dl class="standard extra dl-horizontal-lg">
 			<dt>#GO terms</dt>
 			<dd><?php echo $num_go;?></dd>
 			<dt>#Transcripts with GO</dt>
 			<dd><?php echo gradDiv(perc($num_transcript_go,$num_transcripts,0,false),$num_transcript_go.perc($num_transcript_go,$num_transcripts,1));?></dd>
 		</dl>
 		<h4>InterPro</h4>
-		<dl class="standard extra">
+		<dl class="standard extra dl-horizontal-lg">
 			<dt>#InterPro domains</dt>
 			<dd><?php echo $num_interpro;?></dd>
 			<dt>#Transcripts with Protein Domain</dt>
@@ -126,7 +128,7 @@
 	</div>
 
 	<h3>Export</h3>
-	<div class="subdiv">
+	<div class="subdiv page-section">
 		<?php
 		echo $this->Form->create(false,array("url"=>array("controller"=>"tools","action"=>"statistics/".$exp_id),
 				"type"=>"post"));

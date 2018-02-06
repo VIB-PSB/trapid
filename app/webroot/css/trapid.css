@@ -275,7 +275,7 @@ div.tabbed_div{
 	/*border: 1px solid #CCCCCC;*/
 	margin-bottom: 5px;
 	padding-top: 15px;
-	width:620px;
+	/*width:620px;*/
 	display: none;
 	/*line-height:1.8em;*/
 }
@@ -1418,6 +1418,24 @@ a.linkout:after {
 	text-align: center;
 	background-color: #ffffff;
 	border-radius: 5px;
+}
+
+
+.dl-horizontal-lg dt {
+	float: left;
+	width: 260px;
+	clear: left;
+	text-align: right;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	/*white-space: nowrap;*/
+}
+.dl-horizontal-lg dd {
+	margin-left: 280px;
+}
+
+.table-centered th, .table-centered tr {
+    text-align: center;
 }
 
 

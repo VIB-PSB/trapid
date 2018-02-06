@@ -270,6 +270,20 @@ class Transcripts extends AppModel{
   }
 
 
+    // Count the number of ORFs in an experiment
+    // ORF => `orf_stop` > 0 (end of ORF sequence on the transcript)
+    function getOrfCount($exp_id){
+        $result 	= array();
+        $query = "SELECT COUNT(*) as count FROM `transcripts` WHERE `experiment_id`='".$exp_id."' AND `orf_stop` > 0;";
+        $res	= $this->query($query);
+        $result	= 0;
+        foreach($res as $r){
+          $result = $r[0]['count'];
+        }
+        return $result;
+    }
+
+
     /* Unused code: quick test to write custom queries when overriding pagination */
 
 //    /* Create custom query, optionally forcing to use a certain index */

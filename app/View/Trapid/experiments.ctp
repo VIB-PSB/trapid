@@ -216,46 +216,6 @@
 	</div>
 	</dd>
 
-	<?php if(count($shared_experiments)!=0): ?>
-        <br>
-        <p class="text-justify">Experiments shared with <strong><?php echo $user_email['Authentication']['email'];?></strong>: </p>
-
-        <dd>
-	<div>
-		<table class="table table-hover table-striped">
-		<thead>
-        <tr>
-			<th style="width:30%;">Name</th>
-			<th style="width:40%;">Owner</th>
-			<th style="width:20%;">PLAZA version</th>
-			<th style="width:10%;">Log</th>
-		</tr>
-        </thead>
-        <tbody>
-		<?php
-		foreach($shared_experiments as $experiment){
-			$e	= $experiment['Experiments'];
-			echo "<tr>";
-			echo "<td>".$this->Html->link($e['title'],array("controller"=>"trapid","action"=>"experiment",$e['experiment_id']))."</td>";
-			$owner_email	= $all_user_ids[$e['user_id']];
-			echo "<td><a href='mailto:".$owner_email."'>".$owner_email."</a></td>";
-			if($experiment['DataSources']['URL']){
-				echo "<td>".$this->Html->link($experiment['DataSources']['name'],$experiment['DataSources']['URL'])."</td>";
-			}
-			else{
-				echo "<td>".$experiment['DataSources']['name']."</td>";
-			}
-			 echo "<td>".$this->Html->link("View log",array("controller"=>"trapid","action"=>"view_log",$e['experiment_id']))."</td>\n";
-			echo "</tr>\n";
-		}
-		?>
-        </tbody>
-		</table>
-	</div>
-	</dd>
-
-	<?php endif; ?>
-
 
 	<?php if(count($experiments)<$max_user_experiments): ?>
 <p class="text-right">
@@ -365,13 +325,50 @@
 		<!--button disabled class="btn btn-primary btn-lg" name="" id=""><span class="glyphicon glyphicon-plus"> </span> Create experiment</button-->
 		</p>
 	<!--dt>Add new experiment</dt-->
-	<dd>
-	<div>
-
-	</div>
-	</dd>
 	<?php endif;?>
 	</dl>
+
+    <?php if(count($shared_experiments)!=0): ?>
+        <br>
+        <p class="text-justify">Experiments shared with <strong><?php echo $user_email['Authentication']['email'];?></strong>: </p>
+
+        <dd>
+            <div>
+                <table class="table table-hover table-striped">
+                    <thead>
+                    <tr>
+                        <th style="width:30%;">Name</th>
+                        <th style="width:40%;">Owner</th>
+                        <th style="width:20%;">PLAZA version</th>
+                        <th style="width:10%;">Log</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <?php
+                    foreach($shared_experiments as $experiment){
+                        $e	= $experiment['Experiments'];
+                        echo "<tr>";
+                        echo "<td>".$this->Html->link($e['title'],array("controller"=>"trapid","action"=>"experiment",$e['experiment_id']))."</td>";
+                        $owner_email	= $all_user_ids[$e['user_id']];
+                        echo "<td><a href='mailto:".$owner_email."'>".$owner_email."</a></td>";
+                        if($experiment['DataSources']['URL']){
+                            echo "<td>".$this->Html->link($experiment['DataSources']['name'],$experiment['DataSources']['URL'])."</td>";
+                        }
+                        else{
+                            echo "<td>".$experiment['DataSources']['name']."</td>";
+                        }
+                        echo "<td>".$this->Html->link("View log",array("controller"=>"trapid","action"=>"view_log",$e['experiment_id']))."</td>\n";
+                        echo "</tr>\n";
+                    }
+                    ?>
+                    </tbody>
+                </table>
+            </div>
+        </dd>
+
+    <?php endif; ?>
+
+
 </div>
 
 </div>

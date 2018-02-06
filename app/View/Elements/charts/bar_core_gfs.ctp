@@ -1,5 +1,5 @@
 <!-- Core GFs barchart div -->
-<div id="<?php echo $chart_div_id; ?>" style="width:100%; height:400px;"></div>
+<div class="hc" id="<?php echo $chart_div_id; ?>" style="width:100%; height:400px;"></div>
 
 <!-- Core GFs barchart JS -->
 <script type='text/javascript' defer="defer">

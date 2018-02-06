@@ -438,7 +438,7 @@
     var msaUrl = "<?php echo $this->Html->url(array("controller"=>"tools","action"=>"get_msa",$exp_id, $gf_id, $msa_type)); ?>";
     var opts = {
         el: msaDiv,
-        colorscheme: {"scheme": "hydro"},
+        // colorscheme: {"scheme": "hydro"},
         importURL: msaUrl,
         vis: {
             labelId: false,

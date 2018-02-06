@@ -96,7 +96,7 @@
 					echo "<td>".$this->Html->link($k,array("controller"=>"functional_annotation","go",$exp_id,$wk))."</td>";
 				}
 				else if($type=='ipr'){
-					echo "<td>".$this->Html->link($k,array("controller"=>"functional_annotation","interpro",$exp_id,$wk))."</td>";
+					echo "<td>".$this->Html->link($k,array("controller"=>"functional_annotation","action"=>"interpro",$exp_id,$wk))."</td>";
 				}
 				echo "<td>".$descriptions[$k]."</td>";
 				echo "<td>".$this->Html->link($data_subset1[$k],array("controller"=>"trapid","action"=>"transcript_selection",$exp_id,"label",urlencode($subset1),"interpro",$wk))."</td>";
@@ -144,7 +144,7 @@
 					echo "<td>".$this->Html->link($k,array("controller"=>"functional_annotation","go",$exp_id,$wk))."</td>";
 				}
 				else if($type=='ipr'){
-					echo "<td>".$this->Html->link($k,array("controller"=>"functional_annotation","interpro",$exp_id,$wk))."</td>";
+					echo "<td>".$this->Html->link($k,array("controller"=>"functional_annotation","action"=>"interpro",$exp_id,$wk))."</td>";
 				}
 				echo "<td>".$descriptions[$k]."</td>";
 				//echo "<td>".$data_subset1[$k]."</td>";			
@@ -188,7 +188,7 @@
 					echo "<td>".$this->Html->link($k,array("controller"=>"functional_annotation","go",$exp_id,$wk))."</td>";
 				}
 				else if($type=='ipr'){
-					echo "<td>".$this->Html->link($k,array("controller"=>"functional_annotation","interpro",$exp_id,$wk))."</td>";
+					echo "<td>".$this->Html->link($k,array("controller"=>"functional_annotation","action"=>"interpro",$exp_id,$wk))."</td>";
 				}
 				echo "<td>".$descriptions[$k]."</td>";			
 				//echo "<td>".$data_subset2[$k]."</td>";		

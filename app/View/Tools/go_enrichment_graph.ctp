@@ -21,6 +21,8 @@
 	    <?php
 		$max_depth = 0;
 		foreach($all_graphs as $go=>$graph){
+//		    pr($go);
+//		    pr($graph);
 		    foreach($graph["nodes"] as $depth=>$nodes){
 			if($depth>$max_depth){$max_depth = $depth;}
 		    }

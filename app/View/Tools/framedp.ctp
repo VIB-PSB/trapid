@@ -1,9 +1,11 @@
 <div>
-<h3>Frameshift correction using FrameDP</h3>
+    <div class="page-header">
+        <h1 class="text-primary">Frameshift correction</h1>
+    </div>
 <div class="subdiv">
-	<?php echo $this->element("trapid_experiment");?>
-	<h3>FrameDP</h3>
-	<div class="subdiv">
+	<?php // echo $this->element("trapid_experiment");?>
+	<h3>Options</h3>
+	<div class="subdiv" style="margin-top: 20px;">
 
 		<?php if(isset($error) && $error=="framedp_state"):?>
 		
@@ -13,7 +15,7 @@
 		</span>
 		<?php else: ?>
 		<?php
-		echo $this->Form->create(null,array("action"=>"framedp/".$exp_id."/".$gf_id,"type"=>"post"));
+		echo $this->Form->create(false, array("action"=>"framedp/".$exp_id."/".$gf_id,"type"=>"post"));
 		?>
 		<dl class="standard">
 			<dt>Gene family</dt>
@@ -29,9 +31,12 @@
 
 				//pr($transcripts);
 															
-				echo "<div style='float:left;width:450px;'>\n";		
-				echo "<table cellpadding='0' cellspacing='0' style='width:450px;'>\n";
+				echo "<div style='float:left;max-width:650px;'>\n";
+				echo "<table class='table table-hover table-stripsed table-condensed table-bordered table-centered' style='font-size:88%;'>\n";
+				echo "<thead>\n";
 				echo "<tr><th>Include</th><th>Transcript</th><th>Putative frameshift</th><th>FrameDP run</th><th>Frameshift corrected</th></tr>";
+				echo "</thead>\n";
+				echo "<tbody>\n";
 				$start1	= 0; $stop1=(count($transcripts)/2); $two_table=true;
 				if(count($transcripts) <5 ){$stop1=(count($transcripts)-1);$two_table=false;}
 						
@@ -44,32 +49,33 @@
 					$frame_corrected= $transcript["is_frame_corrected"];				
 					echo "<tr>";
 					if($putative_fs){
-						echo "<td><input type='checkbox' name='".$transcript_id."' id='".$transcript_id."' checked='checked'/></td>";
+						echo "<td class='text-center'><input type='checkbox' name='".$transcript_id."' id='".$transcript_id."' checked='checked'/></td>";
 					}
 					else{
-						echo "<td><input type='checkbox' name='".$transcript_id."' id='".$transcript_id."' /></td>";
+						echo "<td class='text-center'><input type='checkbox' name='".$transcript_id."' id='".$transcript_id."' /></td>";
 					}	
 					echo "<td>".$this->Html->link($transcript_id,array("controller"=>"trapid","action"=>"transcript",$exp_id,$transcript_id))."</td>";
-					if($putative_fs){echo "<td><span class='message'>V</span></td>";}
+					if($putative_fs){echo "<td><span class='text-success'>V</span></td>";}
 					else{echo "<td></td>";}
 
-					if($framedp_run){echo "<td><span class='message'>V</span></td>";}
+					if($framedp_run){echo "<td><span class='text-success'>V</span></td>";}
 					else{echo "<td></td>";}
 					
 					if($putative_fs){
-						if($frame_corrected){echo "<td><span class='message'>V</span></td>";}
-						else{echo "<td><span class='error'>X</span></td>";}
+						if($frame_corrected){echo "<td><span class='text-success'>V</span></td>";}
+						else{echo "<td><span class='text-danger'>X</span></td>";}
 					}
 					else{echo "<td></td>";}
 		
 					echo "</tr>\n";
 					$last_i = $i;
-				}								
-				echo "</table>\n";
+				}
+                echo "</tbody>\n";
+                echo "</table>\n";
 				echo "</div>\n";
 				if($two_table){
-				    echo "<div style='float:left;width:450px;margin-left:20px;'>\n";		
-				    echo "<table cellpadding='0' cellspacing='0' style='width:450px;'>\n";
+				    echo "<div style='float:left;max-width:650px;margin-left:20px; font-size: 88%;'>\n";
+				    echo "<table class='table table-hover table-stripsed table-condensed table-bordered table-centered' style='max-width:650px;'>\n";
 				    echo "<tr><th>Include</th><th>Transcript</th><th>Putative Frameshift</th><th>FrameDP run</th><th>Frameshift corrected</th></tr>";
 				    for($i=($last_i+1);$i<(count($transcripts));$i++){
 					    $transcript	= $transcripts[$i]['Transcripts'];	
@@ -79,21 +85,21 @@
 				            $frame_corrected	= $transcript["is_frame_corrected"];
 					    echo "<tr>";
 					    if($putative_fs){
-						    echo "<td><input type='checkbox' name='".$transcript_id."' id='".$transcript_id."' checked='checked'/></td>";
+						    echo "<td class='text-center'><input type='checkbox' name='".$transcript_id."' id='".$transcript_id."' checked='checked'/></td>";
 					    }
 					    else{
-						    echo "<td><input type='checkbox' name='".$transcript_id."' id='".$transcript_id."' /></td>";
+						    echo "<td class='text-center'><input type='checkbox' name='".$transcript_id."' id='".$transcript_id."' /></td>";
 					    }	
 					    echo "<td>".$this->Html->link($transcript_id,array("controller"=>"trapid","action"=>"transcript",$exp_id,$transcript_id))."</td>";
-					    if($putative_fs){echo "<td><span class='message'>V</span></td>";}	
+					    if($putative_fs){echo "<td><span class='text-success'>V</span></td>";}	
 					    else{echo "<td></td>";}
 
-					    if($framedp_run){echo "<td><span class='message'>V</span></td>";}
+					    if($framedp_run){echo "<td><span class='text-success'>V</span></td>";}
 					    else{echo "<td></td>";}
 
 					    if($putative_fs){
-					    	if($frame_corrected){echo "<td><span class='message'>V</span></td>";}
-						else{echo "<td><span class='error'>X</span></td>";}
+					    	if($frame_corrected){echo "<td><span class='text-success'>V</span></td>";}
+						else{echo "<td><span class='text-danger'>X</span></td>";}
 					    }
 				  	    else{echo "<td></td>";}
 					    echo "</tr>\n";
@@ -103,11 +109,11 @@
 				}			
 				?>
 
-				<div style='clear:both;width:700px;'>							
+				<div style='clear:both;'>
 				<input type='checkbox' id='all_fs_transcripts' checked='checked'/>
-				<span style='margin-left:10px;'>Select all transcripts with putative frameshifts</span> <br/>
+                    <label for="all_fs_transcripts" style='margin-left:10px;'><strong>Select all transcripts with putative frameshifts</strong></label> <br/>
 				<input type='checkbox' id='all_transcripts' />
-				<span style='margin-left:10px;'>Select all transcripts</span>
+                    <label style='margin-left:10px;' for="all_transcripts"><strong>Select all transcripts</strong></label>
 				<script type='text/javascript'>
 				<?php
 					$new_transcript_data	= array();
@@ -120,19 +126,25 @@
 				?>
 				
 				//<![CDATA[
-					$("all_fs_transcripts").observe("change",function(){						
-						for(var i=0;i<transcript_data.length;i++){
+
+                    // Handle transcript selection with checkboxes
+
+					$("#all_fs_transcripts").on("change", function() {
+					    var all_fs_transcripts_check = document.getElementById("all_fs_transcripts").checked;
+						for(var i=0;i<transcript_data.length;i++) {
 							var transcript_id	= transcript_data[i].transcript_id;
 							var frameshift		= transcript_data[i].putative_frameshift;
-							if(frameshift){
-								$(transcript_id).checked=$("all_fs_transcripts").checked;
+							if(frameshift) {
+								document.getElementById(transcript_id).checked = all_fs_transcripts_check;
 							}
 						}					
-					});			
-					$("all_transcripts").observe("change",function(){
-						for(var i=0;i<transcript_data.length;i++){
-							var transcript_id	= transcript_data[i].transcript_id;		
-							$(transcript_id).checked=$("all_transcripts").checked;
+					});
+
+					$("#all_transcripts").on("change", function() {
+                        var all_transcripts_check = document.getElementById("all_transcripts").checked;
+						for(var i=0;i<transcript_data.length;i++) {
+							var transcript_id	= transcript_data[i].transcript_id;
+                            document.getElementById(transcript_id).checked = all_transcripts_check;
 						}	
 					});
 				//]]>
@@ -143,10 +155,9 @@
 			</dd>	
 			<?php endif; ?>			
 		</dl>
-		<br/>
 		<?php
 		if(isset($error)){
-			echo "<span class='error'>".$error."</span>\n";
+			echo "<br><span class='text-danger'><strong>".$error."</strong></span>\n";
 			echo "<br/>\n";
 		}
 		?>
@@ -165,7 +176,7 @@
 		
 
 		<?php if(!isset($run_pipeline)) : ?>
-		<input type="submit" value="Perform frameshift correction" />
+		<input type="submit" class='btn btn-primary' value="Perform frameshift correction" disabled/><br><br>
 		</form>
 		<?php endif;?>
 

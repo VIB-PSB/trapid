@@ -11,7 +11,7 @@ class TrapidController extends AppController{
   var $uses		= array("Authentication","Experiments","DataSources","Transcripts","GeneFamilies","ExperimentLog",
 				"TranscriptsGo","TranscriptsInterpro","TranscriptsLabels","TranscriptsPagination","Similarities",
 				"SharedExperiments","DataUploads","ExperimentJobs","CleanupDate","CleanupExperiments",
-				"AnnotSources","Annotation","ExtendedGo","ProteinMotifs","GfData", "HelpTooltips"
+				"AnnotSources","Annotation","ExtendedGo","ProteinMotifs","GfData", "HelpTooltips", "GoParents"
 				);
 
   var $components	= array("Cookie", "TrapidUtils", "Sequence", "Session");
@@ -209,7 +209,7 @@ class TrapidController extends AppController{
 
   //fast and ugly hack to facilitate ajax call to get extra information about number of transcripts per experiment.
   function experiments_num_transcripts($exp_id){
-    //Configure::write("debug",1);
+    Configure::write("debug",1);
 //      ini_set('memory_limit','800M');
     $this->layout = "";
     if(!$exp_id){$this->redirect(array("controller"=>"trapid","action"=>"experiments"));}
@@ -1130,9 +1130,15 @@ class TrapidController extends AppController{
       }
     }
     else if($st=="gf"){
-      $transcripts_info = $this->GeneFamilies->find("count",array("conditions"=>array("experiment_id"=>$exp_id,"gf_id"=>$sv)));
+      $transcripts_info = $this->GeneFamilies->find("count",array("conditions"=>array("experiment_id"=>$exp_id,"gf_id LIKE '%" . $sv . "%'")));
       if(!$transcripts_info){$this->set("search_result","bad_search");return;}
-      else{$this->redirect(array("controller"=>"gene_family","action"=>"gene_family",$exp_id,urlencode($sv)));}
+      else {
+          $gf = $this->GeneFamilies->find("first", array("conditions"=>array("experiment_id"=>$exp_id,"gf_id LIKE '%" . $sv . "%'")));
+          $gf_id = $gf['GeneFamilies']['gf_id'];
+          pr($gf_id);
+//          return;
+          $this->redirect(array("controller"=>"gene_family","action"=>"gene_family",$exp_id, urlencode($gf_id)));
+      }
     }
     else if($st=="GO"){
       //check on length of search value.
@@ -1420,7 +1426,9 @@ class TrapidController extends AppController{
       if(file_exists($qsub_err)){unlink($qsub_err);}
 
       $output   = array();
-      $command  = "sh $qsub_file -q long -o $qsub_out -e $qsub_err $shell_file";
+      $command  = "sh $qsub_file -pe smp 2 -q long -o $qsub_out -e $qsub_err $shell_file";
+      // pr($command);
+      // return;
       exec($command,$output);
       $job_id	= $this->TrapidUtils->getClusterJobId($output);
 
@@ -1595,10 +1603,9 @@ class TrapidController extends AppController{
       	$qsub_err	= $tmp_dir."upload.err";
         if(file_exists($qsub_out)){unlink($qsub_out);}
         if(file_exists($qsub_err)){unlink($qsub_err);}
-
-        $command  = "sh $qsub_file -q medium -o $qsub_out -e $qsub_err $shell_file";
+        $command  = "sh $qsub_file -q medium -o $qsub_out -e $qsub_err ". " -cwd "  . $shell_file;
 	$output   = array();
-        $qsub_submit = exec($command,$output);
+	$qsub_submit = exec($command . " 2>&1",$output);
 	$job_id	= $this->TrapidUtils->getClusterJobId($output);
 
 	//indicate in the database the new job-id

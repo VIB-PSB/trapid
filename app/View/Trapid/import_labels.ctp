@@ -1,5 +1,5 @@
 <div class="page-header">
-    <h1 class="text-primary">Import labels</h1>
+    <h1 class="text-primary">Import subset</h1>
 </div>
 <div class="subdiv">
     <?php // echo $this->element("trapid_experiment"); ?>
@@ -16,7 +16,7 @@
         <div style="margin-bottom:10px;font-weight:bold;width:700px;">
         </div>
         <div style="margin-bottom:10px;">
-                <p class="text-justify">Please upload a file containing transcript identifiers which should have the same label.</p>
+                <p class="text-justify">Please upload a file containing transcript identifiers which should form a subset.</p>
                 <p class="text-justify">Each line of the file must contain a transcript identifier. For example:</p>
             </div>
             <div class="fixed-width-text well well-sm">
@@ -36,7 +36,7 @@
 
             <input name="uploadedfile" type="file"/>
             <br/>
-            <input type="text" placeholder="New label" name="label"/> <span>Label for the transcripts</span>
+            <input type="text" placeholder="New subset..." name="label"/> <span>Name of transcripts subset</span>
             <br/><br/>
             <input type="submit" value="Import labels" class="btn btn-primary btn-sm"/>
             </form>

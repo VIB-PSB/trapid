@@ -7,7 +7,7 @@ class LabelsController extends AppController{
   var $name		= "Labels";
   var $helpers		= array("Html", "Form");  // ,"Javascript","Ajax");
   var $uses		= array("Authentication","Experiments","Configuration","Transcripts","AnnotSources","Annotation",
-				"PlazaConfiguration","GeneFamilies","ExtendedGo","ProteinMotifs",
+				"PlazaConfiguration","GeneFamilies","ExtendedGo","ProteinMotifs", "GoParents", "GfData",
 				"TranscriptsGo","TranscriptsInterpro","TranscriptsLabels");
 
   var $components	= array("Cookie","TrapidUtils","Statistics");

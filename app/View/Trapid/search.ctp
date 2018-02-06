@@ -132,14 +132,14 @@
 
                     echo "</table>\n";
                 } else {
-                    echo "<dl class='standard'>\n";
+                    echo "<dl class='standard dl-horizontal'>\n";
                     echo "<dt>Gene identifier</dt>\n";
                     echo "<dd>" . $search_value . "</dd>\n";
                     if (array_key_exists('plaza_gf_id', $gf_info) && $gf_info['plaza_gf_id']) {
-                        echo "<dt>PLAZA gene family</dt>\n";
+                        echo "<dt>Ref. gene family</dt>\n";
                         if ($exp_info['datasource_URL']) {
                             $url = $exp_info['datasource_URL'] . "gene_families/view/" . $gf_info['plaza_gf_id'];
-                            echo "<dd><a href='" . $url . "'>" . $gf_info['plaza_gf_id'] . "</a></dd>\n";
+                            echo "<dd><a class='linkout' href='" . $url . "'>" . $gf_info['plaza_gf_id'] . "</a></dd>\n";
                         } else {
                             echo "<dd>" . $gf_info['gf_id'] . "</dd>\n";
                         }

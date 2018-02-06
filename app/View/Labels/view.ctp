@@ -10,7 +10,7 @@
 	<?php else: ?>
 	<h3>Overview</h3>
 	<div class="subdiv">
-		<dl class="standard">
+		<dl class="standard dl-horizontal">
 			<dt>Subset</dt>
 			<dd><?php echo $label; ?></dd>			
 			<dt>#transcripts</dt>

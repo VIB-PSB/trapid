@@ -12,7 +12,7 @@
     <div class="subdiv">
         <?php $this->Paginator->options(array("url" => $this->passedArgs)); ?>
         <!--		<table cellpadding="0" cellspacing="0" style="width:900px">-->
-        <table class="table table-bordered table-striped table-hover">
+        <table class="table table-bordered table-striped table-hover table-condensed">
             <thead>
             <!--			<tr>-->
             <th style="width:20%"><?php echo $this->Paginator->sort("Gene Family", "gf_id"); ?></th>
@@ -60,14 +60,14 @@
 
 
                 if ($gene_family['GeneFamilies']['msa']) {
-                    echo "<td><span style='font-weight:bold;color:green'>V</span></td>\n";
+                    echo "<td><span style='font-weight:bold;' class='text-success'>V</span></td>\n";
                 } else {
-                    echo "<td><span style='font-weight:bold;color:red'>X</span></td>\n";
+                    echo "<td><span style='font-weight:bold;' class='text-danger'>X</span></td>\n";
                 }
                 if ($gene_family['GeneFamilies']['tree']) {
-                    echo "<td><span style='font-weight:bold;color:green'>V</span></td>\n";
+                    echo "<td><span style='font-weight:bold;' class='text-success'>V</span></td>\n";
                 } else {
-                    echo "<td><span style='font-weight:bold;color:red'>X</span></td>\n";
+                    echo "<td><span style='font-weight:bold;' class='text-danger'>X</span></td>\n";
                 }
                 echo "</tr>\n";
             }

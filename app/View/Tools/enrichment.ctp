@@ -11,6 +11,22 @@
     <div class="page-header">
         <h1 class="text-primary"><?php echo $available_types[$type]; ?> enrichment</h1>
     </div>
+    <section class="page-section">
+        <p class="text-justify">
+            Gene set enrichment analysis (or functional enrichment analysis) determines the over-representation of
+            a certain functional annotation term in a gene set compared to the background frequency, here genome-wide.
+        </p>
+        <p class="text-justify">
+            This procedure will compare the occurrence of a certain functional annotation term  in a subset with the
+            occurrence in the complete dataset. The significance of over-representation is determined using the
+            hypergeometric distribution and the Bonferroni method is applied to correct for multiple testing.
+        </p>
+        <p class="text-justify">
+            Note that enrichment folds, which indicate the ratio of the frequency in the subset
+            over the frequency in the complete dataset, are reported in log<sub>2</sub> scale
+            (e.g. <samp>value = 1</samp> is two-fold enriched).
+        </p>
+    </section>
     <div class="subdiv">
 <!--        <div class="row">-->
 <!--            <div class="col-sm-8" style="border: 1px red solid;">-->
@@ -72,11 +88,13 @@
         if (isset($error)) {
             echo "<span class='error'>" . $error . "</span>\n";
         }
-        echo $this->Form->create(false, array("action" => "enrichment/" . $exp_id . "/" . $type, "type" => "post"));
-        echo "<dl class='standard dl-horizontal'>";
-        echo "<dt>Subset</dt>";
+        echo $this->Form->create(false, array("action" => "enrichment/" . $exp_id . "/" . $type, "type" => "post", "id"=>"enrichment-form"));
+        echo "<dl class='standard dl-horizontal' style='max-width:520px;'>";
+        echo "<dt>Subset";
+        echo "</dt>";
         echo "<dd>";
-        echo "<select name='subset' style='width:300px;'>";
+        echo $this->element("help_tooltips/create_tooltip", array("tooltip_text"=>$tooltips['enrichment_subset'], "tooltip_placement"=>"right"));
+        echo "<select name='subset' style='width:300px;' class='form-control'>";
         foreach ($subsets as $subset => $count) {
             if (isset($selected_subset) && $selected_subset == $subset) {
                 echo "<option value='" . $subset . "' selected='selected'>" . $subset . " (" . $count . " transcripts)</option>\n";
@@ -88,7 +106,8 @@
         echo "</dd>\n";
         echo "<dt>P-value</dt>";
         echo "<dd>";
-        echo "<select name='pvalue' style='width:80px;'>";
+        echo $this->element("help_tooltips/create_tooltip", array("tooltip_text"=>$tooltips['enrichment_pvalue'], "tooltip_placement"=>"right"));
+        echo "<select name='pvalue' style='width:80px;' class='form-control'>";
         foreach ($possible_pvalues as $ppv) {
             if ($ppv == $selected_pvalue) {
                 echo "<option value='" . $ppv . "' selected='selected'>" . $ppv . "</option>";
@@ -101,8 +120,8 @@
         echo "</dl><br/>";
         //		echo "<input type='submit' style='width:200px;' value='Compute enrichment' />\n";
         echo "<input type='submit' class='btn btn-primary' value='Compute enrichment' />\n";
-        echo "<input type='checkbox' style='margin-left:20px;' name='use_cache' checked='checked' />\n";
-        echo "<span style='margin-left:5px;'>Used cached results</span>\n";
+        echo "<input type='checkbox' style='margin-left:20px;' id='use_cache' name='use_cache' checked='checked' />\n";
+        echo "<label style='margin-left:5px;' for='use_cache'><strong>Use cached results</strong></label>\n";
         echo "</form>\n";
         ?>
     </div>
@@ -164,3 +183,4 @@
         resize_charts();
     });
 </script>
+<?php echo $this->element("help_tooltips/enable_tooltips",  array("container"=>"#enrichment-form")); ?>

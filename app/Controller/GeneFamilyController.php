@@ -7,7 +7,7 @@ class GeneFamilyController extends AppController{
   var $name		= "GeneFamily";
   var $helpers		= array("Html", "Form"); // ,"Javascript","Ajax");
   var $uses		= array("Authentication","Experiments","Configuration","Transcripts","GeneFamilies","TranscriptsGo",
-				"TranscriptsInterpro","TranscriptsLabels","DataSources","ExperimentJobs",
+				"TranscriptsInterpro","TranscriptsLabels","DataSources","ExperimentJobs", "GoParents",
 
 				"GfData","AnnotSources","Annotation","ExtendedGo","ProteinMotifs");
 

@@ -3,11 +3,11 @@
 <h1 class="text-primary">Gene family</h1>
     </div>
 <div class="subdiv">
-	<?php echo $this->element("trapid_experiment"); ?>
+	<?php // echo $this->element("trapid_experiment"); ?>
 	
 	<h3>Gene family information</h3>
-	<div class="subdiv">
-		<dl class="standard">
+	<div class="subdiv page-section">
+		<dl class="standard dl-horizontal">
 			<dt>Gene family</dt>
 			<dd><?php echo $this->Html->link($gf_id,array("controller"=>"gene_family","action"=>"gene_family",$exp_id,$gf_id));?></dd>
 			<dt>#transcripts</dt>
@@ -22,12 +22,15 @@
 		<?php if(count($go_descriptions)==0): ?>
 		<span class='error'>No GO terms are associated with this gene family</span>
 		<?php else: ?>
-		<table cellspacing='0' cellpadding='0' style='width:800px;'>
+		<table class="table table-bordered table-hover table-striped">
+            <thead>
 			<tr>
 				<th style='width:20%'>GO term</th>
 				<th>Description</th>
 				<th style='width:15%'>Assoc. transcripts</th>
 			</tr>
+            </thead>
+            <tbody>
 			<?php
 			$i	= 0;
 			foreach($go_descriptions as $go=>$desc){
@@ -41,16 +44,20 @@
 				echo "</tr>\n";
 			}
 			?>
+            </tbody>
 		</table>
 		<?php endif;?>
 
 		<h4>Protein domains</h4>
-		<table cellspacing='0' cellpadding='0' style='width:800px;'>
+		<table class="table table-bordered table-hover table-striped">
+            <thead>
 			<tr>
 				<th style='width:20%'>Protein domain</th>
 				<th>Description</th>
 				<th style='width:15%'>Assoc. transcripts</th>
 			</tr>
+            </thead>
+            <tbody>
 			<?php
 			$i	= 0;
 			foreach($interpro_descriptions as $interpro=>$desc){
@@ -63,6 +70,7 @@
 				echo "</tr>\n";
 			}
 			?>
+            </tbody>
 		</table>
 	</div>
 </div>

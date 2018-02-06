@@ -57,3 +57,4 @@
         ?>
 <!--    </div>-->
 </div>
+<?php // echo $this->element('sql_dump');  // Dump all MySQL queries (debug) ?>
