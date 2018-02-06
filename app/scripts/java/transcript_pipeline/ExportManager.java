@@ -345,7 +345,7 @@ public class ExportManager {
 		Map<String,String> result		= new HashMap<String,String>();
         // TRAPID v2 database does not have this structure anymore
 // 		String sql						= "SELECT `motif_id`,`desc` FROM `protein_motifs` ";
-		String sql						= "SELECT `name`,`desc` FROM `functional_data` WHERE `type`='ipr'";
+		String sql						= "SELECT `name`,`desc` FROM `functional_data` WHERE `type`='interpro'";
 		Statement stmt					= conn.createStatement();
 		ResultSet set					= stmt.executeQuery(sql);
 		while(set.next()){
