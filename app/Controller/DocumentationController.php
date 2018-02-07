@@ -28,9 +28,7 @@ class DocumentationController extends AppController{
 
 
   function faq(){
-      $title = "SEGPA";
       $this -> set('title_for_layout', 'Frequently asked questions');
-      $this->set('title_for_layout', 'List User');
   }
 
 

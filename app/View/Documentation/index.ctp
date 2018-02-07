@@ -3,13 +3,14 @@
         <h1 class="text-primary">Documentation</h1>
     </div>
 <!--<div class='subdiv'>-->
-
-	These pages contain the documentation for the TRAPID platform for the fast analysis of transcriptome data. <br/>
-	If you think something is missing, or unclear, do not hesitate to <?php echo $this->Html->link("contact us", array("controller"=>"documentation","action"=>"contact")); ?>. <br/>
+<section class="page-section-sm">
+    <p class="text-justify">These pages contain the documentation for the TRAPID platform for the fast analysis of transcriptome data.
+        If you think something is missing, or unclear, do not hesitate to <?php echo $this->Html->link("contact us", array("controller"=>"documentation","action"=>"contact")); ?>. </p>
 <!--    <a href='mailto:plaza@psb.vib-ugent.be'>contact us</a>.-->
-    Several sections are available within the documentation. Use the <strong>menu on the right</strong> to start browsing. <br/><br/>
-	<div style='margin-left:40px;'>
-	<dl class='standard'>
+    <p class="text-justify">Several sections are available within the documentation. Use the <strong>menu below</strong> to start browsing.</p>
+</section>
+	<section class="page-section-sm">
+	<dl class='standard dl-horizontal'>
 		<!--
 		<dt>
 			<?php echo $this->Html->link("Quick start",array("controller"=>"documentation","action"=>"quickstart")); ?>
@@ -30,7 +31,7 @@
 			<?php echo $this->Html->link("General documentation",array("controller"=>"documentation","action"=>"general")); ?>
 		</dt>
 		<dd>
-			<span class='doctopspan'>A comprehensive overview of the TRAPID capabilities</span>
+			<span class='doctopspan'>A comprehensive overview of TRAPID's capabilities</span>
 		</dd>
 		<dt>
 			<?php echo $this->Html->link("Tutorials",array("controller"=>"documentation","action"=>"tutorial")); ?>
@@ -42,14 +43,14 @@
 			<a href="ftp://ftp.psb.ugent.be/pub/trapid">FTP Server</a>
 		</dt>
 		<dd>
-			FTP-server containing a multitude of example files.
+			FTP server containing a multitude of example files.
 		</dd>
 
 	</dl>
-	</div>
+	</section>
 	<br/><br/><br/>
 	<?php
-	echo $this->Html->link("Return to TRAPID",array("controller"=>"trapid","action"=>"index"));
+	// echo $this->Html->link("Return to TRAPID",array("controller"=>"trapid","action"=>"index"));
 	?>
 
 </div>
