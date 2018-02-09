@@ -141,11 +141,15 @@
 <!--</div>-->
 <?php else: ?>
 <?php
+
+
+    $fpdf->SetFont('Arial','B',16);
+
 	$fpdf->setTitle("TRAPID analysis");
 	$fpdf->AliasNbPages();
 	$fpdf->AddPage();
 
-	//ok, first display the standard information about the experiment.
+	// Ok, first display the standard information about the experiment.
 	$fpdf->SetFont('Arial','U',12);
 	$fpdf->Cell(60,10,"General TRAPID experiment information");
 	$fpdf->Ln();
@@ -165,7 +169,7 @@
 	$fpdf->Ln();
 	$fpdf->Ln();
 
-	//next, transcript counts
+	// Next, transcript counts
 	$fpdf->SetFont('Arial','U',12);
 	$fpdf->Cell(60,10,"Transcript information");
 	$fpdf->Ln();
@@ -270,6 +274,6 @@
 	$fpdf->Ln();
 
 
-	echo $fpdf->fpdfOutput();
+	echo $fpdf->Output();
 ?>
 <?php endif; ?>

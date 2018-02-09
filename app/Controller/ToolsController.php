@@ -1,5 +1,7 @@
 <?php
 App::uses('Sanitize', 'Utility');
+App::import('Vendor', 'Fpdf', array('file' => 'fpdf/fpdf.php'));
+
 /*
  * General controller class for the trapid functionality
  */
@@ -360,8 +362,6 @@ class ToolsController extends AppController{
       if(file_exists($qsub_out)){unlink($qsub_out);}
       if(file_exists($qsub_err)){unlink($qsub_err);}
       $command  	= "sh $qsub_file -q short -o $qsub_out -e $qsub_err $shell_file";
-      pr("\n\n\n" . $command);
-      return;
       $output		= array();
       exec($command,$output);
       $cluster_job	= $this->TrapidUtils->getClusterJobId($output);
@@ -1637,8 +1637,7 @@ class ToolsController extends AppController{
     if($_POST || $pdf=='1'){
       if($pdf=='1' || (array_key_exists("export_type",$_POST) && $_POST['export_type']=="pdf")){
 	$this->set("pdf_view",1);
-	$this->helpers[] 	= "fpdf";
-	$this->layout		= "pdf";
+	$this->layout	= "fpdf";
 	$pdf_transcript_info	= array(
 			"#Transcripts"=>$num_transcripts,
 			"Average transcript length"=>$seq_stats['transcript']." basepairs",
@@ -1676,7 +1675,12 @@ class ToolsController extends AppController{
 	$this->set("pdf_gf_info",$pdf_gf_info);
 	$this->set("pdf_func_info",$pdf_func_info);
 
-	$this->render();
+//	$this->render();
+
+          $this->set('fpdf', new FPDF('P','mm','A4'));
+          $this->set('pdf_file_name', "TRAPID_statistics_". $exp_id .".pdf");
+          $this->set('data', 'Hello, PDF world');
+          $this->render('statistics');
       }
     }
 
