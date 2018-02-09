@@ -5,7 +5,7 @@
 <div class="subdiv">
     <?php // echo $this->element("trapid_experiment"); ?>
     <section class="page-section">
-        <p class="text-justify">Transcript files can be uploaded from your machine or from a URL. Maximum allowed file-size is 30 Mb. If your file is larger, compress the file (using <code>zip</code> or <code>gzip</code>) and
+        <p class="text-justify">Transcript files can be uploaded from your machine or from a URL. Maximum allowed file-size is 32 Mb. If your file is larger, compress the file (using <code>zip</code> or <code>gzip</code>) and
                 upload the compressed file.</p>
                 <p class="text-justify">Input data must be formatted as multi-fasta file(s), with each transcript identifier's length <strong>not exceeding 50
                         characters</strong>. For example: </p>
@@ -133,7 +133,7 @@
 
         $("#ri1").change(function () {
             var max_size = 32000000;
-            if ($("#ri1").files[0].size > max_size) {
+            if (this.files[0].size > max_size) {
                 alert("Maximum size of file upload is 32MB. This upload will not work!");
             }
         });
@@ -141,7 +141,7 @@
 
         $("#include_label").change(function () {
             if ($("#include_label").is(':checked')) {
-                console.log("Checked");
+                // console.log("Checked");
                 $('#label_name').attr('disabled', false);
             }
             else {
