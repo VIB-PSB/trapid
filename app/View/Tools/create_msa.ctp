@@ -1,6 +1,7 @@
 <?php
     // Load the necessary javascript libraries
     echo $this->Html->script(array('ftiens4.js','ua.js'));
+    echo $this->Html->script('d3-3.5.6.min.js');
     echo $this->Html->script('msa.min.js');  // MSAViewer
 ?>
 
@@ -449,10 +450,13 @@
         zoomer: {
             menuFontsize:"12px",
             autoResize:true,
-            alignmentHeight:300
+            alignmentHeight:300,
+            labelNameLength: 150,
+            labelFontsize: 12
+            // labelLineHeight: "12px"
         },
         menu:"small",
-        bootstrapMenu:true
+        bootstrapMenu:true,
     };
     var m = msa(opts);
 </script>
