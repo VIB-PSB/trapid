@@ -354,7 +354,7 @@ class TrapidController extends AppController{
     $log_info	= $this->ExperimentLog->find("all",array("conditions"=>array("experiment_id"=>$exp_id),
 							"order"=>array("ExperimentLog.id ASC")));
     $this->set("log_info",$log_info);
-    $this->set("active_header_item", "Settings");
+    $this->set("active_header_item", "Log");
     $this->set('title_for_layout', 'Log');
   }
 
@@ -408,6 +408,8 @@ class TrapidController extends AppController{
      $is_owner 		= parent::is_owner($exp_id);
      $this->set("is_owner",$is_owner);
 
+     $this->set("active_header_item", "Settings");
+     $this->set("title_for_layout", "Experiment access");
 
   }
 
@@ -445,8 +447,8 @@ class TrapidController extends AppController{
       $exp_info	= $this->Experiments->getDefaultInformation($exp_id);
       $this->redirect(array("controller"=>"trapid","action"=>"experiment",$exp_id));
     }
-
-
+    $this->set("active_header_item", "Settings");
+    $this->set("title_for_layout", "Experiment settings");
   }
 
 
@@ -1426,7 +1428,7 @@ class TrapidController extends AppController{
       if(file_exists($qsub_err)){unlink($qsub_err);}
 
       $output   = array();
-      $command  = "sh $qsub_file -pe smp 2 -q long -o $qsub_out -e $qsub_err $shell_file";
+      $command  = "sh $qsub_file -pe serial 2 -q long -o $qsub_out -e $qsub_err $shell_file";
       // pr($command);
       // return;
       exec($command,$output);

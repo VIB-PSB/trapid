@@ -25,11 +25,14 @@
                 <?php endif; ?>
             </a>
         </li>
+        <li><?php echo $this->Html->link("Log",array("controller"=>"trapid","action"=>"view_log",$exp_id));?></li>
         <li><a href="#" class="dropdown-toggle" data-toggle="dropdown">
                 <!--                    <span class="glyphicon glyphicon-cog"></span> -->
-                Settings <span class="caret"></span></a>
+                <span class="glyphicon glyphicon-cog"></span>
+                <span class="hidden">Settings</span>
+                <span class="caret"></span></a>
             <ul class="dropdown-menu-right dropdown-menu">
-                <li><?php echo $this->Html->link("View log",array("controller"=>"trapid","action"=>"view_log",$exp_id));?></li>
+<!--                <li>--><?php //echo $this->Html->link("View log",array("controller"=>"trapid","action"=>"view_log",$exp_id));?><!--</li>-->
                 <li><?php echo $this->Html->link("Share experiment",array("controller"=>"trapid","action"=>"experiment_access",$exp_id));?></li>
                 <li><?php echo $this->Html->link("Change settings",array("controller"=>"trapid","action"=>"experiment_settings",$exp_id));?></li>
                 <li><?php

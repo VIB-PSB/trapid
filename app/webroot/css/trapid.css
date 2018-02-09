@@ -459,6 +459,8 @@ div.selected_tabbed_div{
 .label-beta {
 	background-color: #1abc9c;
 	font-weight: normal;
+	padding: 0em 0.45em 0em 0.45em;
+	font-size: 65%;
 }
 
 /****************************/
