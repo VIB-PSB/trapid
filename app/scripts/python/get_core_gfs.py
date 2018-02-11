@@ -250,6 +250,9 @@ def main(db_name, clade, username, mysql_server, output_file, min_genes, max_gen
         from ete3 import NCBITaxa
         ncbi_taxonomy = NCBITaxa(dbfile="/www/blastdb/biocomp/moderated/trapid_02/.etetoolkit/taxa.sqlite")  # HARDCODED LOCATION OF ETE3 TAXONOMY DB FILE
         species_list =  get_species_list_ncbi(clade=clade, ncbi_taxonomy=ncbi_taxonomy, db_conn=db_ref)
+        if not species_list:
+            sys.stderr.write("No species found for this clade, exit!\n")
+            sys.exit(1)
         get_core_gfs(db_conn=db_ref,
                      clade_name=clade,
                      species_list=species_list,

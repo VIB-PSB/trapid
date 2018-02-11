@@ -2235,7 +2235,11 @@ function label_go_intersection($exp_id=null,$label=null){
         $completeness_job = $this->CompletenessResults->find("first", array("conditions"=>array("experiment_id"=>$exp_id,
             "clade_txid"=>$clade_tax_id, "label"=>$label,
             "used_method"=>"sp=".$species_perc.";ts=".$tax_source.";th=".$top_hits)));
-        // pr($completeness_job);
+        // Dirty but works to catch errors.
+        if(empty($completeness_job)) {
+            $this->autoRender = false;
+            return("<p class='text-danger'><strong>Error:</strong> could not retrieve any species from the reference database. Are you sure the clade you chose is represented there?</p>");
+        }
         // Count number of missing/represented GFs. Done this way:
         // get length of strings: if 0, return 0, otherwise give the length of string splitted by `;`
         $n_missing = strlen($completeness_job['CompletenessResults']['missing_gfs']) ? sizeof(explode(";", $completeness_job['CompletenessResults']['missing_gfs'])) : 0;

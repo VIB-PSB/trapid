@@ -1543,6 +1543,12 @@ a.linkout:after {
 }
 
 
+.unavailable {
+	cursor: not-allowed !important;
+	color: #888888;
+	/*color:red;*/
+}
+
 /* Lots of ugly borders: useful for debugging when things are not displayed as expected */
 
 /*body {*/
