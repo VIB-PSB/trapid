@@ -21,7 +21,7 @@ class GeneFamilyController extends AppController{
 				),
 				"GeneFamilies"=>
 				array(
-					"limit"=>20,
+					"maxLimit"=>20,
 			       		"order"=>array(
                             "GeneFamilies.experiment_id"=>"ASC", // Needed to force use of `experiment_id` index
 			       		    "GeneFamilies.gf_id"=>"ASC"

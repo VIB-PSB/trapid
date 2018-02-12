@@ -15,8 +15,10 @@
         <table class="table table-bordered table-striped table-hover table-condensed">
             <thead>
             <!--			<tr>-->
-            <th style="width:20%"><?php echo $this->Paginator->sort("Gene Family", "gf_id"); ?></th>
-            <th style="width:15%"><?php echo $this->Paginator->sort("#Transcripts", "num_transcripts"); ?></th>
+<!--            <th style="width:20%">--><?php //echo $this->Paginator->sort("Gene Family", "gf_id"); ?><!--</th>-->
+<!--            <th style="width:15%">--><?php //echo $this->Paginator->sort("#Transcripts", "num_transcripts"); ?><!--</th>-->
+            <th style="width:20%"><?php echo $this->Paginator->sort("gf_id", "Gene Family"); ?></th>
+            <th style="width:15%"><?php echo $this->Paginator->sort("num_transcripts", "# Transcripts"); ?></th>
             <?php
             if ($exp_info["genefamily_type"] == "HOM") {
                 echo "<th style='width:15%'>External GF</th>\n";
