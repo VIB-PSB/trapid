@@ -9,7 +9,12 @@
 	<div class="subdiv">
 		<dl class="standard dl-horizontal">
 			<dt>GO term</dt>
-			<dd><?php echo $this->Html->link($go,array("controller"=>"functional_annotation","action"=>"go",$exp_id,$go_web));?></dd>
+			<dd><?php echo $this->Html->link($go,array("controller"=>"functional_annotation","action"=>"go",$exp_id,$go_web));?>
+                &nbsp; &nbsp;
+                <?php echo  $this->element("linkout_func", array("linkout_type"=>"amigo", "query_term"=>$go_info["name"]));?>
+                <?php echo  $this->element("linkout_func", array("linkout_type"=>"quickgo", "query_term"=>$go_info["name"]));?>
+
+            </dd>
 			<dt>GO description</dt>
 			<dd><?php echo $go_info['desc'];?></dd>	
 			<dt>#Transcripts</dt>

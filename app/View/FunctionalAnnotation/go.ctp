@@ -23,6 +23,9 @@
 			       echo $this->Html->link($go_info["name"],$exp_info['datasource_URL']."go/view/".$go_web);
 			    }
 			?>
+                &nbsp; &nbsp;
+                <?php echo  $this->element("linkout_func", array("linkout_type"=>"amigo", "query_term"=>$go_info["name"]));?>
+                <?php echo  $this->element("linkout_func", array("linkout_type"=>"quickgo", "query_term"=>$go_info["name"]));?>
 			</dd>
 			<dt>Description</dt>
 			<dd><?php echo $go_info["desc"];?></dd>

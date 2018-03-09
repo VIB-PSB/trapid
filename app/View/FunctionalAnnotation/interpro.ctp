@@ -3,11 +3,11 @@
 <h1 class="text-primary">Protein domain</h1>
     </div>
 <div class="subdiv">
-	<?php echo $this->element("trapid_experiment");?>	
+	<?php // echo $this->element("trapid_experiment");?>
 	
 	<h3>Overview</h3>
 	<div class="subdiv">		
-		<dl class="standard">
+		<dl class="standard dl-horizontal">
 			<dt>Protein domain</dt>
 			<dd>
 			<?php
@@ -20,8 +20,11 @@
 					echo $this->Html->link($interpro,$exp_info['datasource_URL']."interpro/view/".$interpro);
 					// TODO: add link to InterPro itself. Link is formed as such: http://www.ebi.ac.uk/interpro/entry/<motif_id>
 				}			 
-			?>
-			</dd>
+
+                echo "&nbsp; &nbsp;";
+                echo  $this->element("linkout_func", array("linkout_type"=>"interpro", "query_term"=>$interpro));
+            ?>
+            </dd>
 			<dt>Description</dt>
 			<dd><?php echo $interpro_info["desc"];?></dd>
 			<dt>#transcripts</dt>

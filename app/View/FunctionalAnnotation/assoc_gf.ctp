@@ -18,10 +18,20 @@
 			    	else {
 			    	    echo $this->Html->link($go,$exp_info['datasource_URL']."go/view/".$go_web);
 			    	}
-				echo "</dd>\n";
+            echo "&nbsp; &nbsp;";
+            echo  $this->element("linkout_func", array("linkout_type"=>"amigo", "query_term"=>$go));
+            echo "&nbsp;";
+            echo  $this->element("linkout_func", array("linkout_type"=>"quickgo", "query_term"=>$go));
+            echo "</dd>\n";
 			}
-			else if($type=="ipr"){
-			}		
+			else if($type=="interpro"){
+                echo "<dt>Protein domain</dt>";
+                echo "<dd>";
+                echo $interpro;
+                echo "&nbsp; &nbsp;";
+                echo  $this->element("linkout_func", array("linkout_type"=>"interpro", "query_term"=>$interpro));
+                echo "</dd>\n";
+			}
 			?>
 			<dt>Description</dt>
 			<dd><?php echo $description;?></dd>
@@ -60,7 +70,7 @@
 				for($i=0;$i<count($extra_annot_go[$gf_id]) && $i<2;$i++){	
 					$go	= $extra_annot_go[$gf_id][$i];
 					$desc	= $go_descriptions[$go];
-					echo $this->Html->link(($i+1).")".$desc,array("controller"=>"functional_annotation","action"=>"go",$exp_id,str_replace(":","-",$go)));
+					echo ($i+1) . ". " . $this->Html->link($desc,array("controller"=>"functional_annotation","action"=>"go",$exp_id,str_replace(":","-",$go)));
 					echo "<br/>";
 				}
 				echo "</td>";				
@@ -69,7 +79,7 @@
 				for($i=0;$i<count($extra_annot_ipr[$gf_id]) && $i<2;$i++){
 					$ipr	= $extra_annot_ipr[$gf_id][$i];
 					$desc	= $ipr_descriptions[$ipr];
-					echo $this->Html->link(($i+1).")".$desc,array("controller"=>"functional_annotation","action"=>"interpro",$exp_id,$ipr));
+					echo ($i+1).". " . $this->Html->link($desc,array("controller"=>"functional_annotation","action"=>"interpro",$exp_id,$ipr));
 					echo "<br/>";
 				}
 				echo "</td>";
