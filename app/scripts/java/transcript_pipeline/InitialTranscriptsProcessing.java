@@ -227,9 +227,31 @@ public class InitialTranscriptsProcessing {
 				itp.storeGoTranscripts(trapid_db_connection, trapid_experiment_id,transcript_go_hidden);
 				plaza_db_connection.close();
 				trapid_db_connection.close();
+
+				// Kegg Orthology (KO) annotation
+				plaza_db_connection	= itp.createDbConnection(plaza_database_server,plaza_database_name,plaza_database_login,plaza_database_password);
+				trapid_db_connection = itp.createDbConnection(trapid_server,trapid_name,trapid_login,trapid_password);
+				System.out.println("Performing KO functional transfer : " + func_annot);
+				Map<String,Set<String>> transcript_ko = null;
+				switch(func_annot){
+					case BESTHIT:transcript_ko = itp.assignKoTranscripts_BESTHIT(plaza_db_connection, simsearch_data);break;
+					case GF: transcript_ko = itp.assignKoTranscripts_GF_precomputed(plaza_db_connection, transcript2ogs, ogs2transcripts);break;
+					case GF_BESTHIT:transcript_ko = itp.assignKoTranscripts_GF_BESTHIT(plaza_db_connection, transcript2ogs, ogs2transcripts, simsearch_data);break;
+					default:System.err.println("Illegal func annot indicator : "+func_annot);System.exit(1);
+				}
+				plaza_db_connection.close();
+				trapid_db_connection.close();
+				plaza_db_connection = itp.createDbConnection(plaza_database_server,plaza_database_name,plaza_database_login,plaza_database_password);
+				trapid_db_connection = itp.createDbConnection(trapid_server,trapid_name,trapid_login,trapid_password);
+				itp.storeKoTranscripts(trapid_db_connection, trapid_experiment_id,transcript_ko);
+				long t42	= System.currentTimeMillis();
+				timing("Functional transfer", t41, t42);
+				itp.update_log(trapid_db_connection,trapid_experiment_id,"infer_functional_annotation","","3");
+				plaza_db_connection.close();
+				trapid_db_connection.close();
 			}
 
-			// 'Normal' processing (steps 3,4,5)
+			// 'Normal' processing (steps 3 and 4)
 			else {
                 if (gf_type == GF_TYPE.HOM) {
                     String gf_prefix = itp.getGfPrefix(trapid_db_connection, plaza_database_name);
@@ -2991,6 +3013,226 @@ public class InitialTranscriptsProcessing {
         return transcript_go;
     }
 
+
+
+    ////////
+    // KO annotation
+    ////////
+
+    /**
+     * Assign KO terms to each transcript, based on the best similarity hit. Return hashmap with this assignment.
+     * @param plaza_connection Connection to PLAZA database
+     * @param simsearch_data Similarity search results
+     * @return Mapping from transcript to KO terms
+     * @throws Exception
+     */
+    private Map<String,Set<String>> assignKoTranscripts_BESTHIT(Connection plaza_connection,
+                                                                Map<String,List<String[]>> simsearch_data) throws Exception{
+        Map<String,Set<String>> transcript_ko	= new HashMap<String,Set<String>>();
+        PreparedStatement stmt	= plaza_connection.prepareStatement("SELECT `ko` FROM `gene_ko` WHERE `gene_id` = ? ;");
+
+        // We could cache the KO data (for EggNOG db, table is ~350 MB).
+        // Do it if it takes too long to do it naively, with no caching
+        // long t21	= System.currentTimeMillis();
+        // Map<String,Set<String>> gene_go = this.loadKoData(plaza_connection);
+        // long t22	= System.currentTimeMillis();
+        // timing("Caching KO data",t21,t22,2);
+
+        long t41	= System.currentTimeMillis();
+
+        for(String transcript_id:simsearch_data.keySet()){
+            if(simsearch_data.get(transcript_id).size()!=0){
+                Set<String> ko_terms = new HashSet<String>();
+                String best_hit	= simsearch_data.get(transcript_id).get(0)[0];
+                // Use the best hit to transfer the functional annotation
+                // 1. Get KO terms of best hit
+                stmt.setString(1, best_hit);
+                ResultSet set	= stmt.executeQuery();
+                while(set.next()) {
+                    // Get current KO term
+                    String current_ko = set.getString("ko");
+                    ko_terms.add(current_ko);
+                }
+                set.close();
+                if(ko_terms.size()>0) {
+                    transcript_ko.put(transcript_id, ko_terms);
+                }
+                // else {
+                //     System.err.println("[Warning] No KO terms found (BEST_HIT) for transcript " + transcript_id);
+                // }
+            }
+        }
+        long t42	= System.currentTimeMillis();
+        timing("Inferring functional annotation per transcript",t41,t42,2);
+        // Clear unnecessary data structures
+        long t61 = System.currentTimeMillis();
+        // ko_terms.clear();
+        System.gc();
+        long t62	= System.currentTimeMillis();
+        timing("Clearing local cache data structures",t61,t62,2);
+        stmt.close();
+        System.out.println(transcript_ko);
+        return transcript_ko;
+    }
+
+
+    /**
+     * Assign KO terms to each transcript, based on the associated ortholog groups (+ min. frequency rule), using the
+     * `gf_functional_data` table (taht contains precomputed ko/frequency for each gene family).
+     * @param plaza_connection Connection to PLAZA database
+     * @param transcript2ogs Mapping from transcripts to OGs
+     * @param ogs2transcripts Mapping from OGs to transcripts
+     * @return Mapping from transcript to GO terms
+     * @throws Exception
+     */
+    private Map<String,Set<String>> assignKoTranscripts_GF_precomputed(Connection plaza_connection,
+                                                                       Map<String,List<String>>transcript2ogs,
+                                                                       Map<String,List<String>>ogs2transcripts
+    ) throws Exception {
+
+        double min_freq = 0.33;  // Minimum frequency of KO term in OG to consider it
+        Map<String,Set<String>> transcript_ko = new HashMap<String,Set<String>>();
+        Map<String,Set<String>> og_ko_cache = new HashMap<String,Set<String>>();
+        long t11	= System.currentTimeMillis();
+
+        // Necessary queries
+        String query_ko_terms = "SELECT `name` FROM `gf_functional_data` WHERE `gf_id` = ? and `type`='ko' and freq >=" + min_freq +";";
+        PreparedStatement stmt_ko_terms	= plaza_connection.prepareStatement(query_ko_terms);
+        // Higher `setFetchSize()` should help.
+        stmt_ko_terms.setFetchSize(1000);
+        long t41	= System.currentTimeMillis();
+        // Remove `None` for later. No need to get annotation.
+        if(ogs2transcripts.keySet().contains("None")) {
+            ogs2transcripts.remove("None");
+        }
+        int remaining_og_strings = ogs2transcripts.keySet().size();
+        for(String og_string : ogs2transcripts.keySet()){
+            long t411	= System.currentTimeMillis();
+            // Set of all selected KOs for this set of OGs
+            Set<String> selected_kos	= new HashSet<String>();
+            // For each selected OG, get: members, and their associated KOs
+            String[] ogs = og_string.split(",");
+            for(String og: ogs) {
+                String og_id = og.split("@")[0];
+                // 1. Retrieve KOs associated to genes of current OG (precomputed in `gf_functional_data` table
+                Set<String> og_ko = new HashSet<String>();
+                if (!og_ko_cache.keySet().contains(og_id)) {
+                    stmt_ko_terms.setString(1, og_id);
+                    ResultSet set = stmt_ko_terms.executeQuery();
+                    while (set.next()) {
+                        og_ko.add(set.getString(1));
+                    }
+                    // System.out.println(og + "\t" + og_ko.toString());
+                    og_ko_cache.put(og_id, og_ko);
+                    set.close();
+                } else {
+                    System.err.println("[Message] Already in cache! " + og);
+                    og_ko = og_ko_cache.get(og_id);
+                }
+                // 5. Now, iterate over all the KO identifiers, and select those who are present in at least
+                // `min_freq` of the genes associated with this gene family
+                for (String ko_id : og_ko) {
+                    if(!selected_kos.contains(ko_id)) {
+                        selected_kos.add(ko_id);
+                    }
+                }
+                // Clear the temporary storage for this gene family.
+                og_ko.clear();
+            }  // End 'for each OG of OG string'
+            // 2. Add KOs to transcripts that have this set of OGs
+            for(String transcript_id: ogs2transcripts.get(og_string)) {
+                transcript_ko.put(transcript_id,new HashSet<String>(selected_kos));
+            }
+            // Debug timing
+            long t412	= System.currentTimeMillis();
+            remaining_og_strings--;
+            timing("Dealt with OG string '"+og_string+"'. Still remaining: "+remaining_og_strings, t411, t412,3); // Debug
+        } // End 'for each OG string'
+
+        long t42	= System.currentTimeMillis();
+        timing("Inferring functional annotation per gene family",t41,t42,2);
+        // Clear unnecessary data structures
+        long t61	= System.currentTimeMillis();
+        og_ko_cache.clear();
+        System.gc();
+        long t62	= System.currentTimeMillis();
+        timing("Clearing local cache data structures", t61, t62,2);
+        return transcript_ko;
+    }
+
+
+    /**
+     * Assign KO terms to each transcript, based on both Eggnog OGs and the best similarity hit. Call the
+     * two Eggnog-specific functional annotation methods defined above.
+     * @param plaza_connection Connection to PLAZA database
+     * @param transcript2ogs Mapping from transcripts to gene families
+     * @param ogs2transcripts Mapping from gene families to transcripts
+     * @param simsearch_data Similarity search results
+     * @return Mapping from transcript to GO terms
+     * @throws Exception
+     */
+    private Map<String,Set<String>> assignKoTranscripts_GF_BESTHIT(
+            Connection plaza_connection,
+            Map<String, List<String>> transcript2ogs,
+            Map<String, List<String>> ogs2transcripts,
+            Map<String,List<String[]>> simsearch_data) throws Exception{
+        Map<String,Set<String>> transcript_ko	= new HashMap<String, Set<String>>();
+        // 1. Get best hit GO annotation and GF/OGs GO annotation
+        Map<String,Set<String>> transcript_ko_besthit = this.assignKoTranscripts_BESTHIT(plaza_connection, simsearch_data);
+        Map<String,Set<String>> transcript_ko_gf = this.assignKoTranscripts_GF_precomputed(plaza_connection, transcript2ogs, ogs2transcripts);
+        // 2. Populate and return `transcript_ko`
+        transcript_ko.putAll(transcript_ko_besthit);
+        for(String transcript: transcript_ko_gf.keySet()) {
+            if(!transcript_ko.containsKey(transcript)) {
+                transcript_ko.put(transcript, transcript_ko_gf.get(transcript));
+            }
+            else {
+                transcript_ko.get(transcript).addAll(transcript_ko_gf.get(transcript));
+            }
+        }
+        return transcript_ko;
+    }
+
+
+
+    /**
+     * Store all the transcript - KO associations, that were detected
+     * @param trapid_connection Connection to trapid database
+     * @param trapid_exp_id Trapid experiment id
+     * @param transcript_ko Mapping from transcripts to KO terms
+     * @throws Exception
+     */
+    private void storeKoTranscripts(Connection trapid_connection,String trapid_exp_id,Map<String,Set<String>>transcript_ko) throws Exception{
+        long t51							= System.currentTimeMillis();
+        // TRAPID db structure changed for version 2...
+        String insert_ko_annot				= "INSERT INTO `transcripts_annotation` (`experiment_id`, `type`, `transcript_id`, `name`, `is_hidden`) VALUES ('"+trapid_exp_id+"', 'ko', ?, ?, '0') ";
+        PreparedStatement ins_ko_annot		= trapid_connection.prepareStatement(insert_ko_annot);
+        boolean prev_commit_state			= trapid_connection.getAutoCommit();
+        trapid_connection.setAutoCommit(false);
+
+        for(String transcript_id:transcript_ko.keySet()){
+            for(String ko_id:transcript_ko.get(transcript_id)){
+                ins_ko_annot.setString(1,transcript_id);
+                ins_ko_annot.setString(2,ko_id);
+                ins_ko_annot.addBatch();
+            }
+            ins_ko_annot.executeBatch();
+            trapid_connection.commit();
+            ins_ko_annot.clearBatch();
+        }
+
+        trapid_connection.setAutoCommit(prev_commit_state);
+        long t52	= System.currentTimeMillis();
+        timing("Storing KO functional annotation in database per transcript",t51,t52,2);
+        //close all statements
+        ins_ko_annot.close();
+        //clear unnecessary data structures
+        long t61	= System.currentTimeMillis();
+        transcript_ko.clear();
+        System.gc();
+        long t62	= System.currentTimeMillis();
+        timing("Clearing KO local cache data structures",t61,t62,2);
+    }
 
 
     // Get GF content for a set of GFs (doesm't seem like a good idea to cache the whole table when dealing with EggNog).
