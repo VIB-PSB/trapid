@@ -1528,9 +1528,13 @@ class TrapidController extends AppController{
 	}
 	//#####   FILE  ###########################  --> IMMEDIATELY UNZIP DATA!!!
 	else if($_POST['uploadtype']=="file" && array_key_exists("uploadedfile",$_FILES)){
-	   set_time_limit(180);
+	   // Note (2018/05/08): I put much higher values for these limits so we can start processing big datasets from the web interface
+/*	   set_time_limit(180);
 	   $MAX_FILE_SIZE_NORMAL		= 32000000;
-	   $MAX_FILE_SIZE_ZIP			= 32000000;
+	   $MAX_FILE_SIZE_ZIP			= 32000000;*/
+        set_time_limit(1800);
+        $MAX_FILE_SIZE_NORMAL		= 500000000;
+        $MAX_FILE_SIZE_ZIP			= 500000000;
 	   if(($_FILES['uploadedfile']['name']=="")){$this->set("error","Illegal input file (no name)");return;}
 	   if(($_FILES['uploadedfile']['size'] == 0)){$this->set("error","Illegal input file (size is 0)");return;}
 	   if(($_FILES['uploadedfile']['tmp_name'] == "")){$this->set("error","Illegal input file (no tmp_name)");return;}
