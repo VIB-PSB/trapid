@@ -83,6 +83,19 @@ class Experiments extends AppModel{
     return $result;
   }
 
+
+    function getTranscriptCount($exp_id){
+        $exp_id	= mysql_real_escape_string($exp_id);
+        $query = "SELECT count(*) AS transcript_count FROM `transcripts`  WHERE `experiment_id`='".$exp_id."';";
+
+        $res = $this->query($query);
+        $result = array();
+        if($res){
+            $result	= $res[0][0]['transcript_count'];
+        }
+        return $result;
+    }
+
 }
 
 

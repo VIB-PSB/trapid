@@ -207,19 +207,19 @@ class TrapidController extends AppController{
   }
 
 
-  //fast and ugly hack to facilitate ajax call to get extra information about number of transcripts per experiment.
+// Retrieve transcript count for experiment `$exp_id`. Function called via AJAX for each experiment of the experiments
+// overview page (`experiments`).
   function experiments_num_transcripts($exp_id){
     Configure::write("debug",1);
-//      ini_set('memory_limit','800M');
     $this->layout = "";
     if(!$exp_id){$this->redirect(array("controller"=>"trapid","action"=>"experiments"));}
     $exp_id	= mysql_real_escape_string($exp_id);
     parent::check_user_exp($exp_id);
-    $exp_info	= $this->Experiments->getDefaultInformation($exp_id);
     // pr($exp_info);
-    $num_transcripts = "N/A";
-    if($exp_info){
-      $num_transcripts = $exp_info['transcript_count'];
+    $num_transcripts = "N/A";  // Default value to display
+    $exp_transcripts	= $this->Experiments->getTranscriptCount($exp_id);
+    if($exp_transcripts){
+      $num_transcripts = $exp_transcripts;
     }
     $this->set("num_transcripts",$num_transcripts);
     return;
@@ -702,6 +702,7 @@ class TrapidController extends AppController{
 
     }
 
+      $this -> set('title_for_layout', 'Similarity hits');
 
   }
 
@@ -1015,7 +1016,7 @@ class TrapidController extends AppController{
     parent::check_user_exp($exp_id);
     $exp_info	= $this->Experiments->getDefaultInformation($exp_id);
     //	pr($exp_info);
-
+    $this -> set('title_for_layout', 'Search results');
 
     $this->TrapidUtils->checkPageAccess($exp_info['title'],$exp_info["process_state"],$this->process_states["default"]);
     $this->set("exp_info",$exp_info);
