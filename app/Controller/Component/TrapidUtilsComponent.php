@@ -629,7 +629,7 @@ class TrapidUtilsComponent extends Component{
                     // PLAZA_DB_SERVER,$plaza_db,PLAZA_DB_USER,PLAZA_DB_PASSWORD,
                     TRAPID_DB_SERVER, $plaza_db, TRAPID_DB_USER, TRAPID_DB_PASSWORD,
 					TRAPID_DB_SERVER,TRAPID_DB_NAME,TRAPID_DB_USER,TRAPID_DB_PASSWORD,
-					"db_trapid_02",
+					"db_trapid_dev",
 					// "db_trapid_01_taxonomy",
 					$exp_id,$gf_id,$inc_sub,$inc_met,$tmp_dir,
 					$java_location."forester.jar",
@@ -1302,12 +1302,14 @@ class TrapidUtilsComponent extends Component{
 
 
     function send_registration_email($email,$password,$password_update=false){
+      $subject = "TRAPID authentication information";
       $message 	        	= "Welcome to the online TRAPID system for rapid analysis of transcriptome data.\nHere is the required authentication information.\n\nUser email-address: ".$email."\nPassword: ".$password."\n\nThank you for using the TRAPID system.";
       if($password_update){
-	$message		= "The password for your TRAPID account has been changed.\n\nThe new password is: ".$password."\n\nThank you for using the TRAPID system\n";
+          $subject = "TRAPID password change";
+	      $message		= "The password for your TRAPID account has been changed.\n\nThe new password is: ".$password."\n\nYou can change it at anytime: log into TRAPID and select 'Account > Change password'.\n\nThank you for using the TRAPID system\n";
       }
       $this->Email->to 			= $email;
-      $this->Email->subject		= "TRAPID authentication information";
+      $this->Email->subject		= $subject;
       $this->Email->replyTo		= "no-reply@psb.ugent.be";
       $this->Email->from 		= "TRAPID webmaster <no-reply@psb.ugent.be>";
       $this->Email->additionalParams	= "-fno-reply@psb.ugent.be";

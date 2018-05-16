@@ -2156,7 +2156,38 @@ class TrapidController extends AppController{
 	$this->set("registration", false);
           return;
       }
+        // Password recovery
+      if(array_key_exists("pass_recovery", $_POST)) {
 
+          $this->set("registration", false);
+          $this->set("pass_recovery", true);
+          // Check if email is correct and if it exists in TRAPID's DB.
+          $email		= mysql_real_escape_string($_POST["login"]);
+          if(!(array_key_exists("login",$_POST))){
+              $this->set("error","Invalid form parameters");return;
+          }
+          $this->Authentication->set(array("email"=>$email));
+          if(!$this->Authentication->validates()){
+              $this->set("error","Invalid email address");return;
+          }
+          $user_data = $this->Authentication->find("first",array("conditions"=>array("email"=>$email)));
+          $user_id = $user_data['Authentication']['user_id'];
+          // Note: It may be better to not tell anything if the email is not found? Becasue it would potentially be a way
+          // to retrieve what email addresses are in TRAPID or not.
+          if(!$user_data){
+              $this->set("error","Email-address does not correspond to a TRAPID login. ");return;
+          }
+          // Generate new password
+          $password	= $this->TrapidUtils->rand_str(8);
+          $hashed_pass	= hash("sha256",$password);
+          // Store updated information in the DB
+          $this->Authentication->updateAll(array("password"=>"'".$hashed_pass."'"),array("user_id"=>$user_id));
+          // Send 'password reset' email
+          $this->TrapidUtils->send_registration_email($email, $password, true);
+          // If everything is OK, reload the page with success message
+          $this->set("sent_reset_email", true);
+          $this->set("email", $email);
+      }
       //authentication part of the page
       else{
 	if(array_key_exists("login",$_POST) && array_key_exists("password",$_POST)){

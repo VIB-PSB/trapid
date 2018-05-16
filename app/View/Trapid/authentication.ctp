@@ -42,10 +42,14 @@ input[type="password"] {
   border-top-right-radius: 0;
 }
 }
+
+.form-signin-forgot-pwd {
+    color: red;
+}
 </style>
 
 <div class="container">
-    <div class="subdiv">
+<!--    <form class="subdiv">-->
 	<?php
 	if(isset($error)){
         echo "<div class=\"alert alert-warning alert-dismissible\" role=\"alert\">";
@@ -106,10 +110,33 @@ input[type="password"] {
 -->
 
 	<?php elseif(isset($pass_recovery) && $pass_recovery) :?>
-	<h3>Password recovery</h3>
-	<?php
-	echo $this->Form->create("Authentication",array("url"=>array("controller"=>"trapid","action"=>"authentication"),"type"=>"post"));
-	?>
+	<div class="page-header">
+        <h1 class="text-primary">Password recovery</h1>
+    </div>
+        <?php if(!isset($sent_reset_email)) :?>
+<p class="text-justify">Forgot your account's password? Enter your email address and we'll send you a new one.</p>
+
+        <div class="form-wrapper">
+            <?php
+            echo $this->Form->create("Authentication",array("url"=>array("controller"=>"trapid","action"=>"authentication","registration"),
+                "type"=>"post", "class"=>"form-signin"));
+            ?>
+            <input type="hidden" name="pass_recovery" value="pass_recovery" />
+            <div class="form-group">
+                <label for="login"><strong>Email</strong></label>
+                <input type="email" class="form-control" name="login" id="login" placeholder="you@example.org" required>
+            </div>
+            <button type="submit" style="margin-top:30px;" class="btn btn-lg btn-primary btn-block">Reset password</button>
+            <br>
+<!--            <p class="text-justify text-muted">Please change your password after you receive the new one. </p>-->
+            </form>
+        </div>
+
+            <?php else: ?>
+            <p class="lead text-justify">A reset password was sent to <samp><?php echo $email; ?></samp>.</p>
+            <p class="text-justify">If you don't see this email in your inbox within 15 minutes, look for it in your junk mail folder. If you find it there, please mark it as "Not Junk". </p>
+            <?php endif; ?>
+
 	<?php else: ?>
     <div class="page-header" style="margin-top: 20px;">
       <h1 class="text-primary">Login to TRAPID</h1>
@@ -125,6 +152,9 @@ input[type="password"] {
     <div class="form-group">
       <label for="password"><strong>Password</strong></label>
       <input type="password" class="form-control" name="password" id="password" placeholder="********">
+        <p class="text-right text-muted" style="font-size: 88%; margin-top:5px;">
+            <?php echo $this->Html->link("Forgot your password?",array("controller"=>"trapid","action"=>"authentication","password_recovery")); ?>
+        </p>
     </div>
     <button type="submit" style="margin-top:30px;" class="btn btn-lg btn-primary btn-block">Login</button>
     <br>
