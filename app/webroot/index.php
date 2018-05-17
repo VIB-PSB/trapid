@@ -55,6 +55,19 @@
  *
  * */
 
+// Define `APP`, `SCRIPTS`, `INI` directories
+// Configuration files are stored in the `INI` directory.
+if (!defined('APP')) { define('APP', ROOT.DS.APP_DIR.DS); }
+if(!defined('SCRIPTS')){ define('SCRIPTS',APP.'scripts'.DS); }
+if(!defined('INI')){ define('INI',SCRIPTS.'ini_files'.DS); }
+
+// Define and read configuration files
+if(!defined('DATABASE_SETTINGS_INI_FILE')){define('DATABASE_SETTINGS_INI_FILE',INI."database_settings.ini");}
+if(!defined('WEBAPP_SETTINGS_INI_FILE')){define('WEBAPP_SETTINGS_INI_FILE',INI."webapp_settings.ini");}
+$db_settings_ini_data = parse_ini_file(DATABASE_SETTINGS_INI_FILE);
+$webapp_settings_ini_data = parse_ini_file(WEBAPP_SETTINGS_INI_FILE);
+
+// Use parsed data to set global variables used within TRAPID
 
 /**
  * Default title on pages
@@ -67,26 +80,26 @@ if(!defined('WEBSITE_TITLE')){
  * Path/URL to the temporary files directory. Prefix needs to be the same for `TMP` and `TMP_WEB`
  */
 // if (!defined('TMP')) {define('TMP', '/www/bioapp/trapid2/');}
-if (!defined('TMP')) {define('TMP', '/www/bioapp/trapid_frbuc/');}
-if(!defined('TMP_WEB')){define('TMP_WEB', 'http://bioinformatics.psb.ugent.be/readwrite/trapid_frbuc/');}
+if (!defined('TMP')) {define('TMP', '/www/bioapp/trapid_dev/');}
+if(!defined('TMP_WEB')){define('TMP_WEB', 'http://bioinformatics.psb.ugent.be/readwrite/trapid_dev/');}
 
 /**
  * TRAPID database information
  */
-if(!defined('TRAPID_DB_SERVER')) {define('TRAPID_DB_SERVER', "psbsql01");}
-if(!defined('TRAPID_DB_NAME')) {define('TRAPID_DB_NAME', "db_trapid_02");}
-if(!defined('TRAPID_DB_PORT')) {define('TRAPID_DB_PORT', "3306");}
-if(!defined('TRAPID_DB_USER')) {define('TRAPID_DB_USER', "trapid_website");}
-if(!defined('TRAPID_DB_PASSWORD')) {define('TRAPID_DB_PASSWORD', "@Z%28ZwABf5pZ3jMUz");}
+if(!defined('TRAPID_DB_SERVER')) {define('TRAPID_DB_SERVER', $db_settings_ini_data['trapid_db_server']);}
+if(!defined('TRAPID_DB_NAME')) {define('TRAPID_DB_NAME', $db_settings_ini_data['trapid_db_name']);}
+if(!defined('TRAPID_DB_PORT')) {define('TRAPID_DB_PORT', $db_settings_ini_data['trapid_db_port']);}
+if(!defined('TRAPID_DB_USER')) {define('TRAPID_DB_USER', $db_settings_ini_data['trapid_db_username']);}
+if(!defined('TRAPID_DB_PASSWORD')) {define('TRAPID_DB_PASSWORD', $db_settings_ini_data['trapid_db_password']);}
 
 /**
  * Reference databases information
  * TODO: update these variables (so far I just made things work by using the TRAPID_DB_* variables everywhere).
  */
-if(!defined('PLAZA_DB_SERVER')) {define('PLAZA_DB_SERVER', "psbsql03");}
-if(!defined('PLAZA_DB_PORT')) {define('PLAZA_DB_PORT', "3306");}
-if(!defined('PLAZA_DB_USER')) {define('PLAZA_DB_USER', "plaza_web");}
-if(!defined('PLAZA_DB_PASSWORD')) {define('PLAZA_DB_PASSWORD', "plaza_web_roxor");}
+if(!defined('PLAZA_DB_SERVER')) {define('PLAZA_DB_SERVER', $db_settings_ini_data['plaza_db_server']);}
+if(!defined('PLAZA_DB_PORT')) {define('PLAZA_DB_PORT', $db_settings_ini_data['plaza_db_port']);}
+if(!defined('PLAZA_DB_USER')) {define('PLAZA_DB_USER', $db_settings_ini_data['plaza_db_username']);}
+if(!defined('PLAZA_DB_PASSWORD')) {define('PLAZA_DB_PASSWORD', $db_settings_ini_data['plaza_db_password']);}
 
 /*
  * Location of BLAST databases on webserver & midas

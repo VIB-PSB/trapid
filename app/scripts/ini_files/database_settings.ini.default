@@ -1,0 +1,13 @@
+[TRAPID_database]
+trapid_db_server = "db_server"
+trapid_db_port = 3306
+trapid_db_username = "username"
+trapid_db_password = "password"
+
+; These variables are not used anymore (we now use TRAPID credentials for all DBs), but are kept there until they are
+; not mentioned anywhere in the rest of the code.
+[PLAZA_database]
+plaza_db_server = "db_server"
+plaza_db_port = 3306
+plaza_db_username = "username"
+plaza_db_password = "password"
