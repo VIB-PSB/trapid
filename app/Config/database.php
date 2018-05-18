@@ -70,9 +70,9 @@ class DATABASE_CONFIG {
 		'database' 	=> TRAPID_DB_NAME,
 		'schema' 	=> '',
 		'prefix' 	=> '',
-		'encoding' 	=> '' //,
+		'encoding' 	=> ''//,
 		// Not compatible with cakephp 1.2 ? Check how it is done in v3
-  	// Better to modify the queries themselves
+      	// Better to modify the queries themselves
 		// 'init' => "SET sql_mode = 'STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION';"
 	);
 
@@ -169,5 +169,19 @@ class DATABASE_CONFIG {
 		'encoding' 	=> ''
 	);
 
+
+
+    public $db_trapid_ref_eggnog_test  = array(
+        'datasource' => 'Database/Mysql',
+        'persistent' 	=> false,
+        'host' 		=> TRAPID_DB_SERVER,
+        'port' 		=> TRAPID_DB_PORT,
+        'login' 	=> TRAPID_DB_USER,
+        'password' 	=> TRAPID_DB_PASSWORD,
+        'database' 	=> 'db_trapid_ref_eggnog_test',
+        'schema' 	=> '',
+        'prefix' 	=> '',
+        'encoding' 	=> ''
+    );
 }
 
