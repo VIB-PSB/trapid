@@ -73,15 +73,14 @@ $webapp_settings_ini_data = parse_ini_file(WEBAPP_SETTINGS_INI_FILE);
  * Default title on pages
  */
 if(!defined('WEBSITE_TITLE')){
-    define('WEBSITE_TITLE','TRAPID: Rapid Analysis of Transcriptome Data');
+    define('WEBSITE_TITLE', $webapp_settings_ini_data['default_title']);
 }
 
 /**
  * Path/URL to the temporary files directory. Prefix needs to be the same for `TMP` and `TMP_WEB`
  */
-// if (!defined('TMP')) {define('TMP', '/www/bioapp/trapid2/');}
-if (!defined('TMP')) {define('TMP', '/www/bioapp/trapid_dev/');}
-if(!defined('TMP_WEB')){define('TMP_WEB', 'http://bioinformatics.psb.ugent.be/readwrite/trapid_dev/');}
+if (!defined('TMP')) {define('TMP', $webapp_settings_ini_data['tmp_path']);}
+if(!defined('TMP_WEB')){define('TMP_WEB', $webapp_settings_ini_data['tmp_url']);}
 
 /**
  * TRAPID database information
@@ -106,11 +105,11 @@ if(!defined('PLAZA_DB_PASSWORD')) {define('PLAZA_DB_PASSWORD', $db_settings_ini_
  * Subdirectories are named following reference database names available within this TRAPID instance
  */
 if(!defined('BLAST_DB_DIR')){
-    define('BLAST_DB_DIR','/www/blastdb/biocomp/moderated/trapid_02/');
+    define('BLAST_DB_DIR', $db_settings_ini_data['blast_db_path']);
     // define('BLAST_DB_DIR','/www/blastdb/biocomp/moderated/trapid/');
 }
 if(!defined('BLAST_DB_DIR_MIDAS')){
-    define('BLAST_DB_DIR_MIDAS','/blastdb/webdb/moderated/trapid_02/');
+    define('BLAST_DB_DIR_MIDAS', $db_settings_ini_data['blast_db_path_midas']);
     // define('BLAST_DB_DIR_MIDAS','/blastdb/webdb/moderated/trapid/');
 }
 
@@ -119,7 +118,7 @@ if(!defined('BLAST_DB_DIR_MIDAS')){
  * Defined to prevent overloading and abuse
  */
 if(!defined('MAX_CLUSTER_JOBS')){
-    define('MAX_CLUSTER_JOBS', 2);
+    define('MAX_CLUSTER_JOBS', $db_settings_ini_data['max_cluster_jobs']);
 }
 
 

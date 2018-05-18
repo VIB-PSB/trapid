@@ -1,0 +1,15 @@
+[Website]
+default_title = "Default TRAPID title"
+
+; TRAPID instance name for `tmp_path` and `tmp_url` needs to be the same (here `trapid_tmp`)
+[Tmp]
+tmp_path = "/path/to/trapid_tmp/"
+tmp_url = "http://trapid.host.url/readwrite/trapid_tmp/"
+
+; Path to DIAMOND DBs and extra files used by TRAPID
+[Blast_db]
+blast_db_path = "/path/to/blast_db/"
+blast_db_path_midas = "/path/ti/blast_db/"
+
+[Cluster]
+max_cluster_jobs = 2
