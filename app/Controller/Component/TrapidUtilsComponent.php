@@ -1099,7 +1099,7 @@ class TrapidUtilsComponent extends Component{
       // kaiju needs to be loaded, and I will write my extra scripts in python 2.7
       // 2017-12-15: add diamond to the module list (time to switch form RapSearch2 to DIAMOND).
       // $necessary_modules	= array("perl","java","framedp",  "python/x86_64/2.7.2", "kaiju");
-      $necessary_modules = array("perl", "java", "framedp", "python/x86_64/2.7.2", "gcc", "kaiju", "diamond");
+      $necessary_modules = array("perl", "java", "framedp", "python/x86_64/2.7.2", "gcc", "kaiju", "diamond", "infernal/x86_64/1.1rc4");
     	/* $necessary_parameters	= array(PLAZA_DB_SERVER,$plaza_db,PLAZA_DB_PORT,PLAZA_DB_USER,PLAZA_DB_PASSWORD,
 					TRAPID_DB_SERVER,TRAPID_DB_NAME,TRAPID_DB_PORT,TRAPID_DB_USER,TRAPID_DB_PASSWORD,
 					$tmp_dir,$exp_id,$final_blast_dir,$blast_db.".rap",$gf_type,$num_top_hits,$evalue,$func_annot,

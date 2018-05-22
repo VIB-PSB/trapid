@@ -120,6 +120,28 @@ print STDOUT "###Time used for DIAMOND: ".($stime2-$stime1)."s \n";
 &update_log($par{"trapid_db_server"},$par{"trapid_db_name"},$par{"trapid_db_port"},
 	    $par{"trapid_db_user"},$par{"trapid_db_password"},$par{"experiment"},
             "stop_similarity_search","DIAMOND",2);
+
+
+###
+# Extra step (test): run Infernal to detect ncRNAs (only certain clans)
+###
+# TODO: do not hardcode Rfam filepaths
+&update_log($par{"trapid_db_server"},$par{"trapid_db_name"},$par{"trapid_db_port"},
+    $par{"trapid_db_user"},$par{"trapid_db_password"},$par{"experiment"},
+    "start_nc_rna_search", "Infernal", 2);
+my $itime1 = time();
+# Run Infernal
+my $infernal_output = &perform_infernal_cmscan($par{"trapid_db_server"}, $par{"trapid_db_name"}, $par{"trapid_db_port"},
+    $par{"trapid_db_user"}, $par{"trapid_db_password"}, $multi_fasta_file, $par{"temp_dir"},
+    $par{"experiment"}, "/www/blastdb/biocomp/moderated/trapid_02/rfam/", "Rfam_LSU_SSU.cm", "Rfam.clanin");
+my $itime2 = time();
+print STDOUT "###Time used for Infernal: ".($itime2-$itime1)."s \n";
+&update_log($par{"trapid_db_server"},$par{"trapid_db_name"},$par{"trapid_db_port"},
+    $par{"trapid_db_user"},$par{"trapid_db_password"},$par{"experiment"},
+    "stop_nc_rna_search", "Infernal", 2);
+
+
+
 #clear
 
 
@@ -201,7 +223,8 @@ sub send_email($ $ $ $ $ $){
 	my $subject		= "Subject: TRAPID experiment has finished processing phase\n";
 	my $content		= "Dear,\nYour TRAPID experiment titled '".$experiment_title."' has finished its processing phase.\n";
 	$content		= $content."You can now log in into TRAPID, and begin the analysis of your transcriptome dataset.\n";
-	$content		= $content."You can access TRAPID at http://bioinformatics.psb.ugent.be/webtools/trapid/ \n";
+	# $content		= $content."You can access TRAPID at http://bioinformatics.psb.ugent.be/webtools/trapid/ \n";
+	$content		= $content."You can access TRAPID at http://bioinformatics.psb.ugent.be/testix/trapid_dev/ \n";
 	$content		= $content."\n\nThank you for your interest in TRAPID\n";
 	my $send_to		= "To: ".$user_email."\n";
 	open(SENDMAIL, "|$sendmail") or die "Cannot open $sendmail: $!";
@@ -239,7 +262,7 @@ sub delete_current_job($ $ $ $ $ $ $){
 
 
 sub update_log($ $ $ $ $ $ $ $ $){
-        my $trapid_db_server	= $_[0];
+    my $trapid_db_server	= $_[0];
 	my $trapid_db_name	= $_[1];
 	my $trapid_db_port	= $_[2];
 	my $trapid_db_user	= $_[3];
@@ -325,7 +348,8 @@ sub perform_similarity_search($ $ $ $ $){
 	my $blast_dir          = $blast_location.$blast_directory;
 	print STDOUT "Used DIAMOND database : ".$blast_dir."\n";
 
-	my $exec_command	= $DIAMOND_EXECUTABLE." --query ".$multi_fasta_file." --db ".$blast_dir." --evalue 1e".$DIAMOND_EVALUE." --out ".$output_file.".m8 -p 2 -k 100 --more-sensitive --log";
+	# my $exec_command	= $DIAMOND_EXECUTABLE." --query ".$multi_fasta_file." --db ".$blast_dir." --evalue 1e".$DIAMOND_EVALUE." --out ".$output_file.".m8 -p 2 -k 100 --more-sensitive --log";
+	my $exec_command	= $DIAMOND_EXECUTABLE." --query ".$multi_fasta_file." --db ".$blast_dir." --evalue 1e".$DIAMOND_EVALUE." --out ".$output_file.".m8 -p 2 --more-sensitive --log";
 	print STDOUT $exec_command."\n";
 
 	#perform similarity search
@@ -369,4 +393,50 @@ sub perform_similarity_search_rapsearch($ $ $ $ $){
     system("rm -f ".$align_file);
 
     return $return_file;
+}
+
+
+# A first naive trial: run cmscan after DIAMOND (2 threads, limited selection of LSU/SSU rRNA models)
+sub perform_infernal_cmscan($ $ $ $ $ $ $ $ $ $ $) {
+    my $trapid_db_server = $_[0];
+    my $trapid_db_name = $_[1];
+    my $trapid_db_port = $_[2];
+    my $trapid_db_user = $_[3];
+    my $trapid_db_password = $_[4];
+    my $multi_fasta_file = $_[5];
+    my $tmp_dir	= $_[6];
+    my $experiment = $_[7];
+    my $rfam_dir = $_[8];
+    my $rfam_cm_file = $_[9];
+    my $rfam_clans_file = $_[10];
+    my $total_m_nts = 0;
+    my $output_tbl = $tmp_dir."infernal_".$experiment.".tblout";
+    my $output_cm = $tmp_dir."infernal_".$experiment.".cmscan";
+    #create database connection
+    my $dsn			= qq{DBI:mysql:$trapid_db_name:$trapid_db_server:$trapid_db_port};
+    my $dbh			= DBI->connect($dsn,$trapid_db_user,$trapid_db_password,{RaiseError=>1,AutoCommit=>1});
+    if($dbh->err){
+        print STDOUT "ERROR: Cannot connect with TRAPID database\n";
+        exit;
+    }
+    # Retrieve value needed for cmscan `-Z` parameter (total length in million of nucleotides of query sequences)
+	my $query = "SELECT SUM(`len`) FROM (SELECT CHAR_LENGTH(`transcript_sequence`) AS len FROM `transcripts` WHERE experiment_id ='".$experiment."') tr;";
+    print STDOUT $query;
+	my $dbq = $dbh->prepare($query);
+	$dbq->execute();
+    $dbq->execute();
+    while((my @record) = $dbq->fetchrow_array){
+        $total_m_nts	= $record[0];
+        print STDOUT $total_m_nts;
+    }
+    $total_m_nts = ($total_m_nts / 1000000) * 2;
+    print STDOUT $total_m_nts;
+    # Call Infernal (`cmscan` command)
+	# TODO: Update to commented command once the latest Infernal version is installed. 
+    # my $exec_command	= "cmscan -Z ". $total_m_nts . " --cut_ga --rfam --nohmmonly --tblout " . $output_tbl . " --fmt 2 --clanin " . $rfam_dir.$rfam_clans_file . " ". $rfam_dir.$rfam_cm_file . " ". $multi_fasta_file . " > ". $output_cm;
+    my $exec_command	= "cmscan -Z ". $total_m_nts . " --cpu 2 --cut_ga --rfam --nohmmonly --tblout " . $output_tbl . " ". $rfam_dir.$rfam_cm_file . " ". $multi_fasta_file . " > ". $output_cm;
+    print STDOUT $exec_command."\n";
+    # Call Infernal
+    system($exec_command);
+    return "Test";
 }
