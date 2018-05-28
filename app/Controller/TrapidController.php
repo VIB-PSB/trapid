@@ -1417,9 +1417,13 @@ class TrapidController extends AppController{
       // as well as the correct name for the global perl-file.
       // A single "initial processing" job should only run on a single cluster node
       $qsub_file  = $this->TrapidUtils->create_qsub_script($exp_id);
+      // Create configuration file for initial processing of this experiment
+      $ini_file = $this->TrapidUtils->create_ini_file_initial($exp_id,$exp_info['used_plaza_database'],$blast_db,$gf_type,$num_blast_hits,$blast_evalue, $func_annot, $perform_tax_binning, $tax_scope);
+      pr($ini_file);
       // $shell_file = $this->TrapidUtils->create_shell_file_initial($exp_id,$exp_info['used_plaza_database'],$blast_db,$gf_type,$num_blast_hits,$possible_evalues[$blast_evalue],$func_annot, $perform_tax_binning);
-      $shell_file = $this->TrapidUtils->create_shell_file_initial($exp_id,$exp_info['used_plaza_database'],$blast_db,$gf_type,$num_blast_hits,$blast_evalue, $func_annot, $perform_tax_binning, $tax_scope);
-      if($shell_file == null || $qsub_file == null ){$this->set("error","problem creating program files");return;}
+      // $shell_file = $this->TrapidUtils->create_shell_file_initial($exp_id,$exp_info['used_plaza_database'],$blast_db,$gf_type,$num_blast_hits,$blast_evalue, $func_annot, $perform_tax_binning, $tax_scope);
+      $shell_file = $this->TrapidUtils->create_shell_file_initial($exp_id, $ini_file);
+      if($shell_file == null || $qsub_file == null || $ini_file == null){$this->set("error","Problem creating program files");return;}
 
       //ok, now we submit this program to the web-cluster
       $tmp_dir	= TMP."experiment_data/".$exp_id."/";

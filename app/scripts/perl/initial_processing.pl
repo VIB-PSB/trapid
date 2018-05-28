@@ -2,6 +2,7 @@
 use strict;
 use warnings;
 use DBI;
+use Config::IniFiles;
 
 use FindBin qw{$Bin};
 
@@ -19,8 +20,9 @@ use FindBin qw{$Bin};
 
 
 #Basic parameter check
-if(scalar(@ARGV)<15){
-	print STDOUT "ERROR: parameters\n";
+if(scalar(@ARGV) < 1){
+	print STDOUT "ERROR: incorrect parameters\n";
+	print STDOUT "Usage: perl /path/to/initial_processing.pl /path/to/initial_processing_settings.ini\n";
    	exit;
 }
 
@@ -30,39 +32,43 @@ if(scalar(@ARGV)<15){
 #read parameters
 my %par;
 
-#PLAZA/Reference database parameters
-$par{"plaza_db_server"}		= $ARGV[0];
-$par{"plaza_db_name"}		= $ARGV[1];
-$par{"plaza_db_port"}		= $ARGV[2];
-$par{"plaza_db_user"}		= $ARGV[3];
-$par{"plaza_db_password"}	= $ARGV[4];
+my $initial_processing_ini_file = $ARGV[0];
+my $initial_processing_ini_data = Config::IniFiles->new(-file => $initial_processing_ini_file);
 
-#TRAPID database parameters
-$par{"trapid_db_server"}	= $ARGV[5];
-$par{"trapid_db_name"}		= $ARGV[6];
-$par{"trapid_db_port"}		= $ARGV[7];
-$par{"trapid_db_user"}		= $ARGV[8];
-$par{"trapid_db_password"}	= $ARGV[9];
+# PLAZA/reference database parameters
+$par{"plaza_db_server"}		= $initial_processing_ini_data->val("reference_db", "reference_db_server");
+$par{"plaza_db_name"}		= $initial_processing_ini_data->val("reference_db", "reference_db_name");
+$par{"plaza_db_port"}		= $initial_processing_ini_data->val("reference_db", "reference_db_port");
+$par{"plaza_db_user"}		= $initial_processing_ini_data->val("reference_db", "reference_db_username");
+$par{"plaza_db_password"}	= $initial_processing_ini_data->val("reference_db", "reference_db_password");
 
-#storage parameter
-$par{"temp_dir"}		= $ARGV[10];
+# TRAPID database parameters
+$par{"trapid_db_server"}	= $initial_processing_ini_data->val("trapid_db", "trapid_db_server");
+$par{"trapid_db_name"}		= $initial_processing_ini_data->val("trapid_db", "trapid_db_name");
+$par{"trapid_db_port"}		= $initial_processing_ini_data->val("trapid_db", "trapid_db_port");
+$par{"trapid_db_user"}		= $initial_processing_ini_data->val("trapid_db", "trapid_db_username");
+$par{"trapid_db_password"}	= $initial_processing_ini_data->val("trapid_db", "trapid_db_password");
 
-#experiment settings
-$par{"experiment"}		= $ARGV[11];
-$par{"blast_location"}		= $ARGV[12];
-$par{"blast_directory"}		= $ARGV[13];
-$par{"gf_type"}			= $ARGV[14];
-$par{"num_top_hits"}            = $ARGV[15];
-$par{"evalue"}                  = $ARGV[16];
-$par{"func_annot"}              = $ARGV[17];
+# Experiment settings
+$par{"experiment"}		= $initial_processing_ini_data->val("experiment", "exp_id");
+$par{"temp_dir"}		= $initial_processing_ini_data->val("experiment", "tmp_exp_dir");
 
-#location of executables
-$par{"base_script_location"}    = $ARGV[18];
+# Similarity search settings
+$par{"blast_location"}		= $initial_processing_ini_data->val("sim_search", "blast_db_dir");
+$par{"blast_directory"}		= $initial_processing_ini_data->val("sim_search", "blast_db") . ".dmnd";
+$par{"evalue"}                  = $initial_processing_ini_data->val("sim_search", "e_value");
+
+# Other initial processing settings
+$par{"gf_type"}			= $initial_processing_ini_data->val("initial_processing", "gf_type");
+$par{"num_top_hits"}            = $initial_processing_ini_data->val("initial_processing", "num_top_hits");
+$par{"func_annot"}              = $initial_processing_ini_data->val("initial_processing", "func_annot");
+# Location of executables
+$par{"base_script_location"}    = $initial_processing_ini_data->val("initial_processing", "base_script_dir");
 
 # Tax. binning user choice ('true' = perform it, 'false' = don't perform it)
-$par{"tax_binning"}    = $ARGV[19];
+$par{"tax_binning"}    = $initial_processing_ini_data->val("tax_binning", "perform_tax_binning");
 # Taxonomic scope (should be 'None', unless we work with EggNOG data)
-$par{"tax_scope"} = $ARGV[20];
+$par{"tax_scope"} = $initial_processing_ini_data->val("initial_processing", "tax_scope");
 
 
 my $DELETE_TEMP_DATA = 1;
@@ -90,14 +96,15 @@ if($par{"tax_binning"} eq "false") {
 else {
     print STDERR "Perform taxonomic binning!\n";
     my $kaiju_program	= "run_kaiju_splitted.py";
-    my $python_location	= $par{"base_script_location"}."python/";
+    my $python_location	= $par{"base_script_location"} . "python/";
     my $kaiju_command        = "python ".$python_location.$kaiju_program;
     my @kaiju_options        = ("-o", $par{"temp_dir"}."kaiju",
-    	"-s", $par{"temp_dir"}."run_kaiju_splitted.sh", "-kp=\"-v -z 2 -x\"",
+    	"-s", $par{"temp_dir"}."run_kaiju_splitted.sh",
+		"-kp=\"" . $initial_processing_ini_data->val("tax_binning", "kaiju_parameters") . "\"",
     	$par{"experiment"},
-    	"/www/blastdb/biocomp/moderated/trapid_02/kaiju_files/ncbi_tax_2017_09/nodes.dmp",
-    	"/www/blastdb/biocomp/moderated/trapid_02/kaiju_files/ncbi_tax_2017_09/names.dmp",
-    	"/www/blastdb/biocomp/moderated/trapid_02/kaiju_files/ncbi_nr_2017_09_splitted/",
+		$initial_processing_ini_data->val("tax_binning", "nodes_dmp_file"),
+		$initial_processing_ini_data->val("tax_binning", "names_dmp_file"),
+		$initial_processing_ini_data->val("tax_binning", "splitted_db_dir"),
     	$multi_fasta_file);
 
     my $kaiju_exec           = $kaiju_command." ".join(" ",@kaiju_options);
@@ -131,9 +138,7 @@ print STDOUT "###Time used for DIAMOND: ".($stime2-$stime1)."s \n";
     "start_nc_rna_search", "Infernal", 2);
 my $itime1 = time();
 # Run Infernal
-my $infernal_output = &perform_infernal_cmscan($par{"trapid_db_server"}, $par{"trapid_db_name"}, $par{"trapid_db_port"},
-    $par{"trapid_db_user"}, $par{"trapid_db_password"}, $multi_fasta_file, $par{"temp_dir"},
-    $par{"experiment"}, "/www/blastdb/biocomp/moderated/trapid_02/rfam/", "Rfam_LSU_SSU.cm", "Rfam.clanin");
+my $infernal_output = &perform_infernal_cmscan($initial_processing_ini_file);
 my $itime2 = time();
 print STDOUT "###Time used for Infernal: ".($itime2-$itime1)."s \n";
 &update_log($par{"trapid_db_server"},$par{"trapid_db_name"},$par{"trapid_db_port"},
@@ -397,46 +402,13 @@ sub perform_similarity_search_rapsearch($ $ $ $ $){
 
 
 # A first naive trial: run cmscan after DIAMOND (2 threads, limited selection of LSU/SSU rRNA models)
-sub perform_infernal_cmscan($ $ $ $ $ $ $ $ $ $ $) {
-    my $trapid_db_server = $_[0];
-    my $trapid_db_name = $_[1];
-    my $trapid_db_port = $_[2];
-    my $trapid_db_user = $_[3];
-    my $trapid_db_password = $_[4];
-    my $multi_fasta_file = $_[5];
-    my $tmp_dir	= $_[6];
-    my $experiment = $_[7];
-    my $rfam_dir = $_[8];
-    my $rfam_cm_file = $_[9];
-    my $rfam_clans_file = $_[10];
-    my $total_m_nts = 0;
-    my $output_tbl = $tmp_dir."infernal_".$experiment.".tblout";
-    my $output_cm = $tmp_dir."infernal_".$experiment.".cmscan";
-    #create database connection
-    my $dsn			= qq{DBI:mysql:$trapid_db_name:$trapid_db_server:$trapid_db_port};
-    my $dbh			= DBI->connect($dsn,$trapid_db_user,$trapid_db_password,{RaiseError=>1,AutoCommit=>1});
-    if($dbh->err){
-        print STDOUT "ERROR: Cannot connect with TRAPID database\n";
-        exit;
-    }
-    # Retrieve value needed for cmscan `-Z` parameter (total length in million of nucleotides of query sequences)
-	my $query = "SELECT SUM(`len`) FROM (SELECT CHAR_LENGTH(`transcript_sequence`) AS len FROM `transcripts` WHERE experiment_id ='".$experiment."') tr;";
-    print STDOUT $query;
-	my $dbq = $dbh->prepare($query);
-	$dbq->execute();
-    $dbq->execute();
-    while((my @record) = $dbq->fetchrow_array){
-        $total_m_nts	= $record[0];
-        print STDOUT $total_m_nts;
-    }
-    $total_m_nts = ($total_m_nts / 1000000) * 2;
-    print STDOUT $total_m_nts;
+sub perform_infernal_cmscan($) {
+    my $initial_processing_ini_file = $_[0];
+	my $infernal_wrapper_script = $par{"base_script_location"} . "python/run_infernal.py";
     # Call Infernal (`cmscan` command)
-	# TODO: Update to commented command once the latest Infernal version is installed. 
     # my $exec_command	= "cmscan -Z ". $total_m_nts . " --cut_ga --rfam --nohmmonly --tblout " . $output_tbl . " --fmt 2 --clanin " . $rfam_dir.$rfam_clans_file . " ". $rfam_dir.$rfam_cm_file . " ". $multi_fasta_file . " > ". $output_cm;
-    my $exec_command	= "cmscan -Z ". $total_m_nts . " --cpu 2 --cut_ga --rfam --nohmmonly --tblout " . $output_tbl . " ". $rfam_dir.$rfam_cm_file . " ". $multi_fasta_file . " > ". $output_cm;
+    my $exec_command	= "python " . $infernal_wrapper_script . " " . $initial_processing_ini_file;
     print STDOUT $exec_command."\n";
-    # Call Infernal
+    # Call Infernal wrapper script
     system($exec_command);
-    return "Test";
 }
