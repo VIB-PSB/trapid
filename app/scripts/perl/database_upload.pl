@@ -201,16 +201,18 @@ sub send_email($ $ $ $ $ $){
 	  my $transcript_count	= $record[2];
 
   	my $sendmail 		= "/usr/lib/sendmail.postfix -t";
+	  my $from			= "From: TRAPID webmaster <no-reply\@psb.vib-ugent.be>\n";
 	  my $reply_to 		= "Reply-to: no-reply\@psb.vib-ugent.be\n";
 	  my $subject		= "Subject: TRAPID experiment has finished upload phase\n";
 	  my $content		= "Dear user,\nYour TRAPID experiment titled '".$experiment_title."' has finished its upload phase.\n";
 	  $content		= $content."A total of ".$transcript_count." transcripts has been uploaded in your TRAPID experiment.\n";
 	  $content		= $content."You can now log in into TRAPID, and begin the analysis of your transcriptome dataset.\n";
 	  # $content		= $content."You can access TRAPID at http://bioinformatics.psb.ugent.be/webtools/trapid/ \n";
-	  $content		= $content."You can access TRAPID athttp://bioinformatics.psb.ugent.be/testix/trapid_frbuc/ \n";
+	  $content		= $content."You can access TRAPID at http://bioinformatics.psb.ugent.be/testix/trapid_dev/ \n";
 	  $content		= $content."\n\nThank you for your interest in TRAPID\n";
 	  my $send_to		= "To: ".$user_email."\n";
 	  open(SENDMAIL, "|$sendmail") or die "Cannot open $sendmail: $!";
+	  print SENDMAIL $from;
 	  print SENDMAIL $reply_to;
 	  print SENDMAIL $subject;
 	  print SENDMAIL $send_to;
@@ -421,6 +423,7 @@ sub update_log($ $ $ $ $ $ $ $ $){
 	my $dbh			= DBI->connect($dsn,$trapid_db_user,$trapid_db_password,{RaiseError=>1,AutoCommit=>1});
 	if($dbh->err){return;}
 	my $query               = "INSERT INTO `experiment_log`(`experiment_id`,`date`,`action`,`parameters`,`depth`) VALUES ('".$experiment_id."',NOW(),'".$action."','".$param."','".$depth."')";
+	print STDOUT $query;
 	my $dbq			= $dbh->prepare($query);
 	$dbq->execute();
 	$dbq->finish();

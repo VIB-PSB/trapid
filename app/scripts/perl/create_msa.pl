@@ -618,18 +618,20 @@ sub send_email($ $ $){
 	my $user_email        	= $record[1];
 	
 	my $sendmail 		= "/usr/lib/sendmail.postfix -t";
+    my $from			= "From: TRAPID webmaster <no-reply\@psb.vib-ugent.be>\n";
 	my $reply_to 		= "Reply-to: no-reply\@psb.vib-ugent.be\n";
 	my $subject		= "Subject: TRAPID multiple sequence alignment finished for ".$gf_id."\n";
 	my $content		= "Dear user,\nThe multiple sequence alignment (MSA) for gene family '".$gf_id."' in experiment '".$experiment_title."' has been created.\n";
 	$content		= $content."You can now view the MSA (after authentication) at this URL:\n";
 	# $content		= $content."http://bioinformatics.psb.ugent.be/webtools/trapid/tools/create_msa/".$experiment_id."/".$gf_id." \n";
     # Change URL to the dev. version of TRAPID for now.
-	$content		= $content."http://bioinformatics.psb.ugent.be/testix/trapid_frbuc/tools/create_msa/".$experiment_id."/".$gf_id." \n";
+	$content		= $content."http://bioinformatics.psb.ugent.be/testix/trapid_dev/tools/create_msa/".$experiment_id."/".$gf_id." \n";
 	$content		= $content."\n\nThank you for your interest in TRAPID\n";
 	my $send_to		= "To: ".$user_email."\n";
 	open(SENDMAIL, "|$sendmail") or die "Cannot open $sendmail: $!";
-	print SENDMAIL $reply_to; 
-	print SENDMAIL $subject; 
+	print SENDMAIL $from;
+	print SENDMAIL $reply_to;
+	print SENDMAIL $subject;
 	print SENDMAIL $send_to; 
 	print SENDMAIL "Content-type: text/plain\n\n"; 
 	print SENDMAIL $content; 

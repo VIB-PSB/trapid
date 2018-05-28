@@ -224,6 +224,7 @@ sub send_email($ $ $ $ $ $){
 	my $user_email        = $record[1];
 
 	my $sendmail 		= "/usr/lib/sendmail.postfix -t";
+	my $from			= "From: TRAPID webmaster <no-reply\@psb.vib-ugent.be>\n";
 	my $reply_to 		= "Reply-to: no-reply\@psb.vib-ugent.be\n";
 	my $subject		= "Subject: TRAPID experiment has finished processing phase\n";
 	my $content		= "Dear,\nYour TRAPID experiment titled '".$experiment_title."' has finished its processing phase.\n";
@@ -233,6 +234,7 @@ sub send_email($ $ $ $ $ $){
 	$content		= $content."\n\nThank you for your interest in TRAPID\n";
 	my $send_to		= "To: ".$user_email."\n";
 	open(SENDMAIL, "|$sendmail") or die "Cannot open $sendmail: $!";
+	print SENDMAIL $from;
 	print SENDMAIL $reply_to;
 	print SENDMAIL $subject;
 	print SENDMAIL $send_to;
