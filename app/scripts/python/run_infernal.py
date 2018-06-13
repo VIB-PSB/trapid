@@ -37,23 +37,64 @@ def load_config(ini_file_initial):
     return config_dict
 
 
-def db_connect(username, password, host, db_name):
-    """Connect to database. Return a database connection. """
-    try:
-        db_connection = MS.connect(host=host,
-            user=username,
-            passwd=password,
-            db=db_name)
-    except:
-        sys.stderr.write("[Error] Impossible to connect to the database. Check host/username/password (see error message below)\n")
-        raise
-    return db_connection
+def create_infernal_files(config_dict):
+    """Create `cm` and `clanin` files needed by Infernal for user-selected RFAM clans. """
+    individual_cms = "individual_cms"  # Name of directory containing individual CMs (in config's `rfam_dir`)
+    tmp_exp_dir = config_dict["experiment"]["tmp_exp_dir"]
+    rfam_cm_file = "Rfam_%s.cm" % config_dict["experiment"]["exp_id"]
+    rfam_clans_file = "Rfam_%s.clanin" % config_dict["experiment"]["exp_id"]
+    sys.stderr.write("[Message] Create RFAM `cm` and `clanin` files for Infernal ('%s' and '%s').\n" % (rfam_cm_file, rfam_clans_file))
+    clan_members = {}
+    exp_cms = set()
+    # Read clans to include for the experiment from config value
+    exp_clans = config_dict["infernal"]["rfam_clans"].split(",")
+    # Get clan membership information from `configuration` table
+    # Since there are only 111 clans, we can retrieve this information for all of them
+    query_str = "SELECT `key`, `value` FROM `configuration` WHERE `method`='rfam_clans' AND `attr`='families'"
+    db_conn = common.db_connect(config_dict["trapid_db"]["trapid_db_username"], config_dict["trapid_db"]["trapid_db_password"],
+        config_dict["trapid_db"]["trapid_db_server"], config_dict["trapid_db"]["trapid_db_name"])
+    cursor = db_conn.cursor(MS.cursors.DictCursor)
+    cursor.execute(query_str)
+    for record in cursor.fetchall():
+        clan_members[record['key']] = record['value'].split(',')
+    db_conn.close()
+    # Create `clanin` file
+    with open(os.path.join(tmp_exp_dir, rfam_clans_file), "w") as out_file:
+        for clan in exp_clans:
+            clanin_str = "{clan}\t{members}\n"
+            out_file.write(clanin_str.format(clan=clan,members="\t".join(clan_members[clan])))
+            # Also retrieve RFAM models (update `exp_cms`, later used to retrieve individual models)
+            exp_cms.update(clan_members[clan])
+    # Create `cm` file
+    with open(os.path.join(tmp_exp_dir, rfam_cm_file), "w") as out_file:
+        for model in sorted(list(exp_cms)):
+            for model_type in ["infernal", "hmmer"]:
+                cm_name = "{cm_id}_{cm_type}.cm".format(cm_id=model, cm_type=model_type)
+                cm_file = os.path.join(config_dict["infernal"]["rfam_dir"], individual_cms, cm_name)
+                cm_lines = []
+                with open(cm_file, "r") as in_file:
+                    cm_lines = [line for line in in_file]
+                out_file.write(''.join(cm_lines))
+
+
+def run_cmpress(config_dict):
+    """Call `cmpress` (to run before Infernal). """
+    cmd_str = "cmpress -F {rfam_cm_file}"
+    # Get path of experiment directory and RFAM CM file to use for `cmpress` call
+    tmp_exp_dir = config_dict["experiment"]["tmp_exp_dir"]
+    rfam_cm_file = "Rfam_%s.cm" % config_dict["experiment"]["exp_id"]
+    rfam_cm_file = os.path.join(tmp_exp_dir, rfam_cm_file)
+    # Format cmd string and run!
+    formatted_cmd = cmd_str.format(rfam_cm_file=os.path.join(tmp_exp_dir, rfam_cm_file))
+    sys.stderr.write("[Message] Call `cmpress` with command: %s.\n" % formatted_cmd)
+    job = subprocess.Popen(formatted_cmd, shell=True)
+    job.communicate()
 
 
 def get_cmscan_z_value(config_dict):
     """Retrieve value needed for cmscan `-Z` parameter (total length in million of nucleotides of query sequences). """
     query_str = "SELECT SUM(`len`) FROM (SELECT CHAR_LENGTH(`transcript_sequence`) AS len FROM `transcripts` WHERE experiment_id ='{exp_id}') tr;"
-    db_conn = db_connect(config_dict["trapid_db"]["trapid_db_username"], config_dict["trapid_db"]["trapid_db_password"],
+    db_conn = common.db_connect(config_dict["trapid_db"]["trapid_db_username"], config_dict["trapid_db"]["trapid_db_password"],
         config_dict["trapid_db"]["trapid_db_server"], config_dict["trapid_db"]["trapid_db_name"])
     cursor = db_conn.cursor()
     cursor.execute(query_str.format(exp_id=config_dict["experiment"]["exp_id"]))
@@ -69,13 +110,12 @@ def run_infernal(z_value, config_dict):
     # Get some configuration values for later use (those used more than once)
     tmp_exp_dir = config_dict["experiment"]["tmp_exp_dir"]
     exp_id = config_dict["experiment"]["exp_id"]
-    rfam_dir = config_dict["infernal"]["rfam_dir"]
     # Define path/name of files to use for Infernal
     fasta_file = os.path.join(tmp_exp_dir, "transcripts_%s.fasta" % exp_id)
     cmscan_out_file = os.path.join(tmp_exp_dir, "infernal_%s.cmscan" % exp_id)
     tblout_out_file = os.path.join(tmp_exp_dir, "infernal_%s.tblout" % exp_id)
-    rfam_clans_file = os.path.join(rfam_dir, config_dict["infernal"]["rfam_clans_file"])
-    rfam_cm_file = os.path.join(rfam_dir, config_dict["infernal"]["rfam_cm_file"])
+    rfam_clans_file = os.path.join(tmp_exp_dir, "Rfam_%s.clanin" % exp_id)
+    rfam_cm_file = os.path.join(tmp_exp_dir, "Rfam_%s.cm" % exp_id)
     # Format cmd string and run!
     formatted_cmd = cmd_str.format(z_value=str(z_value), n_cpu="2", tblout_out_file=tblout_out_file,
         rfam_clans_file=rfam_clans_file, rfam_cm_file=rfam_cm_file, fasta_file=fasta_file, cmscan_out_file=cmscan_out_file)
@@ -104,7 +144,7 @@ def flag_rna_genes(filtered_tblout_file, config_dict):
     """Flag a set of transcripts as RNA genes in TRAPID's database"""
     sys.stderr.write('[Message] Flag RNA genes in `transcripts` table. \n')
     query_str = "UPDATE `transcripts` SET `is_rna_gene`=1 WHERE `experiment_id`='{exp_id}' and transcript_id='{transcript_id}';"
-    db_conn = db_connect(config_dict["trapid_db"]["trapid_db_username"], config_dict["trapid_db"]["trapid_db_password"],
+    db_conn = common.db_connect(config_dict["trapid_db"]["trapid_db_username"], config_dict["trapid_db"]["trapid_db_password"],
         config_dict["trapid_db"]["trapid_db_server"], config_dict["trapid_db"]["trapid_db_name"])
     cursor = db_conn.cursor()
     with open(filtered_tblout_file, "r") as in_file:
@@ -122,6 +162,8 @@ def flag_rna_genes(filtered_tblout_file, config_dict):
 # TODO: clean up transcripts table
 def main(config_dict):
     """Main function: run Infernal, filter results and flag RNA genes in TRAPID db. """
+    create_infernal_files(config_dict=config_dict)
+    run_cmpress(config_dict=config_dict)
     total_m_nts = get_cmscan_z_value(config_dict=config_dict)
     infernal_tblout = run_infernal(z_value=total_m_nts, config_dict=config_dict)
     # Parse Infernal output to retrieve best non-ovelrapping matches
@@ -134,14 +176,13 @@ if __name__ == '__main__':
     cmd_args = cmd_parser.parse_args()
     sys.stderr.write('[Message] Starting ncRNA annotation procedure: %s\n'  % time.strftime('%Y/%m/%d %H:%M:%S'))
     config = load_config(cmd_args.ini_file_initial)
-    db_connection = db_connect(config["trapid_db"]["trapid_db_username"], config["trapid_db"]["trapid_db_password"],
+    db_connection = common.db_connect(config["trapid_db"]["trapid_db_username"], config["trapid_db"]["trapid_db_password"],
         config["trapid_db"]["trapid_db_server"], config["trapid_db"]["trapid_db_name"])
     common.update_experiment_log(experiment_id=config["experiment"]["exp_id"], action='start_nc_rna_search', params='Infernal', depth=2, db_conn=db_connection)
     db_connection.close()
     main(config_dict=config)
-    db_connection = db_connect(config["trapid_db"]["trapid_db_username"], config["trapid_db"]["trapid_db_password"],
+    db_connection = common.db_connect(config["trapid_db"]["trapid_db_username"], config["trapid_db"]["trapid_db_password"],
         config["trapid_db"]["trapid_db_server"], config["trapid_db"]["trapid_db_name"])
     common.update_experiment_log(experiment_id=config["experiment"]["exp_id"], action='stop_nc_rna_search', params='Infernal', depth=2, db_conn=db_connection)
     db_connection.close()
     sys.stderr.write('[Message] Finished ncRNA annotation procedure: %s\n'  % time.strftime('%Y/%m/%d %H:%M:%S'))
-

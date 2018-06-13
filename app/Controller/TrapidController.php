@@ -8,11 +8,12 @@ class TrapidController extends AppController{
   var $name		= "Trapid";
   var $helpers		= array("Html", "Form"); // ,"Javascript","Ajax"); //NOTE: Javascript and Ajax helpers were removed in Cake 2.X
 
-  var $uses		= array("Authentication","Experiments","DataSources","Transcripts","GeneFamilies","ExperimentLog",
-				"TranscriptsGo","TranscriptsInterpro","TranscriptsLabels","TranscriptsPagination","Similarities",
-				"SharedExperiments","DataUploads","ExperimentJobs","CleanupDate","CleanupExperiments",
-				"AnnotSources","Annotation","ExtendedGo","ProteinMotifs","GfData", "HelpTooltips", "GoParents"
-				);
+  var $uses	= array('AnnotSources', 'Annotation', 'Authentication', 'CleanupDate', 'CleanupExperiments',
+                    'Configuration', 'DataSources', 'DataUploads', 'ExperimentJobs', 'ExperimentLog', 'Experiments',
+                    'ExtendedGo', 'GeneFamilies', 'GfData', 'GoParents', 'HelpTooltips', 'ProteinMotifs',
+                    'SharedExperiments', 'Similarities', 'Transcripts', 'TranscriptsGo', 'TranscriptsInterpro',
+                    'TranscriptsLabels', 'TranscriptsPagination'
+                    );
 
   var $components	= array("Cookie", "TrapidUtils", "Sequence", "Session");
   var $paginate		= array(
@@ -1274,10 +1275,16 @@ class TrapidController extends AppController{
     if($user_group['Authentication']['group'] != "admin"){
       $this->TrapidUtils->checkPageAccess($exp_info['title'],$exp_info["process_state"],$this->process_states["upload"]);
     }
-    $this->set("exp_id",$exp_id);
-    $this->set("exp_info",$exp_info);
+    $this->set("exp_id", $exp_id);
+    $this->set("exp_info", $exp_info);
     $this -> set('title_for_layout', "Perform initial processing");
     $this->set("tooltips", $tooltips);
+
+    // Retrieve RFAM clans information
+    $rfam_clans_default = $this->Configuration->getRfamClansDefault();
+    $rfam_clans = $this->Configuration->getRfamClansMetadata();
+    $this->set("rfam_clans_default", $rfam_clans_default);
+    $this->set("rfam_clans", $rfam_clans);
 
     $possible_db_types	= array("SINGLE_SPECIES"=>"Single Species","CLADE"=>"Phylogenetic Clade","GF_REP"=>"Gene Family Representatives");
     $possible_gf_types	= array("HOM"=>"Gene Families","IORTHO"=>"Integrative Orthology");
@@ -1347,7 +1354,8 @@ class TrapidController extends AppController{
 
     if($_POST){
       // pr($_POST);
-      //parameter checking.
+      // Parameter checking.
+      // TODO: check existence of new keys (tax binning, nc RNA annotation, etc.)
       if(!(array_key_exists("blast_db_type",$_POST) && array_key_exists("blast_db",$_POST)
 	   && array_key_exists("blast_evalue",$_POST) && array_key_exists("gf_type",$_POST)
 	   && array_key_exists("functional_annotation",$_POST)
@@ -1366,8 +1374,8 @@ class TrapidController extends AppController{
       }
       $perform_tax_binning = false;
       $used_blast_desc	= "";
-      if(!(array_key_exists($blast_db_type,$possible_db_types) &&
-	   array_key_exists($gf_type,$possible_gf_types) &&
+      if(!(array_key_exists($blast_db_type, $possible_db_types) &&
+	   array_key_exists($gf_type, $possible_gf_types) &&
 	   in_array($blast_evalue,$possible_evalues) &&
 	   array_key_exists($func_annot,$possible_func_annot)
 	)){
@@ -1407,9 +1415,24 @@ class TrapidController extends AppController{
               return;
           }
         }
-       // pr($_POST);
-       // return;
 
+      // Non-coding RNA processing: RFAM clan selection
+      $all_rfam_clans = array_keys($this->Configuration->getRfamClansMetadata());
+      $rfam_clans = array();
+      foreach($_POST['rfam-clans'] as $clan) {
+          // Check if the (sanitized) clan accession exists in `configuration`. If not throw an error.
+          $clan_acc = mysql_real_escape_string($clan);
+          if(!in_array($clan_acc, $all_rfam_clans)) {
+              $this->set("error","Incorrect parameters: invalid RFAM clan selected - ". $clan_acc);
+              return;
+          }
+          array_push($rfam_clans, $clan_acc);
+      }
+      // Create string with all selected RFAM clan accessions
+      $rfam_clans_str = implode(",",$rfam_clans);
+
+      // pr($_POST);
+      // return;
 
       // Parameters are ok: we can now proceed with the actual pipeline organization.
       // Create shell file for submission to the web-cluster.
@@ -1418,12 +1441,12 @@ class TrapidController extends AppController{
       // A single "initial processing" job should only run on a single cluster node
       $qsub_file  = $this->TrapidUtils->create_qsub_script($exp_id);
       // Create configuration file for initial processing of this experiment
-      $ini_file = $this->TrapidUtils->create_ini_file_initial($exp_id,$exp_info['used_plaza_database'],$blast_db,$gf_type,$num_blast_hits,$blast_evalue, $func_annot, $perform_tax_binning, $tax_scope);
-      pr($ini_file);
+      $ini_file = $this->TrapidUtils->create_ini_file_initial($exp_id,$exp_info['used_plaza_database'],$blast_db,$gf_type,$num_blast_hits,$blast_evalue, $func_annot, $perform_tax_binning, $tax_scope, $rfam_clans_str);
+      // pr($ini_file);
       // $shell_file = $this->TrapidUtils->create_shell_file_initial($exp_id,$exp_info['used_plaza_database'],$blast_db,$gf_type,$num_blast_hits,$possible_evalues[$blast_evalue],$func_annot, $perform_tax_binning);
       // $shell_file = $this->TrapidUtils->create_shell_file_initial($exp_id,$exp_info['used_plaza_database'],$blast_db,$gf_type,$num_blast_hits,$blast_evalue, $func_annot, $perform_tax_binning, $tax_scope);
       $shell_file = $this->TrapidUtils->create_shell_file_initial($exp_id, $ini_file);
-      if($shell_file == null || $qsub_file == null || $ini_file == null){$this->set("error","Problem creating program files");return;}
+      if($shell_file == null || $qsub_file == null || $ini_file == null){$this->set("error", "Problem creating program files");return;}
 
       //ok, now we submit this program to the web-cluster
       $tmp_dir	= TMP."experiment_data/".$exp_id."/";
@@ -1442,7 +1465,7 @@ class TrapidController extends AppController{
       //indicate int the database the new job-id
       $this->ExperimentJobs->addJob($exp_id,$job_id,"long","initial_processing");
 
-      //indicate in the database that the current experiment is "busy", and should as such not be accesible.
+      //indicate in the database that the current experiment is "busy", and should as such not be accessible.
       $this->Experiments->updateAll(array("process_state"=>"'processing'","genefamily_type"=>"'".$gf_type."'","last_edit_date"=>"'".date("Y-m-d H:i:s")."'","used_blast_database"=>"'".$possible_db_types[$blast_db_type]."/".$used_blast_desc."'", "perform_tax_binning"=>(int)$perform_tax_binning),array("experiment_id"=>$exp_id));
       if($gf_type=="IORTHO"){
 	$this->Experiments->updateAll(array("target_species"=>"'".$blast_db."'"),array("experiment_id"=>$exp_id));
@@ -1458,6 +1481,11 @@ class TrapidController extends AppController{
       if($tax_scope) {
           $this->ExperimentLog->addAction($exp_id,"initial_processing_options","taxonomic_scope=".$tax_scope, 2);
       }
+      $this->ExperimentLog->addAction($exp_id,"initial_processing_options","n_rfam_clans=".sizeof($rfam_clans), 2);
+      // TODO: If too many clans are selected, the value will be too long for `parameters`! Solve that once prototype works.
+        if(sizeof($rfam_clans) <= 30){
+            $this->ExperimentLog->addAction($exp_id,"initial_processing_options","rfam_clans=".$rfam_clans_str, 2);
+        }
       $this->ExperimentLog->addAction($exp_id,"initial_processing","start",1);
 
       //finally, redirect

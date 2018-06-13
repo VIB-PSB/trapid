@@ -42,5 +42,5 @@ kt_import_text_path = "/path/to/KronaTools/scripts/ImportText.pl"
 
 [infernal]
 rfam_dir = "/path/to/rfam/"
-rfam_clans_file = "Rfam.clanin"
-rfam_cm_file  = "Rfam.cm"
+rfam_clans = "<rfam_clans>"
+
