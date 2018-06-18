@@ -1,8 +1,8 @@
 <?php
 // TODO: host locally
 // Highcharts
-echo $this->Html->script('http://code.highcharts.com/highcharts.js');
-echo $this->Html->script('http://code.highcharts.com/modules/exporting.js');
+echo $this->Html->script('https://code.highcharts.com/highcharts.js');
+echo $this->Html->script('https://code.highcharts.com/modules/exporting.js');
 // D3
 echo $this->Html->script('d3-3.5.6.min.js');
 // UniPept's visualizations
