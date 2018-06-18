@@ -1,3 +1,10 @@
+<?php
+// Replace tax. rank string used in the legend if not set.
+if(!isset($legend_tax_str)) {
+    $legend_tax_str = "taxa";
+}
+?>
+
 <!-- Piechart div -->
 <div id="<?php echo $chart_div_id; ?>" style="width:100%; height:400px;"></div>
 
@@ -49,15 +56,16 @@
             },
             legend: {
                 title: {
-                    text: 'Top phyla<br><span style="font-size: 9px; color: #666; font-weight: normal"><em>Click to hide</em></span>'
+                    // The legend changes based on the selected tax. rank (i.e. we need to write 'phyla', 'genera', ...)
+                    text: 'Top ' + '<?php echo $legend_tax_str; ?>' + '<br><span style="font-size: 9px; color: #666; font-weight: normal"><em>Click to hide</em></span>'
                 },
                 align: 'right',
                 verticalAlign: 'top',
                 layout: 'vertical',
                 x: 0,
-                y: 100 //,
+                y: 100,
                 // TODO: solve bug (conflict between use of `useHTML` and the templating?)
-//                useHTML: true
+                 useHTML: true
             },
             series: [{
                 name: 'Transcripts',

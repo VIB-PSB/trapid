@@ -74,6 +74,14 @@ Hold the <kbd>CTRL</kbd> key down and click on phylogenetic clades using any of 
 
         <div id="piecharts" class="tab-pane"><br>
 <!--            <p class="text-justify">Generated using Highcharts.</p>-->
+            <div class="row" style="margin-bottom:6px;">
+                <ul class="nav nav-pills small-nav pull-right" id="nav-pills-piechart" data-tabs="pills">
+                    <li><strong>View taxonomic rank: </strong></li>
+                    <li class="active"><a data-toggle="pill" href="#phylum-top-tax-pie-tab" data-toggle="tab">Phylum</a></li>
+                    <li><a data-toggle="pill" href="#order-top-tax-pie-tab" data-toggle="tab">Order</a></li>
+                    <li><a data-toggle="pill" href="#genus-top-tax-pie-tab" data-toggle="tab">Genus</a></li>
+                </ul>
+            </div>
             <div class="row">
                 <div class="col-md-4">
                     <?php echo
@@ -81,15 +89,39 @@ Hold the <kbd>CTRL</kbd> key down and click on phylogenetic clades using any of 
                     ?>
                 </div>
                 <div class="col-md-8">
-                    <?php echo
-                    $this->element('charts/pie_tax', array("chart_title"=>"Phylum composition", "chart_subtitle"=>"Total transcripts classified at that level: ".$phylum_sum_transcripts, "chart_data"=>$top_tax_phylum, "chart_div_id"=>"phylum_top_tax_piechart"));
-                    ?>
+                    <div class="tab-content" id="top-tax-piecharts">
+                        <div id="phylum-top-tax-pie-tab" class="tab-pane active">
+                            <?php
+                                echo $this->element('charts/pie_tax', array("chart_title"=>"Phylum composition", "chart_subtitle"=>"Total transcripts classified at that level: ".$phylum_sum_transcripts, "chart_data"=>$top_tax_phylum, "chart_div_id"=>"phylum_top_tax_piechart", "legend_tax_str"=>"phyla"));
+                            ?>
+                        </div>
+                        <div id="order-top-tax-pie-tab" class="tab-pane">
+                            <?php
+                                echo $this->element('charts/pie_tax', array("chart_title"=>"Order composition", "chart_subtitle"=>"Total transcripts classified at that level: ".$order_sum_transcripts, "chart_data"=>$top_tax_order, "chart_div_id"=>"order_top_tax_piechart", "legend_tax_str"=>"orders"));
+                            ?>
+                        </div>
+                        <div id="genus-top-tax-pie-tab" class="tab-pane">
+                            <?php
+                                echo $this->element('charts/pie_tax', array("chart_title"=>"Genus composition", "chart_subtitle"=>"Total transcripts classified at that level: ".$genus_sum_transcripts, "chart_data"=>$top_tax_genus, "chart_div_id"=>"genus_top_tax_piechart", "legend_tax_str"=>"genera"));
+                            ?>
+                        </div>
+                    </div>
+
                 </div>
             </div>
         </div>
 
         <div id="barcharts" class="tab-pane"><br>
 <!--            <p class="text-justify">Generated using Highcharts.</p>-->
+            <div class="row" style="margin-bottom:6px;">
+                <ul class="nav nav-pills small-nav pull-right" id="nav-pills-barchart" data-tabs="pills">
+                    <li><strong>View taxonomic rank: </strong></li>
+                    <li class="active"><a data-toggle="pill" href="#phylum-top-tax-bar-tab" data-toggle="tab">Phylum</a></li>
+                    <li><a data-toggle="pill" href="#order-top-tax-bar-tab" data-toggle="tab">Order</a></li>
+                    <li><a data-toggle="pill" href="#genus-top-tax-bar-tab" data-toggle="tab">Genus</a></li>
+                </ul>
+            </div>
+
             <div class="row">
                 <div class="col-md-4">
                     <?php echo
@@ -97,9 +129,23 @@ Hold the <kbd>CTRL</kbd> key down and click on phylogenetic clades using any of 
                     ?>
                 </div>
                 <div class="col-md-8">
-                    <?php echo
-                    $this->element('charts/bar_tax', array("chart_title"=>"Phylum composition", "chart_subtitle"=>"Total transcripts classified at that level: ".$phylum_sum_transcripts, "chart_data"=>$top_tax_phylum, "chart_div_id"=>"phylum_top_tax_barchart"));
-                    ?>
+                    <div class="tab-content" id="top-tax-barcharts">
+                        <div id="phylum-top-tax-bar-tab" class="tab-pane active">
+                        <?php echo
+                            $this->element('charts/bar_tax', array("chart_title"=>"Phylum composition", "chart_subtitle"=>"Total transcripts classified at that level: ".$phylum_sum_transcripts, "chart_data"=>$top_tax_phylum, "chart_div_id"=>"phylum_top_tax_barchart"));
+                        ?>
+                        </div>
+                        <div id="order-top-tax-bar-tab" class="tab-pane">
+                            <?php echo
+                            $this->element('charts/bar_tax', array("chart_title"=>"Order composition", "chart_subtitle"=>"Total transcripts classified at that level: ".$order_sum_transcripts, "chart_data"=>$top_tax_order, "chart_div_id"=>"order_top_tax_barchart"));
+                            ?>
+                        </div>
+                        <div id="genus-top-tax-bar-tab" class="tab-pane">
+                            <?php echo
+                            $this->element('charts/bar_tax', array("chart_title"=>"Genus composition", "chart_subtitle"=>"Total transcripts classified at that level: ".$genus_sum_transcripts, "chart_data"=>$top_tax_genus, "chart_div_id"=>"genus_top_tax_barchart"));
+                            ?>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
