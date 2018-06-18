@@ -97,17 +97,10 @@ else {
     print STDERR "Perform taxonomic binning!\n";
     my $kaiju_program	= "run_kaiju_splitted.py";
     my $python_location	= $par{"base_script_location"} . "python/";
-    my $kaiju_command        = "python ".$python_location.$kaiju_program;
-    my @kaiju_options        = ("-o", $par{"temp_dir"}."kaiju",
-    	"-s", $par{"temp_dir"}."run_kaiju_splitted.sh",
-		"-kp=\"" . $initial_processing_ini_data->val("tax_binning", "kaiju_parameters") . "\"",
-    	$par{"experiment"},
-		$initial_processing_ini_data->val("tax_binning", "nodes_dmp_file"),
-		$initial_processing_ini_data->val("tax_binning", "names_dmp_file"),
-		$initial_processing_ini_data->val("tax_binning", "splitted_db_dir"),
-    	$multi_fasta_file);
+    my $kaiju_command   = "python " . $python_location . $kaiju_program;
+    my @kaiju_options   = ($initial_processing_ini_file);
 
-    my $kaiju_exec           = $kaiju_command." ".join(" ",@kaiju_options);
+    my $kaiju_exec           = $kaiju_command . " " . join(" ", @kaiju_options);
     print STDOUT $kaiju_exec."\n";
     system($kaiju_exec);
 }
