@@ -45,6 +45,12 @@
 		<dd>
 			FTP server containing a multitude of example files.
 		</dd>
+        <dt>
+            <?php echo $this->Html->link("Tools & parameters", array("controller"=>"documentation","action"=>"tools_parameters")); ?>
+        </dt>
+        <dd>
+            An overview of all tools and parameters used within TRAPID
+        </dd>
 
 	</dl>
 	</section>

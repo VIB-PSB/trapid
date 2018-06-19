@@ -41,5 +41,21 @@ class Configuration extends AppModel {
         return $default_clans;
     }
 
+    // Retrieve tools' data (used in the documentation) from the database, and return it as array.
+    function getDocToolsParameters() {
+        $tools_parameters_data = array();
+        $config_values = $this->find("all", array('conditions'=>array('method'=>'doc_tools_parameters')));
+        if($config_values) {
+            // Process retrieved configuration values and return formatted array
+            foreach($config_values as $cf) {
+                $tool_id = $cf['Configuration']['key'];
+                $attr = $cf['Configuration']['attr'];
+                $value = $cf['Configuration']['value'];
+                $tools_parameters_data[$tool_id][$attr] = $value;
+            }
+        }
+        return $tools_parameters_data;
+    }
+
 }
 ?>
