@@ -1142,7 +1142,7 @@ class TrapidUtilsComponent extends Component{
         // kaiju needs to be loaded, and I will write my extra scripts in python 2.7
         // 2017-12-15: add diamond to the module list (time to switch form RapSearch2 to DIAMOND).
         // $necessary_modules	= array("perl","java","framedp",  "python/x86_64/2.7.2", "kaiju");
-        $necessary_modules = array("perl", "java", "framedp", "python/x86_64/2.7.2", "gcc", "kaiju", "diamond", "infernal/x86_64/1.1.2");
+        $necessary_modules = array("perl", "java", "framedp", "python/x86_64/2.7.2", "gcc", "kaiju", "diamond", "infernal/x86_64/1.1.2", "KronaTools/x86_64/2.7");
         // Create shell file
         $shell_file	= $tmp_dir . "initial_processing_" . $exp_id . ".sh";
         $fh	= fopen($shell_file,"w");

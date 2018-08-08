@@ -157,7 +157,6 @@ if __name__ == '__main__':
     kaiju_parameters = config['tax_binning']['kaiju_parameters']
     names_dmp_file = config['tax_binning']['names_dmp_file']
     nodes_dmp_file = config['tax_binning']['nodes_dmp_file']
-    kt_import_text_path = config['tax_binning']['kt_import_text_path']
     # Update experiment log
     db_connection = common.db_connect(*trapid_db_data)
     common.update_experiment_log(experiment_id=exp_id, action='start_tax_binning', params='kaiju_mem', depth=2, db_conn=db_connection)
@@ -172,8 +171,8 @@ if __name__ == '__main__':
     # Impossible to qsub directly from the webcluster...
     # qsub_and_wait(script_name=kaiju_splitted_script, n_cores=1, mem_per_core=8)
     os.chmod(kaiju_splitted_script, 0755)
-    # job = subprocess.Popen(kaiju_splitted_script)
-    # job.communicate()
+    job = subprocess.Popen(kaiju_splitted_script)
+    job.communicate()
     # Merge kaiju results
     merge_kaiju_splitted_results.main(kaiju_outdir=os.path.join(output_dir, "splitted_results"), nodes_tax_file=nodes_dmp_file, output_file=os.path.abspath(os.path.join(output_dir, "kaiju_merged.out")))
     # Process output file to generate graphical outputs
@@ -201,8 +200,7 @@ if __name__ == '__main__':
             kaiju_tsv_output_file=DATA_DICT['kaiju_tsv_output'],
             krona_html_file=DATA_DICT['krona_html_file'],
             names_tax_file=DATA_DICT['names_dmp'],
-            nodes_tax_file=DATA_DICT['nodes_dmp'],
-            kt_import_text_path=kt_import_text_path)
+            nodes_tax_file=DATA_DICT['nodes_dmp'])
     except Exception as e:
         print(e)
         sys.stderr.write("[Error] Unable to produce Krona output. \n")

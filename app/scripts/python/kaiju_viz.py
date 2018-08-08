@@ -7,8 +7,7 @@ from ConfigParser import ConfigParser
 
 KAIJU_TO_KRONA_PATH = "kaiju2krona"
 KAIJU_REPORT_PATH = "kaijuReport"
-KT_IMPORT_TEXT_PATH = "/www/blastdb/biocomp/moderated/trapid_02/kaiju_files/tools/krona/KronaTools/scripts/ImportText.pl"
-# KT_IMPORT_TEXT_PATH = "/blastdb/webdb/moderated/trapid_02/kaiju_files/tools/krona/KronaTools/scripts/ImportText.pl"  # from midas
+KT_IMPORT_TEXT_PATH = "ktImportText"  # No need for absolute path anymore since we use `KronaTools` module
 
 
 ###

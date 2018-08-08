@@ -38,7 +38,6 @@ kaiju_parameters = "kaiju parameters string"
 names_dmp_file = "/path/to/kaiju_files/names.dmp"
 nodes_dmp_file = "/path/to/kaiju_files/nodes.dmp"
 splitted_db_dir = "/path/to/kaiju_files/splitted_db/"
-kt_import_text_path = "/path/to/KronaTools/scripts/ImportText.pl"
 
 [infernal]
 rfam_dir = "/path/to/rfam/"
