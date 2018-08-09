@@ -2,7 +2,7 @@
     <h1 class="text-primary">Experiment Access</h1>
 </div>
 <div class="subdiv">
-    <?php echo $this->element("trapid_experiment"); ?>
+    <?php // echo $this->element("trapid_experiment"); ?>
 
     <h3>Current Access</h3>
     <div class='subdiv'>
@@ -82,7 +82,7 @@
         echo "</table>\n";
         */
 
-        echo "<input type='submit' value='Update experiment access' />\n";
+        echo "<input type='submit' class='btn btn-default' value='Update experiment access' />\n";
         echo "</form>\n";
 
         echo "</div>\n";
