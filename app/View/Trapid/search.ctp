@@ -3,7 +3,7 @@
         <h1 class="text-primary">Search</h1>
     </div>
     <div class="subdiv">
-        <?php echo $this->element("trapid_experiment"); ?>
+        <?php // echo $this->element("trapid_experiment"); ?>
 
         <?php if ($search_result == "bad_search") : ?>
             <h3>Search results</h3>
@@ -24,12 +24,15 @@
                 <?php if (count($transcripts_info) > 1) {
                     echo $this->element("sorttable");
                 } ?>
-                <table cellpadding="0" cellspacing="0" style="width:700px;" class="sortable">
+                <table class="table table-hover table-condensed table-bordered table-striped sortable">
+                    <thead>
                     <tr>
                         <th style="width:20%">GO term</th>
                         <th style="width:70%">GO description</th>
                         <th style="width:10%">#transcripts</th>
                     </tr>
+                    </thead>
+                    <tbody>
                     <?php
                     $i = 0;
                     foreach ($transcripts_info as $go => $data) {
@@ -44,6 +47,7 @@
                         echo "</tr>\n";
                     }
                     ?>
+                    </tbody>
                 </table>
                 <?php if (count($transcripts_info) > 1) {
                     echo $this->element("sorttable");
@@ -57,12 +61,15 @@
                 <?php if (count($transcripts_info) > 1) {
                     echo $this->element("sorttable");
                 } ?>
-                <table cellpadding="0" cellspacing="0" style="width:700px;" class="sortable">
+                <table cellpadding="0" cellspacing="0" style="width:700px;" class="table table-hover table-condensed table-bordered table-striped sortable">
+                    <thead>
                     <tr>
                         <th style="width:20%">InterPro</th>
                         <th style="width:70%">InterPro description</th>
                         <th style="width:10%">#transcripts</th>
                     </tr>
+                    </thead>
+                    <tbody>
                     <?php
                     $i = 0;
                     foreach ($transcripts_info as $interpro => $data) {
@@ -77,6 +84,7 @@
                         echo "</tr>\n";
                     }
                     ?>
+                    </tbody>
                 </table>
                 <?php if (count($transcripts_info)) {
                     echo $this->element("sorttable");
@@ -90,13 +98,15 @@
             <div class="subdiv">
                 <?php
                 if ($mvc) {
-                    echo "<table cellpadding='0' cellspacing='0' style='width:600px;'>\n";
+                    echo "<table class=\"table table-hover table-condensed table-bordered table-striped\">\n";
+                    echo "<thead>\n";
                     echo "<tr>\n";
                     echo "<th>Gene identifier</th>\n";
                     echo "<th>PLAZA gene family</th>\n";
                     echo "<th>TRAPID gene family</th>\n";
                     echo "<th>#Transcripts in family</th>\n";
                     echo "</tr>\n";
+                    echo "</thead>\n<tbody>\n";
 
                     foreach ($genes_info as $k => $v) {
                         echo "<tr>";
@@ -130,6 +140,7 @@
                         echo "</tr>";
                     }
 
+                    echo "</tbody>\n";
                     echo "</table>\n";
                 } else {
                     echo "<dl class='standard dl-horizontal'>\n";
@@ -158,12 +169,15 @@
         <?php elseif ($search_result == "transcript"): ?>
             <h3>Search results</h3>
             <div class="subdiv">
-                <table cellpadding="0" cellspacing="0" style="width:600px;">
+                <table class="table table-hover table-condensed table-bordered table-striped">
+                    <thead>
                     <tr>
                         <th>Transcript</th>
                         <th>Gene family</th>
                         <th>Meta annotation</th>
                     </tr>
+                    </thead>
+                    <tbody>
                     <?php
                     foreach ($transcripts_info as $k => $v) {
                         echo "<tr>";
@@ -182,6 +196,7 @@
                         echo "</tr>\n";
                     }
                     ?>
+                    </tbody>
                 </table>
             </div>
 

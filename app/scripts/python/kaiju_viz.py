@@ -1,10 +1,14 @@
 import json
 import subprocess
 import sys
+from ConfigParser import ConfigParser
+
+
 
 KAIJU_TO_KRONA_PATH = "kaiju2krona"
-KT_IMPORT_TEXT_PATH = "/www/blastdb/biocomp/moderated/trapid_02/kaiju_files/tools/krona/KronaTools/scripts/ImportText.pl"
-# KT_IMPORT_TEXT_PATH = "/blastdb/webdb/moderated/trapid_02/kaiju_files/tools/krona/KronaTools/scripts/ImportText.pl"  # from midas
+KAIJU_REPORT_PATH = "kaijuReport"
+KT_IMPORT_TEXT_PATH = "ktImportText"  # No need for absolute path anymore since we use `KronaTools` module
+
 
 ###
 # NCBI taxonomy-related functions
@@ -81,31 +85,33 @@ def get_tax_rank_names(names_tax_file, nodes_tax_file, tax_rank):
     corresponding to all organisms of rank `tax_rank` (a taxonomic rank).
     Return a list of common names.
     """
-    tax_ids = []
-    tax_names = []
+    tax_ids = set()
+    tax_names = set()
     with open(nodes_tax_file, 'r') as nodes_tax:
         for line in nodes_tax:
             if '\t'+tax_rank in line:
                 current_node = [field.strip() for field in line.split('|')]
-                tax_ids.append(current_node[0])
+                tax_ids.add(current_node[0])
     with open(names_tax_file, 'r') as names_tax:
         for line in names_tax:
             current_rec = [field.strip() for field in line.split('|') if 'scientific name' in line]
             if current_rec and current_rec[0] in tax_ids:
-                tax_names.append(current_rec[1])
+                tax_names.add(current_rec[1])
         if not tax_names:
             sys.stderr.write('[Warning] Could not find any names corresponding to taxonomic rank \'%s\'. \n' % tax_rank)
-    return sorted(tax_names)
+    # return sorted(list(tax_names))
+    return tax_names
 
 
 ###
 # Krona
 ###
 
-def kaiju_to_krona(kaiju_output_file, kaiju_tsv_output_file, krona_html_file, names_tax_file, nodes_tax_file):
+def kaiju_to_krona(kaiju_output_file, kaiju_tsv_output_file, krona_html_file, names_tax_file, nodes_tax_file,
+                   kaiju_to_krona_path=KAIJU_TO_KRONA_PATH, kt_import_text_path=KT_IMPORT_TEXT_PATH):
     """Use Kaiju's `kaiju2krona` and `ktImportTex`(from KronaTools) to generate Krona HTML file. """
     # 1. Generate tsv output file
-    kaiju2krona = subprocess.Popen([KAIJU_TO_KRONA_PATH,    # Path to kaiju2krona
+    kaiju2krona = subprocess.Popen([kaiju_to_krona_path,    # Path to kaiju2krona
                         "-i", kaiju_output_file,
                         "-t", nodes_tax_file,
                         "-n", names_tax_file,
@@ -121,8 +127,8 @@ def kaiju_to_krona(kaiju_output_file, kaiju_tsv_output_file, krona_html_file, na
     if exit_status != 0:
         sys.exit(exit_status)
     # 2. Generate Krona HTML
-    print KT_IMPORT_TEXT_PATH
-    kt_import_text = subprocess.Popen([KT_IMPORT_TEXT_PATH,    # Path to ktImportText
+    # print kt_import_text_path  # Debug
+    kt_import_text = subprocess.Popen([kt_import_text_path,    # Path to ktImportText
                           kaiju_tsv_output_file,  # Path to kaiju2krona's output file
                           "-o", krona_html_file   # Path to output (Krona HTML)
                           ],
@@ -247,9 +253,9 @@ def kaiju_to_tax_piechart_data(kaiju_tsv_output_file, output_data_table, names_t
     kaiju_data = []
     chart_data = {}
     unclass_str = 'Unclassified'
-    # 1. Get all phylum names for given rank_limit.
+    # 1. Get all taxon names for given rank_limit.
     tax_names = get_tax_rank_names(names_tax_file=names_tax_file, nodes_tax_file=nodes_tax_file, tax_rank=rank_limit)
-    tax_names.append(unclass_str)
+    tax_names.add(unclass_str)
     # 2. Read and handle kaiju2krona's output file.
     with open(kaiju_tsv_output_file, 'r') as in_file:
         for line in in_file:
@@ -274,6 +280,18 @@ def kaiju_to_tax_piechart_data(kaiju_tsv_output_file, output_data_table, names_t
         if len(chart_data)>top_tax:
             other_sum = sum([a[1] for a in sorted([a for a in chart_data.iteritems()],key=lambda tup: tup[1], reverse=True)[10:]])
             out_file.write('Other'+'\t'+str(other_sum)+'\n')
+
+
+# TODO: use `kiajuReport` utility to generate tax. summaries (not necessarily needed but would probably be cleaner)
+# def kaiju_to_tax_piechart_data_kr(kaiju_tsv_output_file, output_data_table, names_tax_file, nodes_tax_file,
+#                                   rank_limit='superkingdom', top_tax=10, kaiju_report_path=KAIJU_REPORT_PATH):
+#     """Use `kaijuReport` utility program to create `output_data_table`, a TSV file that contains the data used
+#     for the pie/barcharts shown on the web page (i.e. overview of the domain-level composition of samples).
+#     * `names_tax_file` and `nodes_tax_file`: names.dmp and nodes.dmp files from NCBI taxonomy.
+#     * `rank_limit`: the maximum taxonomic rank to consider
+#     * `top_tax`:  show the name of this number of top taxa (the rest is collapsed as 'Other')
+#     * `kaiju_report_path`: `kaijuReport` command path.
+#     """
 
 
 def read_piechart_data(piechart_data_table):

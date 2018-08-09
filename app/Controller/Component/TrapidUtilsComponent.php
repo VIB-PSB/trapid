@@ -1080,10 +1080,106 @@ class TrapidUtilsComponent extends Component{
   }
 
 
+    // Create experiment initial processing configuration file and return file name.
+    // This function uses the template INI file found in `<INI>/exp_initial_processing_settings.ini.default`
+    // Note: it may be better to avoid using a 'base' ini file altogether, as most of the information there is redundant
+    // with other ini files / variables.
+    function create_ini_file_initial($exp_id, $plaza_db, $blast_db, $gf_type, $num_top_hits, $evalue, $func_annot, $tax_binning, $tax_scope, $rfam_clans){
+        $tmp_dir = TMP . "experiment_data/" . $exp_id . "/";
+        // Read base ini file
+        $initial_processing_ini_file = INI . "exp_initial_processing_settings.ini";
+        $initial_processing_ini_data = parse_ini_file($initial_processing_ini_file, true);
+        pr($initial_processing_ini_data);
+        pr(array($plaza_db, $blast_db, $gf_type, $num_top_hits, $evalue, $func_annot, $tax_binning, $tax_scope));
+        // Replace values with experiment-specific values
+        $initial_processing_ini_data["experiment"]["tmp_exp_dir"] = $tmp_dir;
+        $initial_processing_ini_data["experiment"]["exp_id"] = $exp_id;
+        $initial_processing_ini_data["reference_db"]["reference_db_name"] = $plaza_db;
+        $initial_processing_ini_data["sim_search"]["blast_db_dir"] = BLAST_DB_DIR . $plaza_db . "/";
+        $initial_processing_ini_data["sim_search"]["blast_db"] = $blast_db;
+        // Add a `-` in front of e-value (as we now provide it as -log10)
+        $initial_processing_ini_data["sim_search"]["e_value"] = "-" . $evalue;
+        $initial_processing_ini_data["initial_processing"]["gf_type"] = $gf_type;
+        $initial_processing_ini_data["initial_processing"]["num_top_hits"] = $num_top_hits;
+        $initial_processing_ini_data["initial_processing"]["func_annot"] = $func_annot;
+        // Tax scope -> 'None' if empty. Unclean?
+        $initial_processing_ini_data["initial_processing"]["tax_scope"] = ($tax_scope) ? $tax_scope : 'None';
+        // Convert tax binning boolean to string
+        $initial_processing_ini_data["tax_binning"]["perform_tax_binning"] = ($tax_binning) ? 'true' : 'false';
+        $initial_processing_ini_data["infernal"]["rfam_clans"] = $rfam_clans;
+        // Create and populate new ini file for experiment
+        $exp_initial_processing_ini_file = $tmp_dir . "initial_processing_settings_" . $exp_id . ".ini";
+        $fh	= fopen($exp_initial_processing_ini_file,"w");
+        foreach($initial_processing_ini_data as $section => $parameters) {
+            fwrite($fh, "[" . $section . "]\n");
+            foreach($parameters as $param => $value) {
+                if(is_numeric($value)) {
+                    $param_str = $param . " = " . $value . "\n";
+                }
+                else {
+                    // Perl does not like quotes in ini files it seems (initial processing script)
+                    // Either remove condition here or handle quotes strings from initial processing.
+                    // $param_str = $param . " = \"" . $value . "\"\n";
+                    $param_str = $param . " = " . $value . "\n";
+                }
+                fwrite($fh, $param_str);
+            }
+            fwrite($fh,"\n");
+        }
+        fclose($fh);
+        // Return INI file name
+        return $exp_initial_processing_ini_file;
+    }
 
 
-  // Function to create the necessary shell files for initial processing
-  function create_shell_file_initial($exp_id, $plaza_db, $blast_db, $gf_type, $num_top_hits, $evalue, $func_annot, $tax_binning, $tax_scope){
+    // Function to create the necessary shell files for initial processing
+    function create_shell_file_initial($exp_id, $exp_initial_processing_ini_file){
+        $num_training_framedp	= 50;
+
+        $base_scripts_location = SCRIPTS;
+        $tmp_dir = TMP."experiment_data/".$exp_id."/";
+        // $necessary_modules	= array("perl","java","framedp");
+        // kaiju needs to be loaded, and I will write my extra scripts in python 2.7
+        // 2017-12-15: add diamond to the module list (time to switch form RapSearch2 to DIAMOND).
+        // $necessary_modules	= array("perl","java","framedp",  "python/x86_64/2.7.2", "kaiju");
+        $necessary_modules = array("perl", "java", "framedp", "python/x86_64/2.7.2", "gcc", "kaiju", "diamond", "infernal/x86_64/1.1.2", "KronaTools/x86_64/2.7");
+        // Create shell file
+        $shell_file	= $tmp_dir . "initial_processing_" . $exp_id . ".sh";
+        $fh	= fopen($shell_file,"w");
+        fwrite($fh,"# Loading necessary modules\n");
+        foreach($necessary_modules as $nm){
+            fwrite($fh,"module load ".$nm." \n");
+        }
+        fwrite($fh,"\n# Java parameters\nexport _JAVA_OPTIONS=\"-Xmx8g\" \n");
+        fwrite($fh,"\n# Launching perl script for initial processing, with necessary configuration file\n");
+        $program_location = $base_scripts_location . "perl/initial_processing.pl";
+        $command_line = "perl ".$program_location . " " . $exp_initial_processing_ini_file;
+        fwrite($fh,$command_line."\n");
+
+        //////////////////////////////////////////////////////////////////////////////////////////////
+        //////////////////// FRAMEDP PREPROCESSING ///////////////////////////////////////////////////
+        //////////////////////////////////////////////////////////////////////////////////////////////
+
+        //CUT OUT PRE-TRAINING PHASE (OLD VERSION IS STILL IN SOURCE) TO PREVENT THE POSSIBLE
+
+        //ok, second step of the initial processing: the framedp part.
+        //create the directory
+        $framedp_dir		= $tmp_dir."framedp/";
+        if(!(file_exists($framedp_dir) && is_dir($framedp_dir))){
+            mkdir($framedp_dir);
+            shell_exec("chmod a+rw ".$framedp_dir);
+        }
+        shell_exec("rm -rf ".$framedp_dir."*");
+        fclose($fh);
+
+        shell_exec("chmod a+x ".$shell_file);
+        return $shell_file;
+    }
+
+
+    // Function to create the necessary shell files for initial processing
+  // This function was used before we decided to use ini files for initial processing
+  function create_shell_file_initial_pre_ini($exp_id, $plaza_db, $blast_db, $gf_type, $num_top_hits, $evalue, $func_annot, $tax_binning, $tax_scope){
 	$num_training_framedp	= 50;
 
     $base_scripts_location  = APP."scripts/";
@@ -1099,7 +1195,7 @@ class TrapidUtilsComponent extends Component{
       // kaiju needs to be loaded, and I will write my extra scripts in python 2.7
       // 2017-12-15: add diamond to the module list (time to switch form RapSearch2 to DIAMOND).
       // $necessary_modules	= array("perl","java","framedp",  "python/x86_64/2.7.2", "kaiju");
-      $necessary_modules = array("perl", "java", "framedp", "python/x86_64/2.7.2", "gcc", "kaiju", "diamond");
+      $necessary_modules = array("perl", "java", "framedp", "python/x86_64/2.7.2", "gcc", "kaiju", "diamond", "infernal/x86_64/1.1.2");
     	/* $necessary_parameters	= array(PLAZA_DB_SERVER,$plaza_db,PLAZA_DB_PORT,PLAZA_DB_USER,PLAZA_DB_PASSWORD,
 					TRAPID_DB_SERVER,TRAPID_DB_NAME,TRAPID_DB_PORT,TRAPID_DB_USER,TRAPID_DB_PASSWORD,
 					$tmp_dir,$exp_id,$final_blast_dir,$blast_db.".rap",$gf_type,$num_top_hits,$evalue,$func_annot,
@@ -1121,7 +1217,6 @@ class TrapidUtilsComponent extends Component{
 	  fwrite($fh,"module load ".$nm." \n");
 	}
 	fwrite($fh,"\n# Java parameters...\nexport _JAVA_OPTIONS=\"-Xmx8g\" \n");
-	fwrite($fh,"\n#Launching perl script for initial processing, with necessary parameters\n");
 	fwrite($fh,"\n#Launching perl script for initial processing, with necessary parameters\n");
 	//$program_location	= "/www/group/biocomp/extra/bioinformatics_prod/webtools/trapid/app/scripts/perl/initial_processing.pl";
 	$program_location	= $base_scripts_location."perl/initial_processing.pl";

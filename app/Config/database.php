@@ -129,7 +129,33 @@ class DATABASE_CONFIG {
         'encoding' 	=> ''
     );
 
-	public $db_plaza_public_02_5	= array(
+    public $db_trapid_ref_plaza_dicots_04_test	= array(
+        'datasource' => 'Database/Mysql',
+        'persistent' 	=> false,
+        'host' 		=> TRAPID_DB_SERVER,
+        'port' 		=> TRAPID_DB_PORT,
+        'login' 	=> TRAPID_DB_USER,
+        'password' 	=> TRAPID_DB_PASSWORD,
+        'database' 	=> 'db_trapid_ref_plaza_dicots_04_test',
+        'schema' 	=> '',
+        'prefix' 	=> '',
+        'encoding' 	=> ''
+    );
+
+    public $db_trapid_ref_plaza_monocots_04_test	= array(
+        'datasource' => 'Database/Mysql',
+        'persistent' 	=> false,
+        'host' 		=> TRAPID_DB_SERVER,
+        'port' 		=> TRAPID_DB_PORT,
+        'login' 	=> TRAPID_DB_USER,
+        'password' 	=> TRAPID_DB_PASSWORD,
+        'database' 	=> 'db_trapid_ref_plaza_monocots_04_test',
+        'schema' 	=> '',
+        'prefix' 	=> '',
+        'encoding' 	=> ''
+    );
+
+    public $db_plaza_public_02_5	= array(
 		'datasource' => 'Database/Mysql',
 		'persistent' 	=> false,
 		'host' 		=> PLAZA_DB_SERVER,

@@ -1,8 +1,8 @@
 <?php
 // TODO: host locally
 // Highcharts
-echo $this->Html->script('http://code.highcharts.com/highcharts.js');
-echo $this->Html->script('http://code.highcharts.com/modules/exporting.js');
+echo $this->Html->script('https://code.highcharts.com/highcharts.js');
+echo $this->Html->script('https://code.highcharts.com/modules/exporting.js');
 // Choices JS (https://github.com/jshjohnson/Choices)
 echo $this->Html->script('https://cdn.rawgit.com/jshjohnson/Choices/3e889633/assets/scripts/dist/choices.min.js');
 echo $this->Html->css('https://cdn.rawgit.com/jshjohnson/Choices/3e889633/assets/styles/css/choices.min.css');
@@ -124,7 +124,7 @@ echo $this->Html->css('https://cdn.rawgit.com/jshjohnson/Choices/3e889633/assets
                                         <?php echo $this->element("help_tooltips/create_tooltip", array("tooltip_text"=>$tooltips['core_gf_tax_source'], "tooltip_placement"=>"top")); ?>
                                         <div class="radio" id="tax-radio" name="tax-radio">
                                             <label><input type="radio" name="tax-radio-ncbi" checked>NCBI</label>
-                                            <label><input type="radio" name="tax-radio-db" disabled>PLAZA</label>
+                                            <label class="unavailable"><input type="radio" name="tax-radio-db" disabled>PLAZA</label>
                                         </div>
                                     </div>
                                 </div>

@@ -7,6 +7,19 @@ import time
 import sys
 
 
+def db_connect(username, password, host, db_name):
+    """Connect to database. Return a database connection. """
+    try:
+        db_connection = MS.connect(host=host,
+            user=username,
+            passwd=password,
+            db=db_name)
+    except:
+        sys.stderr.write("[Error] Impossible to connect to the database. Check host/username/password (see error message below)\n")
+        raise
+    return db_connection
+
+
 def update_experiment_log(experiment_id, action, params, depth, db_conn):
     """Update experiment log (i.e. insert a new record in `experiment_log` table). """
     sql_str = "INSERT INTO `experiment_log`(`experiment_id`,`date`,`action`,`parameters`,`depth`) VALUES ({values_str});"

@@ -97,7 +97,7 @@
 
     <!-- Sidebar header -->
     <div class="sidebar-header">
-        <a class="sidebar-brand" href="#">TRAPID <!-- font-family: 'Redensek', arial; -->
+        <a class="sidebar-brand" href="<?php echo $this->Html->Url(array("controller" => "trapid", "action" => "experiments")); ?>">TRAPID <!-- font-family: 'Redensek', arial; -->
             <label class="label label-beta">beta</label>
         </a>
         <!-- Sidebar brand image -->
@@ -154,8 +154,9 @@
             <li class="sidebar-text sidebar-disabled">Statistics</li>
             <li class="sidebar-text sidebar-disabled">Taxonomic binning</li>
             <li class="sidebar-text sidebar-disabled">Browse gene families</li>
+            <li class="sidebar-text sidebar-disabled">Browse RNA families</li>
 <!--            <li class="sidebar-text sidebar-disabled">Expanded/depleted GFs</li>-->
-            <li class="sidebar-text sidebar-disabled">Core GF completeness</li>
+<!--            <li class="sidebar-text sidebar-disabled">Core GF completeness</li>-->
         <?php else :
             // Transcripts uploaded == 'statistics' + GFs available ?>
             <li class="dropdown">
@@ -184,6 +185,9 @@
             <?php endif; ?>
             <li>
                 <?php echo $this->Html->link("Browse gene families", array("controller" => "gene_family", "action" => "index", $exp_id)); ?>
+            </li>
+            <li>
+                <?php echo $this->Html->link("Browse RNA families", array("controller" => "rna_family", "action" => "index", $exp_id)); ?>
             </li>
 <!--            <li>-->
 <!--                --><?php //echo $this->Html->link("Expanded/depleted GFs", array("controller" => "gene_family", "action" => "expansion", $exp_id)); ?>

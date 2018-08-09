@@ -1641,6 +1641,7 @@ class ToolsController extends AppController{
 	$pdf_transcript_info	= array(
 			"#Transcripts"=>$num_transcripts,
 			"Average transcript length"=>$seq_stats['transcript']." basepairs",
+			"#Transcripts with ORF"=>$num_orfs,
 			"Average ORF length"=>$seq_stats['orf']." basepairs",
 			"#ORFs with start codon"=>$num_start_codons." (".round(100*$num_start_codons/$num_transcripts,1)."%)",
 			"#ORFs with stop codon"=>$num_stop_codons." (".round(100*$num_stop_codons/$num_transcripts,1)."%)"
@@ -1930,6 +1931,12 @@ function label_go_intersection($exp_id=null,$label=null){
 //        $top_tax_phylum = $this->read_top_tax_data($exp_id=$exp_id, $tax_rank="phylum");
         $top_tax_phylum = $this->read_top_tax_data($exp_id=$exp_id, $tax_rank="phylum");
         $phylum_sum_transcripts = number_format(array_sum(array_map(function($x) {return intval($x[1]);}, $top_tax_phylum)));
+        // Top tax order level
+        $top_tax_order = $this->read_top_tax_data($exp_id=$exp_id, $tax_rank="order");
+        $order_sum_transcripts = number_format(array_sum(array_map(function($x) {return intval($x[1]);}, $top_tax_order)));
+        // Top tax genus level
+        $top_tax_genus = $this->read_top_tax_data($exp_id=$exp_id, $tax_rank="genus");
+        $genus_sum_transcripts = number_format(array_sum(array_map(function($x) {return intval($x[1]);}, $top_tax_genus)));
         // Set all variables and render page
         $this->set("display_krona_url", Router::url(array("controller"=>"tools","action"=>"display_krona", $exp_id)));
         $this->set("treeview_json_url", Router::url(array("controller"=>"tools","action"=>"get_treeview_json", $exp_id)));
@@ -1937,6 +1944,10 @@ function label_go_intersection($exp_id=null,$label=null){
         $this->set("domain_sum_transcripts", $domain_sum_transcripts);
         $this->set("top_tax_phylum", $top_tax_phylum);
         $this->set("phylum_sum_transcripts", $phylum_sum_transcripts);
+        $this->set("top_tax_order", $top_tax_order);
+        $this->set("order_sum_transcripts", $order_sum_transcripts);
+        $this->set("top_tax_genus", $top_tax_genus);
+        $this->set("genus_sum_transcripts", $genus_sum_transcripts);
         $tooltip_text_subset_name = $this->HelpTooltips->getTooltipText("tax_binning_subset_name");
         $this->set("tooltip_text_subset_name", $tooltip_text_subset_name);
         $this->set("active_sidebar_item", "Tax");
@@ -2007,6 +2018,7 @@ function label_go_intersection($exp_id=null,$label=null){
         $exp_id	= mysql_real_escape_string($exp_id);
         parent::check_user_exp($exp_id);
         if($this->request->is('post')) {
+            set_time_limit(75);
             $unclassified_str = "Unclassified";
             $max_tax = 20;
             // 1. Check subset name. If it already exists, return error message.
@@ -2070,6 +2082,7 @@ function label_go_intersection($exp_id=null,$label=null){
                     $transcripts = array_merge($transcripts, $tax_binning_summary[$tax_id]["transcripts"]);
                 }
             }
+            // pr($transcripts);
             // 5. Create the new subset with these transcripts
             if(sizeof($transcripts)>0) {
                 // Here I tried multiple ways to save the data
@@ -2089,6 +2102,7 @@ function label_go_intersection($exp_id=null,$label=null){
                 // Way 3: using DboSource's `insertMulti()` method: seems to be the fastest as of now.
                 $counter = $this->TranscriptsLabels->enterTranscriptsInsertMulti($exp_id, $transcripts, $subset_name);
                 return "<label class=\"label label-success\">Subset created (".$counter." transcripts)</label>";
+//                return "<label class=\"label label-success\">Subset created</label>";
             }
             return null; // meh?
         }

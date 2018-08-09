@@ -42,12 +42,14 @@
         yAxis: {
             maxPadding: 0,
                 endOnTick: false,
-                title: { text: '# Transcripts' },
+                title: { text: '# Transcripts (log scale)' },
             labels: {
                 style: {
                     color: '#bbb'
                 }
-            }
+            },
+            type: 'logarithmic'
+
         },
         tooltip: {
             pointFormat: '<strong>{point.y}</strong> transcripts',

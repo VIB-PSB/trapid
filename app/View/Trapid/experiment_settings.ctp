@@ -4,7 +4,7 @@
 <div class="subdiv">
     <?php
     //$show_experiment_overview_description	= true;
-    echo $this->element("trapid_experiment");
+    // echo $this->element("trapid_experiment");
     ?>
 
     <h3>Change settings</h3>
@@ -22,7 +22,7 @@
             <dt>Description</dt>
             <dd><textarea rows="4" name="experiment_description" style="width:400px;"></textarea></dd>
         </dl>
-        <input type="submit" value="Update settings" style="width:150px;margin-top:1em;"/>
+        <input type="submit" class='btn btn-default' value="Update settings"/>
         </form>
     </div>
 </div>

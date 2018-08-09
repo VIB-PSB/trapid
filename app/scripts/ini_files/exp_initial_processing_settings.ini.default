@@ -1,0 +1,45 @@
+; This INI file is a template used for the initial processing of experiments
+; It is modified and copied at the root of the experiment tmp directory on initial processing start.
+; Values that are modified upon initial processing submission are between brackets (`<>`).
+
+[trapid_db]
+trapid_db_server = "db_server"
+trapid_db_name = "db_name"
+trapid_db_port = 3306
+trapid_db_username = "username"
+trapid_db_password = "password"
+
+[reference_db]
+reference_db_server = "db_server"
+reference_db_name = "<reference_db_name>"
+reference_db_port = 3306
+reference_db_username = "username"
+reference_db_password = "password"
+
+[experiment]
+exp_id = "<exp_id>"
+tmp_exp_dir = "<tmp_exp_path>"
+
+[initial_processing]
+base_script_dir = ""
+gf_type = "<gf_type>"
+num_top_hits = "<num_top_hits>"
+func_annot = "<func_annot>"
+tax_scope = "<tax_scope>"
+
+[sim_search]
+blast_db_dir = "/path/to/blast_db/"
+blast_db = "<blast_db>"
+e_value = "<e_value>"
+
+[tax_binning]
+perform_tax_binning = "<perform_tax_binning>"
+kaiju_parameters = "kaiju parameters string"
+names_dmp_file = "/path/to/kaiju_files/names.dmp"
+nodes_dmp_file = "/path/to/kaiju_files/nodes.dmp"
+splitted_db_dir = "/path/to/kaiju_files/splitted_db/"
+
+[infernal]
+rfam_dir = "/path/to/rfam/"
+rfam_clans = "<rfam_clans>"
+

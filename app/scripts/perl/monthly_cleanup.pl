@@ -205,6 +205,7 @@ sub send_email_outdated_experiments($ $ $){
 	my $no_access		= $_[1];
 	my @outdated_exps	= @{$_[2]};
 	my $sendmail 		= "/usr/lib/sendmail.postfix -t";
+	my $from			= "From: TRAPID webmaster <no-reply\@psb.vib-ugent.be>\n";
 	my $reply_to 		= "Reply-to: no-reply\@psb.vib-ugent.be\n";
 
 	my $statement		= "SELECT `experiments`.`title`,`authentication`.`email` FROM `experiments`,`authentication` WHERE `experiments`.`experiment_id`= ? AND `experiments`.`user_id`=`authentication`.`user_id`";
@@ -226,10 +227,11 @@ sub send_email_outdated_experiments($ $ $){
 		$content	= $content."In order to save valuable disk space this experiment will be deleted in one month.\n";
 		$content	= $content."This can be prevented by logging into the TRAPID system again, and simply accessing the experiment, which will update the access data for this experiment\n";
 		# $content	= $content."You can access TRAPID at http://bioinformatics.psb.ugent.be/webtools/trapid/ \n";
-		$content	= $content."You can access TRAPID at http://bioinformatics.psb.ugent.be/testix/trapid_frbuc/ \n";
+		$content	= $content."You can access TRAPID at http://bioinformatics.psb.ugent.be/testix/trapid_dev/ \n";
 		$content	= $content."\n\nThank you for your interest in TRAPID\n";
 		my $send_to	= "To: ".$user_email."\n";
 		open(SENDMAIL, "|$sendmail") or die "Cannot open $sendmail: $!";
+		print SENDMAIL $from;
 		print SENDMAIL $reply_to;
 		print SENDMAIL $subject;
 		print SENDMAIL $send_to;

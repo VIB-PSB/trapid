@@ -1360,6 +1360,14 @@ body {
 	cursor:pointer;
 }
 
+/* Small nav pills (used to adjust shown taxonomic level in piechart/barchart summaries) */
+.small-nav>li>a {
+	padding-top: 3px;
+	padding-bottom: 3px;
+	padding-left: 12px;
+	padding-right: 12px;
+	font-size: 88%;
+}
 
 
 /* Core GF completeness */

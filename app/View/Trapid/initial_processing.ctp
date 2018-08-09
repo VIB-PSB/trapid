@@ -70,7 +70,7 @@
                         <label class="radio-inline">
                             <input checked="checked" id="gf_type_hom" name="gf_type" type="radio" value="HOM"> Gene families  &nbsp;
                         </label>
-                        <label class="radio-inline">
+                        <label class="radio-inline unavailable">
                             <input id="gf_type_iortho" name="gf_type" type="radio" value="IORTHO" disabled> Integrative orthology
                         </label><br>
                     </div>
@@ -131,7 +131,22 @@
                 </div>
             </div>
         </div>
-
+    </div>
+    <div style="border:1px gray dotted;">
+        <div class="form-group">
+            <label for="rfam-clans"><strong>RFAM clans</strong></label>
+            <label style="margin-left:5px;" class="label label-primary pull-right">work in progress</label>
+            <?php echo $this->element("help_tooltips/create_tooltip", array("tooltip_text"=>$tooltips['initial_processing_rfam_clans'], "tooltip_placement"=>"top")); ?>
+            <br>
+            <select id="rfam-clans" name="rfam-clans[]" multiple size="8">
+<!--                <option value="rrrrrr">dddddd</option>-->
+                <?php foreach($rfam_clans as $clan_acc=>$clan_data) {
+                    $selected_str = in_array($clan_acc, $rfam_clans_default) ? 'selected' : '';
+                    echo "<option value='" . $clan_acc . "' " . $selected_str . ">" . $clan_data["clan_id"] . " (" . $clan_data["clan_desc"]. ")</option>";
+                }
+                ?>
+            </select>
+        </div>
     </div>
     <?php
     if (isset($error)) {

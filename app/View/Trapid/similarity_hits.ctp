@@ -3,11 +3,11 @@
         <h1 class="text-primary">Similarity hits</h1>
     </div>
     <div class="subdiv">
-        <?php echo $this->element("trapid_experiment"); ?>
+        <?php // echo $this->element("trapid_experiment"); ?>
 
+        <section class="page-section">
         <h3>Transcript overview</h3>
-        <div class="subdiv">
-            <dl class="standard">
+            <dl class="standard dl-horizontal">
                 <dt>Transcript id</dt>
                 <dd><?php echo $this->Html->link($transcript_info['transcript_id'], array("controller" => "trapid", "action" => "transcript", $exp_id, $transcript_info['transcript_id'])); ?></dd>
                 <dt>Gene family</dt>
@@ -21,7 +21,7 @@
                     ?>
                 </dd>
             </dl>
-        </div>
+        </section>
 
         <?php
         if (isset($error)) {
@@ -33,24 +33,27 @@
         ?>
 
 
+        <section class="page-section">
         <h3>Similarity hits</h3>
-        <div class="subdiv">
             <?php
             //pr($transcript_info);
             //pr($exp_info);
             ?>
-            <table cellpadding="0" cellspacing="0" style="width:1100px;">
+            <table class="table table-hover table-condensed table-bordered table-striped">
+                <thead>
                 <tr>
                     <th>Gene id</th>
-                    <th style='width:15%'>E-value</th>
+                    <th>E-value</th>
                     <th>Alignment length</th>
                     <th>Percent identity</th>
-                    <th>Gene family(external)</th>
+                    <th>Gene family(ext.)</th>
                     <th>#genes</th>
                     <th>Gene family(TRAPID)</th>
                     <th>#transcripts</th>
-                    <th style='width:15%'>Select as GF</th>
+                    <th>Select as GF</th>
                 </tr>
+                </thead>
+                <tbody>
                 <?php
                 $prev_gf = null;
                 $altrow = null;
@@ -136,7 +139,7 @@
                                 if ($trapid_gf_id != null) {
                                     echo "<input type='hidden' name='trapid_gf_id' value='" . $trapid_gf_id . "' />";
                                 }
-                                echo "<input type='submit' value='Set as gene family' $disabled_change_form />";
+                                echo "<input type='submit' class='btn btn-sm' value='Set as gene family' $disabled_change_form />";
                                 echo "</form>";
                                 echo "</div>";
                                 echo "</td>";
@@ -156,7 +159,8 @@
 
                 }
                 ?>
+                </tbody>
             </table>
-        </div>
+        </section>
     </div>
 </div>

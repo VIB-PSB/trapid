@@ -105,11 +105,11 @@ if(!defined('PLAZA_DB_PASSWORD')) {define('PLAZA_DB_PASSWORD', $db_settings_ini_
  * Subdirectories are named following reference database names available within this TRAPID instance
  */
 if(!defined('BLAST_DB_DIR')){
-    define('BLAST_DB_DIR', $db_settings_ini_data['blast_db_path']);
+    define('BLAST_DB_DIR', $webapp_settings_ini_data['blast_db_path']);
     // define('BLAST_DB_DIR','/www/blastdb/biocomp/moderated/trapid/');
 }
 if(!defined('BLAST_DB_DIR_MIDAS')){
-    define('BLAST_DB_DIR_MIDAS', $db_settings_ini_data['blast_db_path_midas']);
+    define('BLAST_DB_DIR_MIDAS', $webapp_settings_ini_data['blast_db_path_midas']);
     // define('BLAST_DB_DIR_MIDAS','/blastdb/webdb/moderated/trapid/');
 }
 
@@ -118,7 +118,7 @@ if(!defined('BLAST_DB_DIR_MIDAS')){
  * Defined to prevent overloading and abuse
  */
 if(!defined('MAX_CLUSTER_JOBS')){
-    define('MAX_CLUSTER_JOBS', $db_settings_ini_data['max_cluster_jobs']);
+    define('MAX_CLUSTER_JOBS', $webapp_settings_ini_data['max_cluster_jobs']);
 }
 
 
