@@ -8,11 +8,11 @@ class TrapidController extends AppController{
   var $name		= "Trapid";
   var $helpers		= array("Html", "Form"); // ,"Javascript","Ajax"); //NOTE: Javascript and Ajax helpers were removed in Cake 2.X
 
-  var $uses	= array('AnnotSources', 'Annotation', 'Authentication', 'CleanupDate', 'CleanupExperiments',
+  var $uses	= array('Authentication', 'AnnotSources', 'Annotation', 'CleanupDate', 'CleanupExperiments',
                     'Configuration', 'DataSources', 'DataUploads', 'ExperimentJobs', 'ExperimentLog', 'Experiments',
                     'ExtendedGo', 'GeneFamilies', 'GfData', 'GoParents', 'HelpTooltips', 'ProteinMotifs',
                     'SharedExperiments', 'Similarities', 'Transcripts', 'TranscriptsGo', 'TranscriptsInterpro',
-                    'TranscriptsLabels', 'TranscriptsPagination'
+                    'TranscriptsLabels', 'TranscriptsPagination', 'RnaSimilarities'
                     );
 
   var $components	= array("Cookie", "TrapidUtils", "Sequence", "Session");
@@ -708,6 +708,49 @@ class TrapidController extends AppController{
   }
 
 
+    // RNA similarity output exploration page
+    function rna_similarity_hits($exp_id=null,$transcript_id=null){
+        Configure::write("debug",2);
+        if(!$exp_id || !$transcript_id){$this->redirect(array("controller"=>"trapid","action"=>"experiments"));}
+        $exp_id	= mysql_real_escape_string($exp_id);
+        parent::check_user_exp($exp_id);
+        $exp_info	= $this->Experiments->getDefaultInformation($exp_id);
+        $this->TrapidUtils->checkPageAccess($exp_info['title'], $exp_info["process_state"], $this->process_states["default"]);
+        //check whether transcript is valid
+        $transcript_id = mysql_real_escape_string($transcript_id);
+        $transcript_info = $this->Transcripts->find("first", array("conditions"=>array("experiment_id"=>$exp_id, "transcript_id"=>$transcript_id)));
+        if(!$transcript_info){$this->redirect(array("controller"=>"trapid","action"=>"experiment", $exp_id));}
+        //get the similarity search hits for this transcript
+        $rna_similarity_hits = $this->RnaSimilarities->find("first", array("conditions"=>array("experiment_id"=>$exp_id, "transcript_id"=>$transcript_id)));
+        $rna_similarity_hits = explode(";",$rna_similarity_hits['RnaSimilarities']['similarity_data']);
+        $rna_sim_hits		= array();
+        $gene_ids		= array();
+        //get the gene identifiers.
+        foreach($rna_similarity_hits as $sh){
+            $t		= explode(",",$sh);
+            $gene_id		= $t[0];
+            $gene_ids[] 	= $gene_id;
+            $rna_sim_hits[$gene_id][]	= $t;
+        }
+        $gene_ids		= array_unique($gene_ids);
+        $rf_ids		= array();
+        $rfam_linkouts = $this->Configuration->find("all", array('conditions'=>array('method'=>'linkout', 'key'=>'rfam')));
+        $rfam_linkouts = $this->TrapidUtils->indexArraySimple($rfam_linkouts, "Configuration", "attr", "value");
+
+
+        // if($this->Session->check("error")){$this->set("error",$this->Session->read("error"));$this->Session->delete("error");}
+        // if($this->Session->check("message")){$this->set("message",$this->Session->read("message"));$this->Session->delete("message");}
+        // To write: code to modify assigned RNA family!
+
+        $this->set("exp_info", $exp_info);
+        $this->set("exp_id", $exp_id);
+        $this->set("transcript_info", $transcript_info['Transcripts']);
+        $this->set("sim_hits", $rna_sim_hits);
+        $this->set("rf_ids", $rf_ids);
+        $this->set("rfam_linkouts", $rfam_linkouts);
+        $this -> set('title_for_layout', 'RNA similarity hits');
+
+    }
 
   /******************************************************************************************************
    *
@@ -2094,7 +2137,7 @@ class TrapidController extends AppController{
 
 
   function change_password(){
-    //Configure::write("debug",2);
+    Configure::write("debug",2);
     $this->layout = "external";  // Layout for external pages (i.e. not in experiment)
     $this -> set('title_for_layout', "Change password");
 

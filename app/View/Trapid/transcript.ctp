@@ -35,6 +35,14 @@
                     "some_image.png"
                 )
             ),
+            "RNA similarity search" => array(
+                array(
+                    "Browse RNA similarity search output (Infernal)",
+                    $this->Html->url(array("controller" => "trapid", "action" => "rna_similarity_hits", $exp_id, $transcript_info['transcript_id'])),
+                    "some_image.png",
+                    !$transcript_info['is_rna_gene'] // Cannot be clicked if the transcript wasn't flag as RNA gene
+                )
+            )
         );
         $this->set("toolbox", $toolbox);
         echo $this->element("toolbox");
