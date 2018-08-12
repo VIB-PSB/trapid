@@ -160,7 +160,7 @@ my $java_location	= $par{"base_script_location"}."java/";
 my $java_command        = "java -cp .:..:".$java_location.":".$java_location."mysql.jar ".$java_program;
 my @java_options        = ($par{"plaza_db_server"},$par{"plaza_db_name"},$par{"plaza_db_user"},$par{"plaza_db_password"},
 			   $par{"trapid_db_server"},$par{"trapid_db_name"},$par{"trapid_db_user"},$par{"trapid_db_password"},
-			   $par{"experiment"},$similarity_output,$par{"gf_type"},$par{"num_top_hits"},$par{"func_annot"},  $par{"tax_scope"});
+			   $par{"experiment"},$similarity_output,$par{"gf_type"},$par{"num_top_hits"},$par{"func_annot"},  $par{"tax_scope"}, 0.50);
 
 &update_log($par{"trapid_db_server"},$par{"trapid_db_name"},$par{"trapid_db_port"},
 	    $par{"trapid_db_user"},$par{"trapid_db_password"},$par{"experiment"},

@@ -103,6 +103,13 @@ public class InitialTranscriptsProcessing {
 			System.exit(1);
 		}
 
+		// Taxonomic scope (only used when processing transcripts with EggNOG. Should be `None` otherwise
+		String chosen_scope = args[13];  // "auto";
+		// The minimum representation frequency of GF members to transfer functional annotation (e.g. if a GO term is
+		// represented in at least this fraction of members of a gene family, assign it to the transcript).
+		double gf_min_rep = Double.parseDouble(args[14]);
+
+
 		Connection plaza_db_connection		= null;
 		Connection trapid_db_connection		= null;
 
@@ -166,13 +173,12 @@ public class InitialTranscriptsProcessing {
 			long t31	= System.currentTimeMillis();
 			Map<String,GeneFamilyAssignment> transcript2gf	= null;
 			Map<String, List<String>> gf2transcripts = null;  // Reverse mapping
-			/* Here use a different procedure for eggNOG (steps 3,4,5).
+
+            /* Here use a different procedure for eggNOG (steps 3, 4).
 			 * UNCLEAN AND WORK IN PROGRESS! */
-			// In the future, we need one more command-line variable for the taxonomic scope. But first make it work with `auto` tax scope
 			// For testing purposes just copy-paste things in this big `if`. In the future have two clearly and properly separated pipelines.
             if(plaza_database_name.equals("db_trapid_ref_eggnog_test")) {
             	// TODO: check taxonomic scope (must be 'auto' or anything in `LEVEL_CONTENT`)
-                String chosen_scope = args[13]; // "auto";
                 // Initialize OG-specific maps.
                 Map<String,List<String>> transcript2ogs	= null;
                 Map<String, List<String>> ogs2transcripts = null;
@@ -214,8 +220,8 @@ public class InitialTranscriptsProcessing {
 				Map<String,Set<String>> transcript_go			= null;
 				switch(func_annot){
 					case BESTHIT: transcript_go = itp.assignGoTranscriptsEggnog_BESTHIT(plaza_db_connection, simsearch_data); break;
-					case GF: transcript_go 	= itp.assignGoTranscriptsEggnog_GF_precomputed(plaza_db_connection, transcript2ogs, ogs2transcripts);break;
-					case GF_BESTHIT: transcript_go 	= itp.assignGoTranscriptsEggnog_GF_BESTHIT(plaza_db_connection, transcript2ogs, ogs2transcripts, simsearch_data);break;
+					case GF: transcript_go 	= itp.assignGoTranscriptsEggnog_GF_precomputed(plaza_db_connection, transcript2ogs, ogs2transcripts, gf_min_rep);break;
+					case GF_BESTHIT: transcript_go 	= itp.assignGoTranscriptsEggnog_GF_BESTHIT(plaza_db_connection, transcript2ogs, ogs2transcripts, simsearch_data, gf_min_rep);break;
 					default: System.err.println("Illegal func annot indicator: "+func_annot); System.exit(1);
 				}
 				plaza_db_connection.close();
@@ -235,8 +241,8 @@ public class InitialTranscriptsProcessing {
 				Map<String,Set<String>> transcript_ko = null;
 				switch(func_annot){
 					case BESTHIT:transcript_ko = itp.assignKoTranscripts_BESTHIT(plaza_db_connection, simsearch_data);break;
-					case GF: transcript_ko = itp.assignKoTranscripts_GF_precomputed(plaza_db_connection, transcript2ogs, ogs2transcripts);break;
-					case GF_BESTHIT:transcript_ko = itp.assignKoTranscripts_GF_BESTHIT(plaza_db_connection, transcript2ogs, ogs2transcripts, simsearch_data);break;
+					case GF: transcript_ko = itp.assignKoTranscripts_GF_precomputed(plaza_db_connection, transcript2ogs, ogs2transcripts, gf_min_rep);break;
+					case GF_BESTHIT:transcript_ko = itp.assignKoTranscripts_GF_BESTHIT(plaza_db_connection, transcript2ogs, ogs2transcripts, simsearch_data, gf_min_rep);break;
 					default:System.err.println("Illegal func annot indicator : "+func_annot);System.exit(1);
 				}
 				plaza_db_connection.close();
@@ -251,7 +257,8 @@ public class InitialTranscriptsProcessing {
 				trapid_db_connection.close();
 			}
 
-			// 'Normal' processing (steps 3 and 4)
+
+			// 'Normal' PLAZA processing (steps 3 and 4)
 			else {
                 if (gf_type == GF_TYPE.HOM) {
                     String gf_prefix = itp.getGfPrefix(trapid_db_connection, plaza_database_name);
@@ -291,9 +298,9 @@ public class InitialTranscriptsProcessing {
 			System.out.println("Performing GO functional transfer: "+func_annot);
 			Map<String,Set<String>> transcript_go			= null;
 			switch(func_annot){
-				case GF: transcript_go 			= itp.assignGoTranscripts_GF(plaza_db_connection, transcript2gf, gf2transcripts, gf_type);break;
+				case GF: transcript_go 			= itp.assignGoTranscripts_GF(plaza_db_connection, transcript2gf, gf2transcripts, gf_type, gf_min_rep);break;
 				case BESTHIT: transcript_go 	= itp.assignGoTranscripts_BESTHIT(plaza_db_connection, simsearch_data); break;
-				case GF_BESTHIT: transcript_go 	= itp.assignGoTranscripts_GF_BESTHIT(plaza_db_connection, transcript2gf, gf2transcripts, gf_type, simsearch_data);break;
+				case GF_BESTHIT: transcript_go 	= itp.assignGoTranscripts_GF_BESTHIT(plaza_db_connection, transcript2gf, gf2transcripts, gf_type, simsearch_data, gf_min_rep);break;
 				default: System.err.println("Illegal func annot indicator : "+func_annot); System.exit(1);
 			}
 			plaza_db_connection.close();
@@ -311,9 +318,9 @@ public class InitialTranscriptsProcessing {
 			System.out.println("Performing InterPro functional transfer : "+func_annot);
 			Map<String,Set<String>> transcript_interpro		= null;
 			switch(func_annot){
-				case GF: transcript_interpro		= itp.assignProteindomainTranscripts_GF(plaza_db_connection, transcript2gf, gf2transcripts, gf_type);break;
+				case GF: transcript_interpro		= itp.assignProteindomainTranscripts_GF(plaza_db_connection, transcript2gf, gf2transcripts, gf_type, gf_min_rep);break;
 				case BESTHIT:transcript_interpro	= itp.assignProteindomainTranscripts_BESTHIT(plaza_db_connection, simsearch_data);break;
-				case GF_BESTHIT:transcript_interpro	= itp.assignProteindomainTranscripts_GF_BESTHIT(plaza_db_connection, transcript2gf, gf2transcripts, gf_type, simsearch_data);break;
+				case GF_BESTHIT:transcript_interpro	= itp.assignProteindomainTranscripts_GF_BESTHIT(plaza_db_connection, transcript2gf, gf2transcripts, gf_type, simsearch_data, gf_min_rep);break;
 				default:System.err.println("Illegal func annot indicator : "+func_annot);System.exit(1);
 			}
 			plaza_db_connection.close();
@@ -553,7 +560,11 @@ public class InitialTranscriptsProcessing {
 	 * SELECT `detected_frame` , `detected_strand` , count( `transcript_id` ) AS count FROM `transcripts` WHERE `experiment_id` =13 GROUP BY `detected_frame` , `detected_strand`
 	 */
 	public void performPutativeFrameDetection(Connection db_connection,String experiment_id,Map<String,List<String[]>> simsearch_data) throws Exception{
-
+/*
+		System.out.println("-----");
+		System.out.println(simsearch_data.toString());
+		System.out.println("-----");
+*/
 		Map<String, Integer> lengths = new HashMap<String, Integer>();
 		//boolean frameshift = false; //flag to check if a frameshift is expected
 
@@ -578,6 +589,8 @@ public class InitialTranscriptsProcessing {
 				if (topHit.equals(currentHit)){
 					int start = Integer.parseInt(simsearch_data.get(gene).get(i)[2]);
 					int stop = Integer.parseInt(simsearch_data.get(gene).get(i)[3]);
+					System.out.println(start);
+					System.out.println(stop);
 					int frame = 0;
 					char strand = ' ';
 					if (start < stop){
@@ -656,7 +669,7 @@ public class InitialTranscriptsProcessing {
 			stmt_update_frames.setString(4, "" + frameshifted);
 			stmt_update_frames.setString(5, gene);
 
-			//System.out.println(stmt_update_frames.toString());
+			System.out.println(stmt_update_frames.toString());
 			try{
 				stmt_update_frames.execute();
 			}
@@ -1066,12 +1079,13 @@ public class InitialTranscriptsProcessing {
 	 * @param transcript2gf Mapping from transcripts to gene families
 	 * @param gf2transcripts Mapping from gene families to transcripts
 	 * @param gf_type Type of gene family to be used.
-	 * @return Mapping from transcript to GO terms
+     * @param min_freq Minimum representation of protein domain in GF required to transfer it to transcripts
+     * @return Mapping from transcript to GO terms
 	 * @throws Exception
 	 */
 	private Map<String,Set<String>> assignGoTranscripts_GF(Connection plaza_connection,
 			Map<String,GeneFamilyAssignment> transcript2gf,Map<String,List<String>>gf2transcripts,
-			GF_TYPE gf_type) throws Exception{
+			GF_TYPE gf_type, double min_freq) throws Exception{
 
 
 		Map<String,Set<String>> transcript_go	= new HashMap<String,Set<String>>();
@@ -1146,7 +1160,7 @@ public class InitialTranscriptsProcessing {
 			double gene_gf_count		= gas.gf_size;
 			for(String go_id:go_genes.keySet()){
 				double gene_go_count	= go_genes.get(go_id).size();
-				if(gene_go_count/gene_gf_count >= 0.5){
+				if(gene_go_count/gene_gf_count >= min_freq){
 					selected_gos.add(go_id);
 				}
 			}
@@ -1187,17 +1201,18 @@ public class InitialTranscriptsProcessing {
 	 * @param gf2transcripts Mapping from gene families to transcripts
 	 * @param gf_type Type of gene family to be used.
 	 * @param simsearch_data Similarity search results
-	 * @return Mapping from transcript to GO terms
+     * @param min_freq Minimum representation of protein domain in GF required to transfer it to transcripts
+     * @return Mapping from transcript to GO terms
 	 * @throws Exception
 	 */
 	private Map<String,Set<String>> assignGoTranscripts_GF_BESTHIT(Connection plaza_connection,
 			Map<String,GeneFamilyAssignment> transcript2gf,Map<String,List<String>>gf2transcripts,
-			GF_TYPE gf_type,Map<String,List<String[]>> simsearch_data
+			GF_TYPE gf_type,Map<String,List<String[]>> simsearch_data, double min_freq
 	) throws Exception{
 		Map<String,Set<String>> transcript_go	= new HashMap<String,Set<String>>();
 
 		Map<String,Set<String>> transcript_go_besthit	= this.assignGoTranscripts_BESTHIT(plaza_connection, simsearch_data);
-		Map<String,Set<String>> transcript_go_gf		= this.assignGoTranscripts_GF(plaza_connection, transcript2gf, gf2transcripts, gf_type);
+		Map<String,Set<String>> transcript_go_gf		= this.assignGoTranscripts_GF(plaza_connection, transcript2gf, gf2transcripts, gf_type, min_freq);
 
 		transcript_go.putAll(transcript_go_besthit);
 		for(String transcript:transcript_go_gf.keySet()){
@@ -1285,12 +1300,13 @@ public class InitialTranscriptsProcessing {
 	 * @param transcript2gf Mapping from transcripts to gene families
 	 * @param gf2transcripts Mapping from gene families to transcripts
 	 * @param gf_type Type of gene family to be used.
+	 * @param min_freq Minimum representation of protein domain in GF required to transfer it to transcripts
 	 * @return Mapping from transcript to protein domains
 	 * @throws Exception
 	 */
 	private Map<String,Set<String>> assignProteindomainTranscripts_GF(Connection plaza_connection,
 			Map<String,GeneFamilyAssignment> transcript2gf,Map<String,List<String>>gf2transcripts,
-			GF_TYPE gf_type) throws Exception{
+			GF_TYPE gf_type, double min_freq) throws Exception{
 
 		Map<String,Set<String>> transcript_interpro	= new HashMap<String,Set<String>>();
 
@@ -1344,7 +1360,7 @@ public class InitialTranscriptsProcessing {
 			Set<String> selected_interpros	= new HashSet<String>();
 			for(String ipr_id:interpro_genes.keySet()){
 				double gene_ipr_count	= interpro_genes.get(ipr_id).size();
-				if(gene_ipr_count/gene_gf_count >= 0.5){
+				if(gene_ipr_count/gene_gf_count >= min_freq){
 					selected_interpros.add(ipr_id);
 				}
 			}
@@ -1378,17 +1394,18 @@ public class InitialTranscriptsProcessing {
 	 * @param gf2transcripts Mapping from gene families to transcripts
 	 * @param gf_type Type of gene family to be used.
 	 * @param simsearch_data Similarity search results
-	 * @return Mapping from transcript to protein domains
+     * @param min_freq Minimum representation of protein domain in GF required to transfer it to transcripts
+     * @return Mapping from transcript to protein domains
 	 * @throws Exception
 	 */
 	private Map<String,Set<String>> assignProteindomainTranscripts_GF_BESTHIT(Connection plaza_connection,
 			Map<String,GeneFamilyAssignment> transcript2gf,Map<String,List<String>>gf2transcripts,
-			GF_TYPE gf_type,Map<String,List<String[]>> simsearch_data
+			GF_TYPE gf_type,Map<String,List<String[]>> simsearch_data, double min_freq
 	) throws Exception{
 		Map<String,Set<String>> transcript_interpro	= new HashMap<String,Set<String>>();
 
 		Map<String,Set<String>> transcript_interpro_besthit	= this.assignProteindomainTranscripts_BESTHIT(plaza_connection, simsearch_data);
-		Map<String,Set<String>> transcript_interpro_gf		= this.assignProteindomainTranscripts_GF(plaza_connection, transcript2gf, gf2transcripts, gf_type);
+		Map<String,Set<String>> transcript_interpro_gf		= this.assignProteindomainTranscripts_GF(plaza_connection, transcript2gf, gf2transcripts, gf_type, min_freq);
 
 		transcript_interpro.putAll(transcript_interpro_besthit);
 		for(String transcript:transcript_interpro_gf.keySet()){
@@ -2045,8 +2062,8 @@ public class InitialTranscriptsProcessing {
 		String db_name = db_url.substring(db_url.lastIndexOf("/") + 1);
 		// System.out.println(db_name);
 		String query				= "SELECT `gene_id`,CHAR_LENGTH(`seq`) FROM `annotation` WHERE `type`='coding' ";
-		if(!db_name.contains("plaza")) {
 			query = "SELECT `gene_id`, `seq_length` FROM `annotation` USE INDEX(PRIMARY) WHERE `type`='coding' ";
+		if(!db_name.contains("plaza")) {
 		}
 		Statement stmt				= plaza_conn.createStatement();
 		stmt.setFetchSize(1000);
@@ -2281,6 +2298,7 @@ public class InitialTranscriptsProcessing {
 		public Map<String,String> findLongestORF(String sequence,char strand, int frame){
 			//create sequence to work with, reverse complement if necessary
 			if(frame==0){
+				// System.out.println("Yo I had NO frame!");
 				String forward_sequence	= sequence;
 				String reverse_sequence	= this.reverseComplement(sequence);
 				//iterate over the 3 frames and the 2 strands, and compute all the results. Then compare them.
@@ -2306,6 +2324,7 @@ public class InitialTranscriptsProcessing {
 				return cache.get(best_result);
 			}
 			else{
+				// System.out.println("Yo I had a frame!");
 				String finalSequence = "";
 				if (strand == '-'){finalSequence = this.reverseComplement(sequence);}
 				else {finalSequence = sequence;}
@@ -2678,6 +2697,7 @@ public class InitialTranscriptsProcessing {
      * @param plaza_connection Connection to PLAZA database
      * @param transcript2ogs Mapping from transcripts to OGs
      * @param ogs2transcripts Mapping from OGs to transcripts
+     * @param min_freq Minimum frequency of GO term in OG to consider it
      * @return Mapping from transcript to GO terms
      * @throws Exception
      */
@@ -2686,10 +2706,10 @@ public class InitialTranscriptsProcessing {
     // Problem if using `IN` clauses: some OGs have A LOT of members (for example: COG4886 with 26124 members)
     private Map<String,Set<String>> assignGoTranscriptsEggnog_GF(Connection plaza_connection,
                                                                  Map<String,List<String>>transcript2ogs,
-                                                                 Map<String,List<String>>ogs2transcripts
+                                                                 Map<String,List<String>>ogs2transcripts,
+                                                                 double min_freq
     ) throws Exception {
 
-        double min_freq = 0.33;  // Minimum frequency of GO term in OG to consider it
         Map<String,Set<String>> transcript_go = new HashMap<String,Set<String>>();
 //        Map<String,Set<String>> gene_go_cache = new HashMap<String,Set<String>>();
         Map<String,Set<String>> og_go_cache = new HashMap<String,Set<String>>();
@@ -2883,15 +2903,16 @@ public class InitialTranscriptsProcessing {
 	 * @param plaza_connection Connection to PLAZA database
 	 * @param transcript2ogs Mapping from transcripts to OGs
 	 * @param ogs2transcripts Mapping from OGs to transcripts
+     * @param min_freq    Minimum frequency of GO term in OG to consider it
 	 * @return Mapping from transcript to GO terms
 	 * @throws Exception
 	 */
 	private Map<String,Set<String>> assignGoTranscriptsEggnog_GF_precomputed(Connection plaza_connection,
 																 Map<String,List<String>>transcript2ogs,
-																 Map<String,List<String>>ogs2transcripts
+																 Map<String,List<String>>ogs2transcripts,
+																 double min_freq
 	) throws Exception {
 
-		double min_freq = 0.33;  // Minimum frequency of GO term in OG to consider it
 		Map<String,Set<String>> transcript_go = new HashMap<String,Set<String>>();
 		Map<String,Set<String>> og_go_cache = new HashMap<String,Set<String>>();
 		long t11	= System.currentTimeMillis();
@@ -2988,6 +3009,7 @@ public class InitialTranscriptsProcessing {
      * @param transcript2ogs Mapping from transcripts to gene families
      * @param ogs2transcripts Mapping from gene families to transcripts
      * @param simsearch_data Similarity search results
+     * @param min_freq Minimum frequency of GO term required in GF/OG to transfer it to transcripts
      * @return Mapping from transcript to GO terms
      * @throws Exception
      */
@@ -2995,11 +3017,12 @@ public class InitialTranscriptsProcessing {
     		Connection plaza_connection,
 			Map<String, List<String>> transcript2ogs,
 			Map<String, List<String>> ogs2transcripts,
-			Map<String,List<String[]>> simsearch_data) throws Exception{
+			Map<String,List<String[]>> simsearch_data,
+            double min_freq) throws Exception{
         Map<String,Set<String>> transcript_go	= new HashMap<String,Set<String>>();
         // 1. Get best hit GO annotation and GF/OGs GO annotation
         Map<String,Set<String>> transcript_go_besthit = this.assignGoTranscriptsEggnog_BESTHIT(plaza_connection, simsearch_data);
-        Map<String,Set<String>> transcript_go_gf = this.assignGoTranscriptsEggnog_GF_precomputed(plaza_connection, transcript2ogs, ogs2transcripts);
+        Map<String,Set<String>> transcript_go_gf = this.assignGoTranscriptsEggnog_GF_precomputed(plaza_connection, transcript2ogs, ogs2transcripts, min_freq);
         // 2. Populate and return `transcript_go`
         transcript_go.putAll(transcript_go_besthit);
         for(String transcript: transcript_go_gf.keySet()) {
@@ -3082,15 +3105,16 @@ public class InitialTranscriptsProcessing {
      * @param plaza_connection Connection to PLAZA database
      * @param transcript2ogs Mapping from transcripts to OGs
      * @param ogs2transcripts Mapping from OGs to transcripts
+     * @param min_freq Minimum frequency of KO term in OG to consider it
      * @return Mapping from transcript to GO terms
      * @throws Exception
      */
     private Map<String,Set<String>> assignKoTranscripts_GF_precomputed(Connection plaza_connection,
                                                                        Map<String,List<String>>transcript2ogs,
-                                                                       Map<String,List<String>>ogs2transcripts
+                                                                       Map<String,List<String>>ogs2transcripts,
+                                                                       double min_freq
     ) throws Exception {
 
-        double min_freq = 0.33;  // Minimum frequency of KO term in OG to consider it
         Map<String,Set<String>> transcript_ko = new HashMap<String,Set<String>>();
         Map<String,Set<String>> og_ko_cache = new HashMap<String,Set<String>>();
         long t11	= System.currentTimeMillis();
@@ -3168,6 +3192,7 @@ public class InitialTranscriptsProcessing {
      * @param transcript2ogs Mapping from transcripts to gene families
      * @param ogs2transcripts Mapping from gene families to transcripts
      * @param simsearch_data Similarity search results
+     * @param min_freq minimum frequency rquired in GF/OG to transfer KO terms
      * @return Mapping from transcript to GO terms
      * @throws Exception
      */
@@ -3175,11 +3200,12 @@ public class InitialTranscriptsProcessing {
             Connection plaza_connection,
             Map<String, List<String>> transcript2ogs,
             Map<String, List<String>> ogs2transcripts,
-            Map<String,List<String[]>> simsearch_data) throws Exception{
+            Map<String,List<String[]>> simsearch_data,
+            double min_freq) throws Exception{
         Map<String,Set<String>> transcript_ko	= new HashMap<String, Set<String>>();
         // 1. Get best hit GO annotation and GF/OGs GO annotation
         Map<String,Set<String>> transcript_ko_besthit = this.assignKoTranscripts_BESTHIT(plaza_connection, simsearch_data);
-        Map<String,Set<String>> transcript_ko_gf = this.assignKoTranscripts_GF_precomputed(plaza_connection, transcript2ogs, ogs2transcripts);
+        Map<String,Set<String>> transcript_ko_gf = this.assignKoTranscripts_GF_precomputed(plaza_connection, transcript2ogs, ogs2transcripts, min_freq);
         // 2. Populate and return `transcript_ko`
         transcript_ko.putAll(transcript_ko_besthit);
         for(String transcript: transcript_ko_gf.keySet()) {
