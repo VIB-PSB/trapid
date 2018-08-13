@@ -190,7 +190,9 @@ else{
 			$go_web_id	= str_replace(":","-",$go_id);
 			$res		= $result[$go_id];
 			echo "<tr $class>";
-			echo "<td $lower_row>".$go_type."</td>";
+            echo "<td class='text-center' $lower_row>";
+            echo $this->element("go_category_badge", array("go_category"=>$go_type, "small_badge"=>false, "no_color"=>true));
+            echo "</td>";
 			echo "<td $lower_row>".$this->Html->link($go_id,array("controller"=>"functional_annotation","action"=>"go",$exp_id,$go_web_id))."</td>";
 			echo "<td $lower_row>".number_format($res['enrichment'],2)."</td>";
 

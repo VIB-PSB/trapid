@@ -49,6 +49,8 @@
         <!--            </select>-->
     </p>
 </div>
+<!--    --><?php //pr($standard_experiment_info); ?>
+
 <?php endif; ?>
 
 <div class='page-header'>
@@ -60,24 +62,24 @@
 <script type="text/javascript">
     $(document).ready(function () {
 //        console.log("GONNA PROCESS!");
-        $('#transcriptsTable').dataTable({
-            "bServerSide": true,
-            "bProcessing": true,
-            "sAjaxSource": "http://bioinformatics.psb.ugent.be/testix/trapid_frbuc/trapid/ajaxData"
-        });
-        console.log("PROCESSED!");
+//        $('#transcriptsTable').dataTable({
+//            "bServerSide": true,
+//            "bProcessing": true,
+//            "sAjaxSource": "http://bioinformatics.psb.ugent.be/testix/trapid_frbuc/trapid/ajaxData"
+//        });
+//        console.log("PROCESSED!");
     });
     // Not working for security reasons
-    $(document).ready(function () {
-        var table = $('#example').DataTable({
-            scrollY: "300px",
-            scrollX: true,
-            scrollCollapse: true,
-            ajax: "https://datatables.net/examples/server_side/scripts/server_processing.php",
-            serverSide: true,
-            fixedColumns: true
-        });
-    });
+//    $(document).ready(function () {
+//        var table = $('#example').DataTable({
+//            scrollY: "300px",
+//            scrollX: true,
+//            scrollCollapse: true,
+//            ajax: "https://datatables.net/examples/server_side/scripts/server_processing.php",
+//            serverSide: true,
+//            fixedColumns: true
+//        });
+//    });
 </script>
 <!--    <table id="example" class="display nowrap" cellspacing="0" width="100%">-->
 <!--            <thead>-->
@@ -148,7 +150,6 @@
     <!--                        </div>-->
 </div>
 </section>
-
 <?php
 if ($standard_experiment_info['Experiments']['process_state'] == "upload" || isset($admin)) {
     echo "<h3>Initial processing</h3>\n";
@@ -207,11 +208,11 @@ if ($standard_experiment_info['Experiments']['process_state'] == "finished" && $
 <!--            <br/>-->
 <?php // echo $this->element("search_element");?>
 <!--        </div>-->
-<h2 id="transcripts">Transcripts (legacy)</h2>
+<h2 id="transcripts">Transcripts</h2>
 <div class="subdiv">
     <?php if ($num_transcripts == 0): ?>
         <p class="lead text-muted">Disabled prior to transcripts import. </p>
-<!--        <span class='disabled'>Disabled prior to transcripts import</span>-->
+        <!--        <span class='disabled'>Disabled prior to transcripts import</span>-->
     <?php else: ?>
         <?php
         //$this->Paginator->options(array("url"=>$this->passedArgs));
@@ -268,7 +269,9 @@ if ($standard_experiment_info['Experiments']['process_state'] == "finished" && $
                         $go = $transcripts_go[$td['transcript_id']][$i];
                         $go_web = str_replace(":", "-", $go);
                         $desc = $go_info[$go]['desc'];
-                        echo ($i + 1) . ") " . $this->Html->link($desc, array("controller" => "functional_annotation", "action" => "go", $exp_id, $go_web)) . "<br/>";
+                        echo ($i + 1) . ". " . $this->Html->link($desc, array("controller" => "functional_annotation", "action" => "go", $exp_id, $go_web));
+                        echo " " . $this->element("go_category_badge", array("go_category"=>$go_info[$go]["type"], "small_badge"=>true, "no_color"=>false));
+                        echo "<br/>";
                     }
                     echo "</td>";
                 }
@@ -282,7 +285,7 @@ if ($standard_experiment_info['Experiments']['process_state'] == "finished" && $
                     for ($i = 0; $i < count($transcripts_ipr[$td['transcript_id']]) && $i < 3; $i++) {
                         $ipr = $transcripts_ipr[$td['transcript_id']][$i];
                         $desc = $ipr_info[$ipr]['desc'];
-                        echo ($i + 1) . ") " . $this->Html->link($desc, array("controller" => "functional_annotation", "action" => "interpro", $exp_id, $ipr)) . "</br>";
+                        echo ($i + 1) . ". " . $this->Html->link($desc, array("controller" => "functional_annotation", "action" => "interpro", $exp_id, $ipr)) . "</br>";
                     }
                     echo "</td>";
                 }
@@ -295,7 +298,7 @@ if ($standard_experiment_info['Experiments']['process_state'] == "finished" && $
                     echo "<td class='left'>";
                     for ($i = 0; $i < count($transcripts_labels[$td['transcript_id']]) && $i < 3; $i++) {
                         $label = $transcripts_labels[$td['transcript_id']][$i];
-                        echo ($i + 1) . ") " . $this->Html->link($label, array("controller" => "labels", "action" => "view", $exp_id, urlencode($label))) . "<br/>";
+                        echo ($i + 1) . ". " . $this->Html->link($label, array("controller" => "labels", "action" => "view", $exp_id, urlencode($label))) . "<br/>";
                     }
                     echo "</td>";
                 }

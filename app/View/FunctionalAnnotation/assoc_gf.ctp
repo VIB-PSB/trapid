@@ -14,9 +14,14 @@
 				$go_web	= str_replace(":","-",$go); 			
 			    	if(!$exp_info['allow_linkout']) {
 			    	    echo $go;
-			    	}
+                        echo "&nbsp;";
+                        echo $this->element("go_category_badge", array("go_category"=>$go_category, "small_badge"=>true));
+
+                    }
 			    	else {
 			    	    echo $this->Html->link($go,$exp_info['datasource_URL']."go/view/".$go_web);
+                        echo "&nbsp;";
+                        echo $this->element("go_category_badge", array("go_category"=>$go_category, "small_badge"=>true));
 			    	}
             echo "&nbsp; &nbsp;";
             echo  $this->element("linkout_func", array("linkout_type"=>"amigo", "query_term"=>$go));
@@ -67,11 +72,14 @@
 				echo "<td>".$this->Html->link($gf_id,array("controller"=>"gene_family","action"=>"gene_family",$exp_id,$gf_id))."</td>";
 				echo "<td>".$transcript_count."</td>";
 				echo "<td style='text-align:left;'>";			
-				for($i=0;$i<count($extra_annot_go[$gf_id]) && $i<2;$i++){	
+				for($i=0;$i<count($extra_annot_go[$gf_id]) && $i<2;$i++){
 					$go	= $extra_annot_go[$gf_id][$i];
 					$desc	= $go_descriptions[$go];
+					$go_cat = $go_categories[$go];
 					echo ($i+1) . ". " . $this->Html->link($desc,array("controller"=>"functional_annotation","action"=>"go",$exp_id,str_replace(":","-",$go)));
-					echo "<br/>";
+                    echo "&nbsp;";
+                    echo $this->element("go_category_badge", array("go_category"=>$go_cat, "small_badge"=>true));
+                    echo "<br/>";
 				}
 				echo "</td>";				
 

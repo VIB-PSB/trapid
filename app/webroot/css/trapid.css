@@ -1557,6 +1557,29 @@ a.linkout:after {
 	/*color:red;*/
 }
 
+
+/* Badges for GO categories display */
+
+.badge-go-bp {
+	background-color: #fd7272;
+}
+
+.badge-go-cc {
+	background-color: #3b3b98;
+}
+
+.badge-go-mf {
+	background-color: #1abc9c;
+}
+
+.badge-sm {
+	font-size: 70%;
+	padding: 3px 4px 3px;
+}
+
+
+
+
 /* Lots of ugly borders: useful for debugging when things are not displayed as expected */
 
 /*body {*/

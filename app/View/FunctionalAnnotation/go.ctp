@@ -4,7 +4,7 @@
 	echo $this->Html->css(array('dataTables.bootstrap.min.css'))."\n";
 ?>
 <div class="page-header">
-    <h1 class="text-primary">GO term</h1>
+    <h1 class="text-primary"><?php echo $go_info["name"]; ?> <small>GO term</small></h1>
 </div>
 <div class="subdiv">
 	<?php // echo $this->element("trapid_experiment"); ?>
@@ -18,10 +18,13 @@
 			    $go_web	= str_replace(":","-",$go_info["name"]);
 			    if(!$exp_info['allow_linkout']){
 				echo $go_info["name"];
+                echo $this->element("go_category_badge", array("go_category"=>$go_info["info"], "small_badge"=>true));
 			    }
 			    else{
 			       echo $this->Html->link($go_info["name"],$exp_info['datasource_URL']."go/view/".$go_web);
-			    }
+			       echo "&nbsp;";
+                   echo $this->element("go_category_badge", array("go_category"=>$go_info["info"], "small_badge"=>true));
+                }
 			?>
                 &nbsp; &nbsp;
                 <?php echo  $this->element("linkout_func", array("linkout_type"=>"amigo", "query_term"=>$go_info["name"]));?>

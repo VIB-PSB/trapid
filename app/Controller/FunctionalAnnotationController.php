@@ -270,7 +270,8 @@ class FunctionalAnnotationController extends AppController{
       if($num_transcripts==0){$this->redirect(array("controller"=>"trapid","action"=>"experiment",$exp_id));}
       $go_information	= $this->ExtendedGo->find("first",array("conditions"=>array("name"=>$go, "type"=>"go")));
       $this->set("description",$go_information["ExtendedGo"]["desc"]);
-      $this->set("type","go");
+      $this->set("go_category",$go_information["ExtendedGo"]["info"]);
+      $this->set("type", "go");
       $this->set("go",$go);
       $this->set("num_transcripts",$num_transcripts);
       if($num_transcripts>5000){$this->set("error","Unable to find associated gene families for GO terms with more than 5000 associated transcripts");return;}
@@ -333,16 +334,18 @@ class FunctionalAnnotationController extends AppController{
     //    pr($ipr_descriptions);
 //    $go_descriptions	= $this->TrapidUtils->indexArraySimple($go_descriptions,"ExtendedGo","go","desc");
 //    $ipr_descriptions	= $this->TrapidUtils->indexArraySimple($ipr_descriptions,"ProteinMotifs","motif_id","desc");
-    $go_descriptions	= $this->TrapidUtils->indexArraySimple($go_descriptions,"ExtendedGo","name","desc");
-    $ipr_descriptions	= $this->TrapidUtils->indexArraySimple($ipr_descriptions,"ProteinMotifs","name","desc");
+    $go_categories  = $this->TrapidUtils->indexArraySimple($go_descriptions,"ExtendedGo","name","info");
+    $go_descriptions = $this->TrapidUtils->indexArraySimple($go_descriptions,"ExtendedGo","name","desc");
+      $ipr_descriptions	= $this->TrapidUtils->indexArraySimple($ipr_descriptions,"ProteinMotifs","name","desc");
     //$this->set("extra_annotation",$extra_annotation);
 
     $this->set("extra_annot_go",$extra_annot_go);
     $this->set("extra_annot_ipr",$extra_annot_ipr);
     $this->set("go_descriptions",$go_descriptions);
+    $this->set("go_categories", $go_categories);
     $this->set("ipr_descriptions",$ipr_descriptions);
 
-    $this -> set('title_for_layout', $identifier.' &middot; Associated gene families');
+    $this -> set('title_for_layout', str_replace("-",":", $identifier) .' &middot; Associated gene families');
   }
 
 

@@ -58,7 +58,9 @@ if(isset($label)){$label_column_class1="class='highlight'";$label_column_class2=
 				$go	= $transcripts_go[$td['transcript_id']][$i];
 				$go_web	= str_replace(":","-",$go);
 				$desc	= $go_info_transcripts[$go]['desc'];
-				echo ($i+1).". ".$this->Html->link($desc,array("controller"=>"functional_annotation","action"=>"go",$exp_id,$go_web))."<br/>";
+				echo ($i+1).". ".$this->Html->link($desc,array("controller"=>"functional_annotation","action"=>"go",$exp_id,$go_web));
+				echo " " . $this->element("go_category_badge", array("go_category"=>$go_info_transcripts[$go]["type"], "small_badge"=>true, "no_color"=>false));
+                echo "<br/>";
 			}
 			echo "</td>";
 		}

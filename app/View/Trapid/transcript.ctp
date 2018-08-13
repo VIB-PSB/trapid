@@ -220,24 +220,72 @@
         </div>
 
         <div id="functional-data" class="tab-pane"><br>
-
-            <dl class="standard2 dl-horizontal">
-
-                <dt>Gene Ontology</dt>
-                <dd>
+            <section class="page-section-sm">
+                <h3>Gene Ontology</h3>
                     <?php
                     if ($associated_go) {
+                        // Create three GO arrays (one for each GO ontology)
+                        $go_terms_bp = array();  // Biological process
+                        $go_terms_mf = array();  // Molecular function
+                        $go_terms_cc = array();  // Cellular component
+                        // Loop over found GO terms to map them to their ontologies
+                        foreach ($associated_go as $ag) {
+                            $go_id = $ag['TranscriptsGo']['name'];
+                            $is_hidden = $ag['TranscriptsGo']['is_hidden'];
+                            $go_data = array("go_id"=>$go_id, "is_hidden"=>$is_hidden);
+                            switch ($go_info[$go_id]['type']) {
+                                case "BP":
+                                    $go_terms_bp[] = $go_data;
+                                    break;
+                                case "MF":
+                                    $go_terms_mf[] = $go_data;
+                                    break;
+                                case "CC":
+                                    $go_terms_cc[] = $go_data;
+                                    break;
+                                default:
+                                    break;
+                            }
+                        }
+                        $all_gos = array(
+                            "BP"=>array("title"=>"Biological process", "go_terms"=>$go_terms_bp),
+                            "MF"=>array("title"=>"Molecular function", "go_terms"=>$go_terms_mf),
+                            "CC"=>array("title"=>"Cellular component", "go_terms"=>$go_terms_cc)
+                        );
+                        // Collapsed/all GO choice
                         echo "<ul class='tabbed_header list-unstyled list-inline'>\n";
-                        echo "<li id='tab_collapsed' class='selected_tab'>";
+                        echo "<li id='tab_collapsed' class='selected_tab'>Show: ";
                         echo "<a href=\"javascript:switch_go_display('tab_collapsed','div_collapsed');\">Collapsed GO data</a>";
                         echo "</li>\n";
                         echo "<li id='tab_all'>";
                         echo "<a href=\"javascript:switch_go_display('tab_all','div_all');\">All GO data</a>";
                         echo "</li>\n";
+                        echo $this->element("help_tooltips/create_tooltip", array("tooltip_text"=>$tooltips["transcript_go_collapsed"], "tooltip_placement"=>"right", "override_span_class"=>"glyphicon glyphicon-question-sign"));
                         echo "</ul>\n";
 
+                        // Collapsed GOs div
                         echo "<div class='tabbed_div selected_tabbed_div' id='div_collapsed'>\n";
-                        echo "<table class='table table-striped table-condensed table-bordered table-hover' cellpadding='0' cellspacing='0' style='width:600px;'>\n";
+                        foreach($all_gos as $go_category) {
+                            if(!empty($go_category["go_terms"])) {
+                                echo "<h4>" . $go_category["title"] . "</h4>";
+                                echo "<table class='table table-striped table-condensed table-bordered table-hover'>\n";
+                                echo "<thead><tr><th style='width:20%;'>GO term</th><th style='width:80%;'>Description</th></tr></thead>\n";
+                                foreach($go_category["go_terms"] as $go_term) {
+                                    if ($go_term["is_hidden"] == 0) {
+                                        $web_go = str_replace(":", "-", $go_term["go_id"]);
+                                        echo "<tr>";
+                                        echo "<td>" . $this->Html->link($go_term["go_id"], array("controller" => "functional_annotation", "action" => "go", $exp_id, $web_go)) . "</td>";
+                                        echo "<td>" . $go_info[$go_term["go_id"]]['desc'] . "</td>";
+                                        echo "</tr>\n";
+                                    }
+                                }
+                                echo "</tbody>\n";
+                                echo "</table>\n<br>\n";
+                            }
+                        }
+
+                        // Old table
+/*                        echo "<table class='table table-striped table-condensed table-bordered table-hover'>\n";
                         echo "<thead><tr><th style='width:20%;'>GO term</th><th style='width:80%;'>Description</th></tr></thead>\n";
                         echo "<tbody>\n";
                         foreach ($associated_go as $ag) {
@@ -252,11 +300,36 @@
                             }
                         }
                         echo "</tbody>\n";
-                        echo "</table>\n";
+                        echo "</table>\n";*/
+
                         echo "</div>\n";
 
+                        // All GOs div
                         echo "<div class='tabbed_div' id='div_all'>\n";
-                        echo "<table class='table table-striped table-condensed table-bordered table-hover' cellpadding='0' cellspacing='0' style='width:600px;'>\n";
+                        echo "<div class='tabbed_div selected_tabbed_div' id='div_collapsed'>\n";
+                        foreach($all_gos as $go_category) {
+                            if(!empty($go_category["go_terms"])) {
+                                echo "<h4>" . $go_category["title"] . "</h4>";
+                                echo "<table class='table table-striped table-condensed table-bordered table-hover'>\n";
+                                echo "<thead><tr><th style='width:20%;'>GO term</th><th style='width:80%;'>Description</th></tr></thead>\n";
+                                foreach($go_category["go_terms"] as $go_term) {
+                                    $class = null;
+                                    if ($go_term["is_hidden"] == 0) {
+                                        $class = "class='success'";  // highlight row
+                                    }
+                                        $web_go = str_replace(":", "-", $go_term["go_id"]);
+                                        echo "<tr " . $class . ">";
+                                        echo "<td>" . $this->Html->link($go_term["go_id"], array("controller" => "functional_annotation", "action" => "go", $exp_id, $web_go)) . "</td>";
+                                        echo "<td>" . $go_info[$go_term["go_id"]]['desc'] . "</td>";
+                                        echo "</tr>\n";
+                                    }
+                                }
+                                echo "</tbody>\n";
+                                echo "</table>\n<br>\n";
+                            }
+
+                        // Old table
+/*                        echo "<table class='table table-striped table-condensed table-bordered table-hover'>\n";
                         echo "<thead>\n";
                         echo "<tr><th style='width:20%;'>GO term</th><th style='width:80%;'>Description</th></tr>\n";
                         echo "</thead>\n";
@@ -274,19 +347,19 @@
                             echo "<td>" . $go_info[$go]['desc'] . "</td>";
                             echo "</tr>\n";
                         }
-                        echo "</tbody>\n</table>\n";
+                        echo "</tbody>\n</table>\n";*/
                         echo "</div>\n";
                     } else {
                         echo "<span class='disabled'>Unavailable</span>";
                     }
                     ?>
-                </dd>
-
-                <dt>Interpro domains</dt>
+                </section>
+                <section class="page-section-sm">
+                <h3>InterPro domains</h3>
                 <dd>
                     <?php
                     if ($associated_interpro) {
-                        echo "<table class='table table-striped table-condensed table-bordered table-hover' cellpadding='0' cellspacing='0' style='width:600px;'>\n";
+                        echo "<table class='table table-striped table-condensed table-bordered table-hover'>\n";
                         echo "<thead>\n";
                         echo "<tr><th style='width:20%;'>InterPro domain</th><th style='width:80%;'>Description</th></tr>\n";
                         echo "</thead>\n";
@@ -304,10 +377,7 @@
                         echo "<span class='disabled'>Unavailable</span>";
                     }
                     ?>
-                </dd>
-
-            </dl>
-
+                </section>
 
         </div>
 
@@ -387,3 +457,5 @@
     }
     //]]>
 </script>
+<!-- Enable bootstrap tooltips -->
+<?php echo $this->element("help_tooltips/enable_tooltips",  array("container"=>"#functional-data")); ?>

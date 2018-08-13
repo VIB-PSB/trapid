@@ -884,6 +884,13 @@ class TrapidController extends AppController{
     $this->set("available_subsets",$available_subsets);
     $this->set("transcript_subsets",$transcript_subsets);
 
+    // Help tooltips
+    $tooltips = $this->TrapidUtils->indexArraySimple(
+          $this->HelpTooltips->find("all", array("conditions"=>array("tooltip_id LIKE 'transcript%'"))),
+          "HelpTooltips","tooltip_id","tooltip_text"
+      );
+    $this->set("tooltips", $tooltips);
+
     $this -> set('title_for_layout', $transcript_id . ' &middot; Transcript');
 
   }

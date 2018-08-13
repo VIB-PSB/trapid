@@ -1,6 +1,6 @@
 <div>
 <div class="page-header">
-    <h1 class="text-primary">Child GO terms</h1>
+    <h1 class="text-primary"><?php echo $go; ?> <small>child GO terms</small></h1>
 </div>
 <div class="subdiv">
 	<?php // echo $this->element("trapid_experiment"); ?>
@@ -10,6 +10,7 @@
 		<dl class="standard dl-horizontal">
 			<dt>GO term</dt>
 			<dd><?php echo $this->Html->link($go,array("controller"=>"functional_annotation","action"=>"go",$exp_id,$go_web));?>
+                <?php echo $this->element("go_category_badge", array("go_category"=>$go_info["info"], "small_badge"=>true)); ?>
                 &nbsp; &nbsp;
                 <?php echo  $this->element("linkout_func", array("linkout_type"=>"amigo", "query_term"=>$go_info["name"]));?>
                 <?php echo  $this->element("linkout_func", array("linkout_type"=>"quickgo", "query_term"=>$go_info["name"]));?>
