@@ -1578,6 +1578,20 @@ a.linkout:after {
 }
 
 
+/* Clipboard copy link */
+.clipboard-copy {
+	color: #777777;
+	/*background-color: red;*/
+	cursor: copy;
+	text-decoration: underline;
+	text-decoration-style: dotted;
+	text-decoration-color: #aaaaaa;
+	/*border: blue 1px solid;*/
+	margin-top: -8px;
+	width: 110px;
+	font-size: 0.77em;
+}
+
 
 
 /* Lots of ugly borders: useful for debugging when things are not displayed as expected */

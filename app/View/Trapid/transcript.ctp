@@ -80,9 +80,11 @@
                 <dt>Uploaded sequence</dt>
                 <dd>
                     <div>
-                        <textarea class='fixed-width-text' cols="80" rows="5"
-                                  name="transcript_sequence"><?php echo $transcript_info['transcript_sequence']; ?></textarea>
-                        <br/>
+                        <div class="textarea-wrapper">
+                            <textarea class='fixed-width-text' cols="80" rows="5"
+                                      name="transcript_sequence" id="transcript_sequence"><?php echo $transcript_info['transcript_sequence']; ?></textarea>
+                                <br><div class='clipboard-copy' id="copy_transcript_sequence">Copy to clipboard</div>
+                        </div>
                         <?php echo "<span>Sequence length: " . strlen($transcript_info['transcript_sequence']) . " nt</span>"; ?>
                     </div>
                 </dd>
@@ -93,7 +95,10 @@
                         <?php
                         if ($transcript_info['transcript_sequence_corrected'] != "") {
                             echo $this->Form->create(false, array("action" => "transcript/" . $exp_id . "/" . $transcript_info['transcript_id'], "type" => "post"));
-                            echo "<textarea class='fixed-width-text' cols='80' rows='5'  name='corrected_sequence'>" . $transcript_info['transcript_sequence_corrected'] . "</textarea>\n";
+                            echo "<div class=\"textarea-wrapper\">";
+                            echo "<textarea class='fixed-width-text' cols='80' rows='5'  name='corrected_sequence' id='corrected_sequence'>" . $transcript_info['transcript_sequence_corrected'] . "</textarea>\n";
+                            echo "<br><div class='clipboard-copy' id=\"copy_corrected_sequence\">Copy to clipboard</div>";
+                            echo "</div>";
                             echo "<br/>\n";
                             echo "<span>Sequence length: " . strlen($transcript_info['transcript_sequence_corrected']) . " nt</span>\n";
                             echo "<br/>\n";
@@ -113,7 +118,10 @@
                         <?php
                         if ($transcript_info['orf_sequence'] != "") {
                             echo $this->Form->create(false, array("action" => "transcript/" . $exp_id . "/" . $transcript_info['transcript_id'], "type" => "post"));
-                            echo "<textarea class='fixed-width-text' cols='80' rows='5' name='orf_sequence'>" . $transcript_info['orf_sequence'] . "</textarea>\n";
+                            echo "<div class=\"textarea-wrapper\">";
+                            echo "<textarea class='fixed-width-text' cols='80' rows='5' name='orf_sequence' id='orf_sequence'>" . $transcript_info['orf_sequence'] . "</textarea>\n";
+                            echo "<br><div class='clipboard-copy' id=\"copy_orf_nt_sequence\">Copy to clipboard</div>";
+                            echo "</div>";
                             echo "<br/>\n";
                             echo "<span>Sequence length: " . strlen($transcript_info['orf_sequence']) . " nt &nbsp; / &nbsp; " . (number_format(strlen($transcript_info['orf_sequence']) / 3, 0)) . " aa ";
                             echo "(<a href='javascript:show_aa();'>show protein sequence</a>)</span>\n";
@@ -137,7 +145,10 @@
 
                 <dt id='aa_seq_dt' style='display:none;'>AA sequence</dt>
                 <dd id='aa_seq_dd' style='display:none;'>
-                    <div><textarea class='fixed-width-text' cols='80' rows='3'><?php echo $transcript_info['aa_sequence']; ?></textarea></div>
+                    <div class="textarea-wrapper">
+                        <textarea class='fixed-width-text' cols='80' rows='3' id="aa_sequence" name="aa_sequence"><?php echo $transcript_info['aa_sequence']; ?></textarea>
+                        <br><div class='clipboard-copy' id="copy_orf_aa_sequence">Copy to clipboard</div>
+                    </div>
                 </dd>
 
 
@@ -265,9 +276,11 @@
 
                         // Collapsed GOs div
                         echo "<div class='tabbed_div selected_tabbed_div' id='div_collapsed'>\n";
-                        foreach($all_gos as $go_category) {
+                        foreach($all_gos as $go_cat_id => $go_category) {
                             if(!empty($go_category["go_terms"])) {
-                                echo "<h4>" . $go_category["title"] . "</h4>";
+                                echo "<h4>" . $go_category["title"] . " ";
+                                echo $this->element("go_category_badge", array("go_category"=>$go_cat_id, "small_badge"=>false));
+                                echo "</h4>";
                                 echo "<table class='table table-striped table-condensed table-bordered table-hover'>\n";
                                 echo "<thead><tr><th style='width:20%;'>GO term</th><th style='width:80%;'>Description</th></tr></thead>\n";
                                 foreach($go_category["go_terms"] as $go_term) {
@@ -307,9 +320,11 @@
                         // All GOs div
                         echo "<div class='tabbed_div' id='div_all'>\n";
                         echo "<div class='tabbed_div selected_tabbed_div' id='div_collapsed'>\n";
-                        foreach($all_gos as $go_category) {
+                        foreach($all_gos as $go_cat_id => $go_category) {
                             if(!empty($go_category["go_terms"])) {
-                                echo "<h4>" . $go_category["title"] . "</h4>";
+                                echo "<h4>" . $go_category["title"] . " ";
+                                echo $this->element("go_category_badge", array("go_category"=>$go_cat_id, "small_badge"=>false));
+                                echo "</h4>";
                                 echo "<table class='table table-striped table-condensed table-bordered table-hover'>\n";
                                 echo "<thead><tr><th style='width:20%;'>GO term</th><th style='width:80%;'>Description</th></tr></thead>\n";
                                 foreach($go_category["go_terms"] as $go_term) {
@@ -456,6 +471,24 @@
         document.getElementById(div_id).className = "tabbed_div selected_tabbed_div";
     }
     //]]>
+
+    /* Copy the content of `textarea` elements to clipboard */
+    function copy_to_clipboard(element_id) {
+        var textarea = document.getElementById(element_id);
+        textarea.select();
+        document.execCommand("Copy");
+    }
+
+    // Add event listeners to 'copy' elements on the page
+    document.getElementById("copy_transcript_sequence").addEventListener("click", function(){ copy_to_clipboard("transcript_sequence");}, false);
+    <?php if ($transcript_info['transcript_sequence_corrected'] != ""): ?>
+    document.getElementById("copy_corrected_sequence").addEventListener("click", function(){ copy_to_clipboard("corrected_sequence");}, false);
+    <?php endif; ?>
+    <?php if  ($transcript_info['orf_sequence'] != ""): ?>
+    document.getElementById("copy_orf_nt_sequence").addEventListener("click", function(){ copy_to_clipboard("orf_sequence");}, false);
+    document.getElementById("copy_orf_aa_sequence").addEventListener("click", function(){ copy_to_clipboard("aa_sequence");}, false);
+    <?php endif; ?>
+
 </script>
 <!-- Enable bootstrap tooltips -->
 <?php echo $this->element("help_tooltips/enable_tooltips",  array("container"=>"#functional-data")); ?>

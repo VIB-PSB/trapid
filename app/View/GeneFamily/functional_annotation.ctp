@@ -52,9 +52,11 @@
             );
 
             // Create a table for each GO category
-            foreach($all_gos as $go_category) {
+            foreach($all_gos as $go_cat_id => $go_category) {
                 if(!empty($go_category["go_terms"])) {
-                    echo "<h5>" . $go_category["title"] . "</h5>";
+                    echo "<h5>" . $go_category["title"] . " ";
+                    echo $this->element("go_category_badge", array("go_category"=>$go_cat_id, "small_badge"=>false));
+                    echo "</h5>";
                     echo "<table class='table table-striped table-bordered table-hover'>\n";
                     echo "<thead><tr><th style='width:20%'>GO term</th><th>Description</th><th style='width:15%'>Assoc. transcripts</th></tr></thead>\n";
                     foreach($go_category["go_terms"] as $go_term) {
