@@ -271,8 +271,15 @@ if ($standard_experiment_info['Experiments']['process_state'] == "finished" && $
                         $desc = $go_info[$go]['desc'];
                         echo ($i + 1) . ". " . $this->Html->link($desc, array("controller" => "functional_annotation", "action" => "go", $exp_id, $go_web));
                         echo " " . $this->element("go_category_badge", array("go_category"=>$go_info[$go]["type"], "small_badge"=>true, "no_color"=>false));
-                        echo "<br/>";
+                        if($i < 2) {
+                            echo "<br/>";
+                        }
                     }
+                        if (count($transcripts_go[$td['transcript_id']]) > 3) {
+                            $more_go = count($transcripts_go[$td['transcript_id']]) -3;
+                            echo "<label title='" . $more_go . " more GO terms are associated to this transcript" .
+                                "' class='pull-right label label-default' style='cursor:help;'>...</label>";
+                        }
                     echo "</td>";
                 }
 
@@ -285,7 +292,15 @@ if ($standard_experiment_info['Experiments']['process_state'] == "finished" && $
                     for ($i = 0; $i < count($transcripts_ipr[$td['transcript_id']]) && $i < 3; $i++) {
                         $ipr = $transcripts_ipr[$td['transcript_id']][$i];
                         $desc = $ipr_info[$ipr]['desc'];
-                        echo ($i + 1) . ". " . $this->Html->link($desc, array("controller" => "functional_annotation", "action" => "interpro", $exp_id, $ipr)) . "</br>";
+                        echo ($i + 1) . ". " . $this->Html->link($desc, array("controller" => "functional_annotation", "action" => "interpro", $exp_id, $ipr));
+                        if($i < 2) {
+                            echo "<br/>";
+                        }
+                    }
+                    if (count($transcripts_ipr[$td['transcript_id']]) > 3) {
+                        $more_ipr = count($transcripts_ipr[$td['transcript_id']]) -3;
+                        echo "<label title='" . $more_go . " more InterPro domains are associated to this transcript" .
+                            "' class='pull-right label label-default' style='cursor:help;'>...</label>";
                     }
                     echo "</td>";
                 }
@@ -298,7 +313,15 @@ if ($standard_experiment_info['Experiments']['process_state'] == "finished" && $
                     echo "<td class='left'>";
                     for ($i = 0; $i < count($transcripts_labels[$td['transcript_id']]) && $i < 3; $i++) {
                         $label = $transcripts_labels[$td['transcript_id']][$i];
-                        echo ($i + 1) . ". " . $this->Html->link($label, array("controller" => "labels", "action" => "view", $exp_id, urlencode($label))) . "<br/>";
+                        echo ($i + 1) . ". " . $this->Html->link($label, array("controller" => "labels", "action" => "view", $exp_id, urlencode($label)));
+                        if($i < 2) {
+                            echo "<br/>";
+                        }
+                    }
+                    if (count($transcripts_labels[$td['transcript_id']]) > 3) {
+                        $more_sub = count($transcripts_labels[$td['transcript_id']]) -3;
+                        echo "<label title='This transcript is in " . $more_sub . " more subsets" .
+                            "' class='pull-right label label-default' style='cursor:help;'>...</label>";
                     }
                     echo "</td>";
                 }
