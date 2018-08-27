@@ -2330,6 +2330,11 @@ class TrapidController extends AppController{
   }
 
 
+  // TRAPID maintenance page
+  function maintenance(){
+      $this->layout = "external";  // Layout for external pages (i.e. not in experiment)
+      $this -> set('title_for_layout', "Maintenance");
+  }
 
   /*
    * Cookie setup:
