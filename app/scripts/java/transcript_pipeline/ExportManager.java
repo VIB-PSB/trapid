@@ -138,7 +138,7 @@ public class ExportManager {
 
 	public void exportTranscriptSequences(Connection conn,String exp_id,String output_file) throws Exception{
 		BufferedWriter writer	= new BufferedWriter(new FileWriter(new File(output_file)));
-		String sql			= "SELECT `transcript_id`,`transcript_sequence` FROM `transcripts` WHERE `experiment_id`='"+exp_id+"' ";
+		String sql			= "SELECT `transcript_id`,UNCOMPRESS(`transcript_sequence`) as `transcript_sequence` FROM `transcripts` WHERE `experiment_id`='"+exp_id+"' ";
 		Statement stmt		= conn.createStatement();
 		ResultSet set		= stmt.executeQuery(sql);
 		while(set.next()){
@@ -154,7 +154,7 @@ public class ExportManager {
 
 	public void exportOrfSequences(Connection conn,String exp_id,String output_file) throws Exception{
 		BufferedWriter writer	= new BufferedWriter(new FileWriter(new File(output_file)));
-		String sql			= "SELECT `transcript_id`,`orf_sequence` FROM `transcripts` WHERE `experiment_id`='"+exp_id+"' ";
+		String sql			= "SELECT `transcript_id`, UNCOMPRESS(`orf_sequence`) as `orf_sequence` FROM `transcripts` WHERE `experiment_id`='"+exp_id+"' ";
 		Statement stmt		= conn.createStatement();
 		ResultSet set		= stmt.executeQuery(sql);
 		while(set.next()){
@@ -170,7 +170,7 @@ public class ExportManager {
 	public void exportAASequences(Connection conn,String exp_id,String output_file) throws Exception{
 		Map<String,Character> map	= this.getTranslateMap();
 		BufferedWriter writer	= new BufferedWriter(new FileWriter(new File(output_file)));
-		String sql			= "SELECT `transcript_id`,`orf_sequence` FROM `transcripts` WHERE `experiment_id`='"+exp_id+"' ";
+		String sql			= "SELECT `transcript_id`, UNCOMPRESS(`orf_sequence`) as `orf_sequence` FROM `transcripts` WHERE `experiment_id`='"+exp_id+"' ";
 		Statement stmt		= conn.createStatement();
 		ResultSet set		= stmt.executeQuery(sql);
 		while(set.next()){
