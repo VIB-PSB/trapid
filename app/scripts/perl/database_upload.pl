@@ -106,7 +106,7 @@ for(my $i=0;$i<scalar(@data_content);$i++){
 
 	# Trying to fix the 'infinite upload status' issue (Gitlab issue #1)
 	# Wait before upload
-	sleep 3;  
+	sleep 3;
 
 	#next step, check the file extension. If zip or gz, try to extract the content in the upload folder
 	my ($name,$path,$suffix) = fileparse($file_location,qr"\..[^.]*$");
@@ -122,7 +122,7 @@ for(my $i=0;$i<scalar(@data_content);$i++){
 		}
 		# Trying to fix the 'infinite upload status' issue (Gitlab issue #1)
 		# Wait after uncompressing file
-		sleep 2;  
+		sleep 2;
 	}
 
 
@@ -303,7 +303,7 @@ sub upload_file_content($ $ $ $ $ $ $ $){
 	my $dsn			= qq{DBI:mysql:$trapid_db_name:$trapid_db_server:$trapid_db_port};
 	my $dbh			= DBI->connect($dsn,$trapid_db_user,$trapid_db_password,{RaiseError=>1,AutoCommit=>1});
 	if($dbh->err){print STDERR "Cannot create database connection during database uploads retrieval";exit;}
-	my $dbq			= $dbh->prepare("INSERT INTO `transcripts` (`experiment_id`,`transcript_id`,`transcript_sequence`) VALUES (?,?,?) ");
+	my $dbq			= $dbh->prepare("INSERT INTO `transcripts` (`experiment_id`,`transcript_id`,`transcript_sequence`) VALUES (?,?,COMPRESS(?)) ");
 	my @transcript_ids	= ();
 	my $current_transcript	= "";
 	my $current_sequence	= "";
