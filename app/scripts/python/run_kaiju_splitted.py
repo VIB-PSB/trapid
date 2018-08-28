@@ -110,7 +110,7 @@ def clear_db_content(exp_id, db_connection):
 def kaiju_output_to_db(exp_id, kaiju_output_file, db_connection, chunk_size=2000):
     """Simple function to parse kaiju's result to fill the `transcripts_tax` table for the current experiment. """
     sys.stderr.write("[Message] Insert kaiju results in `transcripts_tax`.\n")
-    insert_query = "INSERT INTO transcripts_tax(experiment_id, transcript_id, txid, tax_results) VALUES ({exp_id}, '{transcript_id}', {tax_id}, '{kaiju_str}');"
+    insert_query = "INSERT INTO transcripts_tax(experiment_id, transcript_id, txid, tax_results) VALUES ({exp_id}, '{transcript_id}', {tax_id}, COMPRESS('{kaiju_str}'));"
     cursor = db_connection.cursor()
     with open(kaiju_output_file, 'r') as in_file:
         for line in in_file:

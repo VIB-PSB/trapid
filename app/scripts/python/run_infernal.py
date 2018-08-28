@@ -196,7 +196,7 @@ def store_rna_similarities(exp_id, trapid_db_data, infernal_results):
     # First cleanup the table
     cleanup_table(exp_id=exp_id, table_name="rna_similarities", trapid_db_data=trapid_db_data)
     sys.stderr.write('[Message] Store Infernal results in `rna_similarities`. \n')
-    query_str = "INSERT INTO `rna_similarities` (`experiment_id`,`transcript_id`,`similarity_data`) VALUES ('{exp_id}','{transcript_id}',\"{infernal_data}\")";
+    query_str = "INSERT INTO `rna_similarities` (`experiment_id`,`transcript_id`,`similarity_data`) VALUES ('{exp_id}','{transcript_id}', COMPRESS(\"{infernal_data}\"))";
     # Get and format similarity data
     fields_to_keep = ["cm_acc", "cm_id", "clan", "e_value", "score", "bias", "mdl_from", "mdl_to", "trunc", "seq_from", "seq_to"]
     rna_sim_data = {}
