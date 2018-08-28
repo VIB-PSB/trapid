@@ -589,8 +589,9 @@ class TrapidController extends AppController{
     if(!$transcript_info){$this->redirect(array("controller"=>"trapid","action"=>"experiment",$exp_id));}
     $this->set("transcript_info",$transcript_info['Transcripts']);
     //get the similarity search hits for this transcript
-    $similarity_hits   = $this->Similarities->find("first",array("conditions"=>array("experiment_id"=>$exp_id,"transcript_id"=>$transcript_id)));
-    $similarity_hits	= explode(";",$similarity_hits['Similarities']['similarity_data']);
+    $similarity_hits   = $this->Similarities->find("first",array("fields"=>array("UNCOMPRESS(similarity_data) as sim_data"), "conditions"=>array("experiment_id"=>$exp_id,"transcript_id"=>$transcript_id)));
+    // $similarity_hits	= explode(";",$similarity_hits['Similarities']['similarity_data']);
+    $similarity_hits	= explode(";",$similarity_hits[0]['sim_data']);
     $sim_hits		= array();
     $gene_ids		= array();
     //get the gene identifiers.
@@ -721,8 +722,9 @@ class TrapidController extends AppController{
         $transcript_info = $this->Transcripts->find("first", array("conditions"=>array("experiment_id"=>$exp_id, "transcript_id"=>$transcript_id)));
         if(!$transcript_info){$this->redirect(array("controller"=>"trapid","action"=>"experiment", $exp_id));}
         //get the similarity search hits for this transcript
-        $rna_similarity_hits = $this->RnaSimilarities->find("first", array("conditions"=>array("experiment_id"=>$exp_id, "transcript_id"=>$transcript_id)));
-        $rna_similarity_hits = explode(";",$rna_similarity_hits['RnaSimilarities']['similarity_data']);
+        // TODO: create dedicted model function to handle `uncompress`?
+        $rna_similarity_hits = $this->RnaSimilarities->find("first", array("fields"=>array("UNCOMPRESS(similarity_data) as sim_data"), "conditions"=>array("experiment_id"=>$exp_id, "transcript_id"=>$transcript_id)));
+        $rna_similarity_hits = explode(";",$rna_similarity_hits[0]['sim_data']);
         $rna_sim_hits		= array();
         $gene_ids		= array();
         //get the gene identifiers.
@@ -795,7 +797,7 @@ class TrapidController extends AppController{
     //check whether transcript is valid
     $transcript_id 	= mysql_real_escape_string($transcript_id);
     $transcript_info    = $this->Transcripts->find("first",array("conditions"=>array("experiment_id"=>$exp_id,"transcript_id"=>$transcript_id)));
-    //pr($transcript_info);
+    // pr($transcript_info);
     if(!$transcript_info){$this->redirect(array("controller"=>"trapid","action"=>"experiment",$exp_id));}
     if($transcript_info['Transcripts']['orf_sequence'] !=""){
       $transcript_info['Transcripts']['aa_sequence'] = $this->Sequence->translate_cds_php($transcript_info['Transcripts']['orf_sequence']);
@@ -810,16 +812,16 @@ class TrapidController extends AppController{
     //put it here, as it might influence the later results. Also reload the transcript info
     if($_POST){
       if(array_key_exists("orf_sequence",$_POST)){
-	$this->Transcripts->updateAll(array("orf_sequence"=>"'".mysql_real_escape_string($_POST['orf_sequence'])."'"),array("experiment_id"=>$exp_id,"transcript_id"=>$transcript_id));
+	$this->Transcripts->updateAll(array("orf_sequence"=>"COMPRESS('".mysql_real_escape_string($_POST['orf_sequence'])."')"),array("experiment_id"=>$exp_id,"transcript_id"=>$transcript_id));
 	$this->Transcripts->updateCodonStats($exp_id,$transcript_id,$_POST['orf_sequence']);
 	$this->ExperimentLog->addAction($exp_id,"change_orf_sequence",$transcript_id);
       }
       if(array_key_exists("transcript_sequence",$_POST)){
-	$this->Transcripts->updateAll(array("transcript_sequence"=>"'".mysql_real_escape_string($_POST['transcript_sequence'])."'"),array("experiment_id"=>$exp_id,"transcript_id"=>$transcript_id));
+	$this->Transcripts->updateAll(array("transcript_sequence"=>"COMPRESS('".mysql_real_escape_string($_POST['transcript_sequence'])."')"),array("experiment_id"=>$exp_id,"transcript_id"=>$transcript_id));
 	$this->ExperimentLog->addAction($exp_id,"change_transcript_sequence",$transcript_id);
       }
       if(array_key_exists("corrected_sequence",$_POST)){
-	$this->Transcripts->updateAll(array("transcript_sequence_corrected"=>"'".mysql_real_escape_string($_POST['corrected_sequence'])."'"),array("experiment_id"=>$exp_id,"transcript_id"=>$transcript_id));
+	$this->Transcripts->updateAll(array("transcript_sequence_corrected"=>"COMPRESS('".mysql_real_escape_string($_POST['corrected_sequence'])."')"),array("experiment_id"=>$exp_id,"transcript_id"=>$transcript_id));
 	$this->ExperimentLog->addAction($exp_id,"change_corrected_sequence",$transcript_id);
       }
       if(array_key_exists("meta_annotation",$_POST)){
@@ -859,7 +861,13 @@ class TrapidController extends AppController{
       //$this->redirect(array("controller"=>"trapid","action"=>"transcript",$exp_id,$transcript_id));
       $transcript_info = $this->Transcripts->find("first",array("conditions"=>array("experiment_id"=>$exp_id,"transcript_id"=>$transcript_id)));
     }
-
+    // TODO: don't retrieve the binary sequences in the first place, instead of overwriting them like now!
+    // Get sequence data associated to this transcript (need to `uncompress` from the database)
+    $transcript_sqces = $this->Transcripts->getAllSqces($exp_id, $transcript_id);
+    // Add retrieved sequence data to `transcript_info`.
+    foreach($transcript_sqces as $sqce_type=>$sqce_str) {
+      $transcript_info['Transcripts'][$sqce_type] = $sqce_str;
+    }
     $this->set("transcript_info",$transcript_info['Transcripts']);
     //pr($transcript_info['Transcripts']);
     //go and interpro information

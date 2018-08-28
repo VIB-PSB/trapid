@@ -284,6 +284,19 @@ class Transcripts extends AppModel{
     }
 
 
+    // Get all sequences (uploaded sequence, corrected sequence, ORF sequence) associate to transcript `transcript_id`,
+    // from experiment `exp_id`, as text. Return them as associative array (keys = name of fields in the database).
+    // Why is data returned in such a nested array?
+    function getAllSqces($exp_id, $transcript_id) {
+        $result 	= array();
+        $query = "SELECT UNCOMPRESS(`transcript_sequence`) as `transcript_sequence`, UNCOMPRESS(`transcript_sequence_corrected`) as `transcript_sequence_corrected`, UNCOMPRESS(`orf_sequence`) as `orf_sequence` FROM `transcripts` WHERE `experiment_id`='".$exp_id."' AND `transcript_id` ='" . $transcript_id . "';";
+        $res	= $this->query($query);
+        foreach($res[0][0] as $k=>$v){
+            $result[$k] = $v;
+        }
+        return $result;
+    }
+
     /* Unused code: quick test to write custom queries when overriding pagination */
 
 //    /* Create custom query, optionally forcing to use a certain index */
