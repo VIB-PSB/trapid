@@ -12,9 +12,9 @@ our %blosum;
 our @strip_params = qw(0.1 50 1); # Default = 0.1 50 1
 our ($max_gap_portion,$percentile,$per_codon)= @strip_params;
 
-### This perl-script contains the necessary code 
+### This perl-script contains the necessary code
 ### to create a multiple sequence alignment (this can later be used to create trees as well).
-### 
+###
 ### Creation of the MSA itself is done by an external program.
 ### The correct modules need as such be loaded.
 ###
@@ -50,11 +50,11 @@ $par{"experiment_id"}           = $ARGV[11];
 $par{"gf_id"}                   = $ARGV[12];
 
 
-#location of BLOSSUM FILE 
+#location of BLOSSUM FILE
 $par{"blossum_file"}            = $ARGV[13];
 
 if(scalar(@ARGV) == 15){
-    #editing mode variable          
+    #editing mode variable
     $par{"editing_mode"}            = $ARGV[14];
     $max_gap_portion                = $par{"editing_mode"};
     $perform_msa_stripping          = 1;
@@ -66,23 +66,23 @@ if(scalar(@ARGV) == 15){
 
 #=======================================================================================================
 #=======================================================================================================
-# First step : create 2 database connections. 
-#  - we keep these open at first, to retrieve the necessary data. 
+# First step : create 2 database connections.
+#  - we keep these open at first, to retrieve the necessary data.
 #  - during MSA construction they should be closed.
 #  - after MSA construction the trapid connection should be opened again for storing results.
 #=======================================================================================================
 #=======================================================================================================
 my $dsn_trapid		= qq{DBI:mysql:$par{"trapid_db_name"}:$par{"trapid_db_server"}:$par{"trapid_db_port"}};
-my $dbh_trapid		= DBI->connect($dsn_trapid,$par{"trapid_db_user"},$par{"trapid_db_password"},{RaiseError=>1,AutoCommit=>1});	
+my $dbh_trapid		= DBI->connect($dsn_trapid,$par{"trapid_db_user"},$par{"trapid_db_password"},{RaiseError=>1,AutoCommit=>1});
 if($dbh_trapid->err){
 	print STDOUT "ERROR: Cannot connect with TRAPID database\n";
-	exit;	
+	exit;
 }
 my $dsn_plaza		= qq{DBI:mysql:$par{"plaza_db_name"}:$par{"plaza_db_server"}:$par{"plaza_db_port"}};
-my $dbh_plaza		= DBI->connect($dsn_plaza,$par{"plaza_db_user"},$par{"plaza_db_password"},{RaiseError=>1,AutoCommit=>1});	
+my $dbh_plaza		= DBI->connect($dsn_plaza,$par{"plaza_db_user"},$par{"plaza_db_password"},{RaiseError=>1,AutoCommit=>1});
 if($dbh_plaza->err){
 	print STDOUT "ERROR: Cannot connect with PLAZA database\n";
-	exit;	
+	exit;
 }
 
 
@@ -109,8 +109,8 @@ my $seq_type                   = $basic_information->{"seq_type"};
 #=======================================================================================================
 # Third step : create FASTA file containing the necessary sequences:
 # - sequences from PLAZA gene family (or IORTHO) group, but filtered by species
-# - transcript sequences      
-# Important to note: 
+# - transcript sequences
+# Important to note:
 # - transcript sequences need to be translated first (use ORF_SEQUENCE from table TRANSCRIPTS)
 # - PLAZA sequences may have to be translated, based on settings from DATA_SOURCES table
 #=======================================================================================================
@@ -129,7 +129,7 @@ if($perform_msa_stripping){ #only during tree construction --> msa strippig can 
 }
 
 my %plaza_sequences;
-if($gf_type eq "HOM"){     
+if($gf_type eq "HOM"){
     %plaza_sequences         = %{&retrieve_sequences_plaza_hom($dbh_plaza,$gf_information->{"plaza_gf_id"},\@used_species)};
 }
 elsif($gf_type eq "IORTHO"){
@@ -180,7 +180,7 @@ if(-e $aligned_file){unlink($aligned_file);}
 if ($alnmethod eq 'muscle'){
    print STDOUT "muscle -in $multi_fasta_file -out $aligned_file -maxiters 3\n";
    system("muscle -in $multi_fasta_file -out $aligned_file -maxiters 3");
-}  
+}
 if ($alnmethod eq 't_coffee'){
    print STDOUT "t_coffee -infile $multi_fasta_file -outfile $aligned_file -output=fasta_aln\n";
    #system("t_coffee -infile $multi_fasta_file -outfile $aligned_file -output=fasta_aln");
@@ -197,10 +197,10 @@ if($perform_msa_stripping){
     #strip multiple sequence alignement
     print STDOUT "Creating stripped alignment\n";
     #($msa,$msa_strip, $alnmethod, $msa_length, $msa_strip_length,join(" ",@strip_params));
-    @msa_data                    = &strip_msa($aligned_file);   
+    @msa_data                    = &strip_msa($aligned_file);
 }
 else{
-    @msa_data                    = &load_msa($aligned_file);    
+    @msa_data                    = &load_msa($aligned_file);
 }
 
 #print STDOUT "Number of entries in msa align file :\n";
@@ -216,10 +216,10 @@ else{
 # Open TRAPID DB connection, and store the result.
 #=======================================================================================================
 #=======================================================================================================
-$dbh_trapid		= DBI->connect($dsn_trapid,$par{"trapid_db_user"},$par{"trapid_db_password"},{RaiseError=>1,AutoCommit=>1});	
+$dbh_trapid		= DBI->connect($dsn_trapid,$par{"trapid_db_user"},$par{"trapid_db_password"},{RaiseError=>1,AutoCommit=>1});
 if($dbh_trapid->err){
     print STDOUT "ERROR: Cannot connect with TRAPID database\n";
-    exit;	
+    exit;
 }
 &store_msa_results($dbh_trapid,$par{"experiment_id"},$par{"gf_id"},\@msa_data);
 
@@ -264,8 +264,8 @@ system("rm -f $aligned_file");
 
 sub load_msa{
     my $fin            = $_[0];
-    my (%align); 
-    %align=&input2hash($fin);      
+    my (%align);
+    %align=&input2hash($fin);
     # store raw msa
     my $msa;
     foreach my $gene_id (keys %align){
@@ -278,14 +278,14 @@ sub load_msa{
 
 
 sub strip_msa{
-  my $fin              = $_[0];   
-  
+  my $fin              = $_[0];
+
   my ($c,$i,$last_anchor);
   my (@align,@ids);
   my (%align);
- 
-  %align=&input2hash($fin);    
-  
+
+  %align=&input2hash($fin);
+
   # store raw msa
   my $msa;
   my $msa_length;
@@ -305,7 +305,7 @@ sub strip_msa{
   # Construct a data structure for editing the alignment
   #+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
   $c=0;
-  foreach (keys %align){ 
+  foreach (keys %align){
       $ids[$c]=$_; # keeps track of original acc; converts to index $c
       my $n=0;
       for ($i=0;$i<length($align{$_});$i+=$per_codon){
@@ -313,10 +313,10 @@ sub strip_msa{
 	  $align[$n][$c]=substr($align{$_},$i,$per_codon);
 	  $n++;
       } #for ($i=0;$i<length($align{$_};$i+=$per_codon)
-      $c++; 
+      $c++;
   } #foreach (keys %align)
 
-  
+
   #die;
 
   #+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -325,15 +325,15 @@ sub strip_msa{
   $last_anchor=-1;
 
   #print STDOUT scalar(@align)."\n";
-  #die;  
-  for ( $i=0;$i<scalar(@align);$i++ ){ # goes over positions      
-         
+  #die;
+  for ( $i=0;$i<scalar(@align);$i++ ){ # goes over positions
+
       #print STDOUT @{$align[$i]}."\n";
-      if (&anchor( @{$align[$i]} )){     
-	  $last_anchor=$i;      
-      }      
+      if (&anchor( @{$align[$i]} )){
+	  $last_anchor=$i;
+      }
       #print "position : ".$i."\n";
-      if ( &gap( @{$align[$i]} ) || ( $last_anchor == -1 ) ){       
+      if ( &gap( @{$align[$i]} ) || ( $last_anchor == -1 ) ){
 	  #while ( !&anchor( @{$align[$last_anchor]} ) && ( $last_anchor > -1 ) ) {$last_anchor--}
 	  $last_anchor++;
 	  do{
@@ -343,9 +343,9 @@ sub strip_msa{
 	  $i=$last_anchor;
       } #if (&gap(@{$align[$i]))
   } #for ($i=0;$i<scalar(@align);$i++)
-  ( $last_anchor < $#align ) && splice (@align,$last_anchor+1); 
-  
-  
+  ( $last_anchor < $#align ) && splice (@align,$last_anchor+1);
+
+
 
   #+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
   # Store the edited alignment again in the original hash structure
@@ -356,15 +356,15 @@ sub strip_msa{
 	  $align{$ids[$i]}.=$$_[$i];
       } #for ($i=0;$i<scalar(@{$_});$i++)
   } #foreach (@align)
-    
+
   my $msa_strip;
   my $msa_strip_length;
   foreach my $gene_id (keys %align){
       $msa_strip.= ">$gene_id;$align{$gene_id}";
       $msa_strip_length=length($align{$gene_id});
-  }   
+  }
 
-  #print STDERR "MSA\n$msa\nMSA_STRIP\n$msa_strip\n";   
+  #print STDERR "MSA\n$msa\nMSA_STRIP\n$msa_strip\n";
   return($msa,$msa_strip, $alnmethod, $msa_length, $msa_strip_length,join(" ",@strip_params));
  }
 
@@ -383,7 +383,7 @@ sub input2hash ( $ ){
     else
      {
       $key || die "Input is not in fasta format!";
-      s/\s+//g;   
+      s/\s+//g;
       $fasta_hash{$key}.=$_;
      } #else
    } #while (<STDIN>)
@@ -404,7 +404,7 @@ sub read_blosum ($){
 	my ($this,@row)=split(/\t/);
 	@{$matrix{$this}}{@residus}=@row;
     }
-    close IN; 
+    close IN;
     return (%matrix);
 }
 
@@ -418,7 +418,7 @@ sub gap{
 	($_ eq $test) && ($gaps++);
     }
   #  print STDERR "Gap2\t".scalar(@_)."\t".$gaps."\t"."@_"."\n";
-    ($gaps/scalar(@_)>$max_gap_portion) ? (return -1) : (return 0); 
+    ($gaps/scalar(@_)>$max_gap_portion) ? (return -1) : (return 0);
 }
 
 
@@ -441,16 +441,16 @@ sub anchor{
 		foreach $j ($i+1..$#row){
 		    ($row[$j] eq $gap) && (next);
 		    #print STDERR "\t"."blossom\t".$row[$i]." ".$row[$j]."\t".$blosum{$row[$i]}{$row[$j]}."\n";
-		    $blosums->add_data($blosum{$row[$i]}{$row[$j]});        	  
+		    $blosums->add_data($blosum{$row[$i]}{$row[$j]});
 		} #foreach $j ($i+1..$#row)
-	    } #foreach $i (0..$#row)      
+	    } #foreach $i (0..$#row)
 	    ($blosums->percentile($percentile)>=0) && ($return=-1);
 	} #if ( scalar( @row  ) > 2 )
-	else {   
+	else {
 	    ( $blosum{$row[0]}{$row[1]} >= 0 ) && ($return=-1);
-	} 
-    } # unless (&gap(@row))  
-    return ($return); 
+	}
+    } # unless (&gap(@row))
+    return ($return);
  }
 
 
@@ -467,7 +467,7 @@ sub anchor{
 sub create_multi_fasta($ $ $ $){
     my $file_path         = $_[0];
     my %trapid_sequences  = %{$_[1]};
-    my %plaza_sequences   = %{$_[2]};       
+    my %plaza_sequences   = %{$_[2]};
     my @exclude_transcripts = @{$_[3]};
 
     my %excl_trans          = map {$_ => 1} @exclude_transcripts;
@@ -478,13 +478,13 @@ sub create_multi_fasta($ $ $ $){
 	    my $prot_seq      = $trapid_sequences{$transcript_id};
 	    $prot_seq         =~ s/\*//g;
 	    print MFA ">$transcript_id\n$prot_seq\n";
-        } 
+        }
     }
     for my $gene_id (keys(%plaza_sequences)){
 	my $prot_seq     = $plaza_sequences{$gene_id};
 	$prot_seq         =~ s/\*//g;
         print MFA ">$gene_id\n$prot_seq\n";
-    }	
+    }
     close(MFA);
 }
 
@@ -502,10 +502,10 @@ sub translate_sequences($){
 }
 
 
-sub _translate_simple ( $ ) {   
+sub _translate_simple ( $ ) {
     my $seq            = $_[0];
     my $return_on_stop = 0;
-    my $transl_table   = 1;	
+    my $transl_table   = 1;
     my $len            = length($seq);
     my $output         = q{};
     my %protein_of = (
@@ -535,7 +535,7 @@ sub _translate_simple ( $ ) {
 	"GAA"=>"E","GAG"=>"E","GAR"=>"E",                               # Glutamic Acid
 	"GGA"=>"G","GGC"=>"G","GGG"=>"G","GGT"=>"G","GGN"=>"G",         # Glycine
 	);
-     $protein_of{'0'}{'ATG'}="M";    
+     $protein_of{'0'}{'ATG'}="M";
     for (my $i=0; $i < ($len-2); $i+=3) {
 	my $codon = substr($seq, $i, 3);
 	if ($i==0 && exists $protein_of{$i}{$codon})
@@ -543,17 +543,17 @@ sub _translate_simple ( $ ) {
 	 my $protein = $protein_of{$i}{$codon};
 	 $output .= $protein;
 	 next;
-	 }	    
+	 }
 
-	if (exists $protein_of{ $codon }) { 
+	if (exists $protein_of{ $codon }) {
 	    my $protein = $protein_of{ $codon };
 	    $output .= $protein;
 	    last if ($protein eq "*" && $return_on_stop);
 	}
 	else {
 	    $output .= 'X'; # unknown codon
-	    #	printf STDERR " no translation for: " . substr($seq,$i,3) . "\n"; 
-	}                        
+	    #	printf STDERR " no translation for: " . substr($seq,$i,3) . "\n";
+	}
     }
     return ($output);
 }
@@ -562,35 +562,35 @@ sub _translate_simple ( $ ) {
 
 #=======================================================================================================
 #=======================================================================================================
-# DATABASE FUNCTIONS : 
-#  - STORING DATA 
+# DATABASE FUNCTIONS :
+#  - STORING DATA
 #=======================================================================================================
 #=======================================================================================================
 sub store_msa_results($ $ $ $){  #($dbh_trapid,\@msa_data)
     my $dbh_trapid            = $_[0];
     my $exp_id                = $_[1];
     my $gf_id                 = $_[2];
-    my @msa_data              = @{$_[3]}; 
-    #msa_data[0]   = multiple sequence alignment (raw) 
+    my @msa_data              = @{$_[3]};
+    #msa_data[0]   = multiple sequence alignment (raw)
     #msa_data[1]   = stripped multiple sequence alignment              --> only present if strip align
     #msa_data[2]   = alignment method (normally muscle)                 -> only present if strip align
     #msa_data[3]   = length of multiple sequence alignment              -> only present if strip align
     #msa_data[4]   = length of stripped multiple sequence alignment     -> only present if strip align
     #msa_data[5]   = msa strip parameters                               -> only present if strip align
-    
+
     my $query      = "";
     if(scalar(@msa_data)==1){ #not stripped alignment
-	$query     = "UPDATE `gene_families` SET `msa`='".$msa_data[0]."'                                 
-                                 WHERE `experiment_id`='".$exp_id."' AND `gf_id`='".$gf_id."' ";  
+	$query     = "UPDATE `gene_families` SET `msa`='".$msa_data[0]."'
+                                 WHERE `experiment_id`='".$exp_id."' AND `gf_id`='".$gf_id."' ";
     }
     else{ # stripped alignment
        $query      = "UPDATE `gene_families` SET `msa`='".$msa_data[0]."',
-                                 `msa_stripped`='".$msa_data[1]."', `msa_stripped_params`='".$msa_data[5]."' 
-                                 WHERE `experiment_id`='".$exp_id."' AND `gf_id`='".$gf_id."' ";     
+                                 `msa_stripped`='".$msa_data[1]."', `msa_stripped_params`='".$msa_data[5]."'
+                                 WHERE `experiment_id`='".$exp_id."' AND `gf_id`='".$gf_id."' ";
     }
     my $dbq            = $dbh_trapid->prepare($query);
     $dbq->execute();
-    $dbq->finish();    
+    $dbq->finish();
 }
 
 
@@ -600,23 +600,23 @@ sub delete_current_job($ $ $){
 	my $gf_id		= $_[2];
 	my $dbq			= $dbh_trapid->prepare("DELETE FROM `experiment_jobs` WHERE `experiment_id`=? AND `comment`=?");
 	my $comment		= "create_msa ".$gf_id;
-	$dbq->execute($experiment_id,$comment);	
+	$dbq->execute($experiment_id,$comment);
 	$dbq->finish();
 }
 
 
 sub send_email($ $ $){
-    my $dbh_trapid		= $_[0];    
+    my $dbh_trapid		= $_[0];
     my $experiment_id	        = $_[1];
     my $gf_id			= $_[2];
-    
+
     my $query  			= "SELECT a.`title`,b.`email` FROM `experiments` a,`authentication` b WHERE a.`experiment_id`=? AND b.`user_id`=a.`user_id` ";
     my $dbq			= $dbh_trapid->prepare($query);
     $dbq->execute($experiment_id);
     while((my @record) = $dbq->fetchrow_array){
 	my $experiment_title  	= $record[0];
 	my $user_email        	= $record[1];
-	
+
 	my $sendmail 		= "/usr/lib/sendmail.postfix -t";
     my $from			= "From: TRAPID webmaster <no-reply\@psb.vib-ugent.be>\n";
 	my $reply_to 		= "Reply-to: no-reply\@psb.vib-ugent.be\n";
@@ -625,21 +625,21 @@ sub send_email($ $ $){
 	$content		= $content."You can now view the MSA (after authentication) at this URL:\n";
 	# $content		= $content."http://bioinformatics.psb.ugent.be/webtools/trapid/tools/create_msa/".$experiment_id."/".$gf_id." \n";
     # Change URL to the dev. version of TRAPID for now.
-	$content		= $content."http://bioinformatics.psb.ugent.be/testix/trapid_dev/tools/create_msa/".$experiment_id."/".$gf_id." \n";
+	$content		= $content."https://bioinformatics.psb.ugent.be/webtools/trapid_dev/tools/create_msa/".$experiment_id."/".$gf_id." \n";
 	$content		= $content."\n\nThank you for your interest in TRAPID\n";
 	my $send_to		= "To: ".$user_email."\n";
 	open(SENDMAIL, "|$sendmail") or die "Cannot open $sendmail: $!";
 	print SENDMAIL $from;
 	print SENDMAIL $reply_to;
 	print SENDMAIL $subject;
-	print SENDMAIL $send_to; 
-	print SENDMAIL "Content-type: text/plain\n\n"; 
-	print SENDMAIL $content; 
+	print SENDMAIL $send_to;
+	print SENDMAIL "Content-type: text/plain\n\n";
+	print SENDMAIL $content;
 	close(SENDMAIL);
 
     }
     #close handlers and return name of multi-fasta file
-    $dbq->finish();       
+    $dbq->finish();
     return;
 }
 
@@ -648,8 +648,8 @@ sub send_email($ $ $){
 
 #=======================================================================================================
 #=======================================================================================================
-# DATABASE FUNCTIONS : 
-#  - RETRIEVING DATA 
+# DATABASE FUNCTIONS :
+#  - RETRIEVING DATA
 #=======================================================================================================
 #=======================================================================================================
 
@@ -658,7 +658,7 @@ sub retrieve_sequences_trapid($ $ $){
     my $dbh_trapid             = $_[0];
     my $exp_id                 = $_[1];
     my $gf_id                  = $_[2];
-    my $query                  = "SELECT `transcript_id`,`orf_sequence` FROM `transcripts` 
+    my $query                  = "SELECT `transcript_id`,UNCOMPRESS(`orf_sequence`) as `orf_sequence` FROM `transcripts`
                                   WHERE `experiment_id`='".$exp_id."' AND `gf_id`='".$gf_id."' ";
     my $dbq                    = $dbh_trapid->prepare($query);
     $dbq->execute();
@@ -669,7 +669,7 @@ sub retrieve_sequences_trapid($ $ $){
     }
     $dbq->finish();
     return \%result;
-} 
+}
 
 
 sub get_used_species($ $){
@@ -681,12 +681,12 @@ sub get_used_species($ $){
     my $dbq                    = $dbh_plaza->prepare($query);
     $dbq->execute();
     while((my @record) = $dbq->fetchrow_array){
-	my $species            = $record[0];      
+	my $species            = $record[0];
         push(@result,$species);
 	#print $species."\n";
 	#print scalar(@result)."\n";
     }
-    $dbq->finish();    
+    $dbq->finish();
     #print "@result";
     return \@result;
 }
@@ -698,7 +698,7 @@ sub retrieve_sequences_plaza_hom($ $ $){
     my $plaza_gf_id           = $_[1];
     my @used_species          = @{$_[2]};
     my $used_species_string   = "('".join("','",@used_species)."')";
-    my $query                 = "SELECT `annotation`.`gene_id`,`annotation`.`seq` FROM `annotation`,`gf_data` 
+    my $query                 = "SELECT `annotation`.`gene_id`,`annotation`.`seq` FROM `annotation`,`gf_data`
                                 WHERE `gf_data`.`gf_id`='".$plaza_gf_id."' AND `annotation`.`gene_id`=`gf_data`.`gene_id`
                                 AND `annotation`.`species` IN ".$used_species_string;
     my $dbq                    = $dbh_plaza->prepare($query);
@@ -721,7 +721,7 @@ sub retrieve_sequences_plaza_iorth($ $ $){
     my @used_species           = @{$_[2]};
     my $used_species_string    = "('".join("','",@used_species)."')";
     my $gene_string            = "('".join("','",split(" ",$gf_content))."')";
-    my $query                  = "SELECT `annotation`.`gene_id`,`annotation`.`seq` FROM `annotation` 
+    my $query                  = "SELECT `annotation`.`gene_id`,`annotation`.`seq` FROM `annotation`
                                  WHERE `annotation`.`gene_id` IN ".$gene_string." AND `annotation`.`species` IN ".$used_species_string;
     my $dbq                    = $dbh_plaza->prepare($query);
     $dbq->execute();
@@ -741,10 +741,10 @@ sub retrieve_sequences_plaza_iorth($ $ $){
 #Retrieve gene family information from the trapid database
 sub retrieve_gf_information($ $ $){
         my %result;
-	my $dbh_trapid          = $_[0];		       
+	my $dbh_trapid          = $_[0];
 	my $experiment_id       = $_[1];
 	my $trapid_gf_id        = $_[2];
-	my $query               = "SELECT `plaza_gf_id`,`gf_content`,`used_species`,`exclude_transcripts` FROM `gene_families` 
+	my $query               = "SELECT `plaza_gf_id`,`gf_content`,`used_species`,`exclude_transcripts` FROM `gene_families`
                                    WHERE `experiment_id`='".$experiment_id."' AND `gf_id`='".$trapid_gf_id."' ";
 	my $dbq                 = $dbh_trapid->prepare($query);
 	$dbq->execute();
@@ -757,8 +757,8 @@ sub retrieve_gf_information($ $ $){
 	    $result{"gf_content"}   = $gf_content;
 	    $result{"used_species"} = $used_species;
 	    $result{"exclude_transcripts"} = $exclude_trans;
-	}	
-	#close handlers 
+	}
+	#close handlers
 	$dbq->finish();
 	return \%result;
 }
@@ -768,10 +768,10 @@ sub retrieve_gf_information($ $ $){
 #Retrieve basic information on a trapid experiment
 sub get_basic_information($ $){
         my %result;
-	my $dbh_trapid          = $_[0];		       
+	my $dbh_trapid          = $_[0];
 	my $experiment_id       = $_[1];
-	my $query               = "SELECT  `experiments`.`genefamily_type`,`data_sources`.`seq_type` 
-                                   FROM `experiments`,`data_sources` 
+	my $query               = "SELECT  `experiments`.`genefamily_type`,`data_sources`.`seq_type`
+                                   FROM `experiments`,`data_sources`
                                    WHERE `experiments`.`experiment_id`='".$experiment_id."' AND `data_sources`.`db_name`=`experiments`.`used_plaza_database` ";
 	my $dbq			= $dbh_trapid->prepare($query);
 	$dbq->execute();
@@ -780,15 +780,8 @@ sub get_basic_information($ $){
 	    my $seq_type            = $record[1];
 	    $result{"gf_type"}      = $gf_type;
 	    $result{"seq_type"}     = $seq_type;
-	}	
-	#close handlers 
+	}
+	#close handlers
 	$dbq->finish();
 	return \%result;
 }
-
-
-
-
-
-
-

@@ -223,7 +223,7 @@ sub send_email($ $ $ $ $ $){
 	my $content		= "Dear,\nYour TRAPID experiment titled '".$experiment_title."' has finished its processing phase.\n";
 	$content		= $content."You can now log in into TRAPID, and begin the analysis of your transcriptome dataset.\n";
 	# $content		= $content."You can access TRAPID at http://bioinformatics.psb.ugent.be/webtools/trapid/ \n";
-	$content		= $content."You can access TRAPID at http://bioinformatics.psb.ugent.be/testix/trapid_dev/ \n";
+	$content		= $content."You can access TRAPID at https://bioinformatics.psb.ugent.be/webtools/trapid_dev/ \n";
 	$content		= $content."\n\nThank you for your interest in TRAPID\n";
 	my $send_to		= "To: ".$user_email."\n";
 	open(SENDMAIL, "|$sendmail") or die "Cannot open $sendmail: $!";
@@ -311,7 +311,7 @@ sub create_experiment_multifasta($ $ $ $ $ $ $){
 	#retrieve data and store write  to multi-fasta file
 	my $fasta_file		= $temp_dir."transcripts_".$experiment_id.".fasta";
 	open FASTA_FILE,">",$fasta_file;
-	my $query		= "SELECT `transcript_id`,`transcript_sequence` FROM `transcripts` WHERE `experiment_id`='".$experiment_id."' ";
+	my $query		= "SELECT `transcript_id`, UNCOMPRESS(`transcript_sequence`) FROM `transcripts` WHERE `experiment_id`='".$experiment_id."' ";
 	my $dbq			= $dbh->prepare($query);
 	$dbq->execute();
 	while((my @record) = $dbq->fetchrow_array){

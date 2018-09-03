@@ -59,7 +59,7 @@ if($ARGV[0] eq "cleanup"){
 	my $subject		= "Subject: TRAPID experiment has finished processing phase\n";
 	my $content		= "Dear,\nYour TRAPID experiment titled '".$experiment_title."' has finished its enrichment preprocessing phase.\n";
 	$content		= $content."You can now log in into TRAPID, and begin the analysis of the enriched labels within your dataset.\n";
-	$content		= $content."You can access TRAPID at http://bioinformatics.psb.ugent.be/testix/trapid_dev/ \n";
+	$content		= $content."You can access TRAPID at https://bioinformatics.psb.ugent.be/webtools/trapid_dev/ \n";
 	$content		= $content."\n\nThank you for your interest in TRAPID\n";	
 	my $send_to		= "To: ".$user_email."\n";
 	open(SENDMAIL, "|$sendmail") or die "Cannot open $sendmail: $!";

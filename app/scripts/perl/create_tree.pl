@@ -6,9 +6,9 @@ use POSIX;
 use Statistics::Descriptive;
 use FindBin qw{$Bin};
 
-### This perl-script contains the necessary code 
+### This perl-script contains the necessary code
 ### to create a phylogenetic tree
-### 
+###
 ### Creation of the tree itself is done by an external program.
 ### The correct modules need as such be loaded.
 ###
@@ -56,17 +56,17 @@ $par{"tree_program"}		= $ARGV[9];
 
 #=======================================================================================================
 #=======================================================================================================
-# First step : create 2 database connections. 
-#  - we keep these open at first, to retrieve the necessary data. 
+# First step : create 2 database connections.
+#  - we keep these open at first, to retrieve the necessary data.
 #  - during MSA construction they should be closed.
 #  - after MSA construction the trapid connection should be opened again for storing results.
 #=======================================================================================================
 #=======================================================================================================
 my $dsn_trapid		= qq{DBI:mysql:$par{"trapid_db_name"}:$par{"trapid_db_server"}:$par{"trapid_db_port"}};
-my $dbh_trapid		= DBI->connect($dsn_trapid,$par{"trapid_db_user"},$par{"trapid_db_password"},{RaiseError=>1,AutoCommit=>1});	
+my $dbh_trapid		= DBI->connect($dsn_trapid,$par{"trapid_db_user"},$par{"trapid_db_password"},{RaiseError=>1,AutoCommit=>1});
 if($dbh_trapid->err){
 	print STDOUT "ERROR: Cannot connect with TRAPID database\n";
-	exit;	
+	exit;
 }
 
 my $stime1                   = time();
@@ -77,10 +77,10 @@ $dbh_trapid->disconnect();
 
 my $outtree                  = &create_tree($par{"experiment_id"},$par{"gf_id"},$gf_information{"stripped_msa"},$par{"bootstrap_mode"},$par{"tree_program"},$par{"temp_dir"});
 
-$dbh_trapid		= DBI->connect($dsn_trapid,$par{"trapid_db_user"},$par{"trapid_db_password"},{RaiseError=>1,AutoCommit=>1});	
+$dbh_trapid		= DBI->connect($dsn_trapid,$par{"trapid_db_user"},$par{"trapid_db_password"},{RaiseError=>1,AutoCommit=>1});
 if($dbh_trapid->err){
 	print STDOUT "ERROR: Cannot connect with TRAPID database\n";
-	exit;	
+	exit;
 }
 &store_tree($dbh_trapid,$par{"experiment_id"},$par{"gf_id"},$outtree);
 
@@ -108,22 +108,22 @@ sub create_tree ($ $ $ $ $ $){
     my $gf_id               = $_[1];
     my $stripped_msa        = $_[2];
     my $bootstrap_mode      = $_[3];
-    my $tree_program	    = $_[4];	
+    my $tree_program	    = $_[4];
     my $tmp_dir             = $_[5];
     my $outtree;
-    
+
     print STDERR "Running algorithm $tree_program on gene family $gf_id from experiment $exp_id";
-                
-    #create tree by running phyml    
-    if($tree_program eq "phyml"){    
-	    my $phylip_file         = $tmp_dir."phylip_".$exp_id."_".$gf_id.".phy";   
+
+    #create tree by running phyml
+    if($tree_program eq "phyml"){
+	    my $phylip_file         = $tmp_dir."phylip_".$exp_id."_".$gf_id.".phy";
 	    if (! &faln2phylip2file($stripped_msa,$phylip_file) ){  #names are converted using %idswitch!
 		print STDERR "* Empty strip_aln; quit!\n";
 		return("0");
-	    }        	    
-	    $outtree = &_run_phyml($phylip_file,$bootstrap_mode)."\n";	
+	    }
+	    $outtree = &_run_phyml($phylip_file,$bootstrap_mode)."\n";
 	    #remove temp files
-    	    system("rm -f $phylip_file*");   
+    	    system("rm -f $phylip_file*");
     }
     #create tree by running fasttree
     elsif($tree_program eq "fasttree"){
@@ -142,22 +142,22 @@ sub create_tree ($ $ $ $ $ $){
 
 
 sub _run_fasttree ( $ $){
- my $fin           = $_[0]; 
+ my $fin           = $_[0];
  my $bs            = $_[1];
  print STDERR "Running FastTree with input file : $fin\n";
- 
+
  my $error_file_location = $fin."_fasttree_error.txt";
  my $fout          = $fin."_fasttree_tree.txt";
- 
+
  my $command = "FastTree $FASTTREE_prot_settings  $fin > $fout 2> $error_file_location";
  print STDERR "Command for fasttree : ".$command."\n";
  system($command);
- my $result        = 0; 
+ my $result        = 0;
  my $constree;
  if(! -e $fout){
      print STDERR "ERROR: Cannot open fasttree output file $fout\n";
      return $result;
- } 
+ }
  print STDERR "Parsing output tree from $fout \n";
  open (TREE,$fout);
  while (<TREE>){
@@ -165,7 +165,7 @@ sub _run_fasttree ( $ $){
   $constree.=$_;
  }
  close TREE;
- return $constree; 
+ return $constree;
 }
 
 
@@ -174,18 +174,18 @@ sub _run_fasttree ( $ $){
 sub _run_phyml ( $ $){
  #print STDERR "SUB run_phyml @_\n";
  #print STDERR "DES run_phyml :: runs phyml aa for file \$_[0] and returns Newick_bootstrap-like_tree\n";
- my $fin           = $_[0]; 
- my $bs            = $_[1];	
+ my $fin           = $_[0];
+ my $bs            = $_[1];
  print STDERR "Running Phyml with input file : $fin\n";
  my $error_file_location = $fin."_phyml_error.txt";
  my $fout          = $fin."_phyml_tree.txt";
- system("phyml -i $fin -d aa  -n 1 -b $bs $PHYML_prot_settings 2>&1 > $error_file_location"); 
- my $result        = 0; 
+ system("phyml -i $fin -d aa  -n 1 -b $bs $PHYML_prot_settings 2>&1 > $error_file_location");
+ my $result        = 0;
  my $constree;
  if(! -e $fout){
      print STDERR "ERROR: Cannot open phyml output file $fout\n";
      return $result;
- } 
+ }
  print STDERR "Parsing output tree from $fout \n";
  open (TREE,$fout);
  while (<TREE>){
@@ -195,7 +195,7 @@ sub _run_phyml ( $ $){
  close TREE;
  $constree =~ s/_//g;
 
- #restore original gene_id	 
+ #restore original gene_id
  my @revert = split(/:/,$constree);
  my @revert2;
  foreach my $e (@revert)
@@ -223,7 +223,7 @@ sub _run_phyml ( $ $){
    }
    push @revert2, $e;
   }
- return(join(':',@revert2)); 
+ return(join(':',@revert2));
 }
 
 
@@ -235,7 +235,7 @@ sub _run_phyml ( $ $){
 #=======================================================================================================
 
 
-#simply write the multiple sequence file in fasta format to the 
+#simply write the multiple sequence file in fasta format to the
 sub create_msa_file( $ $){
 	my $in = $_[0];
 	my $fout = $_[1];
@@ -253,16 +253,16 @@ sub create_msa_file( $ $){
 sub faln2phylip2file ( $ $ )
  {
  #print STDERR "SUB faln2phylip2file \$_[0] $_[1]\n";
- #print STDERR "DES faln2phylip2file :: reads aln string \$_[0] and writes phylip interleaved alignment to file $_[1]\n"; 
+ #print STDERR "DES faln2phylip2file :: reads aln string \$_[0] and writes phylip interleaved alignment to file $_[1]\n";
  my $in = $_[0];
  my $fout = $_[1];
  my($numberseq,%bib,$woord,@seq,%vollseq,$k,$blocks,$blocksint,$l,@word,$i);
  my($m,$z,$o,$j,$letters,$konijn);
  my $tekens=0;
- 
+
 # print STDERR "Cleaning /%idswitch before adding new genes!\n";
  #undef %idswitch;
- 
+
  my @convert = split(/>/,$in);
  $numberseq = 0;
  foreach my $ac (@convert)
@@ -272,18 +272,18 @@ sub faln2phylip2file ( $ $ )
   my @string = split(/;/,$ac);
   my $short = "X".sprintf("%06d",$numberseq)."X";
   $idswitch{$string[0]}=$short;
-  $idswitch{$short}=$string[0];  
+  $idswitch{$short}=$string[0];
   #print STDERR "$string[0]=$short ";
   $bib{$numberseq} = $idswitch{$string[0]}; # so bib contains as key the seq nr 1 and as value 000000001
-  @{$vollseq{$idswitch{$string[0]}}} = split (//, $string[1]);  
-  $tekens = scalar @{$vollseq{$idswitch{$string[0]}}};		
+  @{$vollseq{$idswitch{$string[0]}}} = split (//, $string[1]);
+  $tekens = scalar @{$vollseq{$idswitch{$string[0]}}};
   }
- 
+
 if ($tekens == 0)
  {
- return(0); 
+ return(0);
  }
- 
+
 open (FOUT, ">$fout");
 $blocks = $tekens/50;
 $blocksint = ceil($blocks);
@@ -330,7 +330,7 @@ if ($blocksint > 1)
 			print FOUT "${$vollseq{$bib{$o}}}[$b]";
 			}
 		print FOUT "\n";
-		}	
+		}
 	}
 
 else
@@ -359,17 +359,17 @@ else
 
 #=======================================================================================================
 #=======================================================================================================
-# DATABASE FUNCTIONS : 
-#  - STORING DATA 
+# DATABASE FUNCTIONS :
+#  - STORING DATA
 #=======================================================================================================
 #=======================================================================================================
 
 sub store_tree ($ $ $ $){
-    my $dbh_trapid          = $_[0];		       
+    my $dbh_trapid          = $_[0];
     my $experiment_id       = $_[1];
     my $trapid_gf_id        = $_[2];
     my $tree                = $_[3];
-    my $statement           = "UPDATE `gene_families` SET `tree`='".$tree."' WHERE `experiment_id`='".$experiment_id."' 
+    my $statement           = "UPDATE `gene_families` SET `tree`='".$tree."' WHERE `experiment_id`='".$experiment_id."'
                               AND `gf_id`='".$trapid_gf_id."' ";
     my $dbq                 = $dbh_trapid->prepare($statement);
     $dbq->execute();
@@ -383,23 +383,23 @@ sub delete_current_job($ $ $){
 	my $gf_id		= $_[2];
 	my $dbq			= $dbh_trapid->prepare("DELETE FROM `experiment_jobs` WHERE `experiment_id`=? AND `comment`=?");
 	my $comment		= "create_tree ".$gf_id;
-	$dbq->execute($experiment_id,$comment);	
+	$dbq->execute($experiment_id,$comment);
 	$dbq->finish();
 }
 
 
 sub send_email($ $ $){
-    my $dbh_trapid		= $_[0];    
+    my $dbh_trapid		= $_[0];
     my $experiment_id	        = $_[1];
     my $gf_id			= $_[2];
-    
+
     my $query  			= "SELECT a.`title`,b.`email` FROM `experiments` a,`authentication` b WHERE a.`experiment_id`=? AND b.`user_id`=a.`user_id` ";
     my $dbq			= $dbh_trapid->prepare($query);
     $dbq->execute($experiment_id);
     while((my @record) = $dbq->fetchrow_array){
 	my $experiment_title  	= $record[0];
 	my $user_email        	= $record[1];
-	
+
 	my $sendmail 		= "/usr/lib/sendmail.postfix -t";
     my $from			= "From: TRAPID webmaster <no-reply\@psb.vib-ugent.be>\n";
 	my $reply_to 		= "Reply-to: no-reply\@psb.vib-ugent.be\n";
@@ -407,29 +407,29 @@ sub send_email($ $ $){
 	my $content		= "Dear user,\nThe phylogenetic tree for gene family '".$gf_id."' in experiment '".$experiment_title."' has been created.\n";
 	$content		= $content."You can now view the phylogenetic tree at this URL:\n";
 	# $content		= $content."http://bioinformatics.psb.ugent.be/webtools/trapid/tools/create_tree/".$experiment_id."/".$gf_id." \n";
-	$content		= $content."http://bioinformatics.psb.ugent.be/testix/trapid_dev/tools/create_tree/".$experiment_id."/".$gf_id." \n";
+	$content		= $content."https://bioinformatics.psb.ugent.be/webtools/trapid_dev/tools/create_tree/".$experiment_id."/".$gf_id." \n";
 	$content		= $content."\n\nThank you for your interest in TRAPID\n";
 	my $send_to		= "To: ".$user_email."\n";
 	open(SENDMAIL, "|$sendmail") or die "Cannot open $sendmail: $!";
 	print SENDMAIL $from;
 	print SENDMAIL $reply_to;
 	print SENDMAIL $subject;
-	print SENDMAIL $send_to; 
-	print SENDMAIL "Content-type: text/plain\n\n"; 
-	print SENDMAIL $content; 
+	print SENDMAIL $send_to;
+	print SENDMAIL "Content-type: text/plain\n\n";
+	print SENDMAIL $content;
 	close(SENDMAIL);
 
     }
     #close handlers and return name of multi-fasta file
-    $dbq->finish();       
+    $dbq->finish();
     return;
 }
 
 
 #=======================================================================================================
 #=======================================================================================================
-# DATABASE FUNCTIONS : 
-#  - RETRIEVING DATA 
+# DATABASE FUNCTIONS :
+#  - RETRIEVING DATA
 #=======================================================================================================
 #=======================================================================================================
 
@@ -437,10 +437,10 @@ sub send_email($ $ $){
 #Retrieve gene family information from the trapid database
 sub retrieve_gf_information($ $ $){
         my %result;
-	my $dbh_trapid          = $_[0];		       
+	my $dbh_trapid          = $_[0];
 	my $experiment_id       = $_[1];
 	my $trapid_gf_id        = $_[2];
-	my $query               = "SELECT `plaza_gf_id`,`gf_content`,`msa_stripped` FROM `gene_families` 
+	my $query               = "SELECT `plaza_gf_id`,`gf_content`,`msa_stripped` FROM `gene_families`
                                    WHERE `experiment_id`='".$experiment_id."' AND `gf_id`='".$trapid_gf_id."' ";
 	my $dbq                 = $dbh_trapid->prepare($query);
 	$dbq->execute();
@@ -449,10 +449,10 @@ sub retrieve_gf_information($ $ $){
 	    my $gf_content          = $record[1];
 	    my $stripped_msa        = $record[2];
 	    $result{"plaza_gf_id"}  = $plaza_gf_id;
-	    $result{"gf_content"}   = $gf_content;	   
+	    $result{"gf_content"}   = $gf_content;
 	    $result{"stripped_msa"} = $stripped_msa;
-	}	
-	#close handlers 
+	}
+	#close handlers
 	$dbq->finish();
 	return \%result;
 }
