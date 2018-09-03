@@ -177,7 +177,8 @@ public class InitialTranscriptsProcessing {
             /* Here use a different procedure for eggNOG (steps 3, 4).
 			 * UNCLEAN AND WORK IN PROGRESS! */
 			// For testing purposes just copy-paste things in this big `if`. In the future have two clearly and properly separated pipelines.
-            if(plaza_database_name.equals("db_trapid_ref_eggnog_test")) {
+			// TODO: do not hardcode the db name like that...
+            if(plaza_database_name.equals("db_trapid_ref_eggnog_test_02")) {
             	// TODO: check taxonomic scope (must be 'auto' or anything in `LEVEL_CONTENT`)
                 // Initialize OG-specific maps.
                 Map<String,List<String>> transcript2ogs	= null;
@@ -496,7 +497,7 @@ public class InitialTranscriptsProcessing {
 	 * @throws Exception Database error
 	 */
 	public void storeSimilarityData(Connection trapid_connection,String trapid_experiment,Map<String,List<String[]>> simsearch_data) throws Exception{
-		String insert_query			= "INSERT INTO `similarities` (`experiment_id`,`transcript_id`,`similarity_data`) VALUES ('"+trapid_experiment+"',?,?)";
+		String insert_query			= "INSERT INTO `similarities` (`experiment_id`,`transcript_id`,`similarity_data`) VALUES ('"+trapid_experiment+"',?, COMPRESS(?))";
 		PreparedStatement stmt		= trapid_connection.prepareStatement(insert_query);
 
 		for(String transcript_id : simsearch_data.keySet()){
@@ -568,7 +569,7 @@ public class InitialTranscriptsProcessing {
 		Map<String, Integer> lengths = new HashMap<String, Integer>();
 		//boolean frameshift = false; //flag to check if a frameshift is expected
 
-		String query_transcript_lengths				= "SELECT `transcript_id`, LENGTH(`transcript_sequence`)  FROM `transcripts` WHERE `experiment_id` = ?";
+		String query_transcript_lengths				= "SELECT `transcript_id`, LENGTH(UNCOMPRESS(`transcript_sequence`))  FROM `transcripts` WHERE `experiment_id` = ?";
 		PreparedStatement stmt_transcript_lengths	= db_connection.prepareStatement(query_transcript_lengths);
 		stmt_transcript_lengths.setString(1,experiment_id);
 		ResultSet set	= stmt_transcript_lengths.executeQuery();
@@ -707,7 +708,7 @@ public class InitialTranscriptsProcessing {
 		Hashtable<String, Character> geneStrand = new Hashtable<String, Character>();
 		Hashtable<String, Integer> geneFrame = new Hashtable<String, Integer>();
 
-		String query_transcripts	= "SELECT `transcript_id`, `transcript_sequence`, `detected_strand`, `detected_frame`  FROM `transcripts` WHERE `experiment_id` = " + experiment_id;
+		String query_transcripts	= "SELECT `transcript_id`, UNCOMPRESS(`transcript_sequence`), `detected_strand`, `detected_frame`  FROM `transcripts` WHERE `experiment_id` = " + experiment_id;
 		Statement stmt				= db_connection.createStatement();
 		ResultSet set				= stmt.executeQuery(query_transcripts);
 		while(set.next()){
@@ -717,7 +718,7 @@ public class InitialTranscriptsProcessing {
 		}
 		set.close();
 		stmt.close();
-		String update_transcripts 					= "UPDATE `transcripts` SET `orf_sequence`= ? , `orf_start` = ? , `orf_stop` = ?, `orf_contains_start_codon` = ?, `orf_contains_stop_codon` = ?  WHERE `experiment_id`='"+experiment_id+"' AND `transcript_id` = ? ";
+		String update_transcripts 					= "UPDATE `transcripts` SET `orf_sequence`= COMPRESS(?) , `orf_start` = ? , `orf_stop` = ?, `orf_contains_start_codon` = ?, `orf_contains_stop_codon` = ?  WHERE `experiment_id`='"+experiment_id+"' AND `transcript_id` = ? ";
 		PreparedStatement stmt_update_transcripts	= db_connection.prepareStatement(update_transcripts);
 		String update_frame_info					= "UPDATE `transcripts` SET `detected_frame`=? , `detected_strand` = ? WHERE `experiment_id`='"+experiment_id+"' AND `transcript_id` = ? ";
 		PreparedStatement stmt_update_frame			= db_connection.prepareStatement(update_frame_info);
@@ -744,6 +745,7 @@ public class InitialTranscriptsProcessing {
 		}
 		stmt_update_transcripts.close();
 		stmt_update_frame.close();
+        System.out.println(update_transcripts.toString());
 	}
 
 
@@ -2062,8 +2064,8 @@ public class InitialTranscriptsProcessing {
 		String db_name = db_url.substring(db_url.lastIndexOf("/") + 1);
 		// System.out.println(db_name);
 		String query				= "SELECT `gene_id`,CHAR_LENGTH(`seq`) FROM `annotation` WHERE `type`='coding' ";
-			query = "SELECT `gene_id`, `seq_length` FROM `annotation` USE INDEX(PRIMARY) WHERE `type`='coding' ";
 		if(!db_name.contains("plaza")) {
+			query = "SELECT `gene_id`, `seq_length` FROM `annotation` USE INDEX(PRIMARY) WHERE `type`='coding' ";
 		}
 		Statement stmt				= plaza_conn.createStatement();
 		stmt.setFetchSize(1000);
@@ -2098,7 +2100,7 @@ public class InitialTranscriptsProcessing {
 
 	private Map<String,Integer> getTranscriptOrfLengths(Connection trapid_conn,String trapid_exp_id)throws Exception{
 		Map<String,Integer> result	= new HashMap<String,Integer>();
-		String query				= "SELECT `transcript_id`,CHAR_LENGTH(`orf_sequence`) as length FROM `transcripts` WHERE `experiment_id`='"+trapid_exp_id+"' ";
+		String query				= "SELECT `transcript_id`, CHAR_LENGTH(UNCOMPRESS(`orf_sequence`)) as length FROM `transcripts` WHERE `experiment_id`='"+trapid_exp_id+"' ";
 		Statement stmt				= trapid_conn.createStatement();
 		ResultSet set				= stmt.executeQuery(query);
 		while(set.next()){
