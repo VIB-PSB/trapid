@@ -44,7 +44,7 @@ data_retrieval_args.add_argument('-sp', '--species_perc', dest='species_perc', t
                         help='Cutoff value: species representation percentage. Only gene families present in at least this proportion of species of the chosen clade will be retrieved. Must be comprised between 0 and 1. ',
                         default=0.9)
 data_retrieval_args.add_argument('-db', '--trapid_db', type=str, dest='trapid_db_name',
-                        help='Name of TRAPID database. ', default='db_trapid_02')
+                        help='Name of TRAPID database. ', default='db_trapid_dev')
 data_retrieval_args.add_argument('-u', '--username', type=str, dest='username',
                         help='Username to connect to the TRAPID database. The script will prompt you for the password, unless it was provided as environment variable ($DB_PWD). ',
                         default='trapid_website')
@@ -80,14 +80,14 @@ def read_trapid_data(db_conn, experiment_id, top_hits, transcript_label=None):
     sys.stderr.write('[' + time.strftime("%H:%M:%S") + '] Retrieving similarity search data from TRAPID database.\n')
     sim_list= []
     if transcript_label not in [None, "None"]:  # Quickfix (ambiguity between None, and 'None' str).
-        get_sim_data_query = "SELECT sim.transcript_id, sim.similarity_data " \
+        get_sim_data_query = "SELECT sim.transcript_id, UNCOMPRESS(sim.similarity_data) AS similarity_data " \
                              "FROM similarities sim INNER JOIN transcripts_labels tl " \
                              "ON sim.transcript_id = tl.transcript_id " \
                              "WHERE sim.experiment_id = {experiment_id} " \
                              "AND tl.label = '{transcript_label}'".format(experiment_id=str(experiment_id),
                                                                           transcript_label=transcript_label)
     else:
-        get_sim_data_query = "SELECT sim.transcript_id, sim.similarity_data " \
+        get_sim_data_query = "SELECT sim.transcript_id, UNCOMPRESS(sim.similarity_data) AS similarity_data " \
                              "FROM similarities sim " \
                              "WHERE sim.experiment_id = {experiment_id}".format(experiment_id=str(experiment_id))
     # Execute query
