@@ -1398,7 +1398,7 @@ class TrapidUtilsComponent extends Component{
 
     function send_registration_email($email,$password,$password_update=false){
       $subject = "TRAPID authentication information";
-      $message 	        	= "Welcome to the online TRAPID system for rapid analysis of transcriptome data.\nHere is the required authentication information.\n\nUser email-address: ".$email."\nPassword: ".$password."\n\nThank you for using the TRAPID system.";
+      $message 	        	= "Welcome to TRAPID 2.0, the web resource for rapid analysis of transcriptome data.\nHere is the required authentication information.\n\nUser email-address: ".$email."\nPassword: ".$password."\n\nThank you for using TRAPID 2.0.";
       if($password_update){
           $subject = "TRAPID password change";
 	      $message		= "The password for your TRAPID account has been changed.\n\nThe new password is: ".$password."\n\nYou can change it at anytime: log into TRAPID and select 'Account > Change password'.\n\nThank you for using the TRAPID system\n";
@@ -1414,7 +1414,7 @@ class TrapidUtilsComponent extends Component{
       // Send email to administrators to be warned when a new user is added
       if(!$password_update){
      	  $this->Email->reset();
-    	  $this->Email->to		= "frbuc@psb.vib-ugent.be"; // "mibel@psb.ugent.be,klpoe@psb.ugent.be";
+    	  $this->Email->to		= "frbuc@psb.vib-ugent.be,mibel@psb.ugent.be,klpoe@psb.ugent.be";
     	  $this->Email->subject		= "TRAPID new user";
     	  $this->Email->replyTo		= "no-reply@psb.ugent.be";
     	  $this->Email->from 		= "TRAPID webmaster <no-reply@psb.ugent.be>";
