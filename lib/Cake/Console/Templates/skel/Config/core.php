@@ -4,9 +4,7 @@
  *
  * Use it to configure core behavior of Cake.
  *
- * PHP 5
- *
- * @link          http://cakephp.org CakePHP(tm) Project
+ * @link          https://cakephp.org CakePHP(tm) Project
  * @package       app.Config
  * @since         CakePHP(tm) v 0.2.9
  */
@@ -36,7 +34,7 @@
  * - `handler` - callback - The callback to handle errors. You can set this to any callable type,
  *   including anonymous functions.
  *   Make sure you add App::uses('MyHandler', 'Error'); when using a custom handler class
- * - `level` - int - The level of errors you are interested in capturing.
+ * - `level` - integer - The level of errors you are interested in capturing.
  * - `trace` - boolean - Include stack traces for errors in log files.
  *
  * @see ErrorHandler for more information on error handling and configuration.
@@ -61,7 +59,7 @@
  * - `renderer` - string - The class responsible for rendering uncaught exceptions. If you choose a custom class you
  *   should place the file for that class in app/Lib/Error. This class needs to implement a render method.
  * - `log` - boolean - Should Exceptions be logged?
-  * - `skipLog` - array - list of exceptions to skip for logging. Exceptions that
+ * - `skipLog` - array - list of exceptions to skip for logging. Exceptions that
  *   extend one of the listed exceptions will also be skipped for logging.
  *   Example: `'skipLog' => array('NotFoundException', 'UnauthorizedException')`
  *
@@ -88,7 +86,7 @@
  * /app/webroot/.htaccess
  *
  * And uncomment the App.baseUrl below. But keep in mind
- * that plugin assets such as images, CSS and Javascript files
+ * that plugin assets such as images, CSS and JavaScript files
  * will not work without URL rewriting!
  * To work around this issue you should either symlink or copy
  * the plugin assets into you app's webroot directory. This is
@@ -106,7 +104,7 @@
  * will override the automatic detection of full base URL and can be
  * useful when generating links from the CLI (e.g. sending emails)
  */
-	//Configure::write('App.fullBaseUrl', 'http://example.com');
+	//Configure::write('App.fullBaseUrl', 'https://example.com');
 
 /**
  * Web path to the public images directory under webroot.
@@ -140,13 +138,11 @@
  * Enables:
  *	`admin_index()` and `/admin/controller/index`
  *	`manager_index()` and `/manager/controller/index`
- *
  */
 	//Configure::write('Routing.prefixes', array('admin'));
 
 /**
  * Turn off all caching application-wide.
- *
  */
 	//Configure::write('Cache.disable', true);
 
@@ -157,7 +153,6 @@
  * public $cacheAction inside your controllers to define caching settings.
  * You can either set it controller-wide by setting public $cacheAction = true,
  * or in each action using $this->cacheAction = true.
- *
  */
 	//Configure::write('Cache.check', true);
 
@@ -206,7 +201,6 @@
  *
  * To use database sessions, run the app/Config/Schema/sessions.php schema using
  * the cake shell command: cake schema create Sessions
- *
  */
 	Configure::write('Session', array(
 		'defaults' => 'php'
@@ -245,7 +239,7 @@
  * Plug in your own custom JavaScript compressor by dropping a script in your webroot to handle the
  * output, and setting the config below to the name of the script.
  *
- * To use, prefix your JavaScript link URLs with '/cjs/' instead of '/js/' or use JavaScriptHelper::link().
+ * To use, prefix your JavaScript link URLs with '/cjs/' instead of '/js/' or use JsHelper::link().
  */
 	//Configure::write('Asset.filter.js', 'custom_javascript_output_filter.php');
 
@@ -263,7 +257,6 @@
 	//date_default_timezone_set('UTC');
 
 /**
- *
  * Cache Engine Configuration
  * Default settings provided below
  *
@@ -280,7 +273,7 @@
  * 		'mask' => 0664, //[optional]
  *	));
  *
- * APC (http://pecl.php.net/package/APC)
+ * APC (https://pecl.php.net/package/APC)
  *
  * 	 Cache::config('default', array(
  *		'engine' => 'Apc', //[required]
@@ -289,7 +282,7 @@
  * 		'prefix' => Inflector::slug(APP_DIR) . '_', //[optional]  prefix every cache file with this string
  *	));
  *
- * Xcache (http://xcache.lighttpd.net/)
+ * Xcache (https://xcache.lighttpd.net/)
  *
  * 	 Cache::config('default', array(
  *		'engine' => 'Xcache', //[required]
@@ -314,7 +307,7 @@
  * 		'compress' => false, // [optional] compress data in Memcache (slower, but uses less memory)
  *	));
  *
- *  Wincache (http://php.net/wincache)
+ *  Wincache (https://secure.php.net/wincache)
  *
  * 	 Cache::config('default', array(
  *		'engine' => 'Wincache', //[required]

@@ -2,20 +2,18 @@
 /**
  * Paginator Component
  *
- * PHP 5
- *
- * CakePHP(tm) : Rapid Development Framework (http://cakephp.org)
- * Copyright (c) Cake Software Foundation, Inc. (http://cakefoundation.org)
+ * CakePHP(tm) : Rapid Development Framework (https://cakephp.org)
+ * Copyright (c) Cake Software Foundation, Inc. (https://cakefoundation.org)
  *
  * Licensed under The MIT License
  * For full copyright and license information, please see the LICENSE.txt
  * Redistributions of files must retain the above copyright notice.
  *
- * @copyright     Copyright (c) Cake Software Foundation, Inc. (http://cakefoundation.org)
- * @link          http://cakephp.org CakePHP(tm) Project
+ * @copyright     Copyright (c) Cake Software Foundation, Inc. (https://cakefoundation.org)
+ * @link          https://cakephp.org CakePHP(tm) Project
  * @package       Cake.Controller.Component
  * @since         CakePHP(tm) v 2.0
- * @license       http://www.opensource.org/licenses/mit-license.php MIT License
+ * @license       https://opensource.org/licenses/mit-license.php MIT License
  */
 
 App::uses('Component', 'Controller');
@@ -31,17 +29,17 @@ App::uses('Hash', 'Utility');
  * the default pagination behavior in general or for a specific model. General settings are used when there
  * are no specific model configuration, or the model you are paginating does not have specific settings.
  *
- * {{{
+ * ```
  *	$this->Paginator->settings = array(
  *		'limit' => 20,
  *		'maxLimit' => 100
  *	);
- * }}}
+ * ```
  *
  * The above settings will be used to paginate any model. You can configure model specific settings by
  * keying the settings with the model name.
  *
- * {{{
+ * ```
  *	$this->Paginator->settings = array(
  *		'Post' => array(
  *			'limit' => 20,
@@ -49,7 +47,7 @@ App::uses('Hash', 'Utility');
  *		),
  *		'Comment' => array( ... )
  *	);
- * }}}
+ * ```
  *
  * This would allow you to have different pagination settings for `Comment` and `Post` models.
  *
@@ -57,18 +55,18 @@ App::uses('Hash', 'Utility');
  *
  * You can paginate with any find type defined on your model using the `findType` option.
  *
- * {{{
+ * ```
  * $this->Paginator->settings = array(
  *		'Post' => array(
  *			'findType' => 'popular'
  *		)
  * );
- * }}}
+ * ```
  *
  * Would paginate using the `find('popular')` method.
  *
  * @package       Cake.Controller.Component
- * @link http://book.cakephp.org/2.0/en/core-libraries/components/pagination.html
+ * @link https://book.cakephp.org/2.0/en/core-libraries/components/pagination.html
  */
 class PaginatorComponent extends Component {
 
@@ -82,6 +80,21 @@ class PaginatorComponent extends Component {
  * - `paramType` What type of parameters you want pagination to use?
  *      - `named` Use named parameters / routed parameters.
  *      - `querystring` Use query string parameters.
+ * - `queryScope` By using request parameter scopes you can paginate multiple queries in the same controller action.
+ *
+ * ```
+ * $paginator->paginate = array(
+ *	'Article' => array('queryScope' => 'articles'),
+ *	'Tag' => array('queryScope' => 'tags'),
+ * );
+ * ```
+ *
+ * Each of the above queries will use different query string parameter sets
+ * for pagination data. An example URL paginating both results would be:
+ *
+ * ```
+ * /dashboard/articles[page]:1/tags[page]:2
+ * ```
  *
  * @var array
  */
@@ -89,7 +102,8 @@ class PaginatorComponent extends Component {
 		'page' => 1,
 		'limit' => 20,
 		'maxLimit' => 100,
-		'paramType' => 'named'
+		'paramType' => 'named',
+		'queryScope' => null
 	);
 
 /**
@@ -181,7 +195,7 @@ class PaginatorComponent extends Component {
 			$extra['type'] = $type;
 		}
 
-		if (intval($page) < 1) {
+		if ((int)$page < 1) {
 			$page = 1;
 		}
 		$page = $options['page'] = (int)$page;
@@ -204,6 +218,8 @@ class PaginatorComponent extends Component {
 			$count = 0;
 		} elseif ($object->hasMethod('paginateCount')) {
 			$count = $object->paginateCount($conditions, $recursive, $extra);
+		} elseif ($page === 1 && count($results) < $limit) {
+			$count = count($results);
 		} else {
 			$parameters = compact('conditions');
 			if ($recursive != $object->recursive) {
@@ -211,12 +227,9 @@ class PaginatorComponent extends Component {
 			}
 			$count = $object->find('count', array_merge($parameters, $extra));
 		}
-		$pageCount = intval(ceil($count / $limit));
+		$pageCount = (int)ceil($count / $limit);
 		$requestedPage = $page;
 		$page = max(min($page, $pageCount), 1);
-		if ($requestedPage > $page) {
-			throw new NotFoundException();
-		}
 
 		$paging = array(
 			'page' => $page,
@@ -228,7 +241,8 @@ class PaginatorComponent extends Component {
 			'order' => $order,
 			'limit' => $limit,
 			'options' => Hash::diff($options, $defaults),
-			'paramType' => $options['paramType']
+			'paramType' => $options['paramType'],
+			'queryScope' => $options['queryScope'],
 		);
 
 		if (!isset($this->Controller->request['paging'])) {
@@ -239,8 +253,11 @@ class PaginatorComponent extends Component {
 			array($object->alias => $paging)
 		);
 
-		if (
-			!in_array('Paginator', $this->Controller->helpers) &&
+		if ($requestedPage > $page) {
+			throw new NotFoundException();
+		}
+
+		if (!in_array('Paginator', $this->Controller->helpers) &&
 			!array_key_exists('Paginator', $this->Controller->helpers)
 		) {
 			$this->Controller->helpers[] = 'Paginator';
@@ -317,6 +334,9 @@ class PaginatorComponent extends Component {
 				$request = $this->Controller->request->query;
 				break;
 		}
+		if ($defaults['queryScope']) {
+			$request = Hash::get($request, $defaults['queryScope'], array());
+		}
 		$request = array_intersect_key($request, array_flip($this->whitelist));
 		return array_merge($defaults, $request);
 	}
@@ -333,15 +353,14 @@ class PaginatorComponent extends Component {
 		if (isset($this->settings[$alias])) {
 			$defaults = $this->settings[$alias];
 		}
-		if (isset($defaults['limit']) &&
-			(empty($defaults['maxLimit']) || $defaults['limit'] > $defaults['maxLimit'])
-		) {
-			$defaults['maxLimit'] = $defaults['limit'];
-		}
-		return array_merge(
-			array('page' => 1, 'limit' => 20, 'maxLimit' => 100, 'paramType' => 'named'),
-			$defaults
+		$defaults += array(
+			'page' => 1,
+			'limit' => 20,
+			'maxLimit' => 100,
+			'paramType' => 'named',
+			'queryScope' => null
 		);
+		return $defaults;
 	}
 
 /**
@@ -361,6 +380,10 @@ class PaginatorComponent extends Component {
  * @return array An array of options with sort + direction removed and replaced with order if possible.
  */
 	public function validateSort(Model $object, array $options, array $whitelist = array()) {
+		if (empty($options['order']) && is_array($object->order)) {
+			$options['order'] = $object->order;
+		}
+
 		if (isset($options['sort'])) {
 			$direction = null;
 			if (isset($options['direction'])) {
@@ -380,16 +403,20 @@ class PaginatorComponent extends Component {
 			}
 			return $options;
 		}
-
 		if (!empty($options['order']) && is_array($options['order'])) {
 			$order = array();
 			foreach ($options['order'] as $key => $value) {
+				if (is_int($key)) {
+					$field = explode(' ', $value);
+					$key = $field[0];
+					$value = count($field) === 2 ? trim($field[1]) : 'asc';
+				}
 				$field = $key;
 				$alias = $object->alias;
 				if (strpos($key, '.') !== false) {
 					list($alias, $field) = explode('.', $key);
 				}
-				$correctAlias = ($object->alias == $alias);
+				$correctAlias = ($object->alias === $alias);
 
 				if ($correctAlias && $object->hasField($field)) {
 					$order[$object->alias . '.' . $field] = $value;
@@ -401,9 +428,7 @@ class PaginatorComponent extends Component {
 			}
 			$options['order'] = $order;
 		}
-		if (empty($options['order']) && !empty($object->order)) {
-			$options['order'] = $object->order;
-		}
+
 		return $options;
 	}
 

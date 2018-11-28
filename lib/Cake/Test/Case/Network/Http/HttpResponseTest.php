@@ -2,22 +2,19 @@
 /**
  * HttpResponseTest file
  *
- * PHP 5
- *
- * CakePHP(tm) Tests <http://book.cakephp.org/2.0/en/development/testing.html>
- * Copyright (c) Cake Software Foundation, Inc. (http://cakefoundation.org)
+ * CakePHP(tm) Tests <https://book.cakephp.org/2.0/en/development/testing.html>
+ * Copyright (c) Cake Software Foundation, Inc. (https://cakefoundation.org)
  *
  * Licensed under The MIT License
  * For full copyright and license information, please see the LICENSE.txt
  * Redistributions of files must retain the above copyright notice
  *
- * @copyright     Copyright (c) Cake Software Foundation, Inc. (http://cakefoundation.org)
- * @link          http://book.cakephp.org/2.0/en/development/testing.html CakePHP(tm) Tests
+ * @copyright     Copyright (c) Cake Software Foundation, Inc. (https://cakefoundation.org)
+ * @link          https://book.cakephp.org/2.0/en/development/testing.html CakePHP(tm) Tests
  * @package       Cake.Test.Case.Network.Http
  * @since         CakePHP(tm) v 1.2.0.4206
- * @license       http://www.opensource.org/licenses/mit-license.php MIT License
+ * @license       https://opensource.org/licenses/mit-license.php MIT License
  */
-
 App::uses('HttpResponse', 'Network/Http');
 
 /**
@@ -41,7 +38,7 @@ class TestHttpResponse extends HttpResponse {
  * Convenience method for testing protected method
  *
  * @param string $body A string containing the body to decode
- * @param boolean|string $encoding Can be false in case no encoding is being used, or a string representing the encoding
+ * @param bool|string $encoding Can be false in case no encoding is being used, or a string representing the encoding
  * @return mixed Array or false
  */
 	public function decodeBody($body, $encoding = 'chunked') {
@@ -71,7 +68,7 @@ class TestHttpResponse extends HttpResponse {
 /**
  * Convenience method for testing protected method
  *
- * @param boolean $hex true to get them as HEX values, false otherwise
+ * @param bool $hex true to get them as HEX values, false otherwise
  * @return array Escape chars
  */
 	public function tokenEscapeChars($hex = true, $chars = null) {
@@ -143,7 +140,7 @@ class HttpResponseTest extends CakeTestCase {
 		$this->assertEquals('Bar', $this->HttpResponse->getHeader('FOO'));
 		$this->assertEquals('value', $this->HttpResponse->getHeader('header'));
 		$this->assertEquals('text/plain', $this->HttpResponse->getHeader('Content-Type'));
-		$this->assertSame($this->HttpResponse->getHeader(0), null);
+		$this->assertNull($this->HttpResponse->getHeader(0));
 
 		$this->assertEquals('Bar', $this->HttpResponse->getHeader('foo', false));
 		$this->assertEquals('not from class', $this->HttpResponse->getHeader('foo', array('foo' => 'not from class')));
@@ -270,10 +267,19 @@ class HttpResponseTest extends CakeTestCase {
 		);
 		$this->assertEquals($expected, $r);
 
-		$header = "Multi-Line: I am a \r\nmulti line\t\r\nfield value.\r\nSingle-Line: I am not\r\n";
+		$header = "Date:Sat, 07 Apr 2007 10:10:25 GMT\r\nLink: \r\nX-Total-Count: 19\r\n";
 		$r = $this->HttpResponse->parseHeader($header);
 		$expected = array(
-			'Multi-Line' => "I am a\r\nmulti line\r\nfield value.",
+			'Date' => 'Sat, 07 Apr 2007 10:10:25 GMT',
+			'Link' => '',
+			'X-Total-Count' => '19',
+		);
+		$this->assertEquals($expected, $r);
+
+		$header = "Multi-Line: I am a\r\n multi line \r\n\tfield value.\r\nSingle-Line: I am not\r\n";
+		$r = $this->HttpResponse->parseHeader($header);
+		$expected = array(
+			'Multi-Line' => "I am a multi line field value.",
 			'Single-Line' => 'I am not'
 		);
 		$this->assertEquals($expected, $r);
@@ -357,7 +363,7 @@ class HttpResponseTest extends CakeTestCase {
  *
  * @dataProvider invalidParseResponseDataProvider
  * @expectedException SocketException
- * return void
+ * @return void
  */
 	public function testInvalidParseResponseData($value) {
 		$this->HttpResponse->parseResponse($value);
@@ -455,12 +461,13 @@ class HttpResponseTest extends CakeTestCase {
 /**
  * testDecodeChunkedBodyError method
  *
- * @expectedException SocketException
  * @return void
  */
 	public function testDecodeChunkedBodyError() {
 		$encoded = "19\r\nThis is a chunked message\r\nE\r\n\nThat is cool\n\r\n";
-		$this->HttpResponse->decodeChunkedBody($encoded);
+		$result = $this->HttpResponse->decodeChunkedBody($encoded);
+		$expected = "This is a chunked message\nThat is cool\n";
+		$this->assertEquals($expected, $result['body']);
 	}
 
 /**
@@ -473,7 +480,9 @@ class HttpResponseTest extends CakeTestCase {
 			'Set-Cookie' => array(
 				'foo=bar',
 				'people=jim,jack,johnny";";Path=/accounts',
-				'google=not=nice'
+				'google=not=nice',
+				'1271; domain=.example.com; expires=Fri, 04-Nov-2016 12:50:26 GMT; path=/',
+				'cakephp=great; Secure'
 			),
 			'Transfer-Encoding' => 'chunked',
 			'Date' => 'Sun, 18 Nov 2007 18:57:42 GMT',
@@ -489,17 +498,24 @@ class HttpResponseTest extends CakeTestCase {
 			),
 			'google' => array(
 				'value' => 'not=nice',
+			),
+			'' => array(
+				'value' => '1271',
+				'domain' => '.example.com',
+				'expires' => 'Fri, 04-Nov-2016 12:50:26 GMT',
+				'path' => '/'
+			),
+			'cakephp' => array(
+				'value' => 'great',
+				'secure' => true,
 			)
 		);
 		$this->assertEquals($expected, $cookies);
 
-		$header['Set-Cookie'][] = 'cakephp=great; Secure';
-		$expected['cakephp'] = array('value' => 'great', 'secure' => true);
-		$cookies = $this->HttpResponse->parseCookies($header);
-		$this->assertEquals($expected, $cookies);
-
 		$header['Set-Cookie'] = 'foo=bar';
-		unset($expected['people'], $expected['cakephp'], $expected['google']);
+		$expected = array(
+			'foo' => array('value' => 'bar')
+		);
 		$cookies = $this->HttpResponse->parseCookies($header);
 		$this->assertEquals($expected, $cookies);
 	}
@@ -578,7 +594,7 @@ class HttpResponseTest extends CakeTestCase {
 		$this->assertEquals($expected, $this->HttpResponse['cookies']);
 
 		$this->HttpResponse->raw = "HTTP/1.1 200 OK\r\n\r\nThis is a test!";
-		$this->assertSame($this->HttpResponse['raw']['header'], null);
+		$this->assertNull($this->HttpResponse['raw']['header']);
 	}
 
 }

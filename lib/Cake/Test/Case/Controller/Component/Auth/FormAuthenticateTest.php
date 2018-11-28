@@ -1,21 +1,17 @@
 <?php
 /**
- * FormAuthenticateTest file
- *
- * PHP 5
- *
- * CakePHP(tm) : Rapid Development Framework (http://cakephp.org)
- * Copyright (c) Cake Software Foundation, Inc. (http://cakefoundation.org)
+ * CakePHP(tm) : Rapid Development Framework (https://cakephp.org)
+ * Copyright (c) Cake Software Foundation, Inc. (https://cakefoundation.org)
  *
  * Licensed under The MIT License
  * For full copyright and license information, please see the LICENSE.txt
  * Redistributions of files must retain the above copyright notice.
  *
- * @copyright     Copyright (c) Cake Software Foundation, Inc. (http://cakefoundation.org)
- * @link          http://cakephp.org CakePHP(tm) Project
+ * @copyright     Copyright (c) Cake Software Foundation, Inc. (https://cakefoundation.org)
+ * @link          https://cakephp.org CakePHP(tm) Project
  * @package       Cake.Test.Case.Controller.Component.Auth
  * @since         CakePHP(tm) v 2.0
- * @license       http://www.opensource.org/licenses/mit-license.php MIT License
+ * @license       https://opensource.org/licenses/mit-license.php MIT License
  */
 
 App::uses('AuthComponent', 'Controller/Component');
@@ -121,6 +117,40 @@ class FormAuthenticateTest extends CakeTestCase {
 	}
 
 /**
+ * Test for password as empty string with _checkFields() call skipped
+ * Refs https://github.com/cakephp/cakephp/pull/2441
+ *
+ * @return void
+ */
+	public function testAuthenticatePasswordIsEmptyString() {
+		$request = new CakeRequest('posts/index', false);
+		$request->data = array(
+			'User' => array(
+				'user' => 'mariano',
+				'password' => ''
+		));
+
+		$this->auth = $this->getMock(
+			'FormAuthenticate',
+			array('_checkFields'),
+			array(
+				$this->Collection,
+				array(
+					'fields' => array('username' => 'user', 'password' => 'password'),
+					'userModel' => 'User'
+				)
+			)
+		);
+
+		// Simulate that check for ensuring password is not empty is missing.
+		$this->auth->expects($this->once())
+			->method('_checkFields')
+			->will($this->returnValue(true));
+
+		$this->assertFalse($this->auth->authenticate($request, $this->response));
+	}
+
+/**
  * test authenticate field is not string
  *
  * @return void
@@ -130,6 +160,13 @@ class FormAuthenticateTest extends CakeTestCase {
 		$request->data = array(
 			'User' => array(
 				'user' => array('mariano', 'phpnut'),
+				'password' => 'my password'
+		));
+		$this->assertFalse($this->auth->authenticate($request, $this->response));
+
+		$request->data = array(
+			'User' => array(
+				'user' => array(),
 				'password' => 'my password'
 		));
 		$this->assertFalse($this->auth->authenticate($request, $this->response));
@@ -195,6 +232,30 @@ class FormAuthenticateTest extends CakeTestCase {
 	}
 
 /**
+ * Test that username of 0 works.
+ *
+ * @return void
+ */
+	public function testAuthenticateUsernameZero() {
+		$User = ClassRegistry::init('User');
+		$User->updateAll(array('user' => $User->getDataSource()->value('0')), array('user' => 'mariano'));
+
+		$request = new CakeRequest('posts/index', false);
+		$request->data = array('User' => array(
+			'user' => '0',
+			'password' => 'password'
+		));
+
+		$expected = array(
+			'id' => 1,
+			'user' => '0',
+			'created' => '2007-03-17 01:16:23',
+			'updated' => '2007-03-17 01:18:31'
+		);
+		$this->assertEquals($expected, $this->auth->authenticate($request, $this->response));
+	}
+
+/**
  * test a model in a plugin.
  *
  * @return void
@@ -227,7 +288,7 @@ class FormAuthenticateTest extends CakeTestCase {
 			'username' => 'gwoo',
 			'created' => '2007-03-17 01:16:23'
 		);
-		$this->assertEquals(self::date(), $result['updated']);
+		$this->assertEquals(static::date(), $result['updated']);
 		unset($result['updated']);
 		$this->assertEquals($expected, $result);
 		CakePlugin::unload();

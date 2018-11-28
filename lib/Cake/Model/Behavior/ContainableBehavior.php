@@ -4,20 +4,18 @@
  *
  * Behavior to simplify manipulating a model's bindings when doing a find operation
  *
- * PHP 5
- *
- * CakePHP(tm) : Rapid Development Framework (http://cakephp.org)
- * Copyright (c) Cake Software Foundation, Inc. (http://cakefoundation.org)
+ * CakePHP(tm) : Rapid Development Framework (https://cakephp.org)
+ * Copyright (c) Cake Software Foundation, Inc. (https://cakefoundation.org)
  *
  * Licensed under The MIT License
  * For full copyright and license information, please see the LICENSE.txt
  * Redistributions of files must retain the above copyright notice.
  *
- * @copyright     Copyright (c) Cake Software Foundation, Inc. (http://cakefoundation.org)
- * @link          http://cakephp.org CakePHP(tm) Project
+ * @copyright     Copyright (c) Cake Software Foundation, Inc. (https://cakefoundation.org)
+ * @link          https://cakephp.org CakePHP(tm) Project
  * @package       Cake.Model.Behavior
  * @since         CakePHP(tm) v 1.2.0.5669
- * @license       http://www.opensource.org/licenses/mit-license.php MIT License
+ * @license       https://opensource.org/licenses/mit-license.php MIT License
  */
 
 App::uses('ModelBehavior', 'Model');
@@ -28,7 +26,7 @@ App::uses('ModelBehavior', 'Model');
  * data returned.
  *
  * @package       Cake.Model.Behavior
- * @link http://book.cakephp.org/2.0/en/core-libraries/behaviors/containable.html
+ * @link https://book.cakephp.org/2.0/en/core-libraries/behaviors/containable.html
  */
 class ContainableBehavior extends ModelBehavior {
 
@@ -77,7 +75,7 @@ class ContainableBehavior extends ModelBehavior {
  *
  * `Model->find('all', array('contain' => array('Model1', 'Model2')));`
  *
- * {{{
+ * ```
  * Model->find('all', array('contain' => array(
  * 	'Model1' => array('Model11', 'Model12'),
  * 	'Model2',
@@ -86,7 +84,7 @@ class ContainableBehavior extends ModelBehavior {
  * 		'Model32',
  * 		'Model33' => array('Model331', 'Model332')
  * )));
- * }}}
+ * ```
  *
  * @param Model $Model Model using the behavior
  * @param array $query Query parameters as set by cake
@@ -190,7 +188,7 @@ class ContainableBehavior extends ModelBehavior {
 		foreach (array('hasOne', 'belongsTo') as $type) {
 			if (!empty($Model->{$type})) {
 				foreach ($Model->{$type} as $assoc => $data) {
-					if ($Model->useDbConfig == $Model->{$assoc}->useDbConfig && !empty($data['fields'])) {
+					if ($Model->useDbConfig === $Model->{$assoc}->useDbConfig && !empty($data['fields'])) {
 						foreach ((array)$data['fields'] as $field) {
 							$query['fields'][] = (strpos($field, '.') === false ? $assoc . '.' : '') . $field;
 						}
@@ -205,7 +203,7 @@ class ContainableBehavior extends ModelBehavior {
 					$field = $Model->primaryKey;
 				} elseif (preg_match('/^.+\.\-\-[^-]+\-\-$/', $field)) {
 					list($modelName, $field) = explode('.', $field);
-					if ($Model->useDbConfig == $Model->{$modelName}->useDbConfig) {
+					if ($Model->useDbConfig === $Model->{$modelName}->useDbConfig) {
 						$field = $modelName . '.' . (
 							($field === '--primaryKey--') ? $Model->$modelName->primaryKey : $field
 						);
@@ -228,7 +226,7 @@ class ContainableBehavior extends ModelBehavior {
  *
  * @param Model $Model Model on which binding restriction is being applied
  * @return void
- * @link http://book.cakephp.org/2.0/en/core-libraries/behaviors/containable.html#using-containable
+ * @link https://book.cakephp.org/2.0/en/core-libraries/behaviors/containable.html#using-containable
  */
 	public function contain(Model $Model) {
 		$args = func_get_args();
@@ -265,7 +263,7 @@ class ContainableBehavior extends ModelBehavior {
  * @param Model $Model Model on which binding restriction is being applied
  * @param array $contain Parameters to use for restricting this model
  * @param array $containments Current set of containments
- * @param boolean $throwErrors Whether non-existent bindings show throw errors
+ * @param bool $throwErrors Whether non-existent bindings show throw errors
  * @return array Containments
  */
 	public function containments(Model $Model, $contain, $containments = array(), $throwErrors = null) {
@@ -367,7 +365,7 @@ class ContainableBehavior extends ModelBehavior {
  *
  * @param Model $Model Model
  * @param array $map Map of relations for given model
- * @param array|boolean $fields If array, fields to initially load, if false use $Model as primary model
+ * @param array|bool $fields If array, fields to initially load, if false use $Model as primary model
  * @return array Fields
  */
 	public function fieldDependencies(Model $Model, $map, $fields = array()) {

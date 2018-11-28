@@ -2,19 +2,17 @@
 /**
  * JqueryEngineTestCase
  *
- * PHP 5
- *
- * CakePHP(tm) Tests <http://book.cakephp.org/2.0/en/development/testing.html>
- * Copyright (c) Cake Software Foundation, Inc. (http://cakefoundation.org)
+ * CakePHP(tm) Tests <https://book.cakephp.org/2.0/en/development/testing.html>
+ * Copyright (c) Cake Software Foundation, Inc. (https://cakefoundation.org)
  *
  * Licensed under The MIT License
  * For full copyright and license information, please see the LICENSE.txt
  * Redistributions of files must retain the above copyright notice
  *
- * @copyright     Copyright (c) Cake Software Foundation, Inc. (http://cakefoundation.org)
- * @link          http://cakephp.org CakePHP Project
+ * @copyright     Copyright (c) Cake Software Foundation, Inc. (https://cakefoundation.org)
+ * @link          https://cakephp.org CakePHP Project
  * @package       Cake.Test.Case.View.Helper
- * @license       http://www.opensource.org/licenses/mit-license.php MIT License
+ * @license       https://opensource.org/licenses/mit-license.php MIT License
  */
 
 App::uses('HtmlHelper', 'View/Helper');
@@ -23,7 +21,7 @@ App::uses('JqueryEngineHelper', 'View/Helper');
 App::uses('View', 'View');
 
 /**
- * Class JqueryEngineHelperTest
+ * JqueryEngineHelperTest
  *
  * @package       Cake.Test.Case.View.Helper
  */
@@ -218,6 +216,17 @@ class JqueryEngineHelperTest extends CakeTestCase {
 			'data' => '$("#someId").serialize()',
 		));
 		$expected = '$.ajax({beforeSend:function (XMLHttpRequest) {doBefore}, data:$("#someId").serialize(), success:function (data, textStatus) {doFoo}, type:"post", url:"\\/people\\/edit\\/1"});';
+		$this->assertEquals($expected, $result);
+
+		$result = $this->Jquery->request('/people/edit/1', array(
+			'success' => 'doFoo',
+			'xhr' => 'return jQuery.ajaxSettings.xhr();',
+			'async' => true,
+			'method' => 'post',
+			'dataExpression' => true,
+			'data' => '$("#someId").serialize()',
+		));
+		$expected = '$.ajax({async:true, data:$("#someId").serialize(), success:function (data, textStatus) {doFoo}, type:"post", url:"\/people\/edit\/1", xhr:function () {return jQuery.ajaxSettings.xhr();}});';
 		$this->assertEquals($expected, $result);
 	}
 

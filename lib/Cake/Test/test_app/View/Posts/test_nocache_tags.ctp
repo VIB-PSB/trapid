@@ -47,7 +47,7 @@
 		<?php
 			echo __d('cake', 'Your database configuration file is ');
 			$filePresent = null;
-			if (file_exists(APP . 'Config'.'database.php')):
+			if (file_exists(CONFIG . 'database.php')):
 				echo __d('cake', 'present.');
 				$filePresent = true;
 			else:
@@ -61,7 +61,7 @@
 <?php
 if (!empty($filePresent)):
 	App::uses('ConnectionManager', 'Model');
-	$connected = ConnectionManager::getDataSource('default');
+	$connected = ConnectionManager::getDataSource('test');
 ?>
 <p>
 	<span class="notice">
@@ -91,7 +91,7 @@ if (!empty($filePresent)):
 <a href="http://www-128.ibm.com/developerworks/edu/os-dw-os-php-cake1.html"><?php echo __d('cake', 'Cook up Web sites fast with CakePHP'); ?></a><br />
 <a href="http://www-128.ibm.com/developerworks/edu/os-dw-os-php-wiki1.html"><?php echo __d('cake', 'Create an interactive production wiki using PHP'); ?></a>
 </p>
-<h2><?php echo __d('cake', 'More about Cake'); ?></h2>
+<h2><?php echo __d('cake', 'More about CakePHP'); ?></h2>
 <p>
 <?php echo __d('cake', 'CakePHP is a rapid development framework for PHP which uses commonly known design patterns like Active Record, Association Data Mapping, Front Controller and MVC.'); ?>
 </p>
@@ -99,9 +99,9 @@ if (!empty($filePresent)):
 <?php echo __d('cake', 'Our primary goal is to provide a structured framework that enables PHP users at all levels to rapidly develop robust web applications, without any loss to flexibility.'); ?>
 </p>
 <ul>
-	<li><a href="http://cakefoundation.org/"><?php echo __d('cake', 'Cake Software Foundation'); ?> </a>
+	<li><a href="https://cakefoundation.org/"><?php echo __d('cake', 'Cake Software Foundation'); ?> </a>
 	<ul><li><?php echo __d('cake', 'Promoting development related to CakePHP'); ?></li></ul></li>
-	<li><a href="http://bakery.cakephp.org"><?php echo __d('cake', 'The Bakery'); ?> </a>
+	<li><a href="https://bakery.cakephp.org"><?php echo __d('cake', 'The Bakery'); ?> </a>
 	<ul><li><?php echo __d('cake', 'Everything CakePHP'); ?></li></ul></li>
 	<li><a href="http://astore.amazon.com/cakesoftwaref-20/"><?php echo __d('cake', 'Book Store'); ?> </a>
 	<ul><li><?php echo __d('cake', 'Recommended Software Books'); ?></li></ul></li>
@@ -111,7 +111,7 @@ if (!empty($filePresent)):
 	<ul><li><?php echo __d('cake', 'The Rapid Development Framework'); ?></li></ul></li>
 	<li><a href="http://manual.cakephp.org"><?php echo __d('cake', 'CakePHP Manual'); ?> </a>
 	<ul><li><?php echo __d('cake', 'Your Rapid Development Cookbook'); ?></li></ul></li>
-	<li><a href="http://api.cakephp.org"><?php echo __d('cake', 'CakePHP API'); ?> </a>
+	<li><a href="https://api.cakephp.org"><?php echo __d('cake', 'CakePHP API'); ?> </a>
 	<ul><li><?php echo __d('cake', 'Docblock Your Best Friend'); ?></li></ul></li>
 	<li><a href="http://www.cakeforge.org"><?php echo __d('cake', 'CakeForge'); ?> </a>
 	<ul><li><?php echo __d('cake', 'Open Development for CakePHP'); ?></li></ul></li>

@@ -1,17 +1,17 @@
 <?php
 /**
- * CakePHP(tm) : Rapid Development Framework (http://cakephp.org)
- * Copyright (c) Cake Software Foundation, Inc. (http://cakefoundation.org)
+ * CakePHP(tm) : Rapid Development Framework (https://cakephp.org)
+ * Copyright (c) Cake Software Foundation, Inc. (https://cakefoundation.org)
  *
  * Licensed under The MIT License
  * For full copyright and license information, please see the LICENSE.txt
  * Redistributions of files must retain the above copyright notice.
  *
- * @copyright     Copyright (c) Cake Software Foundation, Inc. (http://cakefoundation.org)
- * @link          http://cakephp.org CakePHP(tm) Project
+ * @copyright     Copyright (c) Cake Software Foundation, Inc. (https://cakefoundation.org)
+ * @link          https://cakephp.org CakePHP(tm) Project
  * @package       Cake.View.Helper
  * @since         CakePHP(tm) v 1.3
- * @license       http://www.opensource.org/licenses/mit-license.php MIT License
+ * @license       https://opensource.org/licenses/mit-license.php MIT License
  */
 
 App::uses('JsBaseEngineHelper', 'View/Helper');
@@ -19,7 +19,7 @@ App::uses('JsBaseEngineHelper', 'View/Helper');
 /**
  * MooTools Engine Helper for JsHelper
  *
- * Provides MooTools specific Javascript for JsHelper.
+ * Provides MooTools specific JavaScript for JsHelper.
  * Assumes that you have the following MooTools packages
  *
  * - Remote, Remote.HTML, Remote.JSON
@@ -118,7 +118,7 @@ class MootoolsEngineHelper extends JsBaseEngineHelper {
  * Create javascript selector for a CSS rule
  *
  * @param string $selector The selector that is targeted
- * @return MootoolsEngineHelper instance of $this. Allows chained methods.
+ * @return self
  */
 	public function get($selector) {
 		$this->_multipleSelection = false;
@@ -144,13 +144,13 @@ class MootoolsEngineHelper extends JsBaseEngineHelper {
  * - 'stop' - Whether you want the event to stopped. (defaults true)
  *
  * @param string $type Type of event to bind to the current dom id
- * @param string $callback The Javascript function you wish to trigger or the function literal
+ * @param string $callback The JavaScript function you wish to trigger or the function literal
  * @param array $options Options for the event.
  * @return string completed event handler
  */
 	public function event($type, $callback, $options = array()) {
 		$defaults = array('wrap' => true, 'stop' => true);
-		$options = array_merge($defaults, $options);
+		$options += $defaults;
 
 		$function = 'function (event) {%s}';
 		if ($options['wrap'] && $options['stop']) {
@@ -225,13 +225,13 @@ class MootoolsEngineHelper extends JsBaseEngineHelper {
 	}
 
 /**
- * Create an new Request.
+ * Create a new Request.
  *
  * Requires `Request`. If you wish to use 'update' key you must have ```Request.HTML```
  * if you wish to do Json requests you will need ```JSON``` and ```Request.JSON```.
  *
- * @param string|array $url
- * @param array $options
+ * @param string|array $url URL
+ * @param array $options Options list.
  * @return string The completed ajax call.
  */
 	public function request($url, $options = array()) {
@@ -361,7 +361,7 @@ class MootoolsEngineHelper extends JsBaseEngineHelper {
  * @see JsBaseEngineHelper::serializeForm()
  */
 	public function serializeForm($options = array()) {
-		$options = array_merge(array('isForm' => false, 'inline' => false), $options);
+		$options += array('isForm' => false, 'inline' => false);
 		$selection = $this->selection;
 		if (!$options['isForm']) {
 			$selection = '$(' . $this->selection . '.form)';

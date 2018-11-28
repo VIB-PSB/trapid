@@ -6,9 +6,7 @@
  * Routes are very important mechanism that allows you to freely connect
  * different URLs to chosen controllers and their actions (functions).
  *
- * PHP 5
- *
- * @link          http://cakephp.org CakePHP(tm) Project
+ * @link          https://cakephp.org CakePHP(tm) Project
  * @package       app.Config
  * @since         CakePHP(tm) v 0.2.9
  */

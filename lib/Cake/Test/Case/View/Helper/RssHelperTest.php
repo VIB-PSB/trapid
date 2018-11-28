@@ -2,20 +2,18 @@
 /**
  * RssHelperTest file
  *
- * PHP 5
- *
- * CakePHP(tm) Tests <http://book.cakephp.org/2.0/en/development/testing.html>
- * Copyright (c) Cake Software Foundation, Inc. (http://cakefoundation.org)
+ * CakePHP(tm) Tests <https://book.cakephp.org/2.0/en/development/testing.html>
+ * Copyright (c) Cake Software Foundation, Inc. (https://cakefoundation.org)
  *
  * Licensed under The MIT License
  * For full copyright and license information, please see the LICENSE.txt
  * Redistributions of files must retain the above copyright notice
  *
- * @copyright     Copyright (c) Cake Software Foundation, Inc. (http://cakefoundation.org)
- * @link          http://book.cakephp.org/2.0/en/development/testing.html CakePHP(tm) Tests
+ * @copyright     Copyright (c) Cake Software Foundation, Inc. (https://cakefoundation.org)
+ * @link          https://book.cakephp.org/2.0/en/development/testing.html CakePHP(tm) Tests
  * @package       Cake.Test.Case.View.Helper
  * @since         CakePHP(tm) v 1.2.0.4206
- * @license       http://www.opensource.org/licenses/mit-license.php MIT License
+ * @license       https://opensource.org/licenses/mit-license.php MIT License
  */
 
 App::uses('View', 'View');
@@ -93,7 +91,7 @@ class RssHelperTest extends CakeTestCase {
  */
 	public function testChannel() {
 		$attrib = array('a' => '1', 'b' => '2');
-		$elements = array('title' => 'title');
+		$elements = array('title' => 'Title');
 		$content = 'content';
 
 		$result = $this->Rss->channel($attrib, $elements, $content);
@@ -103,30 +101,7 @@ class RssHelperTest extends CakeTestCase {
 				'b' => '2'
 			),
 			'<title',
-			'title',
-			'/title',
-			'<link',
-			$this->Rss->url('/', true),
-			'/link',
-			'<description',
-			'content',
-			'/channel'
-		);
-		$this->assertTags($result, $expected);
-
-		$this->View->pageTitle = 'title';
-		$attrib = array('a' => '1', 'b' => '2');
-		$elements = array();
-		$content = 'content';
-
-		$result = $this->Rss->channel($attrib, $elements, $content);
-		$expected = array(
-			'channel' => array(
-				'a' => '1',
-				'b' => '2'
-			),
-			'<title',
-			'title',
+			'Title',
 			'/title',
 			'<link',
 			$this->Rss->url('/', true),
@@ -610,7 +585,7 @@ class RssHelperTest extends CakeTestCase {
 
 		$this->assertTrue($File->write('123'), 'Could not write to ' . $tmpFile);
 
-		if (50300 <= PHP_VERSION_ID) {
+		if (PHP_VERSION_ID >= 50300) {
 			clearstatcache(true, $tmpFile);
 		} else {
 			clearstatcache();
@@ -745,36 +720,36 @@ class RssHelperTest extends CakeTestCase {
 
 	public function testElementNamespaceWithPrefix() {
 		$item = array(
-				'title' => 'Title',
-				'dc:creator' => 'Alex',
-				'xy:description' => 'descriptive words'
-			);
+			'title' => 'Title',
+			'dc:creator' => 'Alex',
+			'dc:description' => 'descriptive words'
+		);
 		$attributes = array(
-				'namespace' => array(
-						'prefix' => 'dc',
-						'url' => 'http://link.com'
-				)
+			'namespace' => array(
+				'prefix' => 'dc',
+				'url' => 'http://link.com'
+			)
 		);
 		$result = $this->Rss->item($attributes, $item);
 		$expected = array(
 			'item' => array(
-					'xmlns:dc' => 'http://link.com'
+				'xmlns:dc' => 'http://link.com'
 			),
 			'title' => array(
-					'xmlns:dc' => 'http://link.com'
+				'xmlns:dc' => 'http://link.com'
 			),
 			'Title',
 			'/title',
 			'dc:creator' => array(
-					'xmlns:dc' => 'http://link.com'
+				'xmlns:dc' => 'http://link.com'
 			),
 			'Alex',
 			'/dc:creator',
-			'description' => array(
-					'xmlns:dc' => 'http://link.com'
+			'dc:description' => array(
+				'xmlns:dc' => 'http://link.com'
 			),
 			'descriptive words',
-			'/description',
+			'/dc:description',
 			'/item'
 		);
 		$this->assertTags($result, $expected, true);

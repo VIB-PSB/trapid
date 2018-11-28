@@ -4,19 +4,17 @@
  *
  * Long description for ad_fixture.php
  *
- * PHP 5
- *
- * CakePHP(tm) : Rapid Development Framework (http://cakephp.org)
+ * CakePHP(tm) : Rapid Development Framework (https://cakephp.org)
  *
  * Licensed under The MIT License
  * For full copyright and license information, please see the LICENSE.txt
  * Redistributions of files must retain the above copyright notice.
  *
- * @copyright     CakePHP(tm) : Rapid Development Framework (http://cakephp.org)
+ * @copyright     Copyright (c) Cake Software Foundation, Inc. (https://cakefoundation.org)
  * @link          http://www.cakephp.org
  * @package       Cake.Test.Fixture
  * @since         1.2
- * @license       http://www.opensource.org/licenses/mit-license.php MIT License
+ * @license       https://opensource.org/licenses/mit-license.php MIT License
  */
 
 /**

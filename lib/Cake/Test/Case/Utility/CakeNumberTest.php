@@ -2,20 +2,18 @@
 /**
  * CakeNumberTest file
  *
- * PHP 5
- *
- * CakePHP(tm) Tests <http://book.cakephp.org/2.0/en/development/testing.html>
- * Copyright (c) Cake Software Foundation, Inc. (http://cakefoundation.org)
+ * CakePHP(tm) Tests <https://book.cakephp.org/2.0/en/development/testing.html>
+ * Copyright (c) Cake Software Foundation, Inc. (https://cakefoundation.org)
  *
  * Licensed under The MIT License
  * For full copyright and license information, please see the LICENSE.txt
  * Redistributions of files must retain the above copyright notice
  *
- * @copyright     Copyright (c) Cake Software Foundation, Inc. (http://cakefoundation.org)
- * @link          http://book.cakephp.org/2.0/en/development/testing.html CakePHP(tm) Tests
+ * @copyright     Copyright (c) Cake Software Foundation, Inc. (https://cakefoundation.org)
+ * @link          https://book.cakephp.org/2.0/en/development/testing.html CakePHP(tm) Tests
  * @package       Cake.Test.Case.View.Helper
  * @since         CakePHP(tm) v 1.2.0.4206
- * @license       http://www.opensource.org/licenses/mit-license.php MIT License
+ * @license       https://opensource.org/licenses/mit-license.php MIT License
  */
 
 App::uses('View', 'View');
@@ -141,31 +139,31 @@ class CakeNumberTest extends CakeTestCase {
 	public function testMultibyteFormat() {
 		$value = '5199100.0006';
 		$result = $this->Number->format($value, array(
-			'thousands'	=> '&nbsp;',
-			'decimals'	=> '&amp;',
-			'places'	=> 3,
-			'escape'	=> false,
-			'before'	=> '',
+			'thousands' => '&nbsp;',
+			'decimals' => '&amp;',
+			'places' => 3,
+			'escape' => false,
+			'before' => '',
 		));
 		$expected = '5&nbsp;199&nbsp;100&amp;001';
 		$this->assertEquals($expected, $result);
 
 		$value = 1000.45;
 		$result = $this->Number->format($value, array(
-			'thousands'	=> ',,',
-			'decimals'	=> '.a',
-			'escape'	=> false,
+			'thousands' => ',,',
+			'decimals' => '.a',
+			'escape' => false,
 		));
 		$expected = '$1,,000.a45';
 		$this->assertEquals($expected, $result);
 
 		$value = 519919827593784.00;
 		$this->Number->addFormat('RUR', array(
-			'thousands'		=> 'ø€ƒ‡™',
-			'decimals'		=> '(§.§)',
-			'escape'		=> false,
-			'wholeSymbol'	=> '€',
-			'wholePosition'	=> 'after',
+			'thousands' => 'ø€ƒ‡™',
+			'decimals' => '(§.§)',
+			'escape' => false,
+			'wholeSymbol' => '€',
+			'wholePosition' => 'after',
 		));
 		$result = $this->Number->currency($value, 'RUR');
 		$expected = '519ø€ƒ‡™919ø€ƒ‡™827ø€ƒ‡™593ø€ƒ‡™784(§.§)00€';
@@ -173,9 +171,9 @@ class CakeNumberTest extends CakeTestCase {
 
 		$value = '13371337.1337';
 		$result = CakeNumber::format($value, array(
-			'thousands'	=> '- |-| /-\ >< () |2 -',
-			'decimals'	=> '- £€€† -',
-			'before'	=> ''
+			'thousands' => '- |-| /-\ >< () |2 -',
+			'decimals' => '- £€€† -',
+			'before' => ''
 		));
 		$expected = '13- |-| /-\ &gt;&lt; () |2 -371- |-| /-\ &gt;&lt; () |2 -337- £€€† -13';
 		$this->assertEquals($expected, $result);
@@ -333,6 +331,19 @@ class CakeNumberTest extends CakeTestCase {
 		$result = $this->Number->currency('0.001', 'BHD', array('places' => 2));
 		$expected = '1 fils';
 		$this->assertEquals($expected, $result);
+	}
+
+/**
+ * Test that the default fraction handling does not cause issues.
+ *
+ * @return void
+ */
+	public function testCurrencyFractionSymbol() {
+		$result = $this->Number->currency(0.2, '', array(
+			'places' => 2,
+			'decimal' => '.'
+		));
+		$this->assertEquals('0.2', $result);
 	}
 
 /**

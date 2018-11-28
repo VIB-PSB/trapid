@@ -2,20 +2,18 @@
 /**
  * FileLogTest file
  *
- * PHP 5
- *
- * CakePHP(tm) Tests <http://book.cakephp.org/2.0/en/development/testing.html>
- * Copyright (c) Cake Software Foundation, Inc. (http://cakefoundation.org)
+ * CakePHP(tm) Tests <https://book.cakephp.org/2.0/en/development/testing.html>
+ * Copyright (c) Cake Software Foundation, Inc. (https://cakefoundation.org)
  *
  * Licensed under The MIT License
  * For full copyright and license information, please see the LICENSE.txt
  * Redistributions of files must retain the above copyright notice
  *
- * @copyright     Copyright (c) Cake Software Foundation, Inc. (http://cakefoundation.org)
- * @link          http://book.cakephp.org/2.0/en/development/testing.html CakePHP(tm) Tests
+ * @copyright     Copyright (c) Cake Software Foundation, Inc. (https://cakefoundation.org)
+ * @link          https://book.cakephp.org/2.0/en/development/testing.html CakePHP(tm) Tests
  * @package       Cake.Test.Case.Log.Engine
  * @since         CakePHP(tm) v 1.3
- * @license       http://www.opensource.org/licenses/mit-license.php MIT License
+ * @license       https://opensource.org/licenses/mit-license.php MIT License
  */
 
 App::uses('FileLog', 'Log/Engine');
@@ -117,6 +115,8 @@ class FileLogTest extends CakeTestCase {
 		$result = file_get_contents($files[1]);
 		$this->assertRegExp('/Warning: Test warning second/', $result);
 
+		file_put_contents($path . 'error.log.0000000000', "The oldest log file with over 35 bytes.\n");
+
 		sleep(1);
 		clearstatcache();
 		$log->write('warning', 'Test warning fourth');
@@ -140,6 +140,7 @@ class FileLogTest extends CakeTestCase {
 			'size' => 35,
 			'rotate' => 0
 		));
+		file_put_contents($path . 'debug.log.0000000000', "The oldest log file with over 35 bytes.\n");
 		$log->write('debug', 'Test debug');
 		$this->assertTrue(file_exists($path . 'debug.log'));
 

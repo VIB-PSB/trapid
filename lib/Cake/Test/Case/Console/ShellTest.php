@@ -4,25 +4,24 @@
  *
  * Test Case for Shell
  *
- * PHP 5
- *
- * CakePHP :  Rapid Development Framework (http://cakephp.org)
- * Copyright (c) Cake Software Foundation, Inc. (http://cakefoundation.org)
+ * CakePHP :  Rapid Development Framework (https://cakephp.org)
+ * Copyright (c) Cake Software Foundation, Inc. (https://cakefoundation.org)
  *
  * Licensed under The MIT License
  * For full copyright and license information, please see the LICENSE.txt
  * Redistributions of files must retain the above copyright notice.
  *
- * @copyright     Copyright (c) Cake Software Foundation, Inc. (http://cakefoundation.org)
- * @link          http://cakephp.org CakePHP Project
+ * @copyright     Copyright (c) Cake Software Foundation, Inc. (https://cakefoundation.org)
+ * @link          https://cakephp.org CakePHP Project
  * @package       Cake.Test.Case.Console.Command
  * @since         CakePHP v 1.2.0.7726
- * @license       http://www.opensource.org/licenses/mit-license.php MIT License
+ * @license       https://opensource.org/licenses/mit-license.php MIT License
  */
 
 App::uses('ShellDispatcher', 'Console');
 App::uses('Shell', 'Console');
 App::uses('Folder', 'Utility');
+App::uses("ProgressHelper", "Console/Helper");
 
 /**
  * ShellTestShell class
@@ -41,7 +40,7 @@ class ShellTestShell extends Shell {
 /**
  * stopped property
  *
- * @var integer
+ * @var int
  */
 	public $stopped;
 
@@ -55,7 +54,7 @@ class ShellTestShell extends Shell {
 /**
  * stop method
  *
- * @param integer $status
+ * @param int $status
  * @return void
  */
 	protected function _stop($status = 0) {
@@ -195,6 +194,7 @@ class ShellTest extends CakeTestCase {
 		), App::RESET);
 
 		CakePlugin::load('TestPlugin');
+		$this->Shell->tasks = array('DbConfig' => array('one', 'two'));
 		$this->Shell->uses = array('TestPlugin.TestPluginPost');
 		$this->Shell->initialize();
 
@@ -208,6 +208,7 @@ class ShellTest extends CakeTestCase {
 		$this->assertTrue(isset($this->Shell->Comment));
 		$this->assertInstanceOf('Comment', $this->Shell->Comment);
 		$this->assertEquals('Comment', $this->Shell->modelClass);
+		$this->assertInstanceOf('DbConfigTask', $this->Shell->DbConfig);
 
 		App::build();
 	}
@@ -366,6 +367,36 @@ class ShellTest extends CakeTestCase {
 		$this->Shell->out('Verbose', 1, Shell::VERBOSE);
 		$this->Shell->out('Normal', 1, Shell::NORMAL);
 		$this->Shell->out('Quiet', 1, Shell::QUIET);
+	}
+
+/**
+ * Test overwriting.
+ *
+ * @return void
+ */
+	public function testOverwrite() {
+		$number = strlen('Some text I want to overwrite');
+
+		$this->Shell->stdout->expects($this->at(0))
+			->method('write')
+			->with('Some <info>text</info> I want to overwrite', 0)
+			->will($this->returnValue($number));
+
+		$this->Shell->stdout->expects($this->at(1))
+			->method('write')
+			->with(str_repeat("\x08", $number), 0);
+
+		$this->Shell->stdout->expects($this->at(2))
+			->method('write')
+			->with('Less text', 0)
+			->will($this->returnValue(9));
+
+		$this->Shell->stdout->expects($this->at(3))
+			->method('write')
+			->with(str_repeat(' ', $number - 9), 0);
+
+		$this->Shell->out('Some <info>text</info> I want to overwrite', 0);
+		$this->Shell->overwrite('Less text');
 	}
 
 /**
@@ -638,7 +669,7 @@ class ShellTest extends CakeTestCase {
  * @return void
  */
 	public function testCreateFileNoPermissions() {
-		$this->skipIf(DIRECTORY_SEPARATOR === '\\', 'Cant perform operations using permissions on windows.');
+		$this->skipIf(DIRECTORY_SEPARATOR === '\\', 'Cant perform operations using permissions on Windows.');
 
 		$path = TMP . 'shell_test';
 		$file = $path . DS . 'no_perms';
@@ -748,6 +779,32 @@ class ShellTest extends CakeTestCase {
 	}
 
 /**
+ * test unknown option causes display of error and help.
+ *
+ * @return void
+ */
+	public function testRunCommandUnknownOption() {
+		$output = $this->getMock('ConsoleOutput', array(), array(), '', false);
+		$error = $this->getMock('ConsoleOutput', array(), array(), '', false);
+		$in = $this->getMock('ConsoleInput', array(), array(), '', false);
+
+		$Parser = $this->getMock('ConsoleOptionParser', array(), array(), '', false);
+		$Parser->expects($this->once())->method('parse')
+			->with(array('--unknown'))
+			->will($this->throwException(new ConsoleException('Unknown option `unknown`')));
+		$Parser->expects($this->once())->method('help');
+
+		$Shell = $this->getMock('ShellTestShell', array('getOptionParser'), array($output, $error, $in));
+
+		$Shell->expects($this->once())->method('getOptionParser')
+			->will($this->returnValue($Parser));
+		$Shell->stderr->expects($this->once())->method('write');
+		$Shell->stdout->expects($this->once())->method('write');
+
+		$Shell->runCommand('do_something', array('do_something', '--unknown'));
+	}
+
+/**
  * test that a --help causes help to show.
  *
  * @return void
@@ -826,6 +883,51 @@ TEXT;
 	}
 
 /**
+ * Test reading params
+ *
+ * @dataProvider paramReadingDataProvider
+ */
+	public function testParamReading($toRead, $expected) {
+		$this->Shell->params = array(
+			'key' => 'value',
+			'help' => false,
+			'emptykey' => '',
+			'truthy' => true
+		);
+		$this->assertSame($expected, $this->Shell->param($toRead));
+	}
+
+/**
+ * Data provider for testing reading values with Shell::param()
+ *
+ * @return array
+ */
+	public function paramReadingDataProvider() {
+		return array(
+			array(
+				'key',
+				'value',
+			),
+			array(
+				'help',
+				false,
+			),
+			array(
+				'emptykey',
+				'',
+			),
+			array(
+				'truthy',
+				true,
+			),
+			array(
+				'does_not_exist',
+				null,
+			)
+		);
+	}
+
+/**
  * Test that option parsers are created with the correct name/command.
  *
  * @return void
@@ -840,8 +942,12 @@ TEXT;
 
 /**
  * Test file and console and logging
+ *
+ * @return void
  */
 	public function testFileAndConsoleLogging() {
+		CakeLog::disable('stdout');
+		CakeLog::disable('stderr');
 		// file logging
 		$this->Shell->log_something();
 		$this->assertTrue(file_exists(LOGS . 'error.log'));
@@ -866,6 +972,9 @@ TEXT;
 		$this->assertTrue(file_exists(LOGS . 'error.log'));
 		$contents = file_get_contents(LOGS . 'error.log');
 		$this->assertContains($this->Shell->testMessage, $contents);
+
+		CakeLog::enable('stdout');
+		CakeLog::enable('stderr');
 	}
 
 /**
@@ -886,6 +995,8 @@ TEXT;
 
 /**
  * Test file and console and logging quiet output
+ *
+ * @return void
  */
 	public function testQuietLog() {
 		$output = $this->getMock('ConsoleOutput', array(), array(), '', false);
@@ -896,4 +1007,53 @@ TEXT;
 		$this->Shell->runCommand('foo', array('--quiet'));
 	}
 
+/**
+ * Test getting an instance of a helper
+ *
+ * @return void
+ */
+	public function testGetInstanceOfHelper() {
+		$actual = $this->Shell->helper("progress");
+		$this->assertInstanceOf("ProgressShellHelper", $actual);
+	}
+
+/**
+ * Test getting an invalid helper
+ *
+ * @expectedException RunTimeException
+ * @return void
+ */
+	public function testGetInvalidHelper() {
+		$this->Shell->helper("tomato");
+	}
+
+/**
+ * Test that shell loggers do not get overridden in constructor if already configured
+ * 
+ * @return void
+ */
+	public function testShellLoggersDoNotGetOverridden() {
+		$shell = $this->getMock(
+			"Shell", array(
+				"_loggerIsConfigured",
+				"configureStdOutLogger",
+				"configureStdErrLogger",
+			),
+			array(),
+			"",
+			false
+		);
+
+		$shell->expects($this->exactly(2))
+			->method("_loggerIsConfigured")
+			->will($this->returnValue(true));
+
+		$shell->expects($this->never())
+			->method("_configureStdOutLogger");
+
+		$shell->expects($this->never())
+			->method("_configureStdErrLogger");
+
+		$shell->__construct();
+	}
 }

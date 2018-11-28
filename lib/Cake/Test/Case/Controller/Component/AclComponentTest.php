@@ -2,20 +2,18 @@
 /**
  * AclComponentTest file
  *
- * PHP 5
- *
- * CakePHP(tm) Tests <http://book.cakephp.org/2.0/en/development/testing.html>
- * Copyright (c) Cake Software Foundation, Inc. (http://cakefoundation.org)
+ * CakePHP(tm) Tests <https://book.cakephp.org/2.0/en/development/testing.html>
+ * Copyright (c) Cake Software Foundation, Inc. (https://cakefoundation.org)
  *
  * Licensed under The MIT License
  * For full copyright and license information, please see the LICENSE.txt
  * Redistributions of files must retain the above copyright notice
  *
- * @copyright     Copyright (c) Cake Software Foundation, Inc. (http://cakefoundation.org)
- * @link          http://book.cakephp.org/2.0/en/development/testing.html CakePHP(tm) Tests
+ * @copyright     Copyright (c) Cake Software Foundation, Inc. (https://cakefoundation.org)
+ * @link          https://book.cakephp.org/2.0/en/development/testing.html CakePHP(tm) Tests
  * @package       Cake.Test.Case.Controller.Component
  * @since         CakePHP(tm) v 1.2.0.5435
- * @license       http://www.opensource.org/licenses/mit-license.php MIT License
+ * @license       https://opensource.org/licenses/mit-license.php MIT License
  */
 
 App::uses('AclComponent', 'Controller/Component');
@@ -72,15 +70,15 @@ class AclComponentTest extends CakeTestCase {
  * @return void
  */
 	public function testAdapter() {
-		$implementation = new MockAclImplementation();
-		$implementation->expects($this->once())->method('initialize')->with($this->Acl);
-		$this->assertNull($this->Acl->adapter($implementation));
+		$Adapter = $this->getMock('AclInterface');
+		$Adapter->expects($this->once())->method('initialize')->with($this->Acl);
 
-		$this->assertEquals($this->Acl->adapter(), $implementation, 'Returned object is different %s');
+		$this->assertNull($this->Acl->adapter($Adapter));
+		$this->assertEquals($this->Acl->adapter(), $Adapter, 'Returned object is different %s');
 	}
 
 /**
- * test that adapter() whines when the class is not an AclBase
+ * test that adapter() whines when the class does not implement AclInterface
  *
  * @expectedException CakeException
  * @return void
