@@ -8,7 +8,7 @@ class ExperimentJobs extends AppModel{
 
   var $name	= "ExperimentJobs";
   var $useTable = "experiment_jobs";
-	
+
 
   function addJob($exp_id,$job_id,$type="long",$comment=""){
     $query	= "INSERT INTO `experiment_jobs`(`experiment_id`,`job_id`,`job_type`,`start_date`,`comment`) VALUES ('".$exp_id."','".$job_id."','".$type."',NOW(),'".$comment."')";
@@ -16,7 +16,8 @@ class ExperimentJobs extends AppModel{
   }
 
   function getJobs($exp_id){
-    $query	= "SELECT * FROM `experiment_jobs` WHERE `experiment_id`='".$exp_id."' ";
+    $data_source = $this->getDataSource();
+    $query	= "SELECT * FROM `experiment_jobs` WHERE `experiment_id`='" . $data_source->value($exp_id, 'integer') ."' ";
     $res	= $this->query($query);
     $result	= array();
     foreach($res as $r){
@@ -26,17 +27,21 @@ class ExperimentJobs extends AppModel{
   }
 
   function getNumJobs($exp_id){
-    $query	= "SELECT COUNT(*) as count FROM `experiment_jobs` WHERE `experiment_id`='".$exp_id."' ";
+    $data_source = $this->getDataSource();
+    $query	= "SELECT COUNT(*) as count FROM `experiment_jobs` WHERE `experiment_id`='". $data_source->value($exp_id, 'integer') ."' ";
     $res 	= $this->query($query);
     $result	= $res[0][0]['count'];
     return $result;
   }
 
   function deleteJob($exp_id,$job_id){
-    $query	= "DELETE FROM `experiment_jobs` WHERE `experiment_id`='".$exp_id."' AND `job_id`='".$job_id."' ";
-    $this->query($query);
+      $data_source = $this->getDataSource();
+      $query	= "DELETE FROM `experiment_jobs` WHERE `experiment_id`='".$data_source->value($exp_id, 'integer') .
+          "' AND `job_id`='" . $data_source->value($job_id, 'integer') . "' ";
+      $this->query($query);
   }
 
+  // Unused function?
   function deleteJobReturn($exp_id,$job_id){
     $query	= "DELETE FROM `experiment_jobs` WHERE `experiment_id`='".$exp_id."' AND `job_id`='".$job_id."' ";
     $this->query($query);

@@ -92,7 +92,8 @@ class TrapidController extends AppController{
 
   function manage_jobs($exp_id=null){
     if(!$exp_id){$this->redirect(array("controller"=>"trapid","action"=>"experiments"));}
-    $exp_id	= mysql_real_escape_string($exp_id);
+    // $exp_id	= mysql_real_escape_string($exp_id);
+    $exp_id	=  $this->Experiments->getDataSource()->value($exp_id, 'integer'); // Useless?
     parent::check_user_exp($exp_id);
 
     // Delete jobs that already finished but that may still be in `experiment_jobs` table, before getting `$exp_info`
@@ -145,11 +146,11 @@ class TrapidController extends AppController{
 
   function change_status($exp_id=null){
     if(!$exp_id){$this->redirect(array("controller"=>"trapid","action"=>"experiments"));}
-    $exp_id	= mysql_real_escape_string($exp_id);
+    // $exp_id	= mysql_real_escape_string($exp_id);
     parent::check_user_exp($exp_id);
     $exp_info	= $this->Experiments->getDefaultInformation($exp_id);
-    $this->set("exp_info",$exp_info);
-    $this->set("exp_id",$exp_id);
+    $this->set("exp_info", $exp_info);
+    $this->set("exp_id", $exp_id);
     $this->set('title_for_layout', 'Experiment status');
 
     $tmp_dir	= TMP."experiment_data/".$exp_id."/";
@@ -166,7 +167,8 @@ class TrapidController extends AppController{
       }
       if($_POST['form_type']=="change_status" && array_key_exists("new_status",$_POST)){
 	//change status
-	$new_status	= mysql_real_escape_string($_POST['new_status']);
+	// $new_status	= mysql_real_escape_string($_POST['new_status']);
+	$new_status	= $_POST['new_status'];
         $this->Experiments->updateAll(array("process_state"=>"'".$new_status."'"),array("experiment_id"=>$exp_id));
 	//try to delete running job
 	if($exp_info['process_state']=='processing'){
@@ -181,7 +183,6 @@ class TrapidController extends AppController{
       }
       $this->redirect(array("controller"=>"trapid","action"=>"experiments"));
     }
-
   }
 
 
@@ -197,14 +198,15 @@ class TrapidController extends AppController{
         $this -> set('title_for_layout', 'Welcome');
       	$user_id	= $this->Cookie->read("user_id");
       	$email		= $this->Cookie->read("email");
-      	$user_id  	= mysql_real_escape_string($user_id);
-      	$email		= mysql_real_escape_string($email);
-      	$user_data	= $this->Authentication->find("first",array("conditions"=>array("user_id"=>$user_id,"email"=>$email)));
-  // Disable this behavior as it can be confusing to have the home page disappearing?
-  // if($user_data){$this->redirect(array("controller"=>"trapid","action"=>"experiments"));}
+        // $user_id  	= $this->Authentication->getDataSource()->value($user_id, 'string');
+        // $email		= $this->Authentication->getDataSource()->value($email, 'string');
+        // No need to escape SQL data when using `find` and proper array notation?
+        $user_data	= $this->Authentication->find("first",array("conditions"=>array("user_id"=>$user_id,"email"=>$email)));
+        // Disable redirection as it can be confusing to have the home page disappearing?
+        // if($user_data){$this->redirect(array("controller"=>"trapid","action"=>"experiments"));}
 
-	// Send a test email
-	//mail("mibel@psb.ugent.be","test email","blablabla");
+       // Send a test email
+	   //mail("mibel@psb.ugent.be","test email","blablabla");
   }
 
 
@@ -214,7 +216,7 @@ class TrapidController extends AppController{
     Configure::write("debug",1);
     $this->layout = "";
     if(!$exp_id){$this->redirect(array("controller"=>"trapid","action"=>"experiments"));}
-    $exp_id	= mysql_real_escape_string($exp_id);
+    // $exp_id	= mysql_real_escape_string($exp_id);
     parent::check_user_exp($exp_id);
     // pr($exp_info);
     $num_transcripts = "N/A";  // Default value to display
@@ -245,7 +247,6 @@ class TrapidController extends AppController{
     //retrieve information about the user
     $user_email		= $this->Authentication->find("first",array("fields"=>array("email"),"conditions"=>array("user_id"=>$user_id)));
     $this->set("user_email",$user_email);
-
 
     //retrieve possible available PLAZA databases from the configuration table
     $available_sources	= $this->DataSources->find("all");
@@ -297,9 +298,13 @@ class TrapidController extends AppController{
     //check if post
     if($_POST){
       if(array_key_exists("experiment_name",$_POST) && array_key_exists("experiment_description",$_POST) && array_key_exists("data_source",$_POST)){
-       	$experiment_name	= mysql_real_escape_string($_POST['experiment_name']);
-	$experiment_description	= mysql_real_escape_string($_POST['experiment_description']);
-	$data_source		= mysql_real_escape_string($_POST['data_source']);
+       	// $experiment_name	= mysql_real_escape_string($_POST['experiment_name']);
+	    // $experiment_description	= mysql_real_escape_string($_POST['experiment_description']);
+	    // $data_source		= mysql_real_escape_string($_POST['data_source']);
+          // No need to escape (using CakePHP's `save()`+arrays)?
+	    $experiment_name	= $_POST['experiment_name'];
+	    $experiment_description	= $_POST['experiment_description'];
+	    $data_source		= $_POST['data_source'];
 
 	//check whether person has not already reached the limit of number of experiments (normally form should be disabled as well)
 	if(count($experiments)>=$MAX_USER_EXPERIMENTS){
@@ -326,7 +331,7 @@ class TrapidController extends AppController{
   // `experiment_id` value set to NULL (setting it to an empty string, like before, would require to turn SQL strict mode off)
 	$this->Experiments->save(array("user_id"=>$user_id,"experiment_id"=>NULL,"title"=>$experiment_name,"description"=>$experiment_description,"creation_date"=>date("Y-m-d H:i:s"),"last_edit_date"=>date("Y-m-d H:i:s"),"process_state"=>"empty","used_plaza_database"=>$data_source));
 	// get last experiment id
-	$user_experiments	= $this->Experiments->query("SELECT `experiment_id` FROM `experiments` WHERE `user_id`='".$user_id."' ORDER BY `experiment_id` DESC ");
+	$user_experiments	= $this->Experiments->query("SELECT `experiment_id` FROM `experiments` WHERE `user_id`='". $this->Authentication->getDataSource()->value($user_id, 'integer') ."' ORDER BY `experiment_id` DESC ");
 	$exp_id			= $user_experiments[0]['experiments']['experiment_id'];
 	$this->ExperimentLog->addAction($exp_id,"create_experiment","");
 	$this->redirect(array("controller"=>"trapid","action"=>"experiments"));
@@ -345,12 +350,12 @@ class TrapidController extends AppController{
    * Pages and actions which are deemed worthy of logging, can be
    */
   function view_log($exp_id=null){
-    $exp_id	= mysql_real_escape_string($exp_id);
+    // $exp_id	= mysql_real_escape_string($exp_id);
     parent::check_user_exp($exp_id);
     $exp_info	= $this->Experiments->getDefaultInformation($exp_id);
     $this->TrapidUtils->checkPageAccess($exp_info['title'],$exp_info["process_state"],$this->process_states["all"]);
-    $this->set("exp_info",$exp_info);
-    $this->set("exp_id",$exp_id);
+    $this->set("exp_info", $exp_info);
+    $this->set("exp_id", $exp_id);
 
     $log_info	= $this->ExperimentLog->find("all",array("conditions"=>array("experiment_id"=>$exp_id),
 							"order"=>array("ExperimentLog.id ASC")));
@@ -365,7 +370,7 @@ class TrapidController extends AppController{
    * Share the experiment.
    */
   function experiment_access($exp_id=null){
-     $exp_id	= mysql_real_escape_string($exp_id);
+     // $exp_id	= mysql_real_escape_string($exp_id);
      parent::check_user_exp($exp_id);
      $exp_info	= $this->Experiments->getDefaultInformation($exp_id);
      $this->set("exp_info",$exp_info);
@@ -423,27 +428,27 @@ class TrapidController extends AppController{
   function experiment_settings($exp_id=null){
 
     if(!$exp_id){$this->redirect(array("controller"=>"trapid","action"=>"experiments"));}
-    $exp_id	= mysql_real_escape_string($exp_id);
+    // $exp_id	= mysql_real_escape_string($exp_id);
     parent::check_user_exp($exp_id);
     $exp_info	= $this->Experiments->getDefaultInformation($exp_id);
     //$this->set("exp_info",$exp_info);
-    $this->set("exp_id",$exp_id);
+    $this->set("exp_id", $exp_id);
     $this->TrapidUtils->checkPageAccess($exp_info['title'],$exp_info["process_state"],$this->process_states["default"]);
     $this->set("exp_info",$exp_info);
     $this->set("show_experiment_overview_description",1);
 
     if($_POST){
       if(array_key_exists("experiment_name",$_POST)){
-	$new_exp_name		= mysql_real_escape_string($_POST["experiment_name"]);
+	$new_exp_name		=  $_POST["experiment_name"];
 	if($new_exp_name==""){
 	  $this->set("error","No name defined");
 	  return;
 	}
-	$this->Experiments->updateAll(array("title"=>"'".$new_exp_name."'"),array("experiment_id"=>$exp_id));
+	$this->Experiments->updateAll(array("title"=> $this->Experiments->getDataSource()->value($new_exp_name, 'string')),array("experiment_id"=>$exp_id));
       }
       if(array_key_exists("experiment_description",$_POST)){
-	$new_exp_desc		= mysql_real_escape_string($_POST["experiment_description"]);
-	$this->Experiments->updateAll(array("description"=>"'".$new_exp_desc."'"),array("experiment_id"=>$exp_id));
+	$new_exp_desc		= $_POST["experiment_description"];
+	$this->Experiments->updateAll(array("description"=> $this->Experiments->getDataSource()->value($new_exp_desc, 'string')),array("experiment_id"=>$exp_id));
       }
       $exp_info	= $this->Experiments->getDefaultInformation($exp_id);
       $this->redirect(array("controller"=>"trapid","action"=>"experiment",$exp_id));
@@ -463,7 +468,7 @@ class TrapidController extends AppController{
    * should only be accesible through tool-pages
    */
   function experiment($exp_id=null){
-    $exp_id	= mysql_real_escape_string($exp_id);
+//    $exp_id	= $this->Experiments->getDataSource()->value($exp_id, 'integer');  // Useless / unclean?
     parent::check_user_exp($exp_id);
 
     // Delete jobs that already finished but that may still be in `experiment_jobs` table, before getting `$exp_info`
@@ -554,7 +559,7 @@ class TrapidController extends AppController{
 
   function change_transcript_gf($exp_id=null,$transcript_id=null){
     if(!$exp_id || !$transcript_id){$this->redirect(array("controller"=>"trapid","action"=>"experiments"));}
-    $exp_id	= mysql_real_escape_string($exp_id);
+    // $exp_id	= mysql_real_escape_string($exp_id); // No need to cehck since there is a `find()` in `check_user_exp()`?
     parent::check_user_exp($exp_id);
     $exp_info	= $this->Experiments->getDefaultInformation($exp_id);
     $this->set("exp_info",$exp_info);
@@ -562,7 +567,7 @@ class TrapidController extends AppController{
     $this->TrapidUtils->checkPageAccess($exp_info['title'],$exp_info["process_state"],$this->process_states["default"]);
 
     //check whether transcript is valid
-    $transcript_id 	= mysql_real_escape_string($transcript_id);
+    // $transcript_id 	= mysql_real_escape_string($transcript_id);
     $transcript_info    = $this->Transcripts->find("first",array("conditions"=>array("experiment_id"=>$exp_id,"transcript_id"=>$transcript_id)));
     //pr($transcript_info);
     if(!$transcript_info){$this->redirect(array("controller"=>"trapid","action"=>"experiment",$exp_id));}
@@ -577,14 +582,14 @@ class TrapidController extends AppController{
   function similarity_hits($exp_id=null,$transcript_id=null){
     Configure::write("debug",2);
     if(!$exp_id || !$transcript_id){$this->redirect(array("controller"=>"trapid","action"=>"experiments"));}
-    $exp_id	= mysql_real_escape_string($exp_id);
+    // $exp_id	= mysql_real_escape_string($exp_id);
     parent::check_user_exp($exp_id);
     $exp_info	= $this->Experiments->getDefaultInformation($exp_id);
     $this->set("exp_info",$exp_info);
     $this->set("exp_id",$exp_id);
     $this->TrapidUtils->checkPageAccess($exp_info['title'],$exp_info["process_state"],$this->process_states["default"]);
     //check whether transcript is valid
-    $transcript_id 	= mysql_real_escape_string($transcript_id);
+    // $transcript_id 	= mysql_real_escape_string($transcript_id);
     $transcript_info    = $this->Transcripts->find("first",array("conditions"=>array("experiment_id"=>$exp_id,"transcript_id"=>$transcript_id)));
     if(!$transcript_info){$this->redirect(array("controller"=>"trapid","action"=>"experiment",$exp_id));}
     $this->set("transcript_info",$transcript_info['Transcripts']);
@@ -629,7 +634,8 @@ class TrapidController extends AppController{
 
     if($_POST && array_key_exists("plaza_gf_id",$_POST)){
 
-      $new_plaza_gf_id		= mysql_real_escape_string($_POST['plaza_gf_id']);
+      // $new_plaza_gf_id		= mysql_real_escape_string($_POST['plaza_gf_id']);
+      $new_plaza_gf_id		= $_POST['plaza_gf_id'];
       //check if exists. If not, return to page with error message.
       $num_plaza_genes		= $this->GfData->find("count",array("conditions"=>array("gf_id"=>$new_plaza_gf_id)));
       if($num_plaza_genes==0){$this->set("error","Illegal external identifier for gene family");}
@@ -637,7 +643,8 @@ class TrapidController extends AppController{
       $new_trapid_gf_info	= null;
       $total_new_gf		= true;
       if(array_key_exists("trapid_gf_id",$_POST)){
-	$new_trapid_gf_id	= mysql_real_escape_string($_POST['trapid_gf_id']);
+	// $new_trapid_gf_id	= mysql_real_escape_string($_POST['trapid_gf_id']);
+	$new_trapid_gf_id	= $_POST['trapid_gf_id'];
 	$new_trapid_gf_info	= $this->GeneFamilies->find("first",array("conditions"=>array("gf_id"=>$new_trapid_gf_id)));
 	if(!$new_trapid_gf_info){$this->set("error","Illegal internal gene family identifier");return;}
 	$total_new_gf		= false;
@@ -713,12 +720,12 @@ class TrapidController extends AppController{
     function rna_similarity_hits($exp_id=null,$transcript_id=null){
         Configure::write("debug",2);
         if(!$exp_id || !$transcript_id){$this->redirect(array("controller"=>"trapid","action"=>"experiments"));}
-        $exp_id	= mysql_real_escape_string($exp_id);
+        // $exp_id	= mysql_real_escape_string($exp_id);
         parent::check_user_exp($exp_id);
         $exp_info	= $this->Experiments->getDefaultInformation($exp_id);
         $this->TrapidUtils->checkPageAccess($exp_info['title'], $exp_info["process_state"], $this->process_states["default"]);
         //check whether transcript is valid
-        $transcript_id = mysql_real_escape_string($transcript_id);
+        // $transcript_id = mysql_real_escape_string($transcript_id);
         $transcript_info = $this->Transcripts->find("first", array("conditions"=>array("experiment_id"=>$exp_id, "transcript_id"=>$transcript_id)));
         if(!$transcript_info){$this->redirect(array("controller"=>"trapid","action"=>"experiment", $exp_id));}
         //get the similarity search hits for this transcript
@@ -766,7 +773,7 @@ class TrapidController extends AppController{
   function detect_orfs($exp_id=null,$transcript_id=null){
     $this->layout = "";
     if(!$exp_id || !$transcript_id){$this->redirect(array("controller"=>"trapid","action"=>"experiments"));}
-    $exp_id	= mysql_real_escape_string($exp_id);
+    // $exp_id	= mysql_real_escape_string($exp_id);
     parent::check_user_exp($exp_id);
     $exp_info	= $this->Experiments->getDefaultInformation($exp_id);
     $this->set("exp_info",$exp_info);
@@ -774,7 +781,7 @@ class TrapidController extends AppController{
     $this->TrapidUtils->checkPageAccess($exp_info['title'],$exp_info["process_state"],$this->process_states["default"]);
 
     //check whether transcript is valid
-    $transcript_id 	= mysql_real_escape_string($transcript_id);
+    // $transcript_id 	= mysql_real_escape_string($transcript_id);
     $transcript_info    = $this->Transcripts->find("first",array("conditions"=>array("experiment_id"=>$exp_id,"transcript_id"=>$transcript_id)));
     //pr($transcript_info);
     if(!$transcript_info){$this->redirect(array("controller"=>"trapid","action"=>"experiment",$exp_id));}
@@ -787,7 +794,7 @@ class TrapidController extends AppController{
   function transcript($exp_id=null,$transcript_id=null){
 
     if(!$exp_id || !$transcript_id){$this->redirect(array("controller"=>"trapid","action"=>"experiments"));}
-    $exp_id	= mysql_real_escape_string($exp_id);
+    // $exp_id	= mysql_real_escape_string($exp_id);
     parent::check_user_exp($exp_id);
     $exp_info	= $this->Experiments->getDefaultInformation($exp_id);
     $this->set("exp_info",$exp_info);
@@ -795,9 +802,10 @@ class TrapidController extends AppController{
     $this->TrapidUtils->checkPageAccess($exp_info['title'],$exp_info["process_state"],$this->process_states["default"]);
 
     //check whether transcript is valid
-    $transcript_id 	= mysql_real_escape_string($transcript_id);
+    // $transcript_id 	= mysql_real_escape_string($transcript_id);
     $transcript_info    = $this->Transcripts->find("first",array("conditions"=>array("experiment_id"=>$exp_id,"transcript_id"=>$transcript_id)));
     // pr($transcript_info);
+    // If no `$transcript_info` (i.e. `$transcript_id` is invalid), redirect to experiment page.
     if(!$transcript_info){$this->redirect(array("controller"=>"trapid","action"=>"experiment",$exp_id));}
     if($transcript_info['Transcripts']['orf_sequence'] !=""){
       $transcript_info['Transcripts']['aa_sequence'] = $this->Sequence->translate_cds_php($transcript_info['Transcripts']['orf_sequence']);
@@ -812,20 +820,20 @@ class TrapidController extends AppController{
     //put it here, as it might influence the later results. Also reload the transcript info
     if($_POST){
       if(array_key_exists("orf_sequence",$_POST)){
-	$this->Transcripts->updateAll(array("orf_sequence"=>"COMPRESS('".mysql_real_escape_string($_POST['orf_sequence'])."')"),array("experiment_id"=>$exp_id,"transcript_id"=>$transcript_id));
+	$this->Transcripts->updateAll(array("orf_sequence"=>"COMPRESS(" . $this->Transcripts->getDataSource()->value($_POST['orf_sequence'], 'string') . ")"),array("experiment_id"=>$exp_id,"transcript_id"=>$transcript_id));
 	$this->Transcripts->updateCodonStats($exp_id,$transcript_id,$_POST['orf_sequence']);
 	$this->ExperimentLog->addAction($exp_id,"change_orf_sequence",$transcript_id);
       }
       if(array_key_exists("transcript_sequence",$_POST)){
-	$this->Transcripts->updateAll(array("transcript_sequence"=>"COMPRESS('".mysql_real_escape_string($_POST['transcript_sequence'])."')"),array("experiment_id"=>$exp_id,"transcript_id"=>$transcript_id));
+	$this->Transcripts->updateAll(array("transcript_sequence"=>"COMPRESS(".$this->Transcripts->getDataSource()->value($_POST['transcript_sequence'], 'string').")"),array("experiment_id"=>$exp_id,"transcript_id"=>$transcript_id));
 	$this->ExperimentLog->addAction($exp_id,"change_transcript_sequence",$transcript_id);
       }
       if(array_key_exists("corrected_sequence",$_POST)){
-	$this->Transcripts->updateAll(array("transcript_sequence_corrected"=>"COMPRESS('".mysql_real_escape_string($_POST['corrected_sequence'])."')"),array("experiment_id"=>$exp_id,"transcript_id"=>$transcript_id));
+	$this->Transcripts->updateAll(array("transcript_sequence_corrected"=>"COMPRESS(".$this->Transcripts->getDataSource()->value($_POST['corrected_sequence'], 'string').")"),array("experiment_id"=>$exp_id,"transcript_id"=>$transcript_id));
 	$this->ExperimentLog->addAction($exp_id,"change_corrected_sequence",$transcript_id);
       }
       if(array_key_exists("meta_annotation",$_POST)){
-	$this->Transcripts->updateAll(array("meta_annotation"=>"'".mysql_real_escape_string($_POST['meta_annotation'])."'"),array("experiment_id"=>$exp_id,"transcript_id"=>$transcript_id));
+	$this->Transcripts->updateAll(array("meta_annotation"=>$this->Transcripts->getDataSource()->value($_POST['meta_annotation'], 'string')),array("experiment_id"=>$exp_id,"transcript_id"=>$transcript_id));
 	$this->ExperimentLog->addAction($exp_id,"change_meta_annotation",$transcript_id);
       }
       if(array_key_exists("subsets",$_POST) && $_POST["subsets"]=="subsets"){
@@ -834,7 +842,7 @@ class TrapidController extends AppController{
     	$transcript_subsets	= $this->TrapidUtils->reduceArray($transcript_subsets,"TranscriptsLabels","label");
 	//check for new subset
 	if(array_key_exists("new_subset",$_POST) && $_POST['new_subset']=="on" && array_key_exists("new_subset_name",$_POST)){
-	  $new_subset		= mysql_real_escape_string($_POST['new_subset_name']);
+	  $new_subset		= filter_var($_POST['new_subset_name'], FILTER_SANITIZE_STRING);  // No check needed since only used in `saveAll()`?
 	  $save_data		= array(array("experiment_id"=>$exp_id,"transcript_id"=>$transcript_id,"label"=>$new_subset));
 	  $this->TranscriptsLabels->saveAll($save_data);
 	}
@@ -915,7 +923,8 @@ class TrapidController extends AppController{
     $num_parameters	= func_num_args();
     if($num_parameters < 3 || $num_parameters%2==0 ){$this->redirect("/");}
     $parameters		= func_get_args();
-    $exp_id		= mysql_real_escape_string($parameters[0]);
+    // $exp_id		= mysql_real_escape_string($parameters[0]);
+    $exp_id		= $parameters[0];
     parent::check_user_exp($exp_id);
     $exp_info	= $this->Experiments->getDefaultInformation($exp_id);
 
@@ -1004,7 +1013,7 @@ class TrapidController extends AppController{
 
 
   function getTrapidSequences($exp_id,$transcript_data){
-    $exp_id	= mysql_real_escape_string($exp_id);
+    // $exp_id	= mysql_real_escape_string($exp_id);
     parent::check_user_exp($exp_id);
     $exp_info	= $this->Experiments->getDefaultInformation($exp_id);
     $seq_type	= $this->DataSources->find("first",array("conditions"=>array("name"=>$exp_info['datasource']),"fields"=>"seq_type"));
@@ -1021,7 +1030,7 @@ class TrapidController extends AppController{
 
 
   function getReferenceSequences($exp_id,$param_type,$param_value){
-    $exp_id	= mysql_real_escape_string($exp_id);
+    // $exp_id	= mysql_real_escape_string($exp_id);
     parent::check_user_exp($exp_id);
     $exp_info	= $this->Experiments->getDefaultInformation($exp_id);
     $seq_type	= $this->DataSources->find("first",array("conditions"=>array("name"=>$exp_info['datasource']),"fields"=>"seq_type"));
@@ -1068,10 +1077,10 @@ class TrapidController extends AppController{
    */
 
 
-
+    // TODO: replace raw queries!
   function search($exp_id=null){
     Configure::write("debug",2);
-    $exp_id	= mysql_real_escape_string($exp_id);
+    // $exp_id	= mysql_real_escape_string($exp_id);
     parent::check_user_exp($exp_id);
     $exp_info	= $this->Experiments->getDefaultInformation($exp_id);
     //	pr($exp_info);
@@ -1087,14 +1096,16 @@ class TrapidController extends AppController{
       $mvc = true;
     }
     $this->set("mvc",$mvc);
-    $st	= mysql_real_escape_string(trim($_POST['search_type']));
-    $sv = mysql_real_escape_string(trim($_POST['search_value']));
+    $st	= trim($_POST['search_type']); // `$st` is checked against valid types
+    // Unclean! But should provide temporary relief before all the requests below are replaced...
+    $sv = str_replace("'", "", $this->Transcripts->getDataSource()->value(trim($_POST['search_value']), 'string'));
     $sv_array = array($sv);
     if($mvc){
       $sv_array		= array();
       $sv_array_tmp 	= explode("\n",$_POST['search_value']);
       foreach($sv_array_tmp as $sat){
-	$tmp		= mysql_real_escape_string(trim($sat));
+	// $tmp		= mysql_real_escape_string(trim($sat));
+	$tmp		= $this->Transcripts->getDataSource()->value(trim($sat), 'string');
 	if($tmp!=""){$sv_array[] 	= $tmp;}
       }
     }
@@ -1240,7 +1251,7 @@ class TrapidController extends AppController{
       }
       $this->redirect(array("controller"=>"trapid","action"=>"transcript_selection",$exp_id,"meta_annotation",urlencode($sv)));
     }
-    else{
+    else{ // Invalid search type `$st`
       $this->redirect(array("controller"=>"trapid","action"=>"experiment",$exp_id));
     }
   }
@@ -1256,7 +1267,7 @@ class TrapidController extends AppController{
 
 
   function enrichment_preprocessing($exp_id=null){
-    $exp_id	= mysql_real_escape_string($exp_id);
+    // $exp_id	= mysql_real_escape_string($exp_id);
     parent::check_user_exp($exp_id);
     $exp_info	= $this->Experiments->getDefaultInformation($exp_id);
     //important checks: is the experiment in finished state and is the enrichment_state not in 'processing'
@@ -1277,7 +1288,9 @@ class TrapidController extends AppController{
     //continue only after the user has selected the correct data type for which the enrichments need to be computed.
     if($_POST){
       $type		= null;
-      if(array_key_exists("type",$_POST)){$type	= mysql_real_escape_string($_POST['type']);}
+      // if(array_key_exists("type",$_POST)){$type	= mysql_real_escape_string($_POST['type']);}
+      // `$type` is already checked against `$possible_types`
+      if(array_key_exists("type",$_POST)){$type	= $_POST['type'];}
       if(!array_key_exists($type,$possible_types)){$this->redirect(array("controller"=>"trapid","action"=>"enrichment_preprocessing",$exp_id));}
       //parameters are ok. we can now proceed with the actual pipeline organization.
       //create shell file for submission to the web-cluster.
@@ -1322,7 +1335,7 @@ class TrapidController extends AppController{
 
   // TODO: modify logic to display/disable/hide some elements of the page to make function cleaner
   function initial_processing($exp_id=null){
-    $exp_id	= mysql_real_escape_string($exp_id);
+    // $exp_id	= mysql_real_escape_string($exp_id);
     parent::check_user_exp($exp_id);
     $exp_info	= $this->Experiments->getDefaultInformation($exp_id);
      $tooltips = $this->TrapidUtils->indexArraySimple(
@@ -1411,7 +1424,8 @@ class TrapidController extends AppController{
       $this->set("tax_scope_data", $tax_scope_data);
 
     if($_POST){
-      // pr($_POST);
+       // pr($_POST);
+
       // Parameter checking.
       // TODO: check existence of new keys (tax binning, nc RNA annotation, etc.)
       if(!(array_key_exists("blast_db_type",$_POST) && array_key_exists("blast_db",$_POST)
@@ -1421,14 +1435,19 @@ class TrapidController extends AppController{
 	$this->set("error","Incorrect parameters : missing parameters");return;
       }
       $num_blast_hits	= 1;
-      $blast_db_type 	= mysql_real_escape_string($_POST['blast_db_type']);
-      $blast_db		= mysql_real_escape_string($_POST['blast_db']);
-      $blast_evalue	= mysql_real_escape_string($_POST['blast_evalue']);
-      $gf_type		= mysql_real_escape_string($_POST['gf_type']);
-      $func_annot	= mysql_real_escape_string($_POST['functional_annotation']);
+      // $blast_db_type 	= mysql_real_escape_string($_POST['blast_db_type']);
+      // $blast_db		= mysql_real_escape_string($_POST['blast_db']);
+      // $blast_evalue	= mysql_real_escape_string($_POST['blast_evalue']);
+      // $gf_type		= mysql_real_escape_string($_POST['gf_type']);
+      // $func_annot	= mysql_real_escape_string($_POST['functional_annotation']);
+      $blast_db_type 	= filter_var($_POST['blast_db_type'], FILTER_SANITIZE_STRING);
+      $blast_db		= filter_var($_POST['blast_db'], FILTER_SANITIZE_STRING);
+      $blast_evalue	= filter_var($_POST['blast_evalue'], FILTER_SANITIZE_STRING);
+      $gf_type		= filter_var($_POST['gf_type'], FILTER_SANITIZE_STRING);
+      $func_annot	= filter_var($_POST['functional_annotation'], FILTER_SANITIZE_STRING);
       $tax_scope = "";
       if(isset($_POST['tax-scope'])) {
-          $tax_scope = mysql_real_escape_string($_POST['tax-scope']);
+          $tax_scope = filter_var($_POST['tax-scope'], FILTER_SANITIZE_STRING);
       }
       $perform_tax_binning = false;
       $used_blast_desc	= "";
@@ -1479,7 +1498,8 @@ class TrapidController extends AppController{
       $rfam_clans = array();
       foreach($_POST['rfam-clans'] as $clan) {
           // Check if the (sanitized) clan accession exists in `configuration`. If not throw an error.
-          $clan_acc = mysql_real_escape_string($clan);
+          $clan_acc = filter_var($clan, FILTER_SANITIZE_STRING);  // No need to sanitize since selected clans are ocmpared to a list of valid clans already?
+          $clan_acc = $clan;
           if(!in_array($clan_acc, $all_rfam_clans)) {
               $this->set("error","Incorrect parameters: invalid RFAM clan selected - ". $clan_acc);
               return;
@@ -1573,7 +1593,7 @@ class TrapidController extends AppController{
    */
   function import_data($exp_id=null){
     Configure::write("debug",1);
-    $exp_id	= mysql_real_escape_string($exp_id);
+    // $exp_id	= mysql_real_escape_string($exp_id);
     parent::check_user_exp($exp_id);
     $exp_info	= $this->Experiments->getDefaultInformation($exp_id);
     $this -> set('title_for_layout', "Import transcripts");
@@ -1611,10 +1631,12 @@ class TrapidController extends AppController{
 	}
 	//#####   URL ###########################
 	if($_POST['uploadtype']=="url" && array_key_exists("uploadedurl",$_POST)){
-	  $uploadurl = mysql_real_escape_string($_POST['uploadedurl']);
-	  $this->DataUploads->saveAll(array(array("user_id"=>$exp_info['user_id'],"experiment_id"=>$exp_id,"type"=>"url",
-						    "name"=>$uploadurl,"label"=>$label_name,"status"=>"to_download")));
-	  $this->redirect(array("controller"=>"trapid","action"=>"import_data",$exp_id));
+	  // $uploadurl = mysql_real_escape_string($_POST['uploadedurl']);
+      // No need to escape since we use Cake's ORM + array notation?
+	  $uploadurl = filter_var($_POST['uploadedurl'], FILTER_SANITIZE_URL); // URL must be checked!
+      $this->DataUploads->saveAll(array(array("user_id"=>$exp_info['user_id'],"experiment_id"=>$exp_id,"type"=>"url",
+              "name"=>$uploadurl,"label"=>$label_name,"status"=>"to_download")));
+      $this->redirect(array("controller"=>"trapid","action"=>"import_data",$exp_id));
 	}
 	//#####   FILE  ###########################  --> IMMEDIATELY UNZIP DATA!!!
 	else if($_POST['uploadtype']=="file" && array_key_exists("uploadedfile",$_FILES)){
@@ -1733,7 +1755,7 @@ class TrapidController extends AppController{
   function import_data_old($exp_id=null){
     //Configure::write("debug",2);
 
-    $exp_id	= mysql_real_escape_string($exp_id);
+    // $exp_id	= mysql_real_escape_string($exp_id);
     parent::check_user_exp($exp_id);
     $exp_info	= $this->Experiments->getDefaultInformation($exp_id);
     $this->TrapidUtils->checkPageAccess($exp_info['title'],$exp_info["process_state"],$this->process_states["start"]);
@@ -1849,7 +1871,8 @@ class TrapidController extends AppController{
 	      		$all_transcript_ids[] = $current_transcript;
 	       	  }
 		  //initiate new variables
-	    	  $current_transcript = mysql_real_escape_string(trim(substr($buffer,1)));
+	    	  $current_transcript = filter_var(trim(substr($buffer,1)), FILTER_SANITIZE_STRING);
+	       	  // TODO: Add check if `filter_var()` returns FALSE?
 	    	  if(strpos($current_transcript," ")!== false){
 			$current_transcript=substr($current_transcript,0,strpos($current_transcript," "));
 		  }
@@ -1877,8 +1900,10 @@ class TrapidController extends AppController{
 
 	//store the label information, if defined
 	if(array_key_exists("label_name",$_POST)){
-	  $label_name	= mysql_real_escape_string($_POST['label_name']);
-	  $this->TranscriptsLabels->enterTranscripts($exp_id,$all_transcript_ids,$label_name);
+	  $label_name	= filter_var($_POST['label_name'], FILTER_SANITIZE_STRING);
+	  if($label_name) {
+    	  $this->TranscriptsLabels->enterTranscripts($exp_id,$all_transcript_ids,$label_name);
+      }
 	}
 
 
@@ -1897,7 +1922,7 @@ class TrapidController extends AppController{
 
 
   function import_labels($exp_id=null){
-    $exp_id	= mysql_real_escape_string($exp_id);
+    // $exp_id	= mysql_real_escape_string($exp_id);
     parent::check_user_exp($exp_id);
     $exp_info	= $this->Experiments->getDefaultInformation($exp_id);
     $this->TrapidUtils->checkPageAccess($exp_info['title'],$exp_info["process_state"],$this->process_states["default"]);
@@ -1944,7 +1969,7 @@ class TrapidController extends AppController{
   function export_data($exp_id=null){
 
     // Configure::write("debug",2);
-    $exp_id	= mysql_real_escape_string($exp_id);
+    // $exp_id	= mysql_real_escape_string($exp_id);
     parent::check_user_exp($exp_id);
     $exp_info	= $this->Experiments->getDefaultInformation($exp_id);
     $plaza_database	= $exp_info['used_plaza_database'];
@@ -2045,7 +2070,7 @@ class TrapidController extends AppController{
       }
       else if($export_type=="subsets"){
 	if(!array_key_exists("subset_label",$_POST)){return;}
-	$subset_label		= mysql_real_escape_string($_POST['subset_label']);
+	$subset_label		= filter_var($_POST['subset_label'], FILTER_SANITIZE_STRING);
 	if(!array_key_exists($subset_label,$available_subsets)){return;}
         $file_path = $this->TrapidUtils->performExport($plaza_database,$user_id,$exp_id,"TRANSCRIPT_LABEL",$subset_label."_transcripts_exp".$exp_id.".txt",$subset_label);
 	//pr($file_path);
@@ -2063,7 +2088,7 @@ class TrapidController extends AppController{
 
 
   function empty_experiment($exp_id=null){
-    $exp_id	= mysql_real_escape_string($exp_id);
+    // $exp_id	= mysql_real_escape_string($exp_id);
     parent::check_user_exp($exp_id);
     $exp_info	= $this->Experiments->getDefaultInformation($exp_id);
     $this->TrapidUtils->checkPageAccess($exp_info['title'],$exp_info["process_state"],$this->process_states["default"]);
@@ -2104,7 +2129,7 @@ class TrapidController extends AppController{
 
 
   function delete_experiment($exp_id=null){
-    $exp_id	= mysql_real_escape_string($exp_id);
+    // $exp_id	= mysql_real_escape_string($exp_id);
     parent::check_user_exp($exp_id);
     $exp_info	= $this->Experiments->getDefaultInformation($exp_id);
     $this->TrapidUtils->checkPageAccess($exp_info['title'],$exp_info["process_state"],$this->process_states["default"]);
@@ -2193,66 +2218,77 @@ class TrapidController extends AppController{
       $hashed_pass	= hash("sha256","test");
     // pr($hashed_pass);
 
-    //basic first check, to see whether user is already logged in.
+    // Basic first check: see whether user is already logged in.
     $user_id		= $this->Cookie->read("user_id");
     $email		= $this->Cookie->read("email");
-    $user_id  		= mysql_real_escape_string($user_id);
-    $email		= mysql_real_escape_string($email);
+    // No need to escape SQL data when using `find` and proper array notation? + `mysql_real_escape_string` does not exist anymore in PHP 7
+    // $user_id  		= mysql_real_escape_string($user_id);
+    // $email		= mysql_real_escape_string($email);
     $user_data		= $this->Authentication->find("first",array("conditions"=>array("user_id"=>$user_id,"email"=>$email)));
     if($user_data){$this->redirect(array("controller"=>"trapid","action"=>"experiments"));}
 
+    // User registration
     if($registration=="registration"){
       $this -> set('title_for_layout', "Register");
       $this->set("registration",true);
     }
+
+    // Password recovery
     if($registration=="password_recovery"){
       $this -> set('title_for_layout', "Forgotten password");
       $this->set("pass_recovery",true);
     }
 
+    // If the form was submitted, three possibilities: registration, password recovery, or login.
     if($_POST){
-      //registration part of the page
+
+      // Registration of a new user
       if(array_key_exists("registration",$_POST)){
-	//standard validation of input parameters
-	if(!(array_key_exists("login",$_POST)&&array_key_exists("organization",$_POST)&&array_key_exists("country",$_POST))){
-	  $this->set("error","Invalid form parameters");return;
-	}
-	$email		= mysql_real_escape_string($_POST["login"]);
-	$organization	= mysql_real_escape_string($_POST["organization"]);
-	$country	= mysql_real_escape_string($_POST["country"]);
-	if(!($email!="" && $organization!="" && $country!="")){
-	  $this->set("error","Not all fields are filled in");return;
-	}
-	//check whether valid email-address, using the models validation
-	$this->Authentication->set(array("email"=>$email));
-	if(!$this->Authentication->validates()){
-	  $this->set("error","Invalid email address");return;
-	}
-	//check whether email-address is already present in authentication table of database
-	$user_data	= $this->Authentication->find("first",array("conditions"=>array("email"=>$email)));
-	if($user_data){
-	  $this->set("error","Email-address already in use");return;
-	}
-	// now, we can actually create a password, add the user to the database
-	$password	= $this->TrapidUtils->rand_str(8);
-	$hashed_pass	= hash("sha256",$password);
-  // `user_id` value set to NULL (setting it to an empty string, like before, would require to turn SQL strict mode off)
-  // Reason: sql_mode is not the same on psbsql01 and psbsql03
-	$this->Authentication->save(array("user_id"=>NULL,"email"=>$email,"password"=>$hashed_pass,"group"=>"academic",
-					  "organization"=>$organization,"country"=>$country));
-	//send email to user with password information
-	$this->TrapidUtils->send_registration_email($email,$password);
-	$this->set("message","Please use the authentication information send to you by email to login");
-	$this->set("registration", false);
+	    // Standard validation of input parameters
+        if(!(array_key_exists("login",$_POST)&&array_key_exists("organization",$_POST)&&array_key_exists("country",$_POST))){
+          $this->set("error","Invalid form parameters");return;
+	    }
+	    // $email		= mysql_real_escape_string($_POST["login"]);
+	    // $organization	= mysql_real_escape_string($_POST["organization"]);
+	    // $country	= mysql_real_escape_string($_POST["country"]);
+        // No need to escape?
+	    $email = $_POST["login"];
+	    $organization = $_POST["organization"];
+	    $country = $_POST["country"];
+	    if(!($email!="" && $organization!="" && $country!="")){
+	      $this->set("error","Not all fields are filled in");return;
+	    }
+	    // Check whether valid email address, using the models validation
+        $this->Authentication->set(array("email"=>$email));
+          if(!$this->Authentication->validates()){
+            $this->set("error","Invalid email address");return;
+	    }
+        // Check whether email address is already present in `authentication` table of database
+        $user_data	= $this->Authentication->find("first",array("conditions"=>array("email"=>$email)));
+        if($user_data){
+          $this->set("error","Email-address already in use");return;
+	    }
+        // Now, we can actually create a password and add the user to the database
+        $password	= $this->TrapidUtils->rand_str(8);
+        $hashed_pass	= hash("sha256",$password);
+        // `user_id` value set to NULL (setting it to an empty string, like before, would require to turn SQL strict mode off)
+        // Reason: sql_mode is not the same on psbsql01 and psbsql03
+        $this->Authentication->save(array("user_id"=>NULL,"email"=>$email,"password"=>$hashed_pass,"group"=>"academic",
+					                "organization"=>$organization,"country"=>$country));
+	    // Send email to user with login information
+        $this->TrapidUtils->send_registration_email($email,$password);
+        $this->set("message","Please use the authentication information send to you by email to login");
+        $this->set("registration", false);
           return;
       }
-        // Password recovery
-      if(array_key_exists("pass_recovery", $_POST)) {
 
+      // Password recovery
+      if(array_key_exists("pass_recovery", $_POST)) {
           $this->set("registration", false);
           $this->set("pass_recovery", true);
           // Check if email is correct and if it exists in TRAPID's DB.
-          $email		= mysql_real_escape_string($_POST["login"]);
+          // $email = mysql_real_escape_string($_POST["login"]);
+          $email = $_POST["login"];  // No need to escape? (using Cake's find+arrays)
           if(!(array_key_exists("login",$_POST))){
               $this->set("error","Invalid form parameters");return;
           }
@@ -2262,14 +2298,14 @@ class TrapidController extends AppController{
           }
           $user_data = $this->Authentication->find("first",array("conditions"=>array("email"=>$email)));
           $user_id = $user_data['Authentication']['user_id'];
-          // Note: It may be better to not tell anything if the email is not found? Becasue it would potentially be a way
-          // to retrieve what email addresses are in TRAPID or not.
+          // Note: It may be better to not display anything if the email is not found? Otherwise it would potentially
+          // be a way to retrieve what email addresses are in TRAPID...
           if(!$user_data){
               $this->set("error","Email-address does not correspond to a TRAPID login. ");return;
           }
           // Generate new password
           $password	= $this->TrapidUtils->rand_str(8);
-          $hashed_pass	= hash("sha256",$password);
+          $hashed_pass	= hash("sha256", $password);
           // Store updated information in the DB
           $this->Authentication->updateAll(array("password"=>"'".$hashed_pass."'"),array("user_id"=>$user_id));
           // Send 'password reset' email
@@ -2278,21 +2314,25 @@ class TrapidController extends AppController{
           $this->set("sent_reset_email", true);
           $this->set("email", $email);
       }
-      //authentication part of the page
+
+      // Logging in
       else{
-	if(array_key_exists("login",$_POST) && array_key_exists("password",$_POST)){
-	  $email	= mysql_real_escape_string($_POST["login"]);
-	  $password	= mysql_real_escape_string(hash("sha256",$_POST["password"]));
-	  $user_data 	= $this->Authentication->find("first",array("conditions"=>array("email"=>$email,"password"=>$password)));
-	  if(!$user_data){$this->set("error","Wrong email/password");return;}
-	  $this->Cookie->write("user_id",$user_data['Authentication']['user_id']);
-	  $this->Cookie->write("email",$user_data['Authentication']['email']);
-
-	  $this->cleanup_experiments();
-
-	  $this->redirect(array("controller"=>"trapid","action"=>"experiments"));
+    	if(array_key_exists("login",$_POST) && array_key_exists("password",$_POST)){
+	      // $email	= mysql_real_escape_string($_POST["login"]);
+	      // $password	= mysql_real_escape_string(hash("sha256",$_POST["password"]));
+          // No need to escape?
+	      $email	= $_POST["login"];
+	      $password	= hash("sha256",$_POST["password"]);
+    	  $user_data 	= $this->Authentication->find("first",array("conditions"=>array("email"=>$email,"password"=>$password)));
+	      if(!$user_data){$this->set("error","Wrong email/password");return;}
+	      $this->Cookie->write("user_id", $user_data['Authentication']['user_id']);
+	      $this->Cookie->write("email", $user_data['Authentication']['email']);
+          $this->cleanup_experiments();
+          $this->redirect(array("controller"=>"trapid","action"=>"experiments"));
         }
-        else{$this->redirect(array("controller"=>"trapid","action"=>"authentication"));}
+        else{
+    	  $this->redirect(array("controller"=>"trapid","action"=>"authentication"));
+    	}
       }
     }
   }

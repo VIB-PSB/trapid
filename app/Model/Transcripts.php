@@ -57,7 +57,8 @@ class Transcripts extends AppModel{
 
 
   function findExperimentInformation($exp_id){
-    $exp_id	= mysql_real_escape_string($exp_id);
+    $data_source = $this->getDataSource();
+    $exp_id	= $data_source->value($exp_id, 'integer');
     $query	= "SELECT COUNT(`transcript_id`) as transcript_count, COUNT(DISTINCT(`gf_id`)) as gf_count FROM `transcripts` WHERE `experiment_id`='".$exp_id."' ";
     $res	= $this->query($query);
     return $res;

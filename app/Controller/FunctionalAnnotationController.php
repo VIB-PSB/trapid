@@ -36,7 +36,7 @@ class FunctionalAnnotationController extends AppController{
     $max_child_gos	= 200;
     //check experiment.
     if(!$exp_id || !$go_web){$this->redirect(array("controller"=>"trapid","action"=>"experiments"));}
-    $exp_id	= mysql_real_escape_string($exp_id);
+    // $exp_id	= mysql_real_escape_string($exp_id);
     parent::check_user_exp($exp_id);
     $exp_info	= $this->Experiments->getDefaultInformation($exp_id);
     $this->set("exp_info",$exp_info);
@@ -81,7 +81,7 @@ class FunctionalAnnotationController extends AppController{
     $max_parental_gos	= 200;
     //check experiment.
     if(!$exp_id || !$go_web){$this->redirect(array("controller"=>"trapid","action"=>"experiments"));}
-    $exp_id	= mysql_real_escape_string($exp_id);
+    // $exp_id	= mysql_real_escape_string($exp_id);
     parent::check_user_exp($exp_id);
     $exp_info	= $this->Experiments->getDefaultInformation($exp_id);
     $this->set("exp_info",$exp_info);
@@ -127,7 +127,7 @@ class FunctionalAnnotationController extends AppController{
   function go($exp_id=null,$go_web=null){
     //check experiment.
     if(!$exp_id || !$go_web){$this->redirect(array("controller"=>"trapid","action"=>"experiments"));}
-    $exp_id	= mysql_real_escape_string($exp_id);
+    // $exp_id	= mysql_real_escape_string($exp_id);
     parent::check_user_exp($exp_id);
     $exp_info	= $this->Experiments->getDefaultInformation($exp_id);
     // Disable linkout if we use eggnog (they do not have dedicated pages to functional annotations).
@@ -190,7 +190,7 @@ class FunctionalAnnotationController extends AppController{
   function interpro($exp_id=null,$interpro=null){
     //check experiment
     if(!$exp_id || !$interpro){$this->redirect(array("controller"=>"trapid","action"=>"experiments"));}
-    $exp_id	= mysql_real_escape_string($exp_id);
+    // $exp_id	= mysql_real_escape_string($exp_id);
     parent::check_user_exp($exp_id);
     $exp_info	= $this->Experiments->getDefaultInformation($exp_id);
     $this->set("exp_info",$exp_info);
@@ -247,7 +247,7 @@ class FunctionalAnnotationController extends AppController{
 
   function assoc_gf($exp_id=null,$type=null,$identifier=null){
     if(!$exp_id){$this->redirect(array("controller"=>"trapid","action"=>"experiments"));}
-    $exp_id	= mysql_real_escape_string($exp_id);
+    // $exp_id	= mysql_real_escape_string($exp_id);
     parent::check_user_exp($exp_id);
     $exp_info	= $this->Experiments->getDefaultInformation($exp_id);
 

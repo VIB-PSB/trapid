@@ -52,7 +52,8 @@ class Experiments extends AppModel{
 
 
   function getDefaultInformation($exp_id){
-    $exp_id	= mysql_real_escape_string($exp_id);
+      $data_source = $this->getDataSource();
+      $exp_id	= $data_source->value($exp_id, 'integer');
     // $query	= "SELECT a.*,COUNT(b.`transcript_id`) as transcript_count,d.`name`,d.`URL`,d.`plaza_linkout`, d.`gf_prefix` FROM `experiments` a LEFT JOIN `transcripts` b ON a.`experiment_id`=b.`experiment_id` JOIN `data_sources` d ON a.`used_plaza_database`=d.`db_name` WHERE a.`experiment_id`='".$exp_id."' ";
     // Modified query to comply with MySQL 5.7 / psbsql01
 //     $query	= "SELECT exp.*, COUNT(tr.`transcript_id`) AS transcript_count, ds.`name`, ds.`URL`, ds.`plaza_linkout`, ds.`gf_prefix` FROM `experiments` exp LEFT JOIN `transcripts` tr ON exp.`experiment_id`=tr.`experiment_id` JOIN `data_sources` ds ON exp.`used_plaza_database`=ds.`db_name` WHERE exp.`experiment_id`='".$exp_id."' GROUP BY ds.`name`, ds.`URL`, ds.`plaza_linkout`, ds.`gf_prefix`";
@@ -85,7 +86,7 @@ class Experiments extends AppModel{
 
 
     function getTranscriptCount($exp_id){
-        $exp_id	= mysql_real_escape_string($exp_id);
+        $exp_id	= $this->getDataSource()->value($exp_id, 'integer');
         $query = "SELECT count(*) AS transcript_count FROM `transcripts`  WHERE `experiment_id`='".$exp_id."';";
 
         $res = $this->query($query);

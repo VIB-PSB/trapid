@@ -5,9 +5,11 @@ class HelpTooltips extends AppModel
 {
 
     /* Get and return tooltip text for a given `tooltip_id` */
+    // TODO: replace by `find()`?
     function getTooltipText($tooltip_id) {
-        $tooltip_id = mysql_real_escape_string($tooltip_id);
-        $query = "SELECT `tooltip_text` FROM `help_tooltips` WHERE `tooltip_id`='" . $tooltip_id . "';";
+        $data_source = $this->getDataSource();
+        $tooltip_id = $data_source->value($tooltip_id, 'string');
+        $query = "SELECT `tooltip_text` FROM `help_tooltips` WHERE `tooltip_id`=" . $tooltip_id . ";";
         $res = $this->query($query);
         if($res) {
             return $res[0]["help_tooltips"]["tooltip_text"];

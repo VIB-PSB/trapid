@@ -128,8 +128,10 @@ class AppController extends Controller {
    function check_user(){
       $user_id		= $this->Cookie->read("user_id");
       $email		= $this->Cookie->read("email");
-      $user_id  	= mysql_real_escape_string($user_id);
-      $email		= mysql_real_escape_string($email);
+      // $user_id  	= $this->Authentication->getDataSource()->value($user_id, 'string');
+      // $email		= $this->Authentication->getDataSource()->value($email, 'string');      $user_id  	= $this->Authentication->getDataSource()->value($user_id, 'string');
+      // No need to escape SQL data when using `find` and proper array notation?
+      // See: https://stackoverflow.com/questions/3534243/how-do-you-escape-sql-data-in-cakephp
       $user_data	= $this->Authentication->find("first",array("conditions"=>array("user_id"=>$user_id,"email"=>$email)));
       if(!$user_data){$this->redirect(array("controller"=>"trapid","action"=>"authentication"));}
       return $user_data["Authentication"]["user_id"];	
@@ -163,8 +165,9 @@ class AppController extends Controller {
      //pr(count($shared_exp));
      //pr("test2");
 
-     // Possibility 1: the experiment is a public experiment. And as such visible to everyone.
      $experiment = $this->Experiments->find("first",array("conditions"=>array("experiment_id"=>$exp_id)));
+     
+     // Possibility 1: the experiment is a public experiment. And as such visible to everyone.
      if($experiment['Experiments']['public_experiment']==1){
        $this->changeDbConfigs($exp_id);	//no need to check on user-experiment 
        return;

@@ -29,7 +29,7 @@ class RnaFamilyController extends AppController{
     // Paginated table with RFAM families, with cake sorting allowed
     function index($exp_id=null) {
         if(!$exp_id){$this->redirect(array("controller"=>"trapid","action"=>"experiments"));}
-        $exp_id	= mysql_real_escape_string($exp_id);
+        // $exp_id	= mysql_real_escape_string($exp_id);
         parent::check_user_exp($exp_id);
         $exp_info	= $this->Experiments->getDefaultInformation($exp_id);
         $this->set("exp_info", $exp_info);
@@ -53,12 +53,12 @@ class RnaFamilyController extends AppController{
     // For now simply provide a list of transcripts in RF (need to discuss what's next depending on pipeline changes)
     function rna_family($exp_id=null, $rf_id=null) {
         if(!$exp_id || !$rf_id){$this->redirect(array("controller"=>"trapid","action"=>"experiments"));}
-        $exp_id	= mysql_real_escape_string($exp_id);
+        // $exp_id	= mysql_real_escape_string($exp_id);
         parent::check_user_exp($exp_id);
         // Get experiment information
         $exp_info	= $this->Experiments->getDefaultInformation($exp_id);
         // Get RNA family / RFAM data
-        $rf_id	= mysql_real_escape_string($rf_id);
+        $rf_id	= $this->RnaFamilies->getDataSource()->value($rf_id, 'string'); //Useless/unclean?
         $rf_data = $this->RnaFamilies->find("first", array("conditions"=>array("experiment_id"=>$exp_id, "rf_id"=>$rf_id)));
         $rfam_linkouts = $this->Configuration->find("all", array('conditions'=>array('method'=>'linkout', 'key'=>'rfam')));
         $rfam_linkouts = $this->TrapidUtils->indexArraySimple($rfam_linkouts, "Configuration", "attr", "value");

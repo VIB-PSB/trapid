@@ -51,7 +51,7 @@ class ToolsController extends AppController{
   function framedp($exp_id=null,$gf_id=null,$transcript_id=null){
     //Configure::write("debug",2);
     if(!$exp_id || !$gf_id){$this->redirect(array("controller"=>"trapid","action"=>"experiments"));}
-    $exp_id	= mysql_real_escape_string($exp_id);
+    // $exp_id	= mysql_real_escape_string($exp_id);
     parent::check_user_exp($exp_id);
     $exp_info	= $this->Experiments->getDefaultInformation($exp_id);
     $this->set("exp_info",$exp_info);
@@ -63,7 +63,7 @@ class ToolsController extends AppController{
     //}
 
     //check if correct gene family
-    $gf_id	= mysql_real_escape_string($gf_id);
+    // $gf_id	= mysql_real_escape_string($gf_id);
     $gf_info	= $this->GeneFamilies->find("first",array("conditions"=>array("experiment_id"=>$exp_id,"gf_id"=>$gf_id)));
     if(!$gf_info){$this->redirect(array("controller"=>"trapid","action"=>"experiment",$exp_id));}
 
@@ -80,8 +80,10 @@ class ToolsController extends AppController{
       //select the transcripts
       $selected_transcripts = array();
       foreach($_POST as $k=>$v){
-	$transcript_info = $this->Transcripts->find("first",array("conditions"=>array("experiment_id"=>$exp_id,"transcript_id"=>$k)));
-	if($transcript_info){$selected_transcripts[mysql_real_escape_string($k)]=$transcript_info['Transcripts']['transcript_sequence'];}
+    	$transcript_info = $this->Transcripts->find("first",array("conditions"=>array("experiment_id"=>$exp_id,"transcript_id"=>$k)));
+	    // if($transcript_info){$selected_transcripts[mysql_real_escape_string($k)]=$transcript_info['Transcripts']['transcript_sequence'];}
+          // TODO: check more carefully this function to see if escaping is needed!
+	    if($transcript_info){$selected_transcripts[$k]=$transcript_info['Transcripts']['transcript_sequence'];}
       }
       //pr($selected_transcripts);return;
 
@@ -139,7 +141,7 @@ class ToolsController extends AppController{
 
 
   function load_framedp($exp_id=null,$gf_id=null,$job_id=null){
-    $exp_id	= mysql_real_escape_string($exp_id);
+    // $exp_id	= mysql_real_escape_string($exp_id);
     parent::check_user_exp($exp_id);
     $exp_info	= $this->Experiments->getDefaultInformation($exp_id);
     $this->TrapidUtils->checkPageAccess($exp_info['title'],$exp_info["process_state"],$this->process_states["finished"]);
@@ -160,7 +162,7 @@ class ToolsController extends AppController{
 
 
  function load_msa($exp_id=null,$gf_id=null,$job_id=null){
-    $exp_id	= mysql_real_escape_string($exp_id);
+    // $exp_id	= mysql_real_escape_string($exp_id);
     parent::check_user_exp($exp_id);
     $exp_info	= $this->Experiments->getDefaultInformation($exp_id);
     $this->TrapidUtils->checkPageAccess($exp_info['title'],$exp_info["process_state"],$this->process_states["finished"]);
@@ -206,7 +208,7 @@ class ToolsController extends AppController{
     // When using an incorrect exp_id, some warnings are thrown: should disappear after debug mode is disabled?
   function get_msa($exp_id=null, $gf_id=null, $type="normal"){
     $this->layout = "";
-    $exp_id	= mysql_real_escape_string($exp_id);
+    // $exp_id	= mysql_real_escape_string($exp_id);
     parent::check_user_exp($exp_id);
     if(!$gf_id) {
         return;
@@ -221,7 +223,7 @@ class ToolsController extends AppController{
       else {
           $alignment_field = "msa";
       }
-      $gf_id = mysql_real_escape_string($gf_id);
+      // $gf_id = mysql_real_escape_string($gf_id);
       // Retrieve data from the db and create a string. If not empty, return it.
       $alignment = $this->GeneFamilies->find("first", array("fields"=>array($alignment_field), "conditions"=>array("experiment_id"=>$exp_id, "gf_id"=>$gf_id)));
       $alignment_str = $alignment['GeneFamilies'][$alignment_field];
@@ -235,7 +237,7 @@ class ToolsController extends AppController{
 
  function create_msa($exp_id=null,$gf_id=null,$stripped=null){
     if(!$exp_id || !$gf_id){$this->redirect(array("controller"=>"trapid","action"=>"experiments"));}
-    $exp_id	= mysql_real_escape_string($exp_id);
+    // $exp_id	= mysql_real_escape_string($exp_id);
     parent::check_user_exp($exp_id);
     $this -> set('title_for_layout', 'Multiple sequence alignment');
     $exp_info	= $this->Experiments->getDefaultInformation($exp_id);
@@ -428,7 +430,7 @@ class ToolsController extends AppController{
 
 
  function load_tree($exp_id=null,$gf_id=null,$job_id=null){
-    $exp_id	= mysql_real_escape_string($exp_id);
+    // $exp_id	= mysql_real_escape_string($exp_id);
     parent::check_user_exp($exp_id);
     $exp_info	= $this->Experiments->getDefaultInformation($exp_id);
     $this->TrapidUtils->checkPageAccess($exp_info['title'],$exp_info["process_state"],$this->process_states["finished"]);
@@ -485,7 +487,7 @@ class ToolsController extends AppController{
     // 2018-01-07: there seem to be a problem with phyloXML, so let's make PhyD3 work with newick tree for now.
     function get_tree($exp_id=null, $gf_id=null, $format="newick"){
         $this->layout = "";
-        $exp_id	= mysql_real_escape_string($exp_id);
+        // $exp_id	= mysql_real_escape_string($exp_id);
         parent::check_user_exp($exp_id);
         if(!$gf_id) {
             return;
@@ -514,7 +516,7 @@ class ToolsController extends AppController{
 
   function create_tree($exp_id=null, $gf_id=null){
     if(!$exp_id || !$gf_id){$this->redirect(array("controller"=>"trapid","action"=>"experiments"));}
-    $exp_id	= mysql_real_escape_string($exp_id);
+    // $exp_id	= mysql_real_escape_string($exp_id);
     parent::check_user_exp($exp_id);
     $exp_info	= $this->Experiments->getDefaultInformation($exp_id);
     $this->set("exp_info",$exp_info);
@@ -753,7 +755,7 @@ class ToolsController extends AppController{
 
 
   function compare_ratios_chart($exp_id=null,$type=null){
-    $exp_id	= mysql_real_escape_string($exp_id);
+    // $exp_id	= mysql_real_escape_string($exp_id);
     parent::check_user_exp($exp_id);
     $exp_info	= $this->Experiments->getDefaultInformation($exp_id);
     $this->TrapidUtils->checkPageAccess($exp_info['title'],$exp_info["process_state"],$this->process_states["finished"]);
@@ -762,7 +764,7 @@ class ToolsController extends AppController{
 
     $possible_types	= array("go"=>"GO","ipr"=>"Protein domain");
     //check type
-    $type		= mysql_real_escape_string($type);
+    // $type		= mysql_real_escape_string($type);
     if(!array_key_exists($type,$possible_types)){$this->redirect("/");}
     $this->set("available_types",$possible_types);
     $this->set("type",$type);
@@ -784,8 +786,9 @@ class ToolsController extends AppController{
 		array_key_exists("go_category",$_POST) && array_key_exists("go_depth",$_POST) )){
 	       	$this->redirect(array("controller"=>"trapid","action"=>"experiment",$exp_id));
 	    }
-	    $subset1	= mysql_real_escape_string($_POST['subset1']);
-            $subset2	= mysql_real_escape_string($_POST['subset2']);
+            // Useless/unclean?
+	        $subset1	= $this->TranscriptsLabels->getDataSource()->value($_POST['subset1'], 'string');
+            $subset2	= $this->TranscriptsLabels->getDataSource()->value($_POST['subset2'], 'string');
             if($subset1==$subset2){$this->set("error","Subset 1 should not be equal to Subset 2");return;}
 	    if(!(array_key_exists($subset1,$subsets) && array_key_exists($subset2,$subsets))){
 		$this->redirect(array("controller"=>"trapid","action"=>"experiment",$exp_id));
@@ -793,8 +796,13 @@ class ToolsController extends AppController{
 	    $this->set("subset1",$subset1);
       	    $this->set("subset2",$subset2);
 
-      	    $go_category	= mysql_real_escape_string($_POST['go_category']);
-	    $go_depth		= mysql_real_escape_string($_POST['go_depth']);
+      	    // $go_category	= mysql_real_escape_string($_POST['go_category']);
+	        // $go_depth		= mysql_real_escape_string($_POST['go_depth']);
+      	    // $go_category	= $this->ExtendedGo->getDataSource()->value($_POST['go_category'], 'string');
+	        // $go_depth		= $this->ExtendedGo->getDataSource()->value($_POST['go_depth'], 'integer');
+            // No need to escape as only used in `find()`?
+      	    $go_category	= $_POST['go_category'];
+	        $go_depth		= $_POST['go_depth'];
 	    if(!(array_key_exists($go_category,$possible_go_types) && $go_depth>0 && $go_depth<=$max_depth)){
 		$this->redirect(array("controller"=>"trapid","action"=>"experiment",$exp_id));
 	    }
@@ -802,7 +810,9 @@ class ToolsController extends AppController{
 	    $this->set("go_depth",$go_depth);
 
 	    $min_coverage	= null;
-	    if(array_key_exists("min_coverage",$_POST)){$min_coverage=mysql_real_escape_string($_POST['min_coverage']);}
+	    // if(array_key_exists("min_coverage", $_POST)){$min_coverage=mysql_real_escape_string($_POST['min_coverage']);}
+        // ???
+	    if(array_key_exists("min_coverage", $_POST)){$min_coverage=$this->ExtendedGo->getDataSource()->value($_POST['min_coverage'], 'float');}
 	    if($min_coverage){$this->set("min_coverage",$min_coverage);}
 	    if($min_coverage=="none"){$min_coverage=false;}
 
@@ -879,7 +889,7 @@ class ToolsController extends AppController{
    */
   function compare_ratios($exp_id=null,$type=null){
     // Configure::write("debug",2);
-    $exp_id	= mysql_real_escape_string($exp_id);
+    // $exp_id	= mysql_real_escape_string($exp_id);
     parent::check_user_exp($exp_id);
     $exp_info	= $this->Experiments->getDefaultInformation($exp_id);
     $this->TrapidUtils->checkPageAccess($exp_info['title'],$exp_info["process_state"],$this->process_states["finished"]);
@@ -889,7 +899,8 @@ class ToolsController extends AppController{
 
     $possible_types	= array("go"=>"GO","ipr"=>"Protein domain");
     //check type
-    $type		= mysql_real_escape_string($type);
+    // $type		= mysql_real_escape_string($type);
+      // No need to escape since `type` is only compared to two possible values?
     if(!array_key_exists($type,$possible_types)){$this->redirect("/");}
     $this->set("available_types",$possible_types);
     $this->set("type",$type);
@@ -903,7 +914,7 @@ class ToolsController extends AppController{
       if(!(array_key_exists("subset1",$_POST) && array_key_exists("subset2",$_POST))){
 	$this->redirect(array("controller"=>"trapid","action"=>"experiment",$exp_id));
       }
-      $subset1	= mysql_real_escape_string($_POST['subset1']);
+      $subset1	= filter_var($_POST['subset1'], );
       $subset2	= mysql_real_escape_string($_POST['subset2']);
       if($subset1==$subset2){
 	$this->set("error","Subset 1 should not be equal to Subset 2");return;
@@ -955,7 +966,7 @@ class ToolsController extends AppController{
 
   function compare_ratios_download($exp_id=null,$type=null,$comparison=null,$subset1=null,$subset2=null,$subtype=null){
     // Configure::write("debug",2);
-    $exp_id	= mysql_real_escape_string($exp_id);
+    // $exp_id	= mysql_real_escape_string($exp_id);
     parent::check_user_exp($exp_id);
     $exp_info	= $this->Experiments->getDefaultInformation($exp_id);
     $this->TrapidUtils->checkPageAccess($exp_info['title'],$exp_info["process_state"],$this->process_states["finished"]);
@@ -964,8 +975,10 @@ class ToolsController extends AppController{
 
     $possible_types	= array("go"=>"GO","ipr"=>"Protein domain");
     //check type
-    $type		= mysql_real_escape_string($type);
-    if(!array_key_exists($type,$possible_types)){$this->redirect("/");}
+    // $type		= mysql_real_escape_string($type);
+    // No need to cescape since `type` is only compared to two possible values?
+
+      if(!array_key_exists($type,$possible_types)){$this->redirect("/");}
     $this->set("type",$type);
 
     $subsets	= $this->TranscriptsLabels->getLabels($exp_id);
@@ -1044,7 +1057,7 @@ class ToolsController extends AppController{
 
 
   function enrichment($exp_id=null, $type=null){
-    $exp_id	= mysql_real_escape_string($exp_id);
+    // $exp_id	= mysql_real_escape_string($exp_id);
     parent::check_user_exp($exp_id);
     $exp_info	= $this->Experiments->getDefaultInformation($exp_id);
     $this->TrapidUtils->checkPageAccess($exp_info['title'],$exp_info["process_state"],$this->process_states["finished"]);
@@ -1142,7 +1155,7 @@ class ToolsController extends AppController{
 
     // NOTE (2017/12/07): function bugged?
   function go_enrichment_graph($exp_id=null,$selected_subset=null,$go_type=null,$pvalue=null){
-    $exp_id	= mysql_real_escape_string($exp_id);
+    // $exp_id	= mysql_real_escape_string($exp_id);
     parent::check_user_exp($exp_id);
     $exp_info	= $this->Experiments->getDefaultInformation($exp_id);
     $this->TrapidUtils->checkPageAccess($exp_info['title'],$exp_info["process_state"],$this->process_states["finished"]);
@@ -1256,7 +1269,7 @@ class ToolsController extends AppController{
 
   function download_enrichment($exp_id=null,$type=null,$selected_subset=null,$pvalue=null){
     //Configure::write("debug",1);
-    $exp_id	= mysql_real_escape_string($exp_id);
+    // $exp_id	= mysql_real_escape_string($exp_id);
     parent::check_user_exp($exp_id);
     $this->layout = "";
     //file locations
@@ -1329,7 +1342,7 @@ class ToolsController extends AppController{
   function load_enrichment($exp_id=null,$type=null,$subset_title=null,$pvalue=null,$result_file=null,$job_id=null){
     // Configure::write("debug",2);
     // pr($result_file);
-    $exp_id	= mysql_real_escape_string($exp_id);
+    // $exp_id	= mysql_real_escape_string($exp_id);
     parent::check_user_exp($exp_id);
     $exp_info	= $this->Experiments->getDefaultInformation($exp_id);
     $this->TrapidUtils->checkPageAccess($exp_info['title'],$exp_info["process_state"],$this->process_states["finished"]);
@@ -1433,7 +1446,7 @@ class ToolsController extends AppController{
 
 
   function orf_statistics($exp_id=null){
-    $exp_id	= mysql_real_escape_string($exp_id);
+    // $exp_id	= mysql_real_escape_string($exp_id);
     parent::check_user_exp($exp_id);
     $exp_info	= $this->Experiments->getDefaultInformation($exp_id);
     $this->TrapidUtils->checkPageAccess($exp_info['title'],$exp_info["process_state"],$this->process_states["default"]);
@@ -1450,7 +1463,7 @@ class ToolsController extends AppController{
 
 
   function length_distribution($exp_id=null,$sequence_type=null){
-    $exp_id	= mysql_real_escape_string($exp_id);
+    // $exp_id	= mysql_real_escape_string($exp_id);
     parent::check_user_exp($exp_id);
     $exp_info	= $this->Experiments->getDefaultInformation($exp_id);
     $this->TrapidUtils->checkPageAccess($exp_info['title'],$exp_info["process_state"],$this->process_states["default"]);
@@ -1575,7 +1588,7 @@ class ToolsController extends AppController{
 
 
   function statistics($exp_id=null, $pdf='0'){
-    $exp_id	= mysql_real_escape_string($exp_id);
+    // $exp_id	= mysql_real_escape_string($exp_id);
     parent::check_user_exp($exp_id);
     $this -> set('title_for_layout', "Statistics");
     $exp_info	= $this->Experiments->getDefaultInformation($exp_id);
@@ -1695,7 +1708,7 @@ class ToolsController extends AppController{
 
   /* Check experiment + get general experiment information */
   function general_set_up($exp_id=null){
-    $exp_id	= mysql_real_escape_string($exp_id);
+    // $exp_id	= mysql_real_escape_string($exp_id);
     parent::check_user_exp($exp_id);
     $exp_info	= $this->Experiments->getDefaultInformation($exp_id);
     $this->TrapidUtils->checkPageAccess($exp_info['title'],$exp_info["process_state"],$this->process_states["default"]);
@@ -1918,7 +1931,7 @@ function label_go_intersection($exp_id=null,$label=null){
   // Main page for taxonomic binning.
     function tax_binning($exp_id=null){
         if(!$exp_id){$this->redirect(array("controller"=>"trapid","action"=>"experiments"));}
-        $exp_id	= mysql_real_escape_string($exp_id);
+        // $exp_id	= mysql_real_escape_string($exp_id);
         parent::check_user_exp($exp_id);
         $exp_info	= $this->Experiments->getDefaultInformation($exp_id);
         $this->set("exp_info",$exp_info);
@@ -2015,7 +2028,7 @@ function label_go_intersection($exp_id=null,$label=null){
     // Create a transcript subset based on user-selected phylogenetic clades, by inspecting the `transcripts_tax` table.
     function create_tax_subset($exp_id=null) {
         $this->autoRender = false;
-        $exp_id	= mysql_real_escape_string($exp_id);
+        // $exp_id	= mysql_real_escape_string($exp_id);
         parent::check_user_exp($exp_id);
         if($this->request->is('post')) {
             set_time_limit(75);
@@ -2117,7 +2130,7 @@ function label_go_intersection($exp_id=null,$label=null){
 
     function core_gf_completeness($exp_id=null){
         if(!$exp_id){$this->redirect(array("controller"=>"trapid","action"=>"experiments"));}
-        $exp_id	= mysql_real_escape_string($exp_id);
+        // $exp_id	= mysql_real_escape_string($exp_id);
         parent::check_user_exp($exp_id);
         $exp_info	= $this->Experiments->getDefaultInformation($exp_id);
         $this->set("exp_info",$exp_info);
@@ -2303,7 +2316,7 @@ function label_go_intersection($exp_id=null,$label=null){
 
     // Delete coreF completeness results
     function delete_core_gf_results($exp_id=null, $clade_tax_id=null, $label=null, $tax_source=null, $species_perc=null, $top_hits=null){
-        $exp_id	= mysql_real_escape_string($exp_id);
+        // $exp_id	= mysql_real_escape_string($exp_id);
         parent::check_user_exp($exp_id);
         // Build query to delete core GF completeness analysis results
         $delete_query = "DELETE FROM `completeness_results` WHERE `experiment_id`='" . $exp_id . "' AND `label` = '" . $label .

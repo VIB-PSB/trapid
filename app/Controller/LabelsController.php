@@ -16,12 +16,11 @@ class LabelsController extends AppController{
 
   function view($exp_id=null,$label=null){
     if(!$exp_id || !$label){$this->redirect(array("controller"=>"trapid","action"=>"experiments"));}
-    $exp_id	= mysql_real_escape_string($exp_id);
     parent::check_user_exp($exp_id);
     $exp_info	= $this->Experiments->getDefaultInformation($exp_id);
     $this->set("exp_info",$exp_info);
     $this->set("exp_id",$exp_id);
-    $label	= mysql_real_escape_string(urldecode($label));
+    $label	= $this->TranscriptsLabels->getDataSource()->value(urldecode($label), 'string');
     //check whether there is at least one transcript with this label associated.
     $num_transcripts	= $this->TranscriptsLabels->find("count",array("conditions"=>array("experiment_id"=>$exp_id,"label"=>$label)));
     //got here by illegal means
@@ -67,7 +66,6 @@ class LabelsController extends AppController{
 
   function subset_overview($exp_id=null){
     //Configure::write("debug",2);
-    $exp_id	= mysql_real_escape_string($exp_id);
     parent::check_user_exp($exp_id);
     $exp_info	= $this->Experiments->getDefaultInformation($exp_id);
     $this->TrapidUtils->checkPageAccess($exp_info['title'],$exp_info["process_state"],$this->process_states["default"]);
@@ -86,16 +84,15 @@ class LabelsController extends AppController{
 
     // Delete label `$label_id` and associated data from experiment `$exp_id`.
     function delete_label($exp_id=null, $label_id=null){
-        $exp_id	= mysql_real_escape_string($exp_id);
-        $label_id = mysql_real_escape_string($label_id);
+        $label_id = $this->TranscriptsLabels->getDataSource()->value($label_id, 'string');
         parent::check_user_exp($exp_id);
         // TODO: check if nothing is running before deleting labels?
-        $this->TranscriptsLabels->query("DELETE FROM `transcripts_labels` WHERE `experiment_id`='".$exp_id."' AND `label` = '".$label_id."';");
+        $this->TranscriptsLabels->query("DELETE FROM `transcripts_labels` WHERE `experiment_id`='".$exp_id."' AND `label` = ".$label_id.";");
         // Also delete all extra data using these labels...
         // Core GF completeness results
-        $this->TranscriptsLabels->query("DELETE FROM `completeness_results` WHERE `experiment_id`='".$exp_id."' AND `label` = '".$label_id."';");
+        $this->TranscriptsLabels->query("DELETE FROM `completeness_results` WHERE `experiment_id`='".$exp_id."' AND `label` = ".$label_id.";");
         // Functional enrichment results
-        $this->TranscriptsLabels->query("DELETE FROM `functional_enrichments` WHERE `experiment_id`='".$exp_id."' AND `label` = '".$label_id."';");
+        $this->TranscriptsLabels->query("DELETE FROM `functional_enrichments` WHERE `experiment_id`='".$exp_id."' AND `label` = ".$label_id.";");
         $this->redirect(array("controller"=>"labels","action"=>"subset_overview", $exp_id));
     }
 
