@@ -42,7 +42,8 @@ class FunctionalAnnotationController extends AppController{
     $this->set("exp_info",$exp_info);
     $this->set("exp_id",$exp_id);
     $this->TrapidUtils->checkPageAccess($exp_info['title'],$exp_info["process_state"],$this->process_states["default"]);
-    $go			= mysql_real_escape_string(str_replace("-",":",$go_web));
+    // $go			= mysql_real_escape_string(str_replace("-",":",$go_web));
+    $go			= str_replace("-",":",$go_web); // No need to escape/check?
     // $go_information	= $this->ExtendedGo->find("first",array("conditions"=>array("go"=>$go)));
     $go_information	= $this->ExtendedGo->find("first",array("conditions"=>array("type"=>"go", "name"=>$go)));
     $num_transcripts	= $this->TranscriptsGo->find("count",array("conditions"=>array("experiment_id"=>$exp_id,"type"=>"go", "name"=>$go)));
@@ -87,7 +88,8 @@ class FunctionalAnnotationController extends AppController{
     $this->set("exp_info",$exp_info);
     $this->set("exp_id",$exp_id);
     $this->TrapidUtils->checkPageAccess($exp_info['title'],$exp_info["process_state"],$this->process_states["default"]);
-    $go			= mysql_real_escape_string(str_replace("-",":",$go_web));
+    // $go			= mysql_real_escape_string(str_replace("-",":",$go_web));
+    $go			= str_replace("-",":",$go_web); // No need to escape/check?
     // $go_information	= $this->ExtendedGo->find("first",array("conditions"=>array("go"=>$go)));
     $go_information	= $this->ExtendedGo->find("first",array("conditions"=>array("name"=>$go, "type"=>"go")));
     $num_transcripts	= $this->TranscriptsGo->find("count",array("conditions"=>array("experiment_id"=>$exp_id,"type"=>"go", "name"=>$go)));
@@ -140,7 +142,8 @@ class FunctionalAnnotationController extends AppController{
     $this->TrapidUtils->checkPageAccess($exp_info['title'],$exp_info["process_state"],$this->process_states["default"]);
 
     // Check GO validity
-    $go			= mysql_real_escape_string(str_replace("-",":",$go_web));
+    // $go			= mysql_real_escape_string(str_replace("-",":",$go_web));
+    $go			= str_replace("-",":",$go_web); // No need to check (find)?
     // $go_information	= $this->ExtendedGo->find("first",array("conditions"=>array("go"=>$go)));
     $go_information	= $this->ExtendedGo->find("first",array("conditions"=>array("name"=>$go)));
     $num_transcripts	= $this->TranscriptsGo->find("count",array("conditions"=>array("experiment_id"=>$exp_id,"type"=>"go", "name"=>$go)));
@@ -198,7 +201,8 @@ class FunctionalAnnotationController extends AppController{
     $this->TrapidUtils->checkPageAccess($exp_info['title'],$exp_info["process_state"],$this->process_states["default"]);
 
     // Check InterPro validity
-    $interpro		= mysql_real_escape_string($interpro);
+    // $interpro		= mysql_real_escape_string($interpro);
+    // No need to check (find)?
     // $interpro_info	= $this->ProteinMotifs->find("first",array("conditions"=>array("motif_id"=>$interpro)));
     $interpro_info	= $this->ProteinMotifs->find("first",array("conditions"=>array("name"=>$interpro, "type"=>"interpro")));
     $num_transcripts =$this->TranscriptsInterpro->find("count",array("conditions"=>array("experiment_id"=>$exp_id, "type"=>"ipr", "name"=>$interpro)));
@@ -264,7 +268,8 @@ class FunctionalAnnotationController extends AppController{
 
 
       if($type=="go"){
-      $go	= str_replace("-",":",mysql_real_escape_string($identifier));
+      // $go	= str_replace("-",":",mysql_real_escape_string($identifier));
+      $go	= str_replace("-",":",$identifier);
       //find whether any genes are associated (this also validates the go itself).
       $num_transcripts= $this->TranscriptsGo->find("count",array("conditions"=>array("experiment_id"=>$exp_id,"type"=>"go", "name"=>$go)));
       if($num_transcripts==0){$this->redirect(array("controller"=>"trapid","action"=>"experiment",$exp_id));}
@@ -282,7 +287,8 @@ class FunctionalAnnotationController extends AppController{
       $this->set("gene_families",$gene_families);
     }
     else if($type=="interpro"){
-      $interpro		= mysql_real_escape_string($identifier);
+      // $interpro		= mysql_real_escape_string($identifier);
+      $interpro		= $identifier;
       //find whether any genes are associated (this also validates the interpro itself)
       $num_transcripts= $this->TranscriptsInterpro->find("count",array("conditions"=>array("experiment_id"=>$exp_id, "type"=>"ipr", "name"=>$interpro)));
       if($num_transcripts==0){$this->redirect(array("controller"=>"trapid","action"=>"experiment",$exp_id));}

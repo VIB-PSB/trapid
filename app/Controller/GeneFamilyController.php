@@ -35,7 +35,7 @@ class GeneFamilyController extends AppController{
 
   function expansion($exp_id=null){
     if(!$exp_id){$this->redirect(array("controller"=>"trapid","action"=>"experiments"));}
-    $exp_id	= mysql_real_escape_string($exp_id);
+    // $exp_id	= mysql_real_escape_string($exp_id);
     parent::check_user_exp($exp_id);
     $exp_info	= $this->Experiments->getDefaultInformation($exp_id);
     $this->set("exp_info",$exp_info);
@@ -55,9 +55,9 @@ class GeneFamilyController extends AppController{
       if(!(array_key_exists("reference_species",$_POST) && array_key_exists("type",$_POST) && array_key_exists("ratio",$_POST))){
 	$this->set("error","Undefined variables");return;
       }
-      $selected_species	= mysql_real_escape_string($_POST['reference_species']);
-      $selected_type	= mysql_real_escape_string($_POST['type']);
-      $selected_ratio	= mysql_real_escape_string($_POST['ratio']);
+      $selected_species	= filter_var($_POST['reference_species'], FILTER_SANITIZE_STRING);
+      $selected_type	= filter_var($_POST['type'], FILTER_SANITIZE_STRING);
+      $selected_ratio	= filter_var($_POST['ratio'], FILTER_SANITIZE_NUMBER_FLOAT);
       if(!(array_key_exists($selected_species,$available_species)
 		&& array_key_exists($selected_type,$available_types)
 	   && in_array($selected_ratio,$available_ratios))){
@@ -126,7 +126,7 @@ class GeneFamilyController extends AppController{
   // Paginated table with gene families, with cake sorting allowed
   function index($exp_id=null){
     if(!$exp_id){$this->redirect(array("controller"=>"trapid","action"=>"experiments"));}
-    $exp_id	= mysql_real_escape_string($exp_id);
+    // $exp_id	= mysql_real_escape_string($exp_id);
     parent::check_user_exp($exp_id);
     $exp_info	= $this->Experiments->getDefaultInformation($exp_id);
     $this->set("exp_info",$exp_info);
@@ -161,6 +161,8 @@ class GeneFamilyController extends AppController{
     }
     $this->set("active_sidebar_item", "Browse gene families");
     $this -> set('title_for_layout', 'Gene families');
+      $user_group=$this->Authentication->find("first",array("fields"=>array("group"),"conditions"=>array("user_id"=>parent::check_user())));
+      if($user_group['Authentication']['group'] == "admin"){$this->set("admin", 1);}
 
   }
 
@@ -171,14 +173,14 @@ class GeneFamilyController extends AppController{
     //Configure::write("debug",2);
 
     if(!$exp_id || !$gf_id){$this->redirect(array("controller"=>"trapid","action"=>"experiments"));}
-    $exp_id	= mysql_real_escape_string($exp_id);
+    // $exp_id	= mysql_real_escape_string($exp_id);
     parent::check_user_exp($exp_id);
     $exp_info	= $this->Experiments->getDefaultInformation($exp_id);
     $this->set("exp_info",$exp_info);
     $this->set("exp_id",$exp_id);
 
     //check whether gene family is valid
-    $gf_id	= mysql_real_escape_string($gf_id);
+    $gf_id	= filter_var($gf_id, FILTER_SANITIZE_STRING);
     $gf_info 	= $this->GeneFamilies->find("first",array("conditions"=>array("experiment_id"=>$exp_id,"gf_id"=>$gf_id)));
     if(!$gf_info){$this->redirect(array("controller"=>"trapid","action"=>"experiment",$exp_id));} //failsafe
     $this->set("gf_info",$gf_info);
@@ -209,7 +211,7 @@ class GeneFamilyController extends AppController{
     // $go_profile		= $this->ExtendedGo->getPhyloProfile($go_ids);
     //$interpro_profile	= $this->ProteinMotifs->getPhyloProfile($interpro_ids);
 
-
+      $this -> set('title_for_layout', 'Associated functional annotation &middot; ' . $gf_id);
   }
 
 
@@ -217,7 +219,7 @@ class GeneFamilyController extends AppController{
   function orf_lengths($exp_id=null,$gf_id=null){
     //first:check exp_id
     if(!$exp_id || !$gf_id){$this->redirect(array("controller"=>"trapid","action"=>"experiments"));}
-    $exp_id	= mysql_real_escape_string($exp_id);
+    // $exp_id	= mysql_real_escape_string($exp_id);
     parent::check_user_exp($exp_id);
     $exp_info	= $this->Experiments->getDefaultInformation($exp_id);
     $this->set("exp_info",$exp_info);
@@ -225,7 +227,7 @@ class GeneFamilyController extends AppController{
     //pr($exp_info);
 
     //check whether gene family is valid
-    $gf_id	= mysql_real_escape_string($gf_id);
+    $gf_id	= filter_var($gf_id, FILTER_SANITIZE_STRING);
     $gf_info 	= $this->GeneFamilies->find("first",array("conditions"=>array("experiment_id"=>$exp_id,"gf_id"=>$gf_id)));
     if(!$gf_info){$this->redirect(array("controller"=>"trapid","action"=>"experiment",$exp_id));} //failsafe
     $transcripts = $this->Transcripts->find("all",array("conditions"=>array("experiment_id"=>$exp_id,"gf_id"=>$gf_id)));
@@ -263,7 +265,7 @@ class GeneFamilyController extends AppController{
   function multifasta($exp_id=null,$gf_id=null){
     //first:check exp_id
     if(!$exp_id || !$gf_id){$this->redirect(array("controller"=>"trapid","action"=>"experiments"));}
-    $exp_id	= mysql_real_escape_string($exp_id);
+    // $exp_id	= mysql_real_escape_string($exp_id);
     parent::check_user_exp($exp_id);
     $exp_info	= $this->Experiments->getDefaultInformation($exp_id);
     $this->set("exp_info",$exp_info);
@@ -271,7 +273,7 @@ class GeneFamilyController extends AppController{
     //pr($exp_info);
 
     //check whether gene family is valid
-    $gf_id	= mysql_real_escape_string($gf_id);
+    $gf_id	= filter_var($gf_id, FILTER_SANITIZE_STRING);
     $gf_info 	= $this->GeneFamilies->find("first",array("conditions"=>array("experiment_id"=>$exp_id,"gf_id"=>$gf_id)));
     if(!$gf_info){$this->redirect(array("controller"=>"trapid","action"=>"experiment",$exp_id));} //failsafe
     $transcripts = $this->Transcripts->find("all",array("conditions"=>array("experiment_id"=>$exp_id,"gf_id"=>$gf_id)));
@@ -293,7 +295,7 @@ class GeneFamilyController extends AppController{
   function species_selection($exp_id=null){
     //first:check exp_id
     if(!$exp_id){$this->redirect(array("controller"=>"trapid","action"=>"experiments"));}
-    $exp_id	= mysql_real_escape_string($exp_id);
+    // $exp_id	= mysql_real_escape_string($exp_id);
     parent::check_user_exp($exp_id);
     $exp_info	= $this->Experiments->getDefaultInformation($exp_id);
 
@@ -308,7 +310,7 @@ class GeneFamilyController extends AppController{
     //Configure::write("debug",2);
     //data for gene family must be present in tables 'transcripts','gene_families'
     if(!$exp_id || !$gf_id){$this->redirect(array("controller"=>"trapid","action"=>"experiments"));}
-    $exp_id	= mysql_real_escape_string($exp_id);
+    // $exp_id	= mysql_real_escape_string($exp_id);
     parent::check_user_exp($exp_id);
     $exp_info	= $this->Experiments->getDefaultInformation($exp_id);
     $this->set("exp_info",$exp_info);
@@ -316,7 +318,7 @@ class GeneFamilyController extends AppController{
     //pr($exp_info);
 
       //check whether gene family is valid
-    $gf_id	= mysql_real_escape_string($gf_id);
+    $gf_id	= filter_var($gf_id, FILTER_SANITIZE_STRING);
     $gf_info 	= $this->GeneFamilies->find("first",array("conditions"=>array("experiment_id"=>$exp_id,"gf_id"=>$gf_id)));
     if(!$gf_info){$this->redirect(array("controller"=>"trapid","action"=>"experiment",$exp_id));} //failsafe
 
@@ -392,8 +394,6 @@ class GeneFamilyController extends AppController{
       return;
     }
   }
-
-
 
  /*
    * Cookie setup:

@@ -188,8 +188,9 @@ class ToolsController extends AppController{
    //Configure::write("debug",1);
     $this->layout = "";
     if(!$user_identifier||!$exp_id || !$gf_id){return;}
-    $user_identifer = mysql_real_escape_string($user_identifier);
-    $exp_id	= mysql_real_escape_string($exp_id);
+    $user_identifer = filter_var($user_identifier, FILTER_SANITIZE_NUMBER_INT); // Unnecessary?
+    // $exp_id	= mysql_real_escape_string($exp_id);
+    parent::check_user_exp($exp_id);
     if(!parent::check_user_exp_no_cookie($user_identifier,$exp_id)){return;}
     $gf_info	= $this->GeneFamilies->find("first",array("conditions"=>array("experiment_id"=>$exp_id,"gf_id"=>$gf_id)));
     if(!$gf_info){return;}
@@ -457,8 +458,9 @@ class ToolsController extends AppController{
  function view_tree($user_identifier=null,$exp_id=null,$gf_id=null,$format="xml"){
     $this->layout 	= "";
     if(!$user_identifier||!$exp_id || !$gf_id){return;}
-    $user_identifer 	= mysql_real_escape_string($user_identifier);
-    $exp_id		= mysql_real_escape_string($exp_id);
+    $user_identifer 	= filter_var($user_identifier, FILTER_SANITIZE_NUMBER_INT);
+    // $exp_id		= mysql_real_escape_string($exp_id);
+    parent::check_user_exp($exp_id);
     if(!parent::check_user_exp_no_cookie($user_identifier,$exp_id)){return;}
     $gf_info		= $this->GeneFamilies->find("first",array("conditions"=>array("experiment_id"=>$exp_id,"gf_id"=>$gf_id)));
     if(!$gf_info){return;}
@@ -502,7 +504,7 @@ class ToolsController extends AppController{
         else {
             $tree_field = "xml_tree";
         }
-        $gf_id = mysql_real_escape_string($gf_id);
+        // $gf_id = mysql_real_escape_string($gf_id); // Not needed (find)?
         // Retrieve data from the db and create a string. If not empty, return it.
         $tree = $this->GeneFamilies->find("first", array("fields"=>array($tree_field), "conditions"=>array("experiment_id"=>$exp_id, "gf_id"=>$gf_id)));
         $tree_str = $tree['GeneFamilies'][$tree_field];
@@ -914,8 +916,9 @@ class ToolsController extends AppController{
       if(!(array_key_exists("subset1",$_POST) && array_key_exists("subset2",$_POST))){
 	$this->redirect(array("controller"=>"trapid","action"=>"experiment",$exp_id));
       }
-      $subset1	= filter_var($_POST['subset1'], );
-      $subset2	= mysql_real_escape_string($_POST['subset2']);
+      // No need to do that since these variables are used with `find()`?
+      $subset1	= filter_var($_POST['subset1'], FILTER_SANITIZE_STRING);
+      $subset2	= filter_var($_POST['subset2'], FILTER_SANITIZE_STRING);
       if($subset1==$subset2){
 	$this->set("error","Subset 1 should not be equal to Subset 2");return;
       }
@@ -985,9 +988,9 @@ class ToolsController extends AppController{
     if(count($subsets) <= 1){$this->redirect(array("controller"=>"trapid","action"=>"experiment",$exp_id));}
     $this->set("subsets",$subsets);
 
-    $comparison		= mysql_real_escape_string($comparison);
-    $subset1		= mysql_real_escape_string($subset1);
-    $subset2		= mysql_real_escape_string($subset2);
+    // $comparison		= mysql_real_escape_string($comparison); // Not needed since checked just below?
+    $subset1		= filter_var($subset1, FILTER_SANITIZE_STRING);
+    $subset2		= filter_var($subset2, FILTER_SANITIZE_STRING);
     $comparison_types	= array("1"=>"both","2"=>"first","3"=>"last");
     if(!($comparison==1 || $comparison==2 || $comparison==3)){
 	$this->redirect(array("controller"=>"trapid","action"=>"experiment",$exp_id));
@@ -999,7 +1002,7 @@ class ToolsController extends AppController{
 	$this->redirect(array("controller"=>"trapid","action"=>"experiment",$exp_id));
     }
     if($type=="go"){
-      $subtype		= mysql_real_escape_string($subtype);
+      // $subtype		= mysql_real_escape_string($subtype); // Not needed since checked just below?
       if(!($subtype=="MF" || $subtype=="BP" || $subtype=="CC")){
 	$this->redirect(array("controller"=>"trapid","action"=>"experiment",$exp_id));
       }
@@ -1074,7 +1077,7 @@ class ToolsController extends AppController{
 
     $possible_types	= array("go"=>"GO","ipr"=>"Protein domain");
     //check type
-    $type		= mysql_real_escape_string($type);
+    // $type		= mysql_real_escape_string($type); // Not needed since checked just below?
     if(!array_key_exists($type,$possible_types)){$this->redirect("/");}
     $this->set("available_types",$possible_types);
     $this->set("type",$type);
@@ -1098,12 +1101,12 @@ class ToolsController extends AppController{
     if($_POST){
       //check for present subset
       if(!array_key_exists("subset",$_POST)){$this->set("error","No subset indicated in form");return;}
-      $subset		= mysql_real_escape_string($_POST['subset']);
+      $subset		= filter_var($_POST['subset'], FILTER_SANITIZE_STRING);
       if(!array_key_exists($subset,$subsets)){$this->set("error","Illegal subset");return;}
       $this->set("selected_subset",$subset);
 
       if(array_key_exists("pvalue",$_POST)){
-	$pvalue	= mysql_real_escape_string($_POST['pvalue']);
+	$pvalue	= filter_var($_POST['pvalue'], FILTER_SANITIZE_NUMBER_FLOAT);
 	if(in_array($pvalue,$possible_pvalues)){$selected_pvalue=$pvalue;}
 	$this->set("selected_pvalue",$selected_pvalue);
       }
@@ -1279,9 +1282,9 @@ class ToolsController extends AppController{
       return;
     }
 
-    $type		= mysql_real_escape_string($type);
-    $selected_subset	= mysql_real_escape_string($selected_subset);
-    $pvalue		= mysql_real_escape_string($pvalue);
+    $type		= filter_var($type, FILTER_SANITIZE_STRING);
+    $selected_subset	= filter_var($selected_subset, FILTER_SANITIZE_STRING);
+    $pvalue		= filter_var($pvalue, FILTER_SANITIZE_STRING);
     $this->set("file_name",$type."_enrichment_".$exp_id."_".$selected_subset."_".$pvalue.".txt");
     $this->set("type",$type);
 
@@ -1352,7 +1355,7 @@ class ToolsController extends AppController{
 
     $possible_types	= array("go"=>"GO","ipr"=>"Protein domain");
     //check type
-    $type		= mysql_real_escape_string($type);
+    // $type		= mysql_real_escape_string($type); // Checked below already against possible types
     if(!array_key_exists($type,$possible_types)){$this->redirect("/");}
     $this->set("available_types",$possible_types);
     $this->set("type",$type);
@@ -1480,7 +1483,8 @@ class ToolsController extends AppController{
     $this->set("possible_bins",$possible_bins);
     $num_bins		= 50;
     if($_POST && array_key_exists("num_bins",$_POST) && array_key_exists($_POST['num_bins'],$possible_bins)){
-      $num_bins	= mysql_real_escape_string($_POST['num_bins']);
+      // $num_bins	= mysql_real_escape_string($_POST['num_bins']);
+      $num_bins	= $_POST['num_bins'];  // Already checked?
     }
     $this->set("num_bins",$num_bins);
     $this->set("bars_offset",$possible_bins[$num_bins]);
@@ -1495,7 +1499,8 @@ class ToolsController extends AppController{
     	$this->set("possible_graphtypes",$possible_graphtypes);
    	$graphtype		   = "grouped";
     	if($_POST && array_key_exists("graphtype",$_POST) && array_key_exists($_POST['graphtype'],$possible_graphtypes)){
-      		$graphtype	   = mysql_real_escape_string($_POST['graphtype']);
+      		// $graphtype	   = mysql_real_escape_string($_POST['graphtype']);
+      		$graphtype	   = $_POST['graphtype']; // Already checked?
     	}
     	$this->set("graphtype",$graphtype);
 	$bins_transcript		= $this->Statistics->create_length_bins($transcript_lengths,$num_bins);
@@ -1534,7 +1539,8 @@ class ToolsController extends AppController{
     	$this->set("available_reference_species",$reference_species);
     	$selected_ref_species	= "";
     	if($_POST && array_key_exists("reference_species",$_POST)){
-      		$rs	= mysql_real_escape_string($_POST['reference_species']);
+      		// $rs	= mysql_real_escape_string($_POST['reference_species']);
+      		$rs	= $_POST['reference_species']; // No need to check (find)?
       		if($this->AnnotSources->find("first",array("conditions"=>array("species"=>$rs)))){
 			$selected_ref_species	= $rs;
       		}
@@ -2035,7 +2041,7 @@ function label_go_intersection($exp_id=null,$label=null){
             $unclassified_str = "Unclassified";
             $max_tax = 20;
             // 1. Check subset name. If it already exists, return error message.
-            $subset_name = mysql_real_escape_string($this->request->data['subset-name']);
+            $subset_name = filter_var($this->request->data['subset-name'], FILTER_SANITIZE_STRING);
             // Strip + replace blank spaces by underscores
             $subset_name = preg_replace('/\s+/', '_', trim($subset_name));
             if(empty($subset_name)){

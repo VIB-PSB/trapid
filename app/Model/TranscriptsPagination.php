@@ -62,8 +62,8 @@ class TranscriptsPagination extends AppModel{
 	$possible_parameters	= $this->getPossibleParameters();
 	$num_parameters	= count($parameters);
 	for($i=1;$i<$num_parameters;$i+=2){
-      		$key	= mysql_real_escape_string($parameters[$i]);
-     		$value	= mysql_real_escape_string(urldecode($parameters[$i+1]));
+      		$key	= filter_var($parameters[$i], FILTER_SANITIZE_STRING);
+     		$value	= filter_var(urldecode($parameters[$i+1]), FILTER_SANITIZE_STRING);
 		if(array_key_exists($key,$possible_parameters)){
 		  $desc		= $possible_parameters[$key]["desc"];
 		  if(!array_key_exists($desc,$result)){$result[$desc] = array();}
@@ -79,11 +79,11 @@ class TranscriptsPagination extends AppModel{
     $possible_parameters	= $this->getPossibleParameters();
     $params		= array();
     $num_parameters	= count($parameters);
-    $exp_id		= mysql_real_escape_string($parameters[0]);
+    $exp_id		= filter_var($parameters[0], FILTER_SANITIZE_NUMBER_INT);
     //parse parameters
     for($i=1;$i<$num_parameters;$i+=2){
-      $key	= mysql_real_escape_string($parameters[$i]);
-      $value	= mysql_real_escape_string(urldecode($parameters[$i+1]));
+      $key	= filter_var($parameters[$i], FILTER_SANITIZE_STRING);
+      $value	= filter_var(urldecode($parameters[$i+1]), FILTER_SANITIZE_STRING);
       if(!array_key_exists($key,$possible_parameters)){/*pr($key);*/return FALSE;}
       $params[]	= array("key"=>$key,"value"=>$value);	//not single hash, as multiple keys should be able to be used at the same time.
     }

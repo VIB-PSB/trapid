@@ -5,7 +5,7 @@ class TrapidUtilsComponent extends Component{
   var $components	= array("Email","Cookie","Session");
   var $controller;
 
-  function startup(&$c){
+  function startup(Controller $c){
     $this->controller = & $c;
   }
 
@@ -1414,7 +1414,7 @@ class TrapidUtilsComponent extends Component{
       // Send email to administrators to be warned when a new user is added
       if(!$password_update){
      	  $this->Email->reset();
-    	  $this->Email->to		= "frbuc@psb.vib-ugent.be,mibel@psb.ugent.be,klpoe@psb.ugent.be";
+    	  $this->Email->to		= array("frbuc@psb.vib-ugent.be","mibel@psb.ugent.be","klpoe@psb.ugent.be");
     	  $this->Email->subject		= "TRAPID new user";
     	  $this->Email->replyTo		= "no-reply@psb.ugent.be";
     	  $this->Email->from 		= "TRAPID webmaster <no-reply@psb.ugent.be>";
