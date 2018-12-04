@@ -90,11 +90,11 @@ my $multi_fasta_file 	= &create_experiment_multifasta($par{"trapid_db_server"},$
 ###
 
 if($par{"tax_binning"} eq "false") {
-    print STDERR "Do not perform taxonomic binning!\n";
+    print STDERR "[Message] Taxonomic classification will not be performed\n";
 }
 
 else {
-    print STDERR "Perform taxonomic binning!\n";
+    print STDERR "[Message] Perform taxonomic classification\n";
     my $kaiju_program	= "run_kaiju_splitted.py";
     my $python_location	= $par{"base_script_location"} . "python/";
     my $kaiju_command   = "python " . $python_location . $kaiju_program;
@@ -153,26 +153,53 @@ print STDOUT "###Time used for Infernal: ".($itime2-$itime1)."s \n";
 #=======================================================================================================
 #=======================================================================================================
 
+
 my $jtime1		= time();
-my $java_program	= "transcript_pipeline.InitialTranscriptsProcessing";
-my $java_location	= $par{"base_script_location"}."java/";
-
-my $java_command        = "java -cp .:..:".$java_location.":".$java_location."mysql.jar ".$java_program;
-my @java_options        = ($par{"plaza_db_server"},$par{"plaza_db_name"},$par{"plaza_db_user"},$par{"plaza_db_password"},
-			   $par{"trapid_db_server"},$par{"trapid_db_name"},$par{"trapid_db_user"},$par{"trapid_db_password"},
-			   $par{"experiment"},$similarity_output,$par{"gf_type"},$par{"num_top_hits"},$par{"func_annot"},  $par{"tax_scope"}, 0.50);
-
 &update_log($par{"trapid_db_server"},$par{"trapid_db_name"},$par{"trapid_db_port"},
-	    $par{"trapid_db_user"},$par{"trapid_db_password"},$par{"experiment"},
-            "start_postprocessing","",2);
-my $java_exec           = $java_command." ".join(" ",@java_options);
-print STDOUT $java_exec."\n";
-system($java_exec);
+	$par{"trapid_db_user"},$par{"trapid_db_password"},$par{"experiment"},
+	"start_postprocessing","",2);
+
+# If transcripts are being processed using EggNOG data, we run Eggnog-mapper (modified version that ignores the
+#  similarity search step), and perform post-processing using modified scripts.
+if($par{plaza_db_name} eq "db_trapid_ref_eggnog_test_02") {
+	# Call modified version of EggNOG-mapper
+	my $outfile_prefix = $par{"temp_dir"} . "emapper_" . $par{"experiment"};
+	my $emapper = "emapper_trapid.py";
+	my $emapper_location = $par{"blast_location"} . "eggnog_mapper/eggnog-mapper/";
+	my $emapper_cmd = "python " . $emapper_location . $emapper;
+	my @emapper_options = ("--tax_scope " . $par{"tax_scope"}, "-i " . $multi_fasta_file, "--output " . $outfile_prefix,
+		"-m diamond", "--data_dir " . $par{"blast_location"} . "eggnog_mapper/eggnog_db/", "--cpu 2",
+		"--dmnd_outfile " . $similarity_output, "--translate");  # TODO: add e-value?
+	my $emapper_exec = $emapper_cmd . " " . join(" ", @emapper_options);
+	print STDERR "Call EggNOG-mapper with command: " . $emapper_exec . "\n";
+	system($emapper_exec);
+
+	# Call post-processing script
+	# Call modified Java post-processing script ()
+}
+
+
+# Otherwise just run the usual TRAPID Java post processing code
+else {
+	my $java_program	= "transcript_pipeline.InitialTranscriptsProcessing";
+	my $java_location	= $par{"base_script_location"}."java/";
+
+	my $java_command        = "java -cp .:..:".$java_location.":".$java_location."mysql.jar ".$java_program;
+	my @java_options        = ($par{"plaza_db_server"},$par{"plaza_db_name"},$par{"plaza_db_user"},$par{"plaza_db_password"},
+		$par{"trapid_db_server"},$par{"trapid_db_name"},$par{"trapid_db_user"},$par{"trapid_db_password"},
+		$par{"experiment"},$similarity_output,$par{"gf_type"},$par{"num_top_hits"},$par{"func_annot"},  $par{"tax_scope"}, 0.50);
+
+	my $java_exec           = $java_command." ".join(" ",@java_options);
+	print STDOUT $java_exec."\n";
+	system($java_exec);
+}
+
 #remove final output file
 if($DELETE_TEMP_DATA){
     system("rm -f ".$multi_fasta_file);
     system("rm -f ".$similarity_output);
 }
+
 my $jtime2		= time();
 print STDOUT "###Time used for Initial Processing : ".($jtime2-$jtime1)."s \n";
 &update_log($par{"trapid_db_server"},$par{"trapid_db_name"},$par{"trapid_db_port"},
