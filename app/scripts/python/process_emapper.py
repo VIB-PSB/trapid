@@ -12,6 +12,8 @@ import sys
 import time
 from ConfigParser import ConfigParser
 
+TOP_GOS = {'GO:0003674', 'GO:0008150', 'GO:0005575'}
+
 
 def parse_arguments():
     """
@@ -52,7 +54,6 @@ def cleanup_db(trapid_db_conn, exp_id):
     "DELETE FROM `transcripts_annotation` WHERE `experiment_id`='{exp_id}'",
     "DELETE FROM `similarities` WHERE `experiment_id`='{exp_id}'"
     ]
-
     for query_str in sql_queries:
         sys.stderr.write(query_str.format(exp_id=exp_id) + "\n")
         cursor = trapid_db_conn.cursor()
@@ -113,9 +114,7 @@ def perform_gf_assignment(emapper_results, trapid_db_conn, exp_id):
     # Populate `gene_families` table
     for gf, gf_data in gf_transcripts.items():
         cursor.execute(gf_query.format(exp_id=exp_id, trapid_gf_id=gf, gf_id=gf_data['gf_id'], n_transcripts=gf_data['n_transcripts']))
-    print gf_transcripts
     trapid_db_conn.commit()
-
 
 
 def get_go_data(ref_db_conn):
@@ -139,8 +138,8 @@ def get_go_data(ref_db_conn):
             replace_by = record['replacement']
         if record['alt_ids'] != '':
             alt_ids = set(record['alt_ids'].split(','))
-            go_dict[record['name']] = {'desc': record['desc'], 'aspect': record['info'], 'parents': set([]),
-                                    'is_obsolete': is_obsolete, 'alt_ids': alt_ids, 'replace_by': replace_by}
+        go_dict[record['name']] = {'desc': record['desc'], 'aspect': record['info'], 'parents': set([]),
+                                   'is_obsolete': is_obsolete, 'alt_ids': alt_ids, 'replace_by': replace_by}
     # 2. Retrieve GO hierarchy from `functional_parents` table, then populate `go_dict` with parents
     go_hierarchy = {}
     cursor.execute(func_parents_query)
@@ -159,7 +158,104 @@ def get_go_data(ref_db_conn):
             else:
                 sys.stderr.write("[Warning] No parents found for '%s'.\n" % go)
     return go_dict
-    # clan_members[record['key']] = record['value'].split(',')
+
+
+def get_alt_gos(go_dict):
+    """
+    Return an alt_id:go mapping dictionary from information retrieved from `go_dict`.
+    """
+    alt_gos = {}
+    for go in go_dict:
+        if go_dict[go]['alt_ids']:
+            for alt_go in go_dict[go]['alt_ids']:
+                alt_gos[alt_go] = go
+    return alt_gos
+
+
+def get_go_parents(transcript_annotation, go_dict):
+    """
+    For a given transcript, retrieve GO parents from `go_dict`. Return parents as dictionary (go_aspect:go_parents)
+    """
+    go_parents = set()
+    for go in transcript_annotation:
+            go_parents.update(go_dict[go]['parents'])
+    return go_parents
+
+
+def perform_go_annotation(emapper_results, trapid_db_conn, go_data, exp_id, chunk_size=10000):
+    """
+    Populate `transcripts_annotation` table of TRAPID DB with GO annotation from emapper's results.
+    """
+    sys.stderr.write("[Message] Preform GO annotation...\n")
+    go_annot_query = "INSERT INTO `transcripts_annotation` (`experiment_id`, `type`, `transcript_id`, `name`, `is_hidden`) VALUES (%s, 'go', %s, %s, %s)"
+    go_annot_values = []
+
+    # Create final set of GO annotations for all transcripts: replace obsolate/alt. GOs, and retrieve parental terms
+    transcript_gos = {}
+    alt_gos = get_alt_gos(go_data)  # Alternative GO to 'regular' GO mapping
+    for transcript, results in emapper_results.items():
+        transcript_gos[transcript] = set()
+        for go in results['go_terms']:
+            is_valid = True
+            go_term = go
+            # Check if GO term is alternative and replace it
+            if go_term in alt_gos:
+                go_term = alt_gos[go_term]
+            # Check if GO term is obsolete and replace it by the term in `replace_by`.
+            if go_term in go_data and go_data[go_term]['is_obsolete']:
+                go_term = go_dict[go_term]['replace_by']
+            if go_term not in go_data:
+                is_valid = False  # i.e. we couldn't replace the GO (not alt. ID or obsolete) + not found -> invalid
+            # If the GO term is valid it is added to `transcript_annotations`
+            if is_valid:
+                transcript_gos[transcript].add(go_term)
+    # Add parental GOs and filter top GOs
+    for transcript in transcript_gos:
+        go_parents =  get_go_parents(transcript_gos[transcript], go_data)
+        transcript_gos[transcript].update(go_parents)
+        transcript_gos[transcript] = transcript_gos[transcript] - TOP_GOS
+    print transcript_gos
+
+    # Create a list of tuples with the values to insert
+    for transcript, gos in transcript_gos.items():
+        for go in gos:
+            is_hidden = 1
+            all_children = set([k for k in go_data if go in go_data[k]['parents']])
+            # If term has no children in the associated transcript's GO terms, `is_hidden` equals 0
+            if not all_children & gos:
+                is_hidden = 0
+            values = (exp_id, transcript, go, is_hidden)
+            go_annot_values.append(values)
+
+    # Populate `transcripts_annotation`
+    trapid_db_conn.autocommit = False
+    cursor = trapid_db_conn.cursor()
+    for i in range(0, len(go_annot_values), chunk_size):
+        # print go_annot_values[i:min(i+chunk_size, len(go_annot_values))]  # Debug
+        cursor.executemany(go_annot_query, go_annot_values[i:min(i+chunk_size, len(go_annot_values))])
+    trapid_db_conn.commit()
+
+
+def perform_ko_annotation(emapper_results, trapid_db_conn, exp_id, chunk_size=10000):
+    """
+    Populate `transcripts_annotation` table of TRAPID DB with KO annotation from emapper's results.
+    """
+    sys.stderr.write("[Message] Preform KO annotation...\n")
+    ko_annot_query = "INSERT INTO `transcripts_annotation` (`experiment_id`, `type`, `transcript_id`, `name`, `is_hidden`) VALUES (%s, 'ko', %s, %s, %s)"
+    ko_annot_values = []
+
+    # Create a list of tuples with the values to insert
+    for transcript, results in emapper_results.items():
+        if results['ko_terms']!= set(['']):
+            for ko in results['ko_terms']:
+                values = (exp_id, transcript, ko, 0)
+                ko_annot_values.append(values)
+    # Populate `transcripts_annotation`
+    trapid_db_conn.autocommit = False
+    cursor = trapid_db_conn.cursor()
+    for i in range(0, len(ko_annot_values), chunk_size):
+        cursor.executemany(ko_annot_query, ko_annot_values[i:min(i+chunk_size, len(ko_annot_values))])
+    trapid_db_conn.commit()
 
 
 def main(ini_file_initial):
@@ -189,14 +285,19 @@ def main(ini_file_initial):
     perform_gf_assignment(emapper_results, db_conn, exp_id)
     db_conn.close()
 
-    # Perform GO annotation
+    # Get GO data
     db_conn = common.db_connect(*ref_db_data)
     go_data = get_go_data(db_conn)
     db_conn.close()
+    # Perform GO annotation
     db_conn = common.db_connect(*trapid_db_data)
-    # perform_gf_assignment(emapper_results, db_conn, go_data, exp_id)
+    perform_go_annotation(emapper_results, db_conn, go_data, exp_id)
     db_conn.close()
+
     # Perform KO annotation
+    db_conn = common.db_connect(*trapid_db_data)
+    perform_ko_annotation(emapper_results, db_conn, exp_id)
+    db_conn.close()
 
 
 if __name__ == '__main__':
