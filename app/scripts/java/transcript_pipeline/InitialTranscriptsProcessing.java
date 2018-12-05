@@ -122,6 +122,114 @@ public class InitialTranscriptsProcessing {
 
 			Class.forName("com.mysql.jdbc.Driver");
 
+            // If processing data using Eggnog as ref. db, several steps were already run beforehand: cleaning the DB, GF assignment, GO/KO annotation
+            // In the future the DB name shouldn't be hardcoded...
+            /* UNCLEAN AND WORK IN PROGRESS! */
+           // For testing purposes just copy-paste things in this big `if`. In the future have two clearly and properly separated pipelines.
+            if(plaza_database_name.equals("db_trapid_ref_eggnog_test_02")) {
+                System.out.println("EGGNOG PROCESSING!");
+                // No need to run step 1!
+
+                // Step 2: parse the similarity search output file, and store some information in the TRAPID db:
+    			// transcript_id -> ({hit_gene,bitscore,query_start,query_stop,perc_identity,aln_length,log_e_val});
+    			long t21	= System.currentTimeMillis();
+    			Map<String,List<String[]>> simsearch_data		= itp.parseSimilarityOutputFile(similarity_search_file,NUM_BLAST_HITS_CACHE);
+    			long t22	= System.currentTimeMillis();
+    			timing("Parsing similarity search file",t21,t22);
+
+
+    			// Step 2b: store the similarity search information in the database.
+    			plaza_db_connection			= itp.createDbConnection(plaza_database_server,plaza_database_name,plaza_database_login,plaza_database_password);
+    			trapid_db_connection		= itp.createDbConnection(trapid_server,trapid_name,trapid_login,trapid_password);
+    			long t2b1	= System.currentTimeMillis();
+    			itp.storeSimilarityData(trapid_db_connection,trapid_experiment_id,simsearch_data);
+    			long t2b2	= System.currentTimeMillis();
+    			timing("Storing similarities information",t2b1,t2b2);
+    			plaza_db_connection.close();
+    			trapid_db_connection.close();
+
+
+                // Step 2c: determine for the similarity search what the best hitting species are
+                // species -> hitcount
+                 plaza_db_connection = itp.createDbConnection(plaza_database_server, plaza_database_name, plaza_database_login, plaza_database_password);
+                 trapid_db_connection = itp.createDbConnection(trapid_server, trapid_name, trapid_login, trapid_password);
+                 Map<String, Integer> species_hit_count = itp.getSpeciesHitCount(plaza_db_connection, simsearch_data);
+                 itp.storeBestSpeciesHitData(trapid_db_connection, trapid_experiment_id, species_hit_count);
+                 plaza_db_connection.close();
+                 trapid_db_connection.close();
+
+
+                // Step 3: create the transcript to gene family mapping, with extra info kept for later
+     			// This is the actual homology assignment done for the transcripts.
+                // TODO: read assigned GFs directly from TRAPID database (since GF assignment was already performed in the python script)
+     			plaza_db_connection			= itp.createDbConnection(plaza_database_server,plaza_database_name,plaza_database_login,plaza_database_password);
+     			trapid_db_connection		= itp.createDbConnection(trapid_server,trapid_name,trapid_login,trapid_password);
+     			long t31	= System.currentTimeMillis();
+     			Map<String,GeneFamilyAssignment> transcript2gf	= null;
+     			Map<String, List<String>> gf2transcripts = null;  // Reverse mapping
+
+                // TODO: check taxonomic scope (must be 'auto' or anything in `LEVEL_CONTENT`)
+                // Initialize OG-specific maps.
+                Map<String,List<String>> transcript2ogs	= null;
+                Map<String, List<String>> ogs2transcripts = null;
+                // We retrieve all the corresponding OGs at multiple levels
+                transcript2ogs = itp.inferTranscriptOGsEggnog(plaza_db_connection, simsearch_data, chosen_scope);
+                // Choose the largest acceptable OG and assign it as GF.
+                transcript2gf = itp.inferTranscriptGenefamiliesEggnog(plaza_db_connection, transcript2ogs);
+     			plaza_db_connection.close();
+     			trapid_db_connection.close();
+
+     			// Make reverse mapping of: OGs/transcript, GF/transcript
+     			plaza_db_connection			= itp.createDbConnection(plaza_database_server,plaza_database_name,plaza_database_login,plaza_database_password);
+     			trapid_db_connection		= itp.createDbConnection(trapid_server,trapid_name,trapid_login,trapid_password);
+     			System.out.println("Reverse mapping");
+                 // This mapping is needed for functional annotation with OGs
+     			ogs2transcripts = itp.reverseMappingOgsEggnog(transcript2ogs);
+                 // This mapping is used in other steps as well (i.e. meta-annotation)
+     			gf2transcripts = itp.reverseMapping(transcript2gf);
+     			long t32	= System.currentTimeMillis();
+     			timing("GF inferring",t31,t32);
+     			plaza_db_connection.close();
+     			trapid_db_connection.close();
+
+
+                 // Step 5: perform putative frameshift detection and store best frame.
+     			plaza_db_connection			= itp.createDbConnection(plaza_database_server,plaza_database_name,plaza_database_login,plaza_database_password);
+     			trapid_db_connection		= itp.createDbConnection(trapid_server,trapid_name,trapid_login,trapid_password);
+     			long t51	= System.currentTimeMillis();
+     			itp.performPutativeFrameDetection(trapid_db_connection,trapid_experiment_id,simsearch_data);
+     			long t52	= System.currentTimeMillis();
+     			timing("PutativeFrameDetection",t51,t52);
+     			itp.update_log(trapid_db_connection,trapid_experiment_id,"frameshift_detection","","3");
+     			plaza_db_connection.close();
+     			trapid_db_connection.close();
+
+                // Step 6: get longest ORFs in preferred frame.
+    			// TODO: update this procedure to work with multiple translation tables
+    			plaza_db_connection			= itp.createDbConnection(plaza_database_server,plaza_database_name,plaza_database_login,plaza_database_password);
+    			trapid_db_connection		= itp.createDbConnection(trapid_server,trapid_name,trapid_login,trapid_password);
+    			long t61	= System.currentTimeMillis();
+    			itp.performInitialORFPrediction(trapid_db_connection,trapid_experiment_id);
+    			long t62	= System.currentTimeMillis();
+    			timing("ORF prediction",t61,t62);
+    			itp.update_log(trapid_db_connection,trapid_experiment_id,"orf_prediction","","3");
+    			plaza_db_connection.close();
+    			trapid_db_connection.close();
+
+
+    			// Step 7: perform check on lengths of transcripts, compared to gene family CDS length, store the results.
+    			plaza_db_connection			= itp.createDbConnection(plaza_database_server,plaza_database_name,plaza_database_login,plaza_database_password);
+    			trapid_db_connection		= itp.createDbConnection(trapid_server,trapid_name,trapid_login,trapid_password);
+    			long t71	= System.currentTimeMillis();
+    			itp.performMetaAnnotationPrediction(plaza_db_connection,trapid_db_connection,plaza_database_name,trapid_experiment_id,transcript2gf,gf2transcripts,gf_type);
+    			long t72	= System.currentTimeMillis();
+    			timing("Meta annotation",t71,t72);
+    			itp.update_log(trapid_db_connection,trapid_experiment_id,"meta_annotation","","3");
+
+            }
+
+            else {
+
 			// Step 1: creating 2 different database connections. One to the reference database (plaza database),
             // and another one to the TRAPID database.
 			plaza_db_connection			= itp.createDbConnection(plaza_database_server,plaza_database_name,plaza_database_login,plaza_database_password);
@@ -174,93 +282,6 @@ public class InitialTranscriptsProcessing {
 			Map<String,GeneFamilyAssignment> transcript2gf	= null;
 			Map<String, List<String>> gf2transcripts = null;  // Reverse mapping
 
-            /* Here use a different procedure for eggNOG (steps 3, 4).
-			 * UNCLEAN AND WORK IN PROGRESS! */
-			// For testing purposes just copy-paste things in this big `if`. In the future have two clearly and properly separated pipelines.
-			// TODO: do not hardcode the db name like that...
-            if(plaza_database_name.equals("db_trapid_ref_eggnog_test_02")) {
-            	// TODO: check taxonomic scope (must be 'auto' or anything in `LEVEL_CONTENT`)
-                // Initialize OG-specific maps.
-                Map<String,List<String>> transcript2ogs	= null;
-                Map<String, List<String>> ogs2transcripts = null;
-                // We retrieve all the corresponding OGs at multiple levels
-                transcript2ogs = itp.inferTranscriptOGsEggnog(plaza_db_connection, simsearch_data, chosen_scope);
-                // Choose the largest acceptable OG and assign it as GF.
-                transcript2gf = itp.inferTranscriptGenefamiliesEggnog(plaza_db_connection, transcript2ogs);
-				plaza_db_connection.close();
-				trapid_db_connection.close();
-
-				// Store the results of the gene family mapping in the database
-				plaza_db_connection			= itp.createDbConnection(plaza_database_server,plaza_database_name,plaza_database_login,plaza_database_password);
-				trapid_db_connection		= itp.createDbConnection(trapid_server,trapid_name,trapid_login,trapid_password);
-				itp.storeGeneFamilyAssignments(trapid_db_connection,trapid_experiment_id,transcript2gf,gf_type);
-				itp.update_log(trapid_db_connection,trapid_experiment_id,"infer_genefamilies","","3");
-				plaza_db_connection.close();
-				trapid_db_connection.close();
-
-				// Make reverse mapping of: OGs/transcript, GF/transcript
-				plaza_db_connection			= itp.createDbConnection(plaza_database_server,plaza_database_name,plaza_database_login,plaza_database_password);
-				trapid_db_connection		= itp.createDbConnection(trapid_server,trapid_name,trapid_login,trapid_password);
-				System.out.println("Reverse mapping");
-                // This mapping is needed for functional annotation with OGs
-				ogs2transcripts = itp.reverseMappingOgsEggnog(transcript2ogs);
-                // This mapping is used in other steps as well (i.e. meta-annotation)
-				gf2transcripts = itp.reverseMapping(transcript2gf);
-				long t32	= System.currentTimeMillis();
-				timing("GF inferring",t31,t32);
-				plaza_db_connection.close();
-				trapid_db_connection.close();
-
-
-				// Step 4: perform transfer of functional annotation from the OGs to the transcripts.
-                // For that step, should we use fine-grained orthologs or not?
-				plaza_db_connection			= itp.createDbConnection(plaza_database_server,plaza_database_name,plaza_database_login,plaza_database_password);
-				trapid_db_connection		= itp.createDbConnection(trapid_server,trapid_name,trapid_login,trapid_password);
-				long t41	= System.currentTimeMillis();
-				System.out.println("Performing GO functional transfer: "+func_annot);
-				Map<String,Set<String>> transcript_go			= null;
-				switch(func_annot){
-					case BESTHIT: transcript_go = itp.assignGoTranscriptsEggnog_BESTHIT(plaza_db_connection, simsearch_data); break;
-					case GF: transcript_go 	= itp.assignGoTranscriptsEggnog_GF_precomputed(plaza_db_connection, transcript2ogs, ogs2transcripts, gf_min_rep);break;
-					case GF_BESTHIT: transcript_go 	= itp.assignGoTranscriptsEggnog_GF_BESTHIT(plaza_db_connection, transcript2ogs, ogs2transcripts, simsearch_data, gf_min_rep);break;
-					default: System.err.println("Illegal func annot indicator: "+func_annot); System.exit(1);
-				}
-				plaza_db_connection.close();
-				trapid_db_connection.close();
-
-				plaza_db_connection			= itp.createDbConnection(plaza_database_server,plaza_database_name,plaza_database_login,plaza_database_password);
-				trapid_db_connection		= itp.createDbConnection(trapid_server,trapid_name,trapid_login,trapid_password);
-				Map<String,Map<String,Integer>>	transcript_go_hidden	= itp.hideGoTerms(plaza_db_connection, transcript_go);
-				itp.storeGoTranscripts(trapid_db_connection, trapid_experiment_id,transcript_go_hidden);
-				plaza_db_connection.close();
-				trapid_db_connection.close();
-
-				// Kegg Orthology (KO) annotation
-				plaza_db_connection	= itp.createDbConnection(plaza_database_server,plaza_database_name,plaza_database_login,plaza_database_password);
-				trapid_db_connection = itp.createDbConnection(trapid_server,trapid_name,trapid_login,trapid_password);
-				System.out.println("Performing KO functional transfer : " + func_annot);
-				Map<String,Set<String>> transcript_ko = null;
-				switch(func_annot){
-					case BESTHIT:transcript_ko = itp.assignKoTranscripts_BESTHIT(plaza_db_connection, simsearch_data);break;
-					case GF: transcript_ko = itp.assignKoTranscripts_GF_precomputed(plaza_db_connection, transcript2ogs, ogs2transcripts, gf_min_rep);break;
-					case GF_BESTHIT:transcript_ko = itp.assignKoTranscripts_GF_BESTHIT(plaza_db_connection, transcript2ogs, ogs2transcripts, simsearch_data, gf_min_rep);break;
-					default:System.err.println("Illegal func annot indicator : "+func_annot);System.exit(1);
-				}
-				plaza_db_connection.close();
-				trapid_db_connection.close();
-				plaza_db_connection = itp.createDbConnection(plaza_database_server,plaza_database_name,plaza_database_login,plaza_database_password);
-				trapid_db_connection = itp.createDbConnection(trapid_server,trapid_name,trapid_login,trapid_password);
-				itp.storeKoTranscripts(trapid_db_connection, trapid_experiment_id,transcript_ko);
-				long t42	= System.currentTimeMillis();
-				timing("Functional transfer", t41, t42);
-				itp.update_log(trapid_db_connection,trapid_experiment_id,"infer_functional_annotation","","3");
-				plaza_db_connection.close();
-				trapid_db_connection.close();
-			}
-
-
-			// 'Normal' PLAZA processing (steps 3 and 4)
-			else {
                 if (gf_type == GF_TYPE.HOM) {
                     String gf_prefix = itp.getGfPrefix(trapid_db_connection, plaza_database_name);
                     //System.out.println("GF_PREFIX : "+gf_prefix);
@@ -336,8 +357,6 @@ public class InitialTranscriptsProcessing {
 			plaza_db_connection.close();
 			trapid_db_connection.close();
 
-			} // End 'normal' separated processing
-
 
 			// Step 5: perform putative frameshift detection and store best frame.
 			plaza_db_connection			= itp.createDbConnection(plaza_database_server,plaza_database_name,plaza_database_login,plaza_database_password);
@@ -373,6 +392,7 @@ public class InitialTranscriptsProcessing {
 			timing("Meta annotation",t71,t72);
 			itp.update_log(trapid_db_connection,trapid_experiment_id,"meta_annotation","","3");
 
+            } // End PLAZA processing
 
 			// Step 8: set status of experiment to finished
 			itp.setExperimentStatus(trapid_db_connection,trapid_experiment_id,"finished");
