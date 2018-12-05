@@ -92,6 +92,7 @@
 <!--                </tr>-->
 <!--            </thead>-->
 <!--        </table>-->
+
 <section class="page-section-sm">
 <div class='row'>
     <div class='col-lg-12'>
@@ -149,59 +150,53 @@
     <!--                            </div>-->
     <!--                        </div>-->
 </div>
-</section>
-<?php
-if ($standard_experiment_info['Experiments']['process_state'] == "upload" || isset($admin)) {
-    echo "<h3>Initial processing</h3>\n";
-    echo "<div class='page-section-sm'>\n";
-    echo "<dl class='standard dl-horizontal'>\n";
-    if ($standard_experiment_info['Experiments']['process_state'] != "upload") {
-        echo "<dt><span style='color:red'>Override</span></dt>\n";
-        echo "<dd><span style='color:red'>Experiment is not in upload state. Override at own risk</span></dd>\n";
-    }
-    echo "<dt>Process</dt>\n";
-    echo "<dd>";
-    echo $this->Html->link("Perform transcript processing",
-        array("controller" => "trapid", "action" => "initial_processing", $exp_id));
-    echo "</dd>\n";
-    echo "</dl>\n";
-    echo "</div>\n";
-}
-?>
+<!--        <button data-toggle="modal" data-target="#squarespaceModal" class="btn btn-primary btn-lg" name="" id="">-->
+<!--            <span class="glyphicon glyphicon-plus"> </span> Perform initial processing-->
+<!--        </button>-->
+<!--        <button data-toggle="modal" data-target="#squarespaceModal" class="btn btn-primary btn-lg" name="" id="">-->
+<!--            <span class="glyphicon glyphicon-plus"> </span> Perform initial processing-->
+<!--        </button>-->
 
-<?php
-/*
- * Here we add a (pre)processing link which will initiate a precomputation of the GO enrichments for all defined labels.
- * This should only be visible on several conditions:
- * 0) Reference DB is PLAZA (no GO for orthomcldb)
- * 1) The experiment is in 'finished' state
- * 2) There is at least 1 label defined (--> should be smaller than total dataset, but we won't check for that here).
- * 3) The last_edit_date is younger than the go_enrichment_date (or go_enrichment_date is default). --> not necessary. Yeah, users can overcompensate, but hey.
- * 4) The variable go_enrichment_state is not set to 'processing'
- *
- * The GO enrichment is stored in 1 table, but extra info (go_enrichment_date and go_enrichment_state) are stored in the experiments table.
- */
-if ($standard_experiment_info['Experiments']['process_state'] == "finished" && $num_subsets > 0) {    //(1) and (2)
-    if ($standard_experiment_info['Experiments']['enrichment_state'] != 'processing') {    //(4)
-        echo "<h3>Functional enrichment preprocessing</h3>\n";
-        echo "<div class='subdiv'>\n";
-        echo "<dl class='standard dl-horizontal'>\n";
-        echo "<dt>Process</dt>\n";
-        echo "<dd>";
-        $link_text = "Perform functional enrichment preprocessing for " . $num_subsets . " subsets";
-        if ($standard_experiment_info['Experiments']['enrichment_state'] == "finished") {
-            $link_text = "Rerun functional enrichment preprocessing for " . $num_subsets . " subsets";
+    <?php
+        echo "<p class=\"text-right\">";
+    if ($standard_experiment_info['Experiments']['process_state'] == "upload" || isset($admin)) {
+        echo $this->Html->link("<span class=\"glyphicon glyphicon-chevron-right\"></span> Process transcripts",
+            array("controller" => "trapid", "action" => "initial_processing", $exp_id), array("class"=>"btn btn-primary", "style"=>"margin-left: 10px;", "escape"=>false, "title"=>"Perform transcript initial processing"));
+    }
+
+
+
+    /*
+     * Here we add a (pre)processing link which will initiate a precomputation of the GO enrichments for all defined labels.
+     * This should only be visible on several conditions:
+     * 0) Reference DB is PLAZA (no GO for orthomcldb)
+     * 1) The experiment is in 'finished' state
+     * 2) There is at least 1 label defined (--> should be smaller than total dataset, but we won't check for that here).
+     * 3) The last_edit_date is younger than the go_enrichment_date (or go_enrichment_date is default). --> not necessary. Yeah, users can overcompensate, but hey.
+     * 4) The variable go_enrichment_state is not set to 'processing'
+     *
+     * The GO enrichment is stored in 1 table, but extra info (go_enrichment_date and go_enrichment_state) are stored in the experiments table.
+     */
+    if ($standard_experiment_info['Experiments']['process_state'] == "finished" && $num_subsets > 0) {    //(1) and (2)
+        if ($standard_experiment_info['Experiments']['enrichment_state'] != 'processing') {    //(4)
+            $link_text = "<span class=\"glyphicon glyphicon-chevron-right\"></span> Run functional enrichment (" . $num_subsets . ")";
+            if ($standard_experiment_info['Experiments']['enrichment_state'] == "finished") {
+                $link_text = "<span class=\"glyphicon glyphicon-chevron-right\"></span> Rerun functional enrichment (" . $num_subsets . ")";
+            }
+            echo $this->Html->link($link_text,
+                array("controller" => "trapid", "action" => "enrichment_preprocessing", $exp_id),
+                array("class"=>"btn btn-primary", "style"=>"margin-left: 10px;", "escape"=>false, "title"=>"Perform functional enrichment preprocessing"));
         }
-        echo $this->Html->link($link_text,
-            array("controller" => "trapid", "action" => "enrichment_preprocessing", $exp_id));
-        echo "</dd>\n";
-        echo "</dl>\n";
-        echo "</div>\n";
     }
-}
+    if ($standard_experiment_info['Experiments']['process_state'] != "upload" && isset($admin)) {
+        echo "<br><span style='color:red'><strong>Warning:</strong> Experiment is not in upload state. Override at own risk</span>\n";
+    }
+    echo "</p>";
 
+    ?>
 
-?>
+</section>
+
 <hr>
 <!--        <h2>Search this experiment</h2>-->
 <!--        <div class="subdiv">-->
@@ -299,7 +294,7 @@ if ($standard_experiment_info['Experiments']['process_state'] == "finished" && $
                     }
                     if (count($transcripts_ipr[$td['transcript_id']]) > 3) {
                         $more_ipr = count($transcripts_ipr[$td['transcript_id']]) -3;
-                        echo "<label title='" . $more_go . " more InterPro domains are associated to this transcript" .
+                        echo "<label title='" . $more_ipr . " more InterPro domains are associated to this transcript" .
                             "' class='pull-right label label-default' style='cursor:help;'>...</label>";
                     }
                     echo "</td>";
