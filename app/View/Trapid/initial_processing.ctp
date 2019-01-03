@@ -70,9 +70,12 @@
                         <label class="radio-inline">
                             <input checked="checked" id="gf_type_hom" name="gf_type" type="radio" value="HOM"> Gene families  &nbsp;
                         </label>
-                        <label class="radio-inline unavailable">
-                            <input id="gf_type_iortho" name="gf_type" type="radio" value="IORTHO" disabled> Integrative orthology
-                        </label><br>
+                        <?php if(!$tax_scope_data): ?>
+                            <label class="radio-inline">
+                                <input id="gf_type_iortho" name="gf_type" type="radio" value="IORTHO" diabled> Integrative orthology
+                            </label>
+                        <?php endif; ?>
+                        <br>
                     </div>
                     <div class="form-group">
                         <label for=""><strong>Functional annotation</strong></label>
@@ -265,8 +268,6 @@
 
     <script type="text/javascript">
         // Modified to jQuery
-        //<![CDATA[
-
         $('input[type=radio][name=blast_db_type]').change(function() {
             var blast_db_type = $("input[name='blast_db_type']:checked").val();
             setBlastDbChoices(blast_db_type)
@@ -296,9 +297,12 @@
             foreach ($available_species as $sn => $cn) {
                 echo "$('#blast_db').append(createOption('" . $sn . "','" . $cn . "'));\n";
             }
-            //add all possible gf types (if applicable) to gf selection
-            foreach ($possible_gf_types as $k => $v) {
-                echo "$('#gf_type').append(createOption('" . $k . "','" . $v . "'));\n";
+            // Make possible GF types available (only if not using EggNOG as ref. db)
+            // foreach ($possible_gf_types as $k => $v) {
+            //     echo "$('#gf_type').append(createOption('" . $k . "','" . $v . "'));\n";
+            // }
+            if(!$tax_scope_data) {
+                echo "document.getElementById(\"gf_type_iortho\").disabled = false;\n";
             }
             ?>
             <?php endif;?>
@@ -313,12 +317,18 @@
             foreach ($clades_species as $clade => $species) {
                 echo "$('#blast_db').append(createOption('" . $clade . "','" . $clade . "'));\n";
             }
-            //add only HOM to gf selection
-            echo "$('#gf_type').append(createOption('HOM','" . $possible_gf_types['HOM'] . "'));\n";
+            // Make only HOM GF type available (only if not using EggNOG as ref. db)
+            // echo "$('#gf_type').append(createOption('HOM','" . $possible_gf_types['HOM'] . "'));\n";
+            if(!$tax_scope_data) {
+                echo "document.getElementById(\"gf_type_hom\").checked = true;\n";
+                echo "document.getElementById(\"gf_type_iortho\").disabled = true;\n";
+             }
             ?>
             <?php endif;?>
+
         }
 
+        // GF representatives are not used anymore???
         function setGfRepData() {
             <?php if(array_key_exists("GF_REP", $possible_db_types)):?>
             clearDBSelect();
