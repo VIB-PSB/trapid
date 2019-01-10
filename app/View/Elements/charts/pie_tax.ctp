@@ -73,7 +73,8 @@ if(!isset($legend_tax_str)) {
                 data: [
                 <?php
                     // Get array keys and fetch last key
-                    $last_key = array_pop(array_keys($chart_data));
+                    $data_keys = array_keys($chart_data);
+                    $last_key = array_pop($data_keys);
                     foreach ($chart_data as $key=>$value) {
                         echo "{";
                         echo "name: '".$value[0]."', ";
