@@ -20,7 +20,7 @@ class LabelsController extends AppController{
     $exp_info	= $this->Experiments->getDefaultInformation($exp_id);
     $this->set("exp_info",$exp_info);
     $this->set("exp_id",$exp_id);
-    $label	= $this->TranscriptsLabels->getDataSource()->value(urldecode($label), 'string');
+    $label	= filter_var($label, FILTER_SANITIZE_STRING);
     //check whether there is at least one transcript with this label associated.
     $num_transcripts	= $this->TranscriptsLabels->find("count",array("conditions"=>array("experiment_id"=>$exp_id,"label"=>$label)));
     //got here by illegal means

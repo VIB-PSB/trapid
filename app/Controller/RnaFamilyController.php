@@ -58,7 +58,8 @@ class RnaFamilyController extends AppController{
         // Get experiment information
         $exp_info	= $this->Experiments->getDefaultInformation($exp_id);
         // Get RNA family / RFAM data
-        $rf_id	= $this->RnaFamilies->getDataSource()->value($rf_id, 'string'); //Useless/unclean?
+        // $rf_id	= $this->RnaFamilies->getDataSource()->value($rf_id, 'string'); //Useless/unclean?
+        $rf_id	= filter_var($rf_id, FILTER_SANITIZE_STRING); //Useless/unclean?
         $rf_data = $this->RnaFamilies->find("first", array("conditions"=>array("experiment_id"=>$exp_id, "rf_id"=>$rf_id)));
         $rfam_linkouts = $this->Configuration->find("all", array('conditions'=>array('method'=>'linkout', 'key'=>'rfam')));
         $rfam_linkouts = $this->TrapidUtils->indexArraySimple($rfam_linkouts, "Configuration", "attr", "value");
