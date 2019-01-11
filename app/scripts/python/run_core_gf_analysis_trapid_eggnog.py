@@ -1,8 +1,8 @@
 #!/usr/bin/python
 
 """
-A wrapper script to perform the entirety of a core GF completeness analysis for a given TRAPID experiment.
-This script is the one used within TRAPID 2.
+A wrapper script to perform the entirety of a core GF completeness analysis for a given TRAPID experiment, when working
+with EggNOG as reference database. This script is the one used within TRAPID 2.
 """
 
 # TODO: have precomputed core GF files and check if it corresponds to the parameters currently used.
@@ -15,7 +15,7 @@ import os
 import time
 from core_gf_completeness.common import connect_to_db, print_log_msg
 from core_gf_completeness.trapid_core_gf import *
-from core_gf_completeness import get_core_gfs
+from core_gf_completeness import get_core_gfs_eggnog
 from core_gf_completeness import core_gf_analysis
 
 
@@ -56,7 +56,6 @@ def parse_arguments():
                             help='Path of an output directory for the core GF analysis results. Will be created if it does not exist. ', default='core_gf_analysis_%s'%timestamp)
     completeness_args.add_argument('-t', '--top_hits', dest='top_hits', type=int,
                             help='Top protein similarity search hits to consider when looking for a GF. ', default=5)
-
     # Unused arguments (for now)
     # gf_retrieval_args.add_argument('-m', '--min_genes', dest='min_genes', type=int,
     #                         help='Cutoff value: only retrieve gene families having minimum this number of genes. By default (0), no filter is applied. ',
@@ -90,9 +89,9 @@ def main(output_dir, trapid_db_name, trapid_db_user, trapid_db_host, experiment_
 
     # 3. Retrieve core GFs from reference database and create core GFs file.
     core_gfs_file = os.path.join(output_dir, "core_gfs_{clade}_sp{species_perc}_{tax_source}.tsv".format(clade=str(clade), species_perc=species_perc, tax_source="ncbi"))
-    get_core_gfs.main(db_name=ref_db_name, clade=clade, username=trapid_db_user, mysql_server=trapid_db_host,
+    get_core_gfs_eggnog.main(db_name=ref_db_name, clade=clade, username=trapid_db_user, mysql_server=trapid_db_host,
                       output_file=core_gfs_file, min_genes=0, max_genes=0,
-                      species_perc=species_perc, tax_source="ncbi", gf_len=False)
+                      species_perc=species_perc)  #, tax_source="ncbi")
 
     # 4. Perform core GF completeness analysis and format results
     all_gfs = core_gf_analysis.read_all_gfs(core_gfs_file=core_gfs_file, gf_len=False)

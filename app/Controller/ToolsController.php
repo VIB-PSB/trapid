@@ -2202,6 +2202,11 @@ function label_go_intersection($exp_id=null,$label=null){
                     $this->redirect(array("controller"=>"tools", "action"=>"load_core_gf_completeness", $exp_id,  $clade_tax_id, $transcript_label, $tax_source, $species_perc, $top_hits));
                 }
                 // No similar job exists: create and launch job
+                // Check if we are working with EggNOG reference database (to call correct the completeness script)
+                $db_type = "plaza";
+                if(strpos($exp_info["used_plaza_database"], "eggnog") !== false){
+                    $db_type = "eggnog";
+                }
                 $tmp_dir = TMP."experiment_data/".$exp_id."/";
                 $completeness_dir		= $tmp_dir."completeness/";
                 $qsub_file = $this->TrapidUtils->create_qsub_script($exp_id);
@@ -2210,8 +2215,9 @@ function label_go_intersection($exp_id=null,$label=null){
                     $exp_id,  // Experiment ID
                     $transcript_label,  // Transcript label. 'None' if all transcripts were chosen.
                     $species_perc, // `species_perc` (threshold to consider what is a core GF or not)
-                    $top_hits, // `tax_source` (can only be 'ncbi' for now
-                    $tax_source // `top_hits`, the number of top gits (by query) used for the core GF completeness analysis.
+                    $top_hits, // `top_hits`, the number of top gits (by query) used for the core GF completeness analysis.
+                    $tax_source, // `tax_source` (can only be 'ncbi' for now)
+                    $db_type // The type of reference database (different wrapper script called when working with EggNOG)
                 );
                 if($shell_file == null || $qsub_file == null ){$this->set("error","Problem creating program files. ");return;}
                 $qsub_out = $completeness_dir."core_gf_completeness_".$exp_id."_".$clade_tax_id."_sp".$species_perc."_th".$top_hits.".out";
@@ -2304,7 +2310,11 @@ function label_go_intersection($exp_id=null,$label=null){
         else {
             $linkout_prefix = null;
         }
-
+        // Check if we are working with EggNOG reference database (to get proper linkouts)
+        $db_type = "plaza";
+        if(strpos($exp_info["used_plaza_database"], "eggnog") !== false){
+            $db_type = "eggnog";
+        }
         // Finally, set all variables used in the view
         $this->set("label", $label);
         $this->set("tax_name", $tax_name);
@@ -2317,6 +2327,7 @@ function label_go_intersection($exp_id=null,$label=null){
         $this->set("species_perc", $species_perc);
         $this->set("top_hits", $top_hits);
         $this->set("linkout_prefix", $linkout_prefix);
+        $this->set("db_type", $db_type);
     }
 
 

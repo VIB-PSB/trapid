@@ -1352,10 +1352,15 @@ class TrapidUtilsComponent extends Component{
   /* Core GF completeness */
   // Tax source not used yet
   //    function create_shell_script_completeness($clade_tax_id, $exp_id, $label, $species_perc, $tax_source, $top_hits){
-    function create_shell_script_completeness($clade_tax_id, $exp_id, $label, $species_perc, $top_hits){
+    function create_shell_script_completeness($clade_tax_id, $exp_id, $label, $species_perc, $top_hits, $tax_source, $db_type="plaza"){
         $base_scripts_location	= APP."scripts/";
         $tmp_dir			= TMP."experiment_data/".$exp_id."/";
         $completeness_dir		= $tmp_dir."completeness/";
+        // Wrapper script name (different if working with EggNOG as ref. DB)
+        $wrapper_script = "run_core_gf_analysis_trapid.py";
+        if($db_type == "eggnog") {
+            $wrapper_script = "run_core_gf_analysis_trapid_eggnog.py";
+        }
         if(!(file_exists($completeness_dir) && is_dir($completeness_dir))){
             mkdir($completeness_dir);
             shell_exec("chmod a+rw ".$completeness_dir);
@@ -1367,14 +1372,13 @@ class TrapidUtilsComponent extends Component{
         $fh				= fopen($shell_file,"w");
         fwrite($fh,"# Print starting date/time \ndate\n\n");
         fwrite($fh,"# Loading necessary modules\n");
+        fwrite($fh,"# " . $db_type . "\n");
         foreach($necessary_modules as $nm){
             fwrite($fh,"module load ".$nm." \n");
         }
-        // Not possible to use environment variables on the web cluster?
-        // fwrite($fh,"\n# DB_PWD environment variable.\nprintenv;export DB_PWD='@Z%28ZwABf5pZ3jMUz'\n");
         fwrite($fh,"\n# Launching python wrapper for core GF analysis from TRAPID, with correct parameters. \n");
-        $program_location		= $base_scripts_location."python/run_core_gf_analysis_trapid.py";
-        $parameters = array($clade_tax_id, $exp_id, "--label", $label, "--species_perc", $species_perc, "--top_hits", $top_hits, "--output_dir", $completeness_dir);
+        $program_location		= $base_scripts_location . "python/" . $wrapper_script;
+        $parameters = array($clade_tax_id, $exp_id, "--label", $label, "--species_perc", $species_perc, "--top_hits", $top_hits, "--output_dir", $completeness_dir, "--trapid_db", TRAPID_DB_NAME);
         $command_line		= "python ".$program_location." ".implode(" ",$parameters);
         fwrite($fh,$command_line."\n");
         fclose($fh);

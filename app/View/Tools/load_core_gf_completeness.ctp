@@ -102,7 +102,7 @@
                     }
                     echo "<td>" . $missing_gf["n_genes"] . "</td>";
                     echo "<td>" . $missing_gf["n_species"] . "</td>";
-                    echo "<td>" . number_format((float)$represented_gf["gf_weight"], 3, '.', '') . "</td>";
+                    echo "<td>" . number_format((float)$missing_gf["gf_weight"], 3, '.', '') . "</td>";
                     echo "</tr>";
                 }
                 echo "</tbody>
@@ -115,11 +115,19 @@
         </div>
     </div>
 </div>
-<?php if($linkout_prefix) : ?>
+<?php if($linkout_prefix): ?>
     <script>
         // Redirect to external GF page
         function redirectToPage(gf_id) {
-            var linkout_url = "<?php echo $linkout_prefix; ?>gene_families/view/" + gf_id;
+            <?php
+                if($db_type == "plaza") {
+                    $linkout_url = $linkout_prefix . "gene_families/view/";
+                }
+                elseif ($db_type == "eggnog"){
+                    $linkout_url = $linkout_prefix . "#/app/results?target_nogs=";
+                }
+            ?>
+            var linkout_url = "<?php echo $linkout_url; ?>" + gf_id;
             window.open(linkout_url, '_blank');
         }
         // On click of a gf in a `.gf-table`, trigger the redirect function
@@ -131,4 +139,4 @@
         });
 
     </script>
-<? endif; ?>
+<?php endif; ?>
