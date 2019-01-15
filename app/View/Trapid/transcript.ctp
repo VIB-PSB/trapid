@@ -77,6 +77,20 @@
 			</span>
                         <?php endif; ?>
                 </dd>
+                <?php if($exp_info['perform_tax_binning'] == 1): ?>
+                    <dt>Tax. classification</dt>
+                    <dd>
+                        <?php if($transcript_txid == 0) {
+                        echo $transcript_txname;
+                    }
+                    else {
+                        // Linkout to NCBI taxonomy
+                        $ncbi_linkout_prefix = "https://www.ncbi.nlm.nih.gov/Taxonomy/Browser/wwwtax.cgi?id=";
+                        echo "<a href=\"" . $ncbi_linkout_prefix . $transcript_txid . "\" target=\"_blank\" class=\"linkout\" title=\"View on NCBI Taxonomy\">" . $transcript_txname . "</a>";
+                    }
+    ?>
+                    </dd>
+                <?php endif; ?>
                 <dt>Uploaded sequence</dt>
                 <dd>
                     <div>

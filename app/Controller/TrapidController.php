@@ -10,9 +10,9 @@ class TrapidController extends AppController{
 
   var $uses	= array('Authentication', 'AnnotSources', 'Annotation', 'CleanupDate', 'CleanupExperiments',
                     'Configuration', 'DataSources', 'DataUploads', 'ExperimentJobs', 'ExperimentLog', 'Experiments',
-                    'ExtendedGo', 'GeneFamilies', 'GfData', 'GoParents', 'HelpTooltips', 'ProteinMotifs',
+                    'ExtendedGo', 'FullTaxonomy', 'GeneFamilies', 'GfData', 'GoParents', 'HelpTooltips', 'ProteinMotifs',
                     'SharedExperiments', 'Similarities', 'Transcripts', 'TranscriptsGo', 'TranscriptsInterpro',
-                    'TranscriptsLabels', 'TranscriptsPagination', 'RnaSimilarities'
+                    'TranscriptsLabels', 'TranscriptsPagination', 'TranscriptsTax', 'RnaSimilarities'
                     );
 
   var $components	= array("Cookie", "TrapidUtils", "Sequence", "Session");
@@ -807,7 +807,14 @@ class TrapidController extends AppController{
     // pr($transcript_info);
     // If no `$transcript_info` (i.e. `$transcript_id` is invalid), redirect to experiment page.
     if(!$transcript_info){$this->redirect(array("controller"=>"trapid","action"=>"experiment",$exp_id));}
-    if($transcript_info['Transcripts']['orf_sequence'] !=""){
+
+      // TODO: don't retrieve the binary sequences in the first place, instead of overwriting them like now!
+      // Get sequence data associated to this transcript (need to `uncompress` from the database)
+      $transcript_sqces = $this->Transcripts->getAllSqces($exp_id, $transcript_id);
+      foreach($transcript_sqces as $sqce_type=>$sqce_str) {
+          $transcript_info['Transcripts'][$sqce_type] = $sqce_str;
+      }
+      if($transcript_info['Transcripts']['orf_sequence'] !=""){
       $transcript_info['Transcripts']['aa_sequence'] = $this->Sequence->translate_cds_php($transcript_info['Transcripts']['orf_sequence']);
     }
 
@@ -871,11 +878,11 @@ class TrapidController extends AppController{
     }
     // TODO: don't retrieve the binary sequences in the first place, instead of overwriting them like now!
     // Get sequence data associated to this transcript (need to `uncompress` from the database)
-    $transcript_sqces = $this->Transcripts->getAllSqces($exp_id, $transcript_id);
+    // $transcript_sqces = $this->Transcripts->getAllSqces($exp_id, $transcript_id);
     // Add retrieved sequence data to `transcript_info`.
-    foreach($transcript_sqces as $sqce_type=>$sqce_str) {
-      $transcript_info['Transcripts'][$sqce_type] = $sqce_str;
-    }
+//    foreach($transcript_sqces as $sqce_type=>$sqce_str) {
+//      $transcript_info['Transcripts'][$sqce_type] = $sqce_str;
+//    }
     $this->set("transcript_info",$transcript_info['Transcripts']);
     //pr($transcript_info['Transcripts']);
     //go and interpro information
@@ -899,6 +906,24 @@ class TrapidController extends AppController{
     $transcript_subsets	= $this->TrapidUtils->reduceArray($transcript_subsets,"TranscriptsLabels","label");
     $this->set("available_subsets",$available_subsets);
     $this->set("transcript_subsets",$transcript_subsets);
+
+    // Taxonomic classification information (if this step was performed during initial processing)
+    if($exp_info['perform_tax_binning'] == 1) {
+        $unclassified_str = "Unclassified";
+        $transcript_txid = $this->TranscriptsTax->find("first", array("conditions"=>array("experiment_id"=>$exp_id, "transcript_id"=>$transcript_id), "fields"=>"txid"));
+        $transcript_txid = $transcript_txid['TranscriptsTax']['txid'];
+        // If the transcript was unclassified, set name of clade to 'Unclassified'
+        if($transcript_txid == 0) {
+            $transcript_txname = $unclassified_str;
+        }
+        // Otherwise retrieve taxonomy data from `full_taxonomy`
+        else {
+            $transcript_txname = $this->FullTaxonomy->find("first", array("fields"=>array("scname"), "conditions"=>array("txid"=>$transcript_txid)));
+            $transcript_txname = $transcript_txname["FullTaxonomy"]["scname"];
+        }
+        $this->set("transcript_txid", $transcript_txid);
+        $this->set("transcript_txname", $transcript_txname);
+    }
 
     // Help tooltips
     $tooltips = $this->TrapidUtils->indexArraySimple(
@@ -1592,6 +1617,7 @@ class TrapidController extends AppController{
    * For zipped files, we apply some extra tests to see whether we're not dealing with a zip-bomb.
    */
   function import_data($exp_id=null){
+
     Configure::write("debug",1);
     // $exp_id	= mysql_real_escape_string($exp_id);
     parent::check_user_exp($exp_id);
