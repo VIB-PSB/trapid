@@ -24,7 +24,7 @@
                 <div class="col-md-6">
                     <br>
                 <ul>
-                    <li><strong>Core GF completeness score</strong>: <?php echo $completeness_score;?></li>
+                    <li><strong>Core GF completeness score</strong>: <?php echo number_format((float)$completeness_score, 3, '.', ',');?></li>
                     <li><strong>Represented core GFs</strong>: <?php echo $n_represented . " / " . $n_total;?></li>
                     <li><strong>Missing core GFs</strong>: <?php echo $n_missing . " / " . $n_total;?></li>
                     <li><strong>Transcript subset</strong>: <code><?php echo $label;?></code></li>

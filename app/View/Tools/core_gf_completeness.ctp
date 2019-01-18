@@ -58,11 +58,14 @@ echo $this->Html->css('https://cdn.rawgit.com/jshjohnson/Choices/3e889633/assets
             echo "</div>";
             }
             ?>
-            <?php echo $this->Form->create(false, array("action" => "core_gf_completeness/" . $exp_id, "type" => "post", "default"=>"false", "id"=>"completeness-form")); ?>
+            <?php
+                // echo $this->Form->create(false, array("action" => "core_gf_completeness/" . $exp_id, "type" => "post", "default"=>"false", "id"=>"completeness-form"));
+                echo $this->Form->create(false, array("type" => "post", "default"=>"false", "id"=>"completeness-form"));
+            ?>
 
             <div class="row">
                     <!-- Data -->
-                <div class="col-lg-5">
+                <div class="col-lg-6">
                     <div class="panel panel-default">
                         <div class="panel-heading"><h3 class="panel-title">Data</h3></div>
                         <div class="panel-body">
@@ -86,6 +89,10 @@ echo $this->Html->css('https://cdn.rawgit.com/jshjohnson/Choices/3e889633/assets
                                         <?php echo $this->element("help_tooltips/create_tooltip", array("tooltip_text"=>$tooltips['core_gf_clade'], "tooltip_placement"=>"top", "use_html"=>true)); ?>
                                         <select class="form-control" id="clade" name="clade" placeholder="Clade selection" required>
                                             <option placeholder>Select clade</option>
+                                            <?php foreach($core_gf_clades as $tax_id=>$tax_name) {
+                                                echo "<option value=\"" . $tax_id . "\">" . $tax_name . " [" . $tax_id . "]</option>";
+                                            }
+                                            ?>
                                         </select>
 <!--                                        <input class="form-control" id="clade" name="clade" placeholder="Clade tax ID"-->
 <!--                                               type="text" required>-->
@@ -96,13 +103,13 @@ echo $this->Html->css('https://cdn.rawgit.com/jshjohnson/Choices/3e889633/assets
                     </div>
                 </div>
 
-                    <!-- Settings -->
-                <div class="col-lg-7">
+                <!-- Settings -->
+                <div class="col-lg-6">
                     <div class="panel panel-default" id="core-gf-settings">
                         <div class="panel-heading"><h3 class="panel-title">Settings</h3></div>
                         <div class="panel-body">
                             <div class="row">
-                                <div class="col-md-4">
+                                <div class="col-md-6">
                                     <div class="form-group">
                                         <label for="species-perc"><strong>Conservation %</strong></label>
                                         <?php echo $this->element("help_tooltips/create_tooltip", array("tooltip_text"=>$tooltips['core_gf_species_perc'], "tooltip_placement"=>"top")); ?>
@@ -110,24 +117,24 @@ echo $this->Html->css('https://cdn.rawgit.com/jshjohnson/Choices/3e889633/assets
                                                name="species-perc" step="0.01" value="0.9" required type="number">
                                     </div>
                                 </div>
-                                <div class="col-md-4">
+                                <div class="col-md-6">
                                     <div class="form-group">
                                         <label for="top-hits"><strong>Top hits</strong></label>
                                         <?php echo $this->element("help_tooltips/create_tooltip", array("tooltip_text"=>$tooltips['core_gf_top_hits'], "tooltip_placement"=>"top")); ?>
                                         <input class="form-control" id="top-hits" max="10" min="1" name="top-hits"
-                                               step="1" value="5" required type="number">
+                                               step="1" value="1" required type="number">
                                     </div>
                                 </div>
-                                <div class="col-md-4">
-                                    <div class="form-group">
-                                        <label for="tax-radio"><strong>Taxonomy source</strong></label>
-                                        <?php echo $this->element("help_tooltips/create_tooltip", array("tooltip_text"=>$tooltips['core_gf_tax_source'], "tooltip_placement"=>"top")); ?>
-                                        <div class="radio" id="tax-radio" name="tax-radio">
-                                            <label><input type="radio" name="tax-radio-ncbi" checked>NCBI</label>
-                                            <label class="unavailable"><input type="radio" name="tax-radio-db" disabled>PLAZA</label>
-                                        </div>
-                                    </div>
-                                </div>
+<!--                                <div class="col-md-4">-->
+<!--                                    <div class="form-group">-->
+<!--                                        <label for="tax-radio"><strong>Taxonomy source</strong></label>-->
+<!--                                        --><?php //echo $this->element("help_tooltips/create_tooltip", array("tooltip_text"=>$tooltips['core_gf_tax_source'], "tooltip_placement"=>"top")); ?>
+<!--                                        <div class="radio" id="tax-radio" name="tax-radio">-->
+<!--                                            <label><input type="radio" name="tax-radio-ncbi" checked>NCBI</label>-->
+<!--                                            <label class="unavailable"><input type="radio" name="tax-radio-db" disabled>PLAZA</label>-->
+<!--                                        </div>-->
+<!--                                    </div>-->
+<!--                                </div>-->
 
                             </div>
                         </div>
@@ -156,7 +163,7 @@ echo $this->Html->css('https://cdn.rawgit.com/jshjohnson/Choices/3e889633/assets
                     <thead>
                     <th>Phylogenetic clade</th>
                     <th>Transcript subset</th>
-                    <th>Used taxonomy</th>
+<!--                    <th>Used taxonomy</th>-->
                     <th>Conservation threshold</th>
                     <th>Top hits</th>
                     <th>Completeness score</th>
@@ -180,10 +187,10 @@ echo $this->Html->css('https://cdn.rawgit.com/jshjohnson/Choices/3e889633/assets
                         } else {
                             echo "<td>" . $completeness_job['CompletenessResults']['label'] . "</td>";
                         }
-                        echo "<td>" . $tax_source ."</td>";
+//                        echo "<td>" . $tax_source ."</td>";
                         echo "<td>" . $species_perc ."</td>";
                         echo "<td>" . $top_hits ."</td>";
-                        echo "<td>" . $completeness_job['CompletenessResults']['completeness_score'] . "</td>";
+                        echo "<td>" . number_format((float)$completeness_job['CompletenessResults']['completeness_score'], 3, '.', ',') . "</td>";
                         echo "<td><a class=\"result_link\" id=\"" . "results_".implode("_", array($completeness_job['CompletenessResults']['clade_txid'], $completeness_job['CompletenessResults']['label'], $tax_source, $species_perc, $top_hits)) . "\">View results</a></td>";
                         echo "<td style=\"text-align:center;\">".$this->Html->link("<span class='material-icons'>delete</span>",
                                 array("controller"=>"tools","action"=>"delete_core_gf_results", $exp_id,
@@ -279,6 +286,7 @@ echo $this->Html->css('https://cdn.rawgit.com/jshjohnson/Choices/3e889633/assets
      * Adapted/simplified from: https://github.com/jshjohnson/Choices/issues/162 */
 
     // Some configuration and variables for ajax calls
+/*
     var ajaxUrl = "<?php echo $this->Html->url(array("controller" => "tools", "action" => "search_tax")); ?>";
     var lookupDelay = 250;
     var lookupTimeout = null;
@@ -295,6 +303,11 @@ echo $this->Html->css('https://cdn.rawgit.com/jshjohnson/Choices/3e889633/assets
 
     // Construct the Choices object
     var choices = new Choices(choices_elmt, config);
+*/
+    var choices_elmt = document.getElementById("clade");
+    var choices = new Choices(choices_elmt);
+
+/*
 
     // Function to perform the lookup.
     var serverLookup = function () {
@@ -336,6 +349,8 @@ echo $this->Html->css('https://cdn.rawgit.com/jshjohnson/Choices/3e889633/assets
     choices_elmt.addEventListener('choice', function (event) {
         choices.setChoices([], 'value', 'label', true);
     });
+
+*/
 
     // Resize bar chart on toggling of the side menu
     // TODO: implement that everywhere where we have highcharts?

@@ -12,6 +12,7 @@ class ToolsController extends AppController{
   var $uses		= array(
   // TRAPID core db
   "Authentication",
+  "Configuration",
   "Experiments",
   "DataSources",
   "Transcripts",
@@ -2166,6 +2167,19 @@ function label_go_intersection($exp_id=null,$label=null){
         $subsets = $this->TranscriptsLabels->getLabels($exp_id);
         $this->set("subsets", $subsets);
 
+        // Get list of valid clades for the current reference database to populate submission form
+        $core_gf_clades = array();
+        $core_gf_clade_str = $this->Configuration->find("first", array('conditions'=>array('method'=>'completeness_parameters', 'key'=>$exp_info['used_plaza_database'], 'attr'=>'clade_list'), 'fields'=>array('value')));
+        $core_gf_tax_ids = explode(';', $core_gf_clade_str['Configuration']['value']);
+        // Get name corresponding to tax_ids for proper display
+        // Note: Wouldn't it make more sense to run only one query using all tax ids?
+        foreach($core_gf_tax_ids as $tax_id) {
+            $tax_name = $this->FullTaxonomy->find("first", array("fields"=>array("scname"), "conditions"=>array("txid"=>$tax_id)));
+            $tax_name = $tax_name["FullTaxonomy"]["scname"];
+            $core_gf_clades[$tax_id] = $tax_name;
+        }
+        asort($core_gf_clades);
+        $this->set("core_gf_clades", $core_gf_clades);
 
         // Check whether the number of jobs in the queue for this experiment has not been reached.
         // If there are already too many jobs running, it should not be possible to submit a new job (TODO).
@@ -2177,6 +2191,7 @@ function label_go_intersection($exp_id=null,$label=null){
                 $clade_tax_id = $this->request->data['clade'];
                 $clade_db = $this->FullTaxonomy->find("first",array("conditions"=>array("txid"=>$clade_tax_id)));
                 // If clade not in `full_taxonomy`, do not launch job and return error message.
+                // TODO: change to also check if the clade is in the valid cclade list of the reference database
                 if(empty($clade_db)){
                     // To change (does not look clean). Move to 'job handling' function?
                     $this->autoRender=false;
@@ -2187,10 +2202,10 @@ function label_go_intersection($exp_id=null,$label=null){
                 if($this->request->data['transcripts-choice'] != "all"){
                     $transcript_label = $this->request->data['transcripts-choice'];
                 }
-                $tax_source = "json";
-                if($this->request->data['tax-radio-ncbi'] == "on") {
+//                $tax_source = "json";
+//                if($this->request->data['tax-radio-ncbi'] == "on") {
                     $tax_source = "ncbi";
-                }
+//                }
                 $species_perc = $this->request->data['species-perc'];
                 $top_hits = $this->request->data['top-hits'];
                 // Check if an identical job exists. If yes, just load the existing completeness results.
@@ -2235,7 +2250,7 @@ function label_go_intersection($exp_id=null,$label=null){
                 $this->ExperimentLog->addAction($exp_id,"core_gf_completeness","options", 1);
                 $this->ExperimentLog->addAction($exp_id,"core_gf_completeness_options","conservation_threshold=".$species_perc,2);
                 $this->ExperimentLog->addAction($exp_id,"core_gf_completeness_options","top_hits=".$top_hits, 2);
-                $this->ExperimentLog->addAction($exp_id,"core_gf_completeness_options","tax_source"." ncbi", 2);
+//                $this->ExperimentLog->addAction($exp_id,"core_gf_completeness_options","tax_source"." ncbi", 2);
                 $this->redirect(array("controller"=>"tools", "action"=>"handle_core_gf_completeness", $exp_id, $cluster_job, $clade_tax_id, $transcript_label, $tax_source, $species_perc, $top_hits));
             }
     }
@@ -2303,7 +2318,6 @@ function label_go_intersection($exp_id=null,$label=null){
         }
 
         // Get linkout prefix if it is allowed, otherwise return null
-        // TODO: adapt linkouts to EggNOG
         if($exp_info['allow_linkout']){
             $linkout_prefix =  $exp_info['datasource_URL'];
         }
