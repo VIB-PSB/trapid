@@ -14,12 +14,19 @@ import sys
 import time
 from ConfigParser import ConfigParser
 
+TOP_GOS = {'GO:0003674', 'GO:0008150', 'GO:0005575'}
 
-cmd_parser = argparse.ArgumentParser(
-    description='''Run Infernal, keep only best non-overlapping hits, upload results to TRAPID db. ''',
-    formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-cmd_parser.add_argument('ini_file_initial', type=str,
-                        help='Initial processing configuration file (generated upon initial processing start)')
+
+
+def parse_arguments():
+    """Parse command-line arguments and return them as dictionary"""
+    cmd_parser = argparse.ArgumentParser(
+        description='''Run Infernal, keep only best non-overlapping hits, upload results to TRAPID db. ''',
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+    cmd_parser.add_argument('ini_file_initial', type=str,
+                            help='Initial processing configuration file (generated upon initial processing start)')
+    cmd_args = cmd_parser.parse_args()
+    return vars(cmd_args)
 
 
 def load_config(ini_file_initial):
@@ -241,6 +248,155 @@ def store_rna_families(exp_id, trapid_db_data, infernal_results):
     db_conn.close()
 
 
+def retrieve_rfam_go_data(trapid_db_data):
+    """Retrieve RFAM GO annotation stored the `configuration` table of TRAPID's database. Return it as cm:gos dict. """
+    sys.stderr.write("[Message] Retrieve RFAM GO annotation from `configuration`.\n")
+    rfam_go = {}
+    query_str = "SELECT `key`, `value` FROM `configuration` WHERE `method`='rfam_annotation' AND `attr`='go'"
+    db_conn = common.db_connect(*trapid_db_data)
+    cursor = db_conn.cursor(MS.cursors.DictCursor)
+    cursor.execute(query_str)
+    for record in cursor.fetchall():
+        rfam_go[record['key']] = record['value'].split(',')
+    db_conn.close()
+    return rfam_go
+
+
+def get_go_data(reference_db_data):
+    """
+    Get GO data (hierarchy, alternative IDs, aspects) from the used reference database. Return the retrieved data as dictionary.
+    """
+    sys.stderr.write("[Message] Fetch GO data from ref. DB (%s)... \n" % reference_db_data[-1])
+    go_dict = {}
+    func_data_query = "SELECT `name`, `desc`, `alt_ids`, `is_obsolete`, `replacement`, `info` FROM `functional_data` WHERE `type`='go';"
+    func_parents_query = "SELECT `child`, `parent` from `functional_parents` WHERE `type`='go';"
+    go_dict = {}
+    # 1. Read `functional_data` table
+    ref_db_conn = common.db_connect(*reference_db_data)
+    cursor = ref_db_conn.cursor(MS.cursors.DictCursor)
+    cursor.execute(func_data_query)
+    for record in cursor.fetchall():
+        is_obsolete = False
+        replace_by = None
+        alt_ids = set([])
+        if record['is_obsolete'] == 1:
+            is_obsolete = True
+            replace_by = record['replacement']
+        if record['alt_ids'] != '':
+            alt_ids = set(record['alt_ids'].split(','))
+        go_dict[record['name']] = {'desc': record['desc'], 'aspect': record['info'], 'parents': set([]), 'children': set([]),
+                                   'is_obsolete': is_obsolete, 'alt_ids': alt_ids, 'replace_by': replace_by}
+    # 2. Retrieve GO hierarchy from `functional_parents` table, then populate `go_dict` with parents
+    go_parents = {}
+    go_children = {}
+    cursor.execute(func_parents_query)
+    for record in cursor.fetchall():
+        child = record['child']
+        parent = record['parent']
+        if child not in go_parents:
+            go_parents[child] = set([parent])
+        else:
+            go_parents[child].add(parent)
+        if parent not in go_children:
+            go_children[parent] = set([child])
+        else:
+            go_children[parent].add(child)
+    ref_db_conn.close()
+    # Now populate `go_dict` with parents/children and return it
+    for go in go_dict:
+        if not go_dict[go]['is_obsolete']:
+            if go in go_parents:
+                go_dict[go]['parents'].update(go_parents[go])
+            else:
+                sys.stderr.write("[Warning] No parents found for '%s'.\n" % go)
+            if go in go_children:
+                go_dict[go]['children'].update(go_children[go])
+            # else:
+            #     sys.stderr.write("[Warning] No children found for '%s'.\n" % go)
+    return go_dict
+
+
+def get_alt_gos(go_dict):
+    """
+    Return an alt_id:go mapping dictionary from information retrieved from `go_dict`.
+    """
+    alt_gos = {}
+    for go in go_dict:
+        if go_dict[go]['alt_ids']:
+            for alt_go in go_dict[go]['alt_ids']:
+                alt_gos[alt_go] = go
+    return alt_gos
+
+
+def get_go_parents(transcript_annotation, go_dict):
+    """
+    For a given transcript, retrieve GO parents from `go_dict`. Return parents as dictionary (go_aspect:go_parents)
+    """
+    go_parents = set()
+    for go in transcript_annotation:
+            go_parents.update(go_dict[go]['parents'])
+    return go_parents
+
+
+def perform_go_annotation(infernal_results, trapid_db_data, go_data, rfam_go, exp_id, chunk_size=10000):
+    """
+    Populate `transcripts_annotation` table of TRAPID DB with GO annotation from RFAM.
+    """
+    sys.stderr.write("[Message] Perform GO annotation.\n")
+    go_annot_query = "INSERT INTO `transcripts_annotation` (`experiment_id`, `type`, `transcript_id`, `name`, `is_hidden`) VALUES (%s, 'go', %s, %s, %s)"
+    go_annot_values = []  # A list to store values to insert
+    # Create final set of GO annotations for all transcripts: replace obsolete/alt. GOs, and retrieve parental terms
+    # We ignore GO terms that do not exist in `go_data`
+    transcript_gos = {}
+    alt_gos = get_alt_gos(go_data)  # Alternative GO to 'regular' GO mapping
+    for result_rec in infernal_results:
+        transcript = result_rec['query']
+        cm_acc = result_rec['cm_acc']
+        if transcript not in transcript_gos:
+            transcript_gos[transcript] = set()
+        for go in rfam_go[cm_acc]:
+            is_valid = True
+            go_term = go
+            # Check if GO term is alternative and replace it
+            if go_term in alt_gos:
+                go_term = alt_gos[go_term]
+            # Check if GO term is obsolete and replace it by the term in `replace_by`.
+            if go_term in go_data and go_data[go_term]['is_obsolete']:
+                go_term = go_data[go_term]['replace_by']
+            if go_term not in go_data:
+                is_valid = False  # i.e. we couldn't replace the GO (not alt. ID or obsolete) + not found -> invalid
+            # If the GO term is valid it is added to `transcript_annotations`
+            if is_valid:
+                transcript_gos[transcript].add(go_term)
+    # Add parental GOs and filter top GOs
+    for transcript in transcript_gos:
+        go_parents =  get_go_parents(transcript_gos[transcript], go_data)
+        transcript_gos[transcript].update(go_parents)
+        transcript_gos[transcript] = transcript_gos[transcript] - TOP_GOS
+
+    # Create a list of tuples with the values to insert
+    for transcript, gos in transcript_gos.items():
+        for go in gos:
+            is_hidden = 1
+            # If term has no children in the associated transcript's GO terms, `is_hidden` equals 0
+            if not go_data[go]['children'] & gos:
+                is_hidden = 0
+                # print "yeah boy " + go
+            values = (exp_id, transcript, go, is_hidden)
+            go_annot_values.append(values)
+
+    # Populate `transcripts_annotation`
+    trapid_db_conn = common.db_connect(*trapid_db_data)
+    trapid_db_conn.autocommit = False
+    cursor = trapid_db_conn.cursor()
+    sys.stderr.write("[Message] %d rows to insert!\n" % len(go_annot_values))
+    for i in range(0, len(go_annot_values), chunk_size):
+        cursor.executemany(go_annot_query, go_annot_values[i:min(i+chunk_size, len(go_annot_values))])
+        sys.stderr.write("[Message] %s: Inserted %d rows...\n" % (time.strftime('%H:%M:%S'), chunk_size))
+    trapid_db_conn.commit()
+    trapid_db_conn.close()
+
+
 # TODO: clean up transcripts table
 # TODO: more results filtering...
 def main(config_dict):
@@ -249,9 +405,11 @@ def main(config_dict):
     tmp_exp_dir = config_dict["experiment"]["tmp_exp_dir"]
     rfam_dir = config_dict["infernal"]["rfam_dir"]
     exp_clans = config_dict["infernal"]["rfam_clans"].split(",")
-    # A list containing all needed parameters for `common.db_connect()`
+    # Lists containing all needed parameters for `common.db_connect()` (TRAPID + reference DB)
     trapid_db_data = [config['trapid_db']['trapid_db_username'], config['trapid_db']['trapid_db_password'],
                       config['trapid_db']['trapid_db_server'], config['trapid_db']['trapid_db_name']]
+    reference_db_data = [config['reference_db']['reference_db_username'], config['reference_db']['reference_db_password'],
+                         config['reference_db']['reference_db_server'], config['reference_db']['reference_db_name']]
     db_connection = common.db_connect(*trapid_db_data)
     common.update_experiment_log(experiment_id=exp_id, action='start_nc_rna_search', params='Infernal', depth=2, db_conn=db_connection)
     db_connection.close()
@@ -269,6 +427,10 @@ def main(config_dict):
     store_rna_similarities(exp_id=exp_id, trapid_db_data=trapid_db_data, infernal_results=infernal_results)
     # ... and `rna_families`
     store_rna_families(exp_id=exp_id, trapid_db_data=trapid_db_data, infernal_results=infernal_results)
+    # Annotate transcripts using GO terms from RFAM
+    rfam_go = retrieve_rfam_go_data(trapid_db_data=trapid_db_data)
+    go_data = get_go_data(reference_db_data=reference_db_data)
+    perform_go_annotation(infernal_results=infernal_results, trapid_db_data=trapid_db_data, go_data=go_data, rfam_go=rfam_go, exp_id=exp_id)
     # That's it for now... More soon!
 
     db_connection = common.db_connect(*trapid_db_data)
@@ -277,10 +439,10 @@ def main(config_dict):
 
 
 if __name__ == '__main__':
-    cmd_args = cmd_parser.parse_args()
+    cmd_args = parse_arguments()
     sys.stderr.write('[Message] Starting ncRNA annotation procedure: %s\n'  % time.strftime('%Y/%m/%d %H:%M:%S'))
     # Read experiment's initial processing configuration file
-    config = load_config(cmd_args.ini_file_initial)
+    config = load_config(cmd_args['ini_file_initial'])
     # Run Infernal, parse and export results to DB
     main(config_dict=config)
     sys.stderr.write('[Message] Finished ncRNA annotation procedure: %s\n'  % time.strftime('%Y/%m/%d %H:%M:%S'))
