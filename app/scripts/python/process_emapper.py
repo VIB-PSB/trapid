@@ -138,25 +138,34 @@ def get_go_data(ref_db_conn):
             replace_by = record['replacement']
         if record['alt_ids'] != '':
             alt_ids = set(record['alt_ids'].split(','))
-        go_dict[record['name']] = {'desc': record['desc'], 'aspect': record['info'], 'parents': set([]),
+        go_dict[record['name']] = {'desc': record['desc'], 'aspect': record['info'], 'parents': set([]), 'children': set([]),
                                    'is_obsolete': is_obsolete, 'alt_ids': alt_ids, 'replace_by': replace_by}
     # 2. Retrieve GO hierarchy from `functional_parents` table, then populate `go_dict` with parents
-    go_hierarchy = {}
+    go_parents = {}
+    go_children = {}
     cursor.execute(func_parents_query)
     for record in cursor.fetchall():
         child = record['child']
         parent = record['parent']
-        if child not in go_hierarchy:
-            go_hierarchy[child] = set([parent])
+        if child not in go_parents:
+            go_parents[child] = set([parent])
         else:
-            go_hierarchy[child].add(parent)
-    # Now populate `go_dict` with parents
+            go_parents[child].add(parent)
+        if parent not in go_children:
+            go_children[parent] = set([child])
+        else:
+            go_children[parent].add(child)
+    # Now populate `go_dict` with parents and children
     for go in go_dict:
         if not go_dict[go]['is_obsolete']:
-            if go in go_hierarchy:
-                go_dict[go]['parents'].update(go_hierarchy[go])
+            if go in go_parents:
+                go_dict[go]['parents'].update(go_parents[go])
             else:
                 sys.stderr.write("[Warning] No parents found for '%s'.\n" % go)
+            if go in go_children:
+                go_dict[go]['children'].update(go_children[go])
+            # else:
+            #     sys.stderr.write("[Warning] No children found for '%s'.\n" % go)
     return go_dict
 
 
@@ -182,11 +191,33 @@ def get_go_parents(transcript_annotation, go_dict):
     return go_parents
 
 
-def perform_go_annotation(emapper_results, trapid_db_conn, go_data, exp_id, chunk_size=10000):
+def read_rfam_go_data(rfam_go_file):
+    """
+    Read RFAM GO data file produced by `run_infernal.py` (GO terms transferred transitively to transcripts having Infernal hits).
+    Return its content as transcript:gos dictionary
+    """
+    sys.stderr.write("[Message] Read RFAM GO annotation from '%s'\n" % rfam_go_file)
+    rfam_transcript_gos = {}
+    if not os.path.exists(rfam_go_file):
+        sys.stderr.write("[Warning] RFAM GO annotation file '%s' not found!\n" % rfam_go_file)
+        return rfam_transcript_gos
+    with open(rfam_go_file, 'r') as in_file:
+        for line in in_file:
+            splitted = line.strip().split('\t')
+            transcript = splitted[1]
+            go = splitted[2]
+            if transcript not in rfam_transcript_gos:
+                rfam_transcript_gos[transcript] = set([go])
+            else:
+                rfam_transcript_gos[transcript].add(go)
+    return rfam_transcript_gos
+
+
+def perform_go_annotation(emapper_results, rfam_transcript_gos, trapid_db_conn, go_data, exp_id, chunk_size=15000):
     """
     Populate `transcripts_annotation` table of TRAPID DB with GO annotation from emapper's results.
     """
-    sys.stderr.write("[Message] Preform GO annotation...\n")
+    sys.stderr.write("[Message] Perform GO annotation...\n")
     go_annot_query = "INSERT INTO `transcripts_annotation` (`experiment_id`, `type`, `transcript_id`, `name`, `is_hidden`) VALUES (%s, 'go', %s, %s, %s)"
     go_annot_values = []
 
@@ -203,26 +234,34 @@ def perform_go_annotation(emapper_results, trapid_db_conn, go_data, exp_id, chun
                 go_term = alt_gos[go_term]
             # Check if GO term is obsolete and replace it by the term in `replace_by`.
             if go_term in go_data and go_data[go_term]['is_obsolete']:
-                go_term = go_dict[go_term]['replace_by']
+                go_term = go_data[go_term]['replace_by']
             if go_term not in go_data:
                 is_valid = False  # i.e. we couldn't replace the GO (not alt. ID or obsolete) + not found -> invalid
             # If the GO term is valid it is added to `transcript_annotations`
             if is_valid:
                 transcript_gos[transcript].add(go_term)
+
+    # Add GO terms derived from Infernal/RFAM to `transcript_gos`
+    for transcript, gos in rfam_transcript_gos.items():
+        if transcript not in transcript_gos:
+            transcript_gos[transcript] = gos
+        else:
+            sys.stderr.write("[Warning] transcript both in emapper's and infernal's output: %s. \n" % transcript)
+            transcript_gos[transcript].update(gos)
+
     # Add parental GOs and filter top GOs
     for transcript in transcript_gos:
         go_parents =  get_go_parents(transcript_gos[transcript], go_data)
         transcript_gos[transcript].update(go_parents)
         transcript_gos[transcript] = transcript_gos[transcript] - TOP_GOS
-    print transcript_gos
+    # print transcript_gos
 
     # Create a list of tuples with the values to insert
     for transcript, gos in transcript_gos.items():
         for go in gos:
             is_hidden = 1
-            all_children = set([k for k in go_data if go in go_data[k]['parents']])
             # If term has no children in the associated transcript's GO terms, `is_hidden` equals 0
-            if not all_children & gos:
+            if not go_data[go]['children'] & gos:
                 is_hidden = 0
             values = (exp_id, transcript, go, is_hidden)
             go_annot_values.append(values)
@@ -230,9 +269,11 @@ def perform_go_annotation(emapper_results, trapid_db_conn, go_data, exp_id, chun
     # Populate `transcripts_annotation`
     trapid_db_conn.autocommit = False
     cursor = trapid_db_conn.cursor()
+    sys.stderr.write("[Message] %d rows to insert!\n" % len(go_annot_values))
     for i in range(0, len(go_annot_values), chunk_size):
         # print go_annot_values[i:min(i+chunk_size, len(go_annot_values))]  # Debug
         cursor.executemany(go_annot_query, go_annot_values[i:min(i+chunk_size, len(go_annot_values))])
+        sys.stderr.write("[Message] %s: Inserted %d rows...\n" % (time.strftime('%H:%M:%S'), chunk_size))
     trapid_db_conn.commit()
 
 
@@ -240,7 +281,7 @@ def perform_ko_annotation(emapper_results, trapid_db_conn, exp_id, chunk_size=10
     """
     Populate `transcripts_annotation` table of TRAPID DB with KO annotation from emapper's results.
     """
-    sys.stderr.write("[Message] Preform KO annotation...\n")
+    sys.stderr.write("[Message] Perform KO annotation...\n")
     ko_annot_query = "INSERT INTO `transcripts_annotation` (`experiment_id`, `type`, `transcript_id`, `name`, `is_hidden`) VALUES (%s, 'ko', %s, %s, %s)"
     ko_annot_values = []
 
@@ -290,8 +331,11 @@ def main(ini_file_initial):
     go_data = get_go_data(db_conn)
     db_conn.close()
     # Perform GO annotation
+    # Read RFAM GO data
+    rfam_go_file = os.path.join(config['experiment']['tmp_exp_dir'], "rfam_go_data.tsv")
+    rfam_transcript_gos = read_rfam_go_data(rfam_go_file)
     db_conn = common.db_connect(*trapid_db_data)
-    perform_go_annotation(emapper_results, db_conn, go_data, exp_id)
+    perform_go_annotation(emapper_results, rfam_transcript_gos, db_conn, go_data, exp_id)
     db_conn.close()
 
     # Perform KO annotation

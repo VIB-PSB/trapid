@@ -34,7 +34,9 @@ import java.util.TreeMap;
  */
 public class InitialTranscriptsProcessing {
 
+    // Minimum GF size required to perfrom meta-annotation
 	public static final int META_MIN_GF_SIZE		= 5;
+    // GF outlier percentage to remove (meta-annotation)
 	public static final double META_PERC_REMOVE		= 0.05;
 
 	public enum GF_TYPE {NONE,HOM,IORTHO};
@@ -328,6 +330,15 @@ public class InitialTranscriptsProcessing {
 			plaza_db_connection.close();
 			trapid_db_connection.close();
 
+
+            // Step 4.a.: also add GO terms derived from Infernal/RFAM to `transcript_go`
+            String tmp_dir = similarity_search_file.replaceAll("[^/]+m8$", "");
+            // Get name of the file containing the RFAM GO data
+            String rfam_go_file = tmp_dir + "rfam_go_data.tsv";
+            // Update `transcript_go`
+            transcript_go = itp.addTranscriptRfamGoData(transcript_go, rfam_go_file);
+
+
 			plaza_db_connection			= itp.createDbConnection(plaza_database_server,plaza_database_name,plaza_database_login,plaza_database_password);
 			trapid_db_connection		= itp.createDbConnection(trapid_server,trapid_name,trapid_login,trapid_password);
 			Map<String,Map<String,Integer>>	transcript_go_hidden	= itp.hideGoTerms(plaza_db_connection, transcript_go);
@@ -610,8 +621,8 @@ public class InitialTranscriptsProcessing {
 				if (topHit.equals(currentHit)){
 					int start = Integer.parseInt(simsearch_data.get(gene).get(i)[2]);
 					int stop = Integer.parseInt(simsearch_data.get(gene).get(i)[3]);
-					System.out.println(start);
-					System.out.println(stop);
+					// System.out.println(start);
+					// System.out.println(stop);
 					int frame = 0;
 					char strand = ' ';
 					if (start < stop){
@@ -690,7 +701,7 @@ public class InitialTranscriptsProcessing {
 			stmt_update_frames.setString(4, "" + frameshifted);
 			stmt_update_frames.setString(5, gene);
 
-			System.out.println(stmt_update_frames.toString());
+			// System.out.println(stmt_update_frames.toString());
 			try{
 				stmt_update_frames.execute();
 			}
@@ -3369,6 +3380,56 @@ public class InitialTranscriptsProcessing {
         // Return the list
         return taxonomicResolution;
     }
+
+
+
+
+	/**
+	 * Update `transcript_go` with data read from an RFAM GO annotation file, produced by the `run_infernal.py` script
+     * (GO terms transferred transitively to transcripts having Infernal hits). This set of GO contains parental terms
+     * so there is no need to retrieve them again!
+	 * @param transcript_go transcript->GO mapping before hiding GO terms
+	 * @param rfam_go_file RFAM GO annotation file
+	 * @return Mapping from transcript to GO terms, including transcripts and GO terms from Infernal/RFAM
+	 * @throws Exception
+	 */
+	private Map<String,Set<String>> addTranscriptRfamGoData(Map<String,Set<String>> transcript_go, String rfam_go_file) throws Exception{
+
+		long t11	= System.currentTimeMillis();
+        File rfam_go = new File(rfam_go_file);
+        // If file exists, retrieve the new GO terms!
+        if(rfam_go.isFile()) {
+            try{
+                BufferedReader br = new BufferedReader(new FileReader(rfam_go));
+                for(String line; (line = br.readLine()) != null; ) {
+                    String[] splitted_line	= line.split("\t");
+                    String transcript_id = splitted_line[1].toString();
+                    String go_term = splitted_line[2].toString();
+                    if(transcript_go.keySet().contains(transcript_id)) {
+                        Set<String> go_terms = transcript_go.get(transcript_id);
+                        go_terms.add(go_term);
+                        transcript_go.put(transcript_id, go_terms);
+                    }
+                    else {
+                        Set<String> go_terms = new HashSet<String>();
+                        go_terms.add(go_term);
+                        transcript_go.put(transcript_id, go_terms);
+                    }
+                }
+            }
+            catch(Exception exc){
+                System.err.println("Problem reading content of RFAM GO file.");
+            }
+        }
+        else {
+            System.err.println("[Warning] RFAM GO annotation file \'" + rfam_go_file + "\' not found!");
+            return(transcript_go);
+        }
+        // System.out.println(transcript_go);  // Debug
+		long t12	= System.currentTimeMillis();
+        timing("Adding RFAM GO annotations",t11,t12,2);
+		return(transcript_go);
+	}
 
 
 }

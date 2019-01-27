@@ -17,7 +17,6 @@ from ConfigParser import ConfigParser
 TOP_GOS = {'GO:0003674', 'GO:0008150', 'GO:0005575'}
 
 
-
 def parse_arguments():
     """Parse command-line arguments and return them as dictionary"""
     cmd_parser = argparse.ArgumentParser(
@@ -282,7 +281,8 @@ def get_go_data(reference_db_data):
         if record['is_obsolete'] == 1:
             is_obsolete = True
             replace_by = record['replacement']
-        if record['alt_ids'] != '':
+        # if record['alt_ids'] != '':
+        if record['alt_ids']:
             alt_ids = set(record['alt_ids'].split(','))
         go_dict[record['name']] = {'desc': record['desc'], 'aspect': record['info'], 'parents': set([]), 'children': set([]),
                                    'is_obsolete': is_obsolete, 'alt_ids': alt_ids, 'replace_by': replace_by}
@@ -338,7 +338,7 @@ def get_go_parents(transcript_annotation, go_dict):
     return go_parents
 
 
-def perform_go_annotation(infernal_results, trapid_db_data, go_data, rfam_go, exp_id, chunk_size=10000):
+def perform_go_annotation(infernal_results, trapid_db_data, go_data, rfam_go, exp_id, tmp_exp_dir, chunk_size=10000):
     """
     Populate `transcripts_annotation` table of TRAPID DB with GO annotation from RFAM.
     """
@@ -365,6 +365,7 @@ def perform_go_annotation(infernal_results, trapid_db_data, go_data, rfam_go, ex
                 go_term = go_data[go_term]['replace_by']
             if go_term not in go_data:
                 is_valid = False  # i.e. we couldn't replace the GO (not alt. ID or obsolete) + not found -> invalid
+                sys.sterr.write("[Warning] Invalid GO term: %s. \n" % go_term)
             # If the GO term is valid it is added to `transcript_annotations`
             if is_valid:
                 transcript_gos[transcript].add(go_term)
@@ -381,20 +382,26 @@ def perform_go_annotation(infernal_results, trapid_db_data, go_data, rfam_go, ex
             # If term has no children in the associated transcript's GO terms, `is_hidden` equals 0
             if not go_data[go]['children'] & gos:
                 is_hidden = 0
-                # print "yeah boy " + go
             values = (exp_id, transcript, go, is_hidden)
             go_annot_values.append(values)
 
     # Populate `transcripts_annotation`
-    trapid_db_conn = common.db_connect(*trapid_db_data)
-    trapid_db_conn.autocommit = False
-    cursor = trapid_db_conn.cursor()
-    sys.stderr.write("[Message] %d rows to insert!\n" % len(go_annot_values))
-    for i in range(0, len(go_annot_values), chunk_size):
-        cursor.executemany(go_annot_query, go_annot_values[i:min(i+chunk_size, len(go_annot_values))])
-        sys.stderr.write("[Message] %s: Inserted %d rows...\n" % (time.strftime('%H:%M:%S'), chunk_size))
-    trapid_db_conn.commit()
-    trapid_db_conn.close()
+    # NOTE: the `transcripts_annotation` data is actually cleaned up in a subsequent processing step, so all results
+    # inserted now would be deleted later. Before a proper way to deal with that issue is found, a working solution is
+    # to write GO annotations to a file, that will be read afterwards to populate the table.
+    # trapid_db_conn = common.db_connect(*trapid_db_data)
+    # trapid_db_conn.autocommit = False
+    # cursor = trapid_db_conn.cursor()
+    # sys.stderr.write("[Message] %d rows to insert!\n" % len(go_annot_values))
+    # for i in range(0, len(go_annot_values), chunk_size):
+    #     cursor.executemany(go_annot_query, go_annot_values[i:min(i+chunk_size, len(go_annot_values))])
+    #     sys.stderr.write("[Message] %s: Inserted %d rows...\n" % (time.strftime('%H:%M:%S'), chunk_size))
+    # trapid_db_conn.commit()
+    # trapid_db_conn.close()
+    rfam_go_file = "rfam_go_data.tsv"
+    with open(os.path.join(tmp_exp_dir, rfam_go_file), "w") as out_file:
+        out_file.write("\n".join(["\t".join([str(val) for val in rec]) for rec in go_annot_values]))
+        out_file.write("\n")
 
 
 # TODO: clean up transcripts table
@@ -430,7 +437,8 @@ def main(config_dict):
     # Annotate transcripts using GO terms from RFAM
     rfam_go = retrieve_rfam_go_data(trapid_db_data=trapid_db_data)
     go_data = get_go_data(reference_db_data=reference_db_data)
-    perform_go_annotation(infernal_results=infernal_results, trapid_db_data=trapid_db_data, go_data=go_data, rfam_go=rfam_go, exp_id=exp_id)
+    perform_go_annotation(infernal_results=infernal_results, trapid_db_data=trapid_db_data, go_data=go_data,
+                          rfam_go=rfam_go, exp_id=exp_id, tmp_exp_dir=tmp_exp_dir)
     # That's it for now... More soon!
 
     db_connection = common.db_connect(*trapid_db_data)
