@@ -21,7 +21,8 @@ var go_descriptions_<?php echo $go_type ?> = {
 //            echo "\"" . $go_term . "\": 'aaaaaaa';\n";
         }
     }
-    $last_index = array_pop(array_keys($all_go));
+    $all_go_keys = array_keys($all_go);
+    $last_index = array_pop($all_go_keys);
     foreach ($all_go as $index=>$go_term) {
         echo "\"" . $go_term . "\": \"" . $descriptions[$go_term][0] . "\"";
         if($index != $last_index) {
@@ -31,7 +32,7 @@ var go_descriptions_<?php echo $go_type ?> = {
 
     ?>
 };
-console.log(go_descriptions_<?php echo $go_type ?>);
+//console.log(go_descriptions_<?php //echo $go_type ?>//);
         var myChart = Highcharts.chart('<?php echo $chart_div_id; ?>', {
             credits: {
                 enabled:false
@@ -56,7 +57,8 @@ console.log(go_descriptions_<?php echo $go_type ?>);
                             array_push($enrichment_data, $enrichment_results[$go_term]['go']);
                         }
                     }
-                    $last_index = array_pop(array_keys($enrichment_data));
+                    $enrichment_keys = array_keys($enrichment_data);
+                    $last_index = array_pop($enrichment_keys);
                     foreach ($enrichment_data as $index=>$enrichment) {
                         echo "'" . $enrichment . "'";
                         if($index != $last_index) {
@@ -147,7 +149,8 @@ console.log(go_descriptions_<?php echo $go_type ?>);
                             array_push($enrichment_data, $enrichment_results[$go_term]['enrichment']);
                         }
                     }
-                    $last_index = array_pop(array_keys($enrichment_data));
+                    $enrichment_keys = array_keys($enrichment_data);
+                    $last_index = array_pop($enrichment_keys);
                     foreach ($enrichment_data as $index=>$enrichment) {
                         echo $enrichment;
                         if($index != $last_index) {
@@ -170,7 +173,8 @@ console.log(go_descriptions_<?php echo $go_type ?>);
                             array_push($enrichment_data, -log10($enrichment_results[$go_term]['p-value']));
                         }
                     }
-                    $last_index = array_pop(array_keys($enrichment_data));
+                    $enrichment_keys = array_keys($enrichment_data);
+                    $last_index = array_pop($enrichment_keys);
                     foreach ($enrichment_data as $index=>$enrichment) {
                         echo $enrichment;
                         if($index != $last_index) {

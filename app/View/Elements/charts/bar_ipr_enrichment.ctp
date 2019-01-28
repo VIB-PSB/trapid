@@ -19,7 +19,8 @@ var ipr_descriptions = {
             array_push($all_ipr, $ipr);
         }
     }
-    $last_index = array_pop(array_keys($all_ipr));
+    $all_ipr_keys = array_keys($all_ipr);
+    $last_index = array_pop($all_ipr_keys);
     foreach ($all_ipr as $ipr) {
         echo "\"" . $ipr . "\": \"" . $descriptions[$ipr][0] . "\"";
         if($ipr != $last_index) {
@@ -56,7 +57,8 @@ console.log(ipr_descriptions);
                         array_push($enrichment_data, $enrichment_results[$ipr]['ipr']);
                     }
                 }
-                $last_index = array_pop(array_keys($enrichment_data));
+                $enrichment_keys = array_keys($enrichment_data);
+                $last_index = array_pop($enrichment_keys);
                 foreach ($enrichment_data as $index=>$enrichment) {
                     echo "'" . $enrichment . "'";
                     if($index != $last_index) {
@@ -145,7 +147,8 @@ console.log(ipr_descriptions);
                         array_push($enrichment_data, $enrichment_results[$ipr]['enrichment']);
                     }
                 }
-                $last_index = array_pop(array_keys($enrichment_data));
+                $enrichment_keys = array_keys($enrichment_data);
+                $last_index = array_pop($enrichment_keys);
                 foreach ($enrichment_data as $index=>$enrichment) {
                     echo $enrichment;
                     if($index != $last_index) {
@@ -168,7 +171,8 @@ console.log(ipr_descriptions);
                         array_push($enrichment_data, -log10($enrichment_results[$ipr]['p-value']));
                     }
                 }
-                $last_index = array_pop(array_keys($enrichment_data));
+                $enrichment_keys = array_keys($enrichment_data);
+                $last_index = array_pop($enrichment_keys);
                 foreach ($enrichment_data as $index=>$enrichment) {
                     echo $enrichment;
                     if($index != $last_index) {
