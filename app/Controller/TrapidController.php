@@ -10,9 +10,10 @@ class TrapidController extends AppController{
 
   var $uses	= array('Authentication', 'AnnotSources', 'Annotation', 'CleanupDate', 'CleanupExperiments',
                     'Configuration', 'DataSources', 'DataUploads', 'ExperimentJobs', 'ExperimentLog', 'Experiments',
-                    'ExtendedGo', 'FullTaxonomy', 'GeneFamilies', 'GfData', 'GoParents', 'HelpTooltips', 'ProteinMotifs',
-                    'SharedExperiments', 'Similarities', 'Transcripts', 'TranscriptsGo', 'TranscriptsInterpro',
-                    'TranscriptsLabels', 'TranscriptsPagination', 'TranscriptsTax', 'RnaSimilarities'
+                    'ExtendedGo', 'FullTaxonomy', 'GeneFamilies', 'GfData', 'GoParents', 'HelpTooltips', 'KoTerms',
+                    'ProteinMotifs', 'SharedExperiments', 'Similarities', 'Transcripts', 'TranscriptsGo',
+                    'TranscriptsInterpro', 'TranscriptsLabels', 'TranscriptsPagination', 'TranscriptsTax',
+                    'RnaSimilarities'
                     );
 
   var $components	= array("Cookie", "TrapidUtils", "Sequence", "Session");

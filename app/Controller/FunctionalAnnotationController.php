@@ -6,10 +6,10 @@ App::uses('Sanitize', 'Utility');
 class FunctionalAnnotationController extends AppController{
   var $name		= "FunctionalAnnotation";
   var $helpers		= array("Html", "Form");  // ,"Javascript","Ajax");
-  var $uses		= array("Authentication","Experiments","Configuration","Transcripts","GeneFamilies",
-				"TranscriptsGo","TranscriptsInterpro","TranscriptsLabels",
+  var $uses		= array("Authentication","Experiments","Configuration","Transcripts","GeneFamilies","GfData",
+				"TranscriptsGo","TranscriptsKo","TranscriptsInterpro","TranscriptsLabels",
 
-				"AnnotSources","Annotation","ExtendedGo","GoParents","ProteinMotifs");
+				"AnnotSources","Annotation","ExtendedGo","GoParents","KoTerms","ProteinMotifs");
 
 
   var $components	= array("Cookie","TrapidUtils");
@@ -18,12 +18,17 @@ class FunctionalAnnotationController extends AppController{
 				"TranscriptsGo"=>
 				array(
 					"limit"=>10,
-			       		"order"=>array("TranscriptsGo.transcript_id"=>"ASC")
+			       	"order"=>array("TranscriptsGo.transcript_id"=>"ASC")
 				),
 				"TranscriptsInterpro"=>
 				array(
-				      	"limit"=>10,
+				    "limit"=>10,
 					"order"=>array("TranscriptsInterpro.transcript_id"=>"ASC")
+				),
+      			"TranscriptsKo"=>
+				array(
+				    "limit"=>10,
+					"order"=>array("TranscriptsKo.transcript_id"=>"ASC")
 				)
 			  );
 
@@ -355,16 +360,76 @@ class FunctionalAnnotationController extends AppController{
   }
 
 
+  function ko($exp_id=null, $ko=null){
+      // Check experiment access
+      if(!$exp_id || !$ko) {
+        $this->redirect(array("controller"=>"trapid", "action"=>"experiments"));
+      }
+      parent::check_user_exp($exp_id);
+      // Get experiment information
+      $exp_info	= $this->Experiments->getDefaultInformation($exp_id);
+      $this->set("exp_info", $exp_info);
+      $this->set("exp_id", $exp_id);
+      $this->TrapidUtils->checkPageAccess($exp_info['title'], $exp_info["process_state"], $this->process_states["default"]);
+
+      // Check validity of supplied KO term (i.e. does it exist, is there any transcript associated to it)
+      $ko_info	= $this->KoTerms->find("first",array("conditions"=>array("name"=>$ko, "type"=>"ko")));
+      $num_transcripts =$this->TranscriptsKo->find("count",array("conditions"=>array("experiment_id"=>$exp_id, "type"=>"ko", "name"=>$ko)));
+      if(!$ko_info || $num_transcripts == 0) {
+        $this->redirect(array("controller"=>"trapid","action"=>"experiment",$exp_id));
+      }
+      $this->set("ko_info",$ko_info['KoTerms']);
+      $this->set("num_transcripts", $num_transcripts);
+
+      // Get (paginated) transcripts annotated with the same KO term
+      $transcripts_p = $this->paginate("TranscriptsKo", array("experiment_id"=>$exp_id, "type"=>"ko", "name"=>$ko));
+      $transcripts_p = $this->TranscriptsKo->find("all",array("fields"=>array("transcript_id"), "conditions"=>array("experiment_id"=>$exp_id, "type"=>"ko", "name"=>$ko)));
+      $transcript_ids = $this->TrapidUtils->reduceArray($transcripts_p,"TranscriptsKo","transcript_id");
+      $transcripts = $this->Transcripts->find("all",array("conditions"=>array("experiment_id"=>$exp_id,"transcript_id"=>$transcript_ids)));
+
+      // Fetch associated data (functional annotation, subsets) to populate the table
+      // GO
+      $transcripts_go = $this->TrapidUtils->indexArray($this->TranscriptsGo->find("all",array("conditions"=>array("experiment_id"=>$exp_id,"transcript_id"=>$transcript_ids,"is_hidden"=>"0", "type"=>"go"))),"TranscriptsGo","transcript_id","name");
+      $go_info	= array();
+      if(count($transcripts_go)!=0){
+          $go_ids = array_unique(call_user_func_array("array_merge",array_values($transcripts_go)));
+          $go_info = $this->ExtendedGo->retrieveGoInformation($go_ids);
+      }
+      // IPR
+      $transcripts_ipr = $this->TrapidUtils->indexArray($this->TranscriptsInterpro->find("all",array("conditions"=>array("experiment_id"=>$exp_id,"transcript_id"=>$transcript_ids, "type"=>"ipr"))),"TranscriptsInterpro","transcript_id","name");
+      $ipr_info	= array();
+      if(count($transcripts_ipr)!=0){
+          $ipr_ids = array_unique(call_user_func_array("array_merge",array_values($transcripts_ipr)));
+          $ipr_info = $this->ProteinMotifs->retrieveInterproInformation($ipr_ids);
+      }
+      // KO
+      $transcripts_ko = $this->TrapidUtils->indexArray($this->TranscriptsKo->find("all",array("conditions"=>array("experiment_id"=>$exp_id,"transcript_id"=>$transcript_ids, "type"=>"ko"))),"TranscriptsKo","transcript_id","name");
+      // Subset/label information
+      $transcripts_labels = $this->TrapidUtils->indexArray($this->TranscriptsLabels->find("all",array("conditions"=>array("experiment_id"=>$exp_id,"transcript_id"=>$transcript_ids))),"TranscriptsLabels","transcript_id","label");
+
+      $this->set("transcript_data", $transcripts);
+      $this->set("transcripts_go", $transcripts_go);
+      $this->set("transcripts_ipr", $transcripts_ipr);
+      $this->set("transcripts_ko", $transcripts_ko);
+      $this->set("transcripts_labels", $transcripts_labels);
+      $this->set("go_info_transcripts", $go_info);
+      $this->set("ipr_info_transcripts", $ipr_info);
+
+      $this -> set('title_for_layout', $ko . ' &middot; KO term ');
+  }
 
 
- /*
-   * Cookie setup:
-   * The entire TRAPID websit is based on user-defined data sets, and as such a method for
-   * account handling and user identification is required.
-   *
-   * The 'beforeFilter' method is executed BEFORE each method, and as such ensures that the necessary
-   * identification through cookies is done.
-   */
+
+
+
+    /*
+      * Cookie setup:
+      * The entire TRAPID websit is based on user-defined data sets, and as such a method for
+      * account handling and user identification is required.
+      *
+      * The 'beforeFilter' method is executed BEFORE each method, and as such ensures that the necessary
+      * identification through cookies is done.
+      */
   function beforeFilter(){
     parent::beforeFilter();
   }

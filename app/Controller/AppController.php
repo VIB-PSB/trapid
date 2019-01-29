@@ -209,7 +209,8 @@ class AppController extends Controller {
      $this->ExtendedGo->useDbConfig=$non_trapid_db;
      $this->GoParents->useDbConfig=$non_trapid_db;
      $this->ProteinMotifs->useDbConfig=$non_trapid_db;
-     $this->GfData->useDbConfig=$non_trapid_db;     
+     $this->GfData->useDbConfig=$non_trapid_db;
+     $this->KoTerms->useDbConfig=$non_trapid_db;
      //is equal to setDataSource($non_trapid_db);
      return;
    }
