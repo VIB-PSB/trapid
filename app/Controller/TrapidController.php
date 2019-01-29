@@ -12,7 +12,7 @@ class TrapidController extends AppController{
                     'Configuration', 'DataSources', 'DataUploads', 'ExperimentJobs', 'ExperimentLog', 'Experiments',
                     'ExtendedGo', 'FullTaxonomy', 'GeneFamilies', 'GfData', 'GoParents', 'HelpTooltips', 'KoTerms',
                     'ProteinMotifs', 'SharedExperiments', 'Similarities', 'Transcripts', 'TranscriptsGo',
-                    'TranscriptsInterpro', 'TranscriptsLabels', 'TranscriptsPagination', 'TranscriptsTax',
+                    'TranscriptsInterpro', 'TranscriptsLabels', 'TranscriptsKo', 'TranscriptsPagination', 'TranscriptsTax',
                     'RnaSimilarities'
                     );
 
@@ -886,7 +886,7 @@ class TrapidController extends AppController{
 //    }
     $this->set("transcript_info",$transcript_info['Transcripts']);
     //pr($transcript_info['Transcripts']);
-    //go and interpro information
+    // Get GO, InterPro and KO information
     $associated_go	= $this->TranscriptsGo->find("all",array("conditions"=>array("experiment_id"=>$exp_id,"transcript_id"=>$transcript_id, "type"=>"go")));
     $go_ids		= $this->TrapidUtils->reduceArray($associated_go,"TranscriptsGo","name");
     //TODO!!
@@ -900,8 +900,14 @@ class TrapidController extends AppController{
     $this->set("associated_interpro",$associated_interpro);
     $this->set("interpro_info",$interpro_information);
 
+    $associated_ko	= $this->TranscriptsKo->find("all", array("conditions"=>array("experiment_id"=>$exp_id, "transcript_id"=>$transcript_id, "type"=>"ko")));
+    $ko_terms	= $this->TrapidUtils->reduceArray($associated_ko, "TranscriptsKo", "name");
+    $ko_information = $this->KoTerms->retrieveKoInformation($ko_terms);
+    $this->set("associated_ko", $associated_ko);
+    $this->set("ko_info" ,$ko_information);
 
-    //subset information
+
+    // Subset information
     $available_subsets	= $this->TranscriptsLabels->getLabels($exp_id);
     $transcript_subsets	= $this->TranscriptsLabels->find("all",array("conditions"=>array("experiment_id"=>$exp_id,"transcript_id"=>$transcript_id)));
     $transcript_subsets	= $this->TrapidUtils->reduceArray($transcript_subsets,"TranscriptsLabels","label");

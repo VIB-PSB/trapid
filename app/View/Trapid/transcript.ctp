@@ -8,6 +8,7 @@
 
     <?php // echo $this->element("trapid_experiment"); ?>
 
+
         <?php
         /* Toolbox code */
         $disable_cluster_tools = false;
@@ -383,6 +384,7 @@
                     }
                     ?>
                 </section>
+            
                 <section class="page-section-sm">
                 <h3>InterPro domains</h3>
                 <dd>
@@ -407,6 +409,32 @@
                     }
                     ?>
                 </section>
+
+            <section class="page-section-sm">
+                <h3>KEGG Orthology</h3>
+                <dd>
+                    <?php
+                    if ($associated_ko) {
+                        echo "<table class='table table-striped table-condensed table-bordered table-hover'>\n";
+                        echo "<thead>\n";
+                        echo "<tr><th style='width:20%;'>KO term</th><th style='width:80%;'>Description</th></tr>\n";
+                        echo "</thead>\n";
+                        echo "<tbody>\n";
+                        foreach ($associated_ko as $ko) {
+                            $ko_id = $ko['TranscriptsKo']['name'];
+                            echo "<tr>";
+                            echo "<td>" . $this->Html->link($ko_id, array("controller" => "functional_annotation", "action" => "ko", $exp_id, $ko_id)) . "</td>";
+                            echo "<td>" . $ko_info[$ko_id]['desc'] . "</td>";
+                            echo "</tr>\n";
+                        }
+                        echo "</tbody>\n";
+                        echo "</table>\n";
+                    } else {
+                        echo "<span class='disabled'>Unavailable</span>";
+                    }
+                    ?>
+            </section>
+
 
         </div>
 
