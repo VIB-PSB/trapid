@@ -5,7 +5,8 @@
 $linkout_map = array(
     "quickgo"=>array("url"=>"https://www.ebi.ac.uk/QuickGO/term/", "text"=>"QuickGO", "title_text"=>"View GO term in QuickGO"),
     "amigo"=>array("url"=>"http://amigo2.berkeleybop.org/amigo/term/", "text"=>"AmiGO", "title_text"=>"View GO term in AmiGO"),
-    "interpro"=>array("url"=>"http://www.ebi.ac.uk/interpro/entry/", "text"=>"InterPro", "title_text"=>"View protein domain in InterPro")
+    "interpro"=>array("url"=>"http://www.ebi.ac.uk/interpro/entry/", "text"=>"InterPro", "title_text"=>"View protein domain in InterPro"),
+    "kegg_ko"=>array("url"=>"https://www.genome.jp/dbget-bin/www_bget?ko:", "text"=>"KEGG", "title_text"=>"View KO term in KEGG")
 );
 
 // If provided linkout type is not set or not in the keys defined above, or we don't have any query term, display nothing
