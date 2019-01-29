@@ -178,6 +178,14 @@ class FunctionalAnnotationController extends AppController{
 	    $ipr_info	= $this->ProteinMotifs->retrieveInterproInformation($ipr_ids);
     }
 
+    // KO
+    $transcripts_ko = $this->TrapidUtils->indexArray($this->TranscriptsKo->find("all",array("conditions"=>array("experiment_id"=>$exp_id,"transcript_id"=>$transcript_ids, "type"=>"ko"))),"TranscriptsKo","transcript_id","name");
+    $ko_info	= [];
+    if(count($transcripts_ko)!=0){
+        $ko_ids = array_unique(call_user_func_array("array_merge",array_values($transcripts_ko)));
+        $ko_info = $this->KoTerms->retrieveKoInformation($ko_ids);
+    }
+
     //retrieve subset/label information
     $transcripts_labels	= $this->TrapidUtils->indexArray($this->TranscriptsLabels->find("all",array("conditions"=>array("experiment_id"=>$exp_id,"transcript_id"=>$transcript_ids))),"TranscriptsLabels","transcript_id","label");
 
@@ -185,9 +193,11 @@ class FunctionalAnnotationController extends AppController{
     $this->set("transcript_data",$transcripts);
     $this->set("transcripts_go",$transcripts_go);
     $this->set("transcripts_ipr",$transcripts_ipr);
+    $this->set("transcripts_ko",$transcripts_ko);
     $this->set("transcripts_labels",$transcripts_labels);
     $this->set("go_info_transcripts",$go_info);
     $this->set("ipr_info_transcripts",$ipr_info);
+    $this->set("ko_info_transcripts",$ko_info);
 
     $this -> set('title_for_layout', $go.' &middot; GO term ');
 
@@ -236,6 +246,14 @@ class FunctionalAnnotationController extends AppController{
 	    $ipr_info	= $this->ProteinMotifs->retrieveInterproInformation($ipr_ids);
     }
 
+    // KO: a bit nonsensical since there are no case where we have both IPR and KO??
+    $transcripts_ko = $this->TrapidUtils->indexArray($this->TranscriptsKo->find("all",array("conditions"=>array("experiment_id"=>$exp_id,"transcript_id"=>$transcript_ids, "type"=>"ko"))),"TranscriptsKo","transcript_id","name");
+    $ko_info	= [];
+    if(count($transcripts_ko)!=0){
+        $ko_ids = array_unique(call_user_func_array("array_merge",array_values($transcripts_ko)));
+        $ko_info = $this->KoTerms->retrieveKoInformation($ko_ids);
+    }
+
     //retrieve subset/label information
     $transcripts_labels	= $this->TrapidUtils->indexArray($this->TranscriptsLabels->find("all",array("conditions"=>array("experiment_id"=>$exp_id,"transcript_id"=>$transcript_ids))),"TranscriptsLabels","transcript_id","label");
 
@@ -244,9 +262,11 @@ class FunctionalAnnotationController extends AppController{
     $this->set("transcript_data",$transcripts);
     $this->set("transcripts_go",$transcripts_go);
     $this->set("transcripts_ipr",$transcripts_ipr);
+    $this->set("transcripts_ipr",$transcripts_ko);
     $this->set("transcripts_labels",$transcripts_labels);
     $this->set("go_info_transcripts",$go_info);
     $this->set("ipr_info_transcripts",$ipr_info);
+    $this->set("ipr_info_transcripts",$ko_info);
 
     $this -> set('title_for_layout', $interpro.' &middot; Protein domain ');
   }
@@ -404,6 +424,11 @@ class FunctionalAnnotationController extends AppController{
       }
       // KO
       $transcripts_ko = $this->TrapidUtils->indexArray($this->TranscriptsKo->find("all",array("conditions"=>array("experiment_id"=>$exp_id,"transcript_id"=>$transcript_ids, "type"=>"ko"))),"TranscriptsKo","transcript_id","name");
+      $ko_info	= [];
+      if(count($transcripts_ko)!=0){
+          $ko_ids = array_unique(call_user_func_array("array_merge",array_values($transcripts_ko)));
+          $ko_info = $this->KoTerms->retrieveKoInformation($ko_ids);
+      }
       // Subset/label information
       $transcripts_labels = $this->TrapidUtils->indexArray($this->TranscriptsLabels->find("all",array("conditions"=>array("experiment_id"=>$exp_id,"transcript_id"=>$transcript_ids))),"TranscriptsLabels","transcript_id","label");
 
@@ -414,6 +439,7 @@ class FunctionalAnnotationController extends AppController{
       $this->set("transcripts_labels", $transcripts_labels);
       $this->set("go_info_transcripts", $go_info);
       $this->set("ipr_info_transcripts", $ipr_info);
+      $this->set("ko_info_transcripts", $ko_info);
 
       $this -> set('title_for_layout', $ko . ' &middot; KO term ');
   }

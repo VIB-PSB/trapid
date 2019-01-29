@@ -1,8 +1,9 @@
 <?php
 /* Table for functional annotation */
 
-// Updated to make it work with jQuery dataTables and Bootstrap + minor improvements
-// Removed this functionality for now... Will re-implement it better soon.
+// It should be updated to make it work with jQuery dataTables!
+// There are also missing data types that should be displayed here (e.g. RNA family, taxonomic classification)
+
 
 $gf_column_class1=null;
 if(isset($gf_info)){$gf_column_class1="class='highlight'";}
@@ -19,8 +20,9 @@ if(isset($label)){$label_column_class1="class='highlight'";$label_column_class2=
 	<thead>
 		<th>Transcript</th>
 		<th <?php echo $gf_column_class1;?> >Gene family</th>
-		<th style="width: 27%;" <?php echo $go_column_class1;?> >GO annotation</th>
-		<th style="width: 27%;" <?php echo $ipr_column_class1;?> >Protein domain annotation</th>
+		<th style="width: 20%;" <?php echo $go_column_class1;?> >GO annotation</th>
+		<th style="width: 20%;" <?php echo $ipr_column_class1;?> >Protein domain annotation</th>
+		<th style="width: 20%;">KO annotation</th>
 		<th <?php echo $label_column_class1;?> >Subset</th>
 		<th>Meta-annotation</th>
 		<!--th>Meta annotation</th-->
@@ -79,6 +81,19 @@ if(isset($label)){$label_column_class1="class='highlight'";$label_column_class2=
 			echo "</td>";
 		}
 
+		// KO annotation
+        if(!array_key_exists($td['transcript_id'],$transcripts_ko)){
+            echo "<td><span class='disabled'>Unavailable</span></td>";
+        }
+        else{
+            echo "<td class='left'>";
+            for($i=0;$i<count($transcripts_ko[$td['transcript_id']]) && $i<3;$i++){
+                $ko	= $transcripts_ko[$td['transcript_id']][$i];
+                $desc	= $ko_info_transcripts[$ko]['desc'];
+                echo ($i+1).". ".$this->Html->link($desc,array("controller"=>"functional_annotation","action"=>"ko",$exp_id,$ko))."</br>";
+            }
+            echo "</td>";
+        }
 
 		//SUBSET
 		if(!array_key_exists($td['transcript_id'],$transcripts_labels)){

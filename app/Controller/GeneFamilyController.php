@@ -7,9 +7,9 @@ class GeneFamilyController extends AppController{
   var $name		= "GeneFamily";
   var $helpers		= array("Html", "Form"); // ,"Javascript","Ajax");
   var $uses		= array("Authentication","Experiments","Configuration","Transcripts","GeneFamilies","TranscriptsGo",
-				"TranscriptsInterpro","TranscriptsLabels","DataSources","ExperimentJobs", "GoParents",
+				"TranscriptsInterpro","TranscriptsLabels","TranscriptsKo","DataSources","ExperimentJobs", "GoParents",
 
-				"GfData","AnnotSources","Annotation","ExtendedGo","ProteinMotifs");
+				"GfData","AnnotSources","Annotation","ExtendedGo","KoTerms","ProteinMotifs");
 
   var $components	= array("Cookie","TrapidUtils");
 
@@ -359,6 +359,14 @@ class GeneFamilyController extends AppController{
 	    $ipr_info	= $this->ProteinMotifs->retrieveInterproInformation($ipr_ids);
     }
 
+    // KO
+    $transcripts_ko = $this->TrapidUtils->indexArray($this->TranscriptsKo->find("all",array("conditions"=>array("experiment_id"=>$exp_id,"transcript_id"=>$transcript_ids, "type"=>"ko"))),"TranscriptsKo","transcript_id","name");
+    $ko_info	= [];
+    if(count($transcripts_ko)!=0){
+      $ko_ids = array_unique(call_user_func_array("array_merge",array_values($transcripts_ko)));
+      $ko_info = $this->KoTerms->retrieveKoInformation($ko_ids);
+    }
+
     //retrieve subset/label information
     $transcripts_labels	= $this->TrapidUtils->indexArray($this->TranscriptsLabels->find("all",array("conditions"=>array("experiment_id"=>$exp_id,"transcript_id"=>$transcript_ids))),"TranscriptsLabels","transcript_id","label");
 
@@ -371,9 +379,11 @@ class GeneFamilyController extends AppController{
     $this->set("transcript_data",$transcripts);
     $this->set("transcripts_go",$transcripts_go);
     $this->set("transcripts_ipr",$transcripts_ipr);
+    $this->set("transcripts_ko",$transcripts_ko);
     $this->set("transcripts_labels",$transcripts_labels);
     $this->set("go_info_transcripts",$go_info);
     $this->set("ipr_info_transcripts",$ipr_info);
+    $this->set("ko_info_transcripts",$ko_info);
 
     $this -> set('title_for_layout', $gf_id.' &middot; Gene family');
   }

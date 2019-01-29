@@ -533,6 +533,13 @@ class TrapidController extends AppController{
 		$ipr_ids        = array_unique(call_user_func_array("array_merge",array_values($transcripts_ipr)));
 		$ipr_info	= $this->ProteinMotifs->retrieveInterproInformation($ipr_ids);
 	}
+    // KO
+    $transcripts_ko = $this->TrapidUtils->indexArray($this->TranscriptsKo->find("all",array("conditions"=>array("experiment_id"=>$exp_id,"transcript_id"=>$transcript_ids, "type"=>"ko"))),"TranscriptsKo","transcript_id","name");
+    $ko_info	= [];
+    if(count($transcripts_ko)!=0){
+        $ko_ids = array_unique(call_user_func_array("array_merge",array_values($transcripts_ko)));
+        $ko_info = $this->KoTerms->retrieveKoInformation($ko_ids);
+    }
 
 	//retrieve subset/label information
 	$transcripts_labels	= $this->TrapidUtils->indexArray($this->TranscriptsLabels->find("all",array("conditions"=>array("experiment_id"=>$exp_id,"transcript_id"=>$transcript_ids))),"TranscriptsLabels","transcript_id","label");
@@ -541,9 +548,11 @@ class TrapidController extends AppController{
 	$this->set("transcript_data",$transcripts_p);
 	$this->set("transcripts_go",$transcripts_go);
 	$this->set("transcripts_ipr",$transcripts_ipr);
+	$this->set("transcripts_ko",$transcripts_ko);
 	$this->set("transcripts_labels",$transcripts_labels);
 	$this->set("go_info",$go_info);
 	$this->set("ipr_info",$ipr_info);
+	$this->set("ko_info",$ko_info);
     }
     // TODO: To change as we now get experiment information twice... Not very smart but will do for prototyping.
       $exp_info	= $this->Experiments->getDefaultInformation($exp_id);
@@ -1028,7 +1037,13 @@ class TrapidController extends AppController{
 	    $ipr_ids        = array_unique(call_user_func_array("array_merge",array_values($transcripts_ipr)));
 	    $ipr_info	= $this->ProteinMotifs->retrieveInterproInformation($ipr_ids);
     }
-
+    // KO
+    $transcripts_ko = $this->TrapidUtils->indexArray($this->TranscriptsKo->find("all",array("conditions"=>array("experiment_id"=>$exp_id,"transcript_id"=>$transcript_ids, "type"=>"ko"))),"TranscriptsKo","transcript_id","name");
+    $ko_info	= [];
+    if(count($transcripts_ko)!=0){
+      $ko_ids = array_unique(call_user_func_array("array_merge",array_values($transcripts_ko)));
+      $ko_info = $this->KoTerms->retrieveKoInformation($ko_ids);
+    }
     //retrieve subset/label information
     $transcripts_labels	= $this->TrapidUtils->indexArray($this->TranscriptsLabels->find("all",array("conditions"=>array("experiment_id"=>$exp_id,"transcript_id"=>$transcript_ids))),"TranscriptsLabels","transcript_id","label");
 
@@ -1036,9 +1051,11 @@ class TrapidController extends AppController{
     $this->set("parameters",$parsed_parameters);
     $this->set("transcripts_go",$transcripts_go);
     $this->set("transcripts_ipr",$transcripts_ipr);
+    $this->set("transcripts_ko",$transcripts_ko);
     $this->set("transcripts_labels",$transcripts_labels);
     $this->set("go_info_transcripts",$go_info);
     $this->set("ipr_info_transcripts",$ipr_info);
+    $this->set("ko_info_transcripts",$ko_info);
 
     if($download_type=="table"){$this->set("file_name","table_".implode("_",$parameters).".txt");return;}
   }

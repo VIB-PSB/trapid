@@ -99,7 +99,6 @@
         <div class="panel panel-primary">
             <!-- Default panel contents -->
             <div class="panel-heading"><h3 class="panel-title">Experiment information</h3></div>
-
             <!-- List group -->
             <ul class="list-group">
                 <li class="list-group-item">
@@ -217,8 +216,9 @@
             <thead>
             <th style="width:10%">Transcript</th>
             <th style="width:15%">Gene family</th>
-            <th style="width:27%">GO annotation</th>
-            <th style="width:27%">Protein domain annotation</th>
+            <th style="width:20%">GO annotation</th>
+            <th style="width:20%">Protein domain annotation</th>
+            <th style="width:20%">KO annotation</th>
             <th style="width:10%">Subset</th>
             <th style="width:10%">Meta annotation</th>
             <!--<th style="width:5%">Edit</th>-->
@@ -295,6 +295,28 @@
                     if (count($transcripts_ipr[$td['transcript_id']]) > 3) {
                         $more_ipr = count($transcripts_ipr[$td['transcript_id']]) -3;
                         echo "<label title='" . $more_ipr . " more InterPro domains are associated to this transcript" .
+                            "' class='pull-right label label-default' style='cursor:help;'>...</label>";
+                    }
+                    echo "</td>";
+                }
+
+
+                //KO annotation
+                if (!array_key_exists($td['transcript_id'], $transcripts_ko)) {
+                    echo "<td><span class='disabled'>Unavailable</span></td>";
+                } else {
+                    echo "<td class='left'>";
+                    for ($i = 0; $i < count($transcripts_ko[$td['transcript_id']]) && $i < 3; $i++) {
+                        $ko = $transcripts_ko[$td['transcript_id']][$i];
+                        $desc = $ko_info[$ko]['desc'];
+                        echo ($i + 1) . ". " . $this->Html->link($desc, array("controller" => "functional_annotation", "action" => "ko", $exp_id, $ko));
+                        if($i < 2) {
+                            echo "<br/>";
+                        }
+                    }
+                    if (count($transcripts_ko[$td['transcript_id']]) > 3) {
+                        $more_ko = count($transcripts_ko[$td['transcript_id']]) -3;
+                        echo "<label title='" . $more_ko . " more KO terms are associated to this transcript" .
                             "' class='pull-right label label-default' style='cursor:help;'>...</label>";
                     }
                     echo "</td>";
