@@ -37,6 +37,15 @@
                 echo  $this->element("linkout_func", array("linkout_type"=>"interpro", "query_term"=>$interpro));
                 echo "</dd>\n";
 			}
+
+            else if($type=="ko"){
+                echo "<dt>KO term</dt>";
+                echo "<dd>";
+                echo $ko;
+                echo "&nbsp; &nbsp;";
+                echo  $this->element("linkout_func", array("linkout_type"=>"kegg_ko", "query_term"=>$ko));
+                echo "</dd>\n";
+            }
 			?>
 			<dt>Description</dt>
 			<dd><?php echo $description;?></dd>
@@ -58,9 +67,10 @@
             <thead>
 			<tr>
 				<th style="width:15%">Gene family</th>
-				<th style="width:15%">#transcripts</th>
-				<th style="width:35%">GO terms</th>
-				<th style="width:35%">Protein domains</th>
+				<th style="width:10%">#transcripts</th>
+				<th style="width:25%">GO terms</th>
+				<th style="width:25%">Protein domains</th>
+				<th style="width:25%">KO terms</th>
 			</tr>
             </thead>
             <tbody>
@@ -88,6 +98,15 @@
 					$ipr	= $extra_annot_ipr[$gf_id][$i];
 					$desc	= $ipr_descriptions[$ipr];
 					echo ($i+1).". " . $this->Html->link($desc,array("controller"=>"functional_annotation","action"=>"interpro",$exp_id,$ipr));
+					echo "<br/>";
+				}
+				echo "</td>";
+
+				echo "<td style='text-align:left;'>";
+				for($i=0;$i<count($extra_annot_ko[$gf_id]) && $i<2;$i++){
+					$ko	= $extra_annot_ko[$gf_id][$i];
+					$desc	= $ko_descriptions[$ko];
+					echo ($i+1).". " . $this->Html->link($desc,array("controller"=>"functional_annotation","action"=>"ko",$exp_id,$ko));
 					echo "<br/>";
 				}
 				echo "</td>";

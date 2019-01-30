@@ -19,6 +19,7 @@ class ToolsController extends AppController{
   "GeneFamilies",
   "TranscriptsGo",
   "TranscriptsInterpro",
+  "TranscriptsKo",
   "TranscriptsLabels",
   "ExperimentLog",
   "ExperimentJobs",
@@ -29,6 +30,7 @@ class ToolsController extends AppController{
   "AnnotSources",
   "Annotation",
   "ExtendedGo",
+  "KoTerms",
   "ProteinMotifs",
   "GfData",
   "GoParents",
@@ -1764,6 +1766,29 @@ class ToolsController extends AppController{
     $this->set("place_holder", $place_holder);
 
       $this -> set('title_for_layout', "Protein domain - gene family");
+      $this->render('sankey_single');
+  }
+
+
+
+  // Sankey diagram to visualize relationships between GFs and a KO term
+  function KOSankey($exp_id=null, $ko=null){
+    $this->general_set_up($exp_id);
+    $place_holder = '###';
+
+    // Need to use `urldecode()` otherwise `#` gets encoded.
+    $urls = array(urldecode(Router::url(array("controller"=>"functional_annotation","action"=>"ko",$exp_id,$place_holder))),
+                  urldecode(Router::url(array("controller"=>"gene_family","action"=>"gene_family",$exp_id,$place_holder)))
+    );
+    $rows	= $this->Transcripts->getOneKOToGFMapping($exp_id, $ko);
+
+    $this->set('mapping',json_encode($rows));
+    $this->set('descriptions',json_encode($this->KoTerms->retrieveKoInformation(array($ko))));  // Why not `find()` if only one term?
+    $this->set('urls', json_encode($urls));
+    $this->set('titleIsAKeyword', 'KO');
+    $this->set("place_holder", $place_holder);
+
+      $this -> set('title_for_layout', "KO term - Gene family");
       $this->render('sankey_single');
   }
 

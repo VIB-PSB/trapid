@@ -271,6 +271,29 @@ class Transcripts extends AppModel{
   }
 
 
+
+  // No check on `$ko`??
+  function getOneKOToGFMapping($exp_id, $ko){
+    $query	= "SELECT COUNT( * ) , transcripts.`gf_id` , transcripts_annotation.`name`
+               FROM transcripts
+               LEFT JOIN transcripts_annotation ON ( transcripts_annotation.`transcript_id` = transcripts.`transcript_id`
+                                             AND transcripts_annotation.`experiment_id` = transcripts.`experiment_id` )
+               WHERE transcripts.`experiment_id` = $exp_id
+               AND transcripts_annotation.`type` = 'ko'
+               AND transcripts_annotation.`name` = '$ko'
+               GROUP BY transcripts.`gf_id` ";
+    $res	= $this->query($query);
+    $result	= array();
+    foreach($res as $r){
+      $gf_id    = $r['transcripts']['gf_id'];
+      $ko_id = $r['transcripts_annotation']['name'];
+      $count    = reset($r[0]);
+      $result[] = array($ko_id, $gf_id, $count);
+    }
+    return $result;
+  }
+
+
     // Count the number of ORFs in an experiment
     // ORF => `orf_stop` > 0 (end of ORF sequence on the transcript)
     function getOrfCount($exp_id){

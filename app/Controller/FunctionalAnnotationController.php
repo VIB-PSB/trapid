@@ -275,6 +275,9 @@ class FunctionalAnnotationController extends AppController{
 
 
   function assoc_gf($exp_id=null,$type=null,$identifier=null){
+      $max_transcripts = 5000;  // The maximum number of transcripts for which this page is displayed
+      $valid_types = ["go", "interpro", "ko"];
+
     if(!$exp_id){$this->redirect(array("controller"=>"trapid","action"=>"experiments"));}
     // $exp_id	= mysql_real_escape_string($exp_id);
     parent::check_user_exp($exp_id);
@@ -288,7 +291,7 @@ class FunctionalAnnotationController extends AppController{
 
       $this->set("exp_info",$exp_info);
     $this->set("exp_id",$exp_id);
-    if(!$type||!$identifier||!($type=="go"||$type=="interpro")){$this->redirect(array("controller"=>"trapid","action"=>"experiment",$exp_id));}
+    if(!$type||!$identifier||!in_array($type, $valid_types)){$this->redirect(array("controller"=>"trapid","action"=>"experiment",$exp_id));}
     $gene_families	= array();
 
 
@@ -304,13 +307,14 @@ class FunctionalAnnotationController extends AppController{
       $this->set("type", "go");
       $this->set("go",$go);
       $this->set("num_transcripts",$num_transcripts);
-      if($num_transcripts>5000){$this->set("error","Unable to find associated gene families for GO terms with more than 5000 associated transcripts");return;}
+      if($num_transcripts > $max_transcripts){$this->set("error","Unable to find associated gene families for GO terms with more than " . $max_transcripts . " associated transcripts");return;}
       $transcripts_p = $this->TranscriptsGo->find("all",array("fields"=>array("transcript_id"),
 							      "conditions"=>array("experiment_id"=>$exp_id, "type"=>"go", "name"=>$go)));
       $transcript_ids	= $this->TrapidUtils->reduceArray($transcripts_p,"TranscriptsGo","transcript_id");
       $gene_families	= $this->Transcripts->findAssociatedGf($exp_id,$transcript_ids);
       $this->set("gene_families",$gene_families);
     }
+
     else if($type=="interpro"){
       // $interpro		= mysql_real_escape_string($identifier);
       $interpro		= $identifier;
@@ -326,19 +330,45 @@ class FunctionalAnnotationController extends AppController{
       $this->set("type","interpro");
       $this->set("interpro",$interpro);
       $this->set("num_transcripts",$num_transcripts);
-      if($num_transcripts>5000){$this->set("error","Unable to find associated gene families for InterPro domains with more than 5000 associated transcripts");return;}
+          if($num_transcripts > $max_transcripts){$this->set("error","Unable to find associated gene families for InterPro domains with more than " . $max_transcripts . " associated transcripts");return;}
       $transcripts_p = $this->TranscriptsInterpro->find("all",array("fields"=>array("transcript_id"),
 							      "conditions"=>array("experiment_id"=>$exp_id, "type"=>"ipr", "name"=>$interpro)));
       $transcript_ids	= $this->TrapidUtils->reduceArray($transcripts_p,"TranscriptsInterpro","transcript_id");
       $gene_families	= $this->Transcripts->findAssociatedGf($exp_id,$transcript_ids);
       $this->set("gene_families",$gene_families);
     }
-    //more func annot per gene family
+
+    else if($type=="ko") {
+      $ko = $identifier;
+      // Find whether any transcripts are associated (also validates the KO term itself)
+      $num_transcripts = $this->TranscriptsKo->find("count", array("conditions"=>array("experiment_id"=>$exp_id, "type"=>"ko", "name"=>$ko)));
+      if($num_transcripts==0) {
+          $this->redirect(array("controller"=>"trapid", "action"=>"experiment", $exp_id));
+      }
+      $ko_information = $this->KoTerms->find("first", array("conditions"=>array("name"=>$ko, "type"=>"ko")));
+      $this->set("description", $ko_information["KoTerms"]["desc"]);
+      $this->set("type", "ko");
+      $this->set("ko", $ko);
+      $this->set("num_transcripts", $num_transcripts);
+      if($num_transcripts > $max_transcripts) {
+          $this->set("error","Unable to find associated gene families for KO terms with more than " . $max_transcripts . " associated transcripts");
+          return;
+      }
+      $transcripts_p = $this->TranscriptsKo->find("all", array("fields"=>array("transcript_id"),
+                                                  "conditions"=>array("experiment_id"=>$exp_id, "type"=>"ko", "name"=>$ko)));
+      $transcript_ids = $this->TrapidUtils->reduceArray($transcripts_p, "TranscriptsKo", "transcript_id");
+      $gene_families = $this->Transcripts->findAssociatedGf($exp_id, $transcript_ids);
+      $this->set("gene_families", $gene_families);
+    }
+
+    // More functional annotation per gene family
     $extra_annot_go	= array();
     $extra_annot_ipr	= array();
+    $extra_annot_ko = array();
     $first_transcripts	= array();
     $go_descriptions	= array();
     $ipr_descriptions	= array();
+    $ko_descriptions = array();
     $assoc_transcripts	= $this->Transcripts->find("all",array("conditions"=>array("experiment_id"=>$exp_id,"gf_id"=>array_keys($gene_families)),"fields"=>array("transcript_id","gf_id")));
     foreach($assoc_transcripts as $t){
       $trid	= $t['Transcripts']['transcript_id'];
@@ -347,34 +377,37 @@ class FunctionalAnnotationController extends AppController{
 	$first_transcripts[$gf] = $trid;
 	$trid_go	= $this->TranscriptsGo->find("all",array("conditions"=>array("experiment_id"=>$exp_id,"transcript_id"=>$trid, "type"=>"go")));
         $trid_ipr	= $this->TranscriptsInterpro->find("all",array("conditions"=>array("experiment_id"=>$exp_id,"transcript_id"=>$trid, "type"=>"ipr")));
+        $trid_ko	= $this->TranscriptsKo->find("all",array("conditions"=>array("experiment_id"=>$exp_id,"transcript_id"=>$trid, "type"=>"ko")));
         $extra_annot_go[$gf]	= array();
 	$extra_annot_ipr[$gf]	= array();
+	$extra_annot_ko[$gf]	= array();
 	foreach($trid_go as $tg){$extra_annot_go[$gf][]=$tg['TranscriptsGo']['name'];$go_descriptions[]=$tg['TranscriptsGo']['name'];}
 	foreach($trid_ipr as $ti){$extra_annot_ipr[$gf][]=$ti['TranscriptsInterpro']['name'];$ipr_descriptions[]=$ti['TranscriptsInterpro']['name'];}
+	foreach($trid_ko as $tk){$extra_annot_ko[$gf][]=$tk['TranscriptsKo']['name'];$ko_descriptions[]=$tk['TranscriptsKo']['name'];}
       }
     }
-//    $go_descriptions	= $this->ExtendedGo->find("all",array("conditions"=>array("go"=>array_unique($go_descriptions))));
-//    $ipr_descriptions	= $this->ProteinMotifs->find("all",array("conditions"=>array("motif_id"=>array_unique($ipr_descriptions))));
     $go_descriptions	= $this->ExtendedGo->find("all",array("conditions"=>array("name"=>array_unique($go_descriptions), "type"=>"go")));
     $ipr_descriptions	= $this->ProteinMotifs->find("all",array("conditions"=>array("name"=>array_unique($ipr_descriptions), "type"=>"interpro")));
+    $ko_descriptions	= $this->KoTerms->find("all",array("conditions"=>array("name"=>array_unique($ko_descriptions), "type"=>"ko")));
     //pr($ipr_descriptions);
 
     //    pr($extra_annot_go);
     //	pr($go_descriptions);
     //    pr($extra_annot_ipr);
     //    pr($ipr_descriptions);
-//    $go_descriptions	= $this->TrapidUtils->indexArraySimple($go_descriptions,"ExtendedGo","go","desc");
-//    $ipr_descriptions	= $this->TrapidUtils->indexArraySimple($ipr_descriptions,"ProteinMotifs","motif_id","desc");
     $go_categories  = $this->TrapidUtils->indexArraySimple($go_descriptions,"ExtendedGo","name","info");
     $go_descriptions = $this->TrapidUtils->indexArraySimple($go_descriptions,"ExtendedGo","name","desc");
       $ipr_descriptions	= $this->TrapidUtils->indexArraySimple($ipr_descriptions,"ProteinMotifs","name","desc");
+      $ko_descriptions	= $this->TrapidUtils->indexArraySimple($ko_descriptions,"KoTerms","name","desc");
     //$this->set("extra_annotation",$extra_annotation);
 
     $this->set("extra_annot_go",$extra_annot_go);
     $this->set("extra_annot_ipr",$extra_annot_ipr);
+    $this->set("extra_annot_ko",$extra_annot_ko);
     $this->set("go_descriptions",$go_descriptions);
     $this->set("go_categories", $go_categories);
     $this->set("ipr_descriptions",$ipr_descriptions);
+    $this->set("ko_descriptions",$ko_descriptions);
 
     $this -> set('title_for_layout', str_replace("-",":", $identifier) .' &middot; Associated gene families');
   }
