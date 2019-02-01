@@ -5,6 +5,21 @@ This module contains a collection of variables/functions used in other modules
 import MySQLdb as MS
 import time
 import sys
+from ConfigParser import ConfigParser
+
+
+def load_config(ini_file_initial, needed_sections):
+    """Read initial processing configuration file and check if all needed sections are there. Return it as dictionary. """
+    config = ConfigParser()
+    config.read(ini_file_initial)
+    config_dict = {section: dict(config.items(section)) for section in config.sections()}
+    config_sections = set(config_dict.keys())
+    if len(needed_sections & config_sections) < len(needed_sections):
+        missing_sections = needed_sections - config_sections
+        sys.stderr.write("[Error] Not all required sections were found in the INI file ('%s')\n" % ini_file_initial)
+        sys.stderr.write("[Error] Missing section(s): %s\n" % ", ".join(list(missing_sections)))
+        sys.exit(1)
+    return config_dict
 
 
 def db_connect(username, password, host, db_name):

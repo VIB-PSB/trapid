@@ -171,30 +171,42 @@ if($par{plaza_db_name} eq "db_trapid_ref_eggnog_test_02") {
 		"-m diamond", "--data_dir " . $par{"blast_location"} . "eggnog_mapper/eggnog_db/", "--cpu 2",
 		"--dmnd_outfile " . $similarity_output, "--translate");  # TODO: add e-value?
 	my $emapper_exec = $emapper_cmd . " " . join(" ", @emapper_options);
-	print STDERR "Call EggNOG-mapper with command: " . $emapper_exec . "\n";
+	print STDERR "[Message] Call EggNOG-mapper with command: " . $emapper_exec . "\n";
 	system($emapper_exec);
-
 	# Call post-processing script
-	# Call modified Java post-processing script ()
+	my $emapper_postprocess_script = $par{"base_script_location"} . "python/process_emapper.py";
+	my $emapper_postprocess_cmd	= "python " . $emapper_postprocess_script . " " . $initial_processing_ini_file;
+	print STDERR "[Message] Call EggNOG-mapper post-processing script with command: " . $emapper_postprocess_cmd . "\n";
+	system($emapper_postprocess_cmd);
 }
 
 
-# Otherwise just run the usual TRAPID Java post processing code
-else {
-	my $java_program	= "transcript_pipeline.InitialTranscriptsProcessing";
-	my $java_location	= $par{"base_script_location"}."java/";
+# Run TRAPID's Java post processing code
+my $java_program	= "transcript_pipeline.InitialTranscriptsProcessing";
+my $java_location	= $par{"base_script_location"}."java/";
 
-	my $java_command        = "java -cp .:..:".$java_location.":".$java_location."mysql.jar ".$java_program;
-	my @java_options        = ($par{"plaza_db_server"},$par{"plaza_db_name"},$par{"plaza_db_user"},$par{"plaza_db_password"},
-		$par{"trapid_db_server"},$par{"trapid_db_name"},$par{"trapid_db_user"},$par{"trapid_db_password"},
-		$par{"experiment"},$similarity_output,$par{"gf_type"},$par{"num_top_hits"},$par{"func_annot"},  $par{"tax_scope"}, 0.50);
+my $java_command        = "java -cp .:..:".$java_location.":".$java_location."mysql.jar ".$java_program;
+my @java_options        = ($par{"plaza_db_server"},$par{"plaza_db_name"},$par{"plaza_db_user"},$par{"plaza_db_password"},
+	$par{"trapid_db_server"},$par{"trapid_db_name"},$par{"trapid_db_user"},$par{"trapid_db_password"},
+	$par{"experiment"},$similarity_output,$par{"gf_type"},$par{"num_top_hits"},$par{"func_annot"},  $par{"tax_scope"}, 0.50);
 
-	my $java_exec           = $java_command." ".join(" ",@java_options);
-	print STDOUT $java_exec."\n";
-	system($java_exec);
-}
+my $java_exec           = $java_command." ".join(" ",@java_options);
+print STDOUT $java_exec."\n";
+system($java_exec);
+
+
+# Create default transcript subsets
+print STDERR "[Message] Create default transcript subsets\n";
+my $create_subsets_script = "create_default_subsets.py";
+my $python_location	= $par{"base_script_location"} . "python/";
+my $create_subsets_command = "python " . $python_location . $create_subsets_script;
+my $create_subsets_exec = $create_subsets_command . " " . $initial_processing_ini_file;
+print STDOUT $create_subsets_exec."\n";
+system($create_subsets_exec);
+
 
 #remove final output file
+# TODO: remove more files!
 if($DELETE_TEMP_DATA){
     system("rm -f ".$multi_fasta_file);
     system("rm -f ".$similarity_output);
