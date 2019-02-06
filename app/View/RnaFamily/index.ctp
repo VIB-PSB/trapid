@@ -21,13 +21,15 @@
             <tbody>
             <?php
             foreach ($rna_families as $rna_family) {
+                $rf_name = $rf_names[$rna_family['RnaFamilies']['rfam_rf_id']];
                 echo "<tr>";
                 echo "<td>" . $this->Html->link($rna_family['RnaFamilies']['rf_id'], array("controller" => "rna_family", "action" => "rna_family", $exp_id, $rna_family['RnaFamilies']['rf_id'])) . "</td>";
                 echo "<td>" . $rna_family['RnaFamilies']['num_transcripts'] . "</td>";
-                echo "<td><a class='linkout' target='_blank' href='". $rfam_linkouts["base_url"] . $rfam_linkouts["family"] . $rna_family['RnaFamilies']['rfam_rf_id'] . "'>" . $rna_family['RnaFamilies']['rfam_rf_id'] . "</a></td>";
+                echo "<td><a class='linkout' target='_blank' href='". $rfam_linkouts["base_url"] . $rfam_linkouts["family"] . $rna_family['RnaFamilies']['rfam_rf_id'] . "'>" . $rf_name . " (" . $rna_family['RnaFamilies']['rfam_rf_id'] . ")</a></td>";
                 // Not all RFAM families are in clans
                 if(!empty($rna_family['RnaFamilies']['rfam_clan_id'])) {
-                    echo "<td><a class='linkout' target='_blank' href='". $rfam_linkouts["base_url"] . $rfam_linkouts["clan"] . $rna_family['RnaFamilies']['rfam_clan_id'] . "'>" . $rna_family['RnaFamilies']['rfam_clan_id'] . "</a></td>";
+                    $clan_name = $clan_names[$rna_family['RnaFamilies']['rfam_clan_id']];
+                    echo "<td><a class='linkout' target='_blank' href='". $rfam_linkouts["base_url"] . $rfam_linkouts["clan"] . $rna_family['RnaFamilies']['rfam_clan_id'] . "'>" . $clan_name . " (" . $rna_family['RnaFamilies']['rfam_clan_id'] . ")</a></td>";
                 }
                 else {
                     echo "<td>-</td>";

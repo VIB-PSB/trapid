@@ -36,13 +36,21 @@ class RnaFamilyController extends AppController{
         $this->set("exp_id", $exp_id);
         $rna_families_p = $this->paginate("RnaFamilies",array("RnaFamilies.experiment_id = '" . $exp_id . "'"));
         $this->set("rna_families", $rna_families_p);
+        // Get RFAM name and description from values stored in `configuration`
+        // Are names only enough to display on this page?
         $rna_families_ids_original	= $this->TrapidUtils->reduceArray($rna_families_p, 'RnaFamilies','rfam_rf_id');
+        $rna_clans_ids_original	= $this->TrapidUtils->reduceArray($rna_families_p, 'RnaFamilies','rfam_clan_id');
+        $rf_names = $this->Configuration->find("all", array("conditions"=>array("method"=>"rfam_families", "key"=>$rna_families_ids_original, "attr"=>"rfam_id"), "fields"=>array("key","value")));
+        $rf_names = $this->TrapidUtils->indexArraySimple($rf_names, "Configuration", "key", "value");
+        $clan_names = $this->Configuration->find("all", array("conditions"=>array("method"=>"rfam_clans", "key"=>$rna_clans_ids_original, "attr"=>"clan_id"), "fields"=>array("key", "value")));
+        $clan_names = $this->TrapidUtils->indexArraySimple($clan_names, "Configuration", "key", "value");
         $rfam_linkouts = $this->Configuration->find("all", array('conditions'=>array('method'=>'linkout', 'key'=>'rfam')));
         $rfam_linkouts = $this->TrapidUtils->indexArraySimple($rfam_linkouts, "Configuration", "attr", "value");
-
         $user_group=$this->Authentication->find("first",array("fields"=>array("group"),"conditions"=>array("user_id"=>parent::check_user())));
         if($user_group['Authentication']['group'] == "admin"){$this->set("admin", 1);}
 
+        $this->set("rf_names", $rf_names);
+        $this->set("clan_names", $clan_names);
         $this->set("rfam_linkouts", $rfam_linkouts);
         $this->set("active_sidebar_item", "Browse RNA families");
         $this -> set('title_for_layout', 'RNA families');
@@ -61,6 +69,18 @@ class RnaFamilyController extends AppController{
         // $rf_id	= $this->RnaFamilies->getDataSource()->value($rf_id, 'string'); //Useless/unclean?
         $rf_id	= filter_var($rf_id, FILTER_SANITIZE_STRING); //Useless/unclean?
         $rf_data = $this->RnaFamilies->find("first", array("conditions"=>array("experiment_id"=>$exp_id, "rf_id"=>$rf_id)));
+        // Get RFAM name and description from values stored in `configuration`
+        $rf_name = $this->Configuration->find("first", array("conditions"=>array("method"=>"rfam_families", "key"=>$rf_data['RnaFamilies']['rfam_rf_id'], "attr"=>"rfam_id"), "fields"=>array("value")));
+        $rf_data['RnaFamilies']['name'] = $rf_name['Configuration']['value'];
+        $rf_desc = $this->Configuration->find("first", array("conditions"=>array("method"=>"rfam_families", "key"=>$rf_data['RnaFamilies']['rfam_rf_id'], "attr"=>"description"), "fields"=>array("value")));
+        $rf_data['RnaFamilies']['description'] = $rf_desc['Configuration']['value'];
+        // Get clan name and description too!
+        if($rf_data['RnaFamilies']['rfam_clan_id']) {
+            $clan_name = $this->Configuration->find("first", array("conditions"=>array("method"=>"rfam_clans", "key"=>$rf_data['RnaFamilies']['rfam_clan_id'], "attr"=>"clan_id"), "fields"=>array("value")));
+            $rf_data['RnaFamilies']['clan_name'] = $clan_name['Configuration']['value'];
+            $clan_desc = $this->Configuration->find("first", array("conditions"=>array("method"=>"rfam_clans", "key"=>$rf_data['RnaFamilies']['rfam_clan_id'], "attr"=>"description"), "fields"=>array("value")));
+            $rf_data['RnaFamilies']['clan_description'] = $clan_desc['Configuration']['value'];
+        }
         $rfam_linkouts = $this->Configuration->find("all", array('conditions'=>array('method'=>'linkout', 'key'=>'rfam')));
         $rfam_linkouts = $this->TrapidUtils->indexArraySimple($rfam_linkouts, "Configuration", "attr", "value");
         // Get transcript data

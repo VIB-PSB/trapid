@@ -15,15 +15,23 @@ class Configuration extends AppModel {
     // Retrieve RFAM clans metadata (id + description) from the database, and return them as array
     function getRfamClansMetadata() {
         $clans_metadata = array();
-        $config_values = $this->find("all", array('conditions'=>array('method'=>'rfam_clans', 'attr'=>'metadata')));
-        if($config_values) {
+        // Retrieve data from DB (`configuration` table)
+        $config_clan_ids = $this->find("all", array('conditions'=>array('method'=>'rfam_clans', 'attr'=>'clan_id')));
+        $config_clan_descs = $this->find("all", array('conditions'=>array('method'=>'rfam_clans', 'attr'=>'description')));
+        if($config_clan_ids && $config_clan_descs) {
             // Process retrieved configuration values and return formatted array
-            foreach($config_values as $cf) {
+            foreach($config_clan_ids as $cf) {
                 $clan_acc = $cf['Configuration']['key'];
-                $clan_metadata = explode(";", $cf['Configuration']['value']);
-                $clan_id = $clan_metadata[0];
-                $clan_desc = $clan_metadata[1];
-                $clans_metadata[$clan_acc] = array("clan_id"=>$clan_id, "clan_desc"=>$clan_desc);
+                $clan_id = $cf['Configuration']['value'];
+                $clans_metadata[$clan_acc]["clan_id"] = $clan_id;
+            }
+            foreach($config_clan_descs as $cf) {
+                $clan_acc = $cf['Configuration']['key'];
+                // Useless check as we know for sure every clan has both an ID and a description?
+                // if(array_key_exists($clan_acc, $clans_metadata)){
+                $clan_desc = $cf['Configuration']['value'];
+                $clans_metadata[$clan_acc]["clan_desc"] = $clan_desc;
+                // }
             }
             return $clans_metadata;
         }

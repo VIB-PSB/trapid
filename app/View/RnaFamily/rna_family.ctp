@@ -1,29 +1,29 @@
 <div>
     <div class="page-header">
         <h1 class="text-primary"><?php echo $rf_data['rf_id']; ?> <small>RNA family</small></h1>
-        <!--        <h1 class="text-primary">Gene Family</h1>-->
     </div>
     <div class="subdiv">
-        <?php // echo $this->element("trapid_experiment");?>
-
         <h3>Overview</h3>
         <div class="subdiv">
             <dl class="standard dl-horizontal">
                 <dt>RNA Family</dt>
                 <dd><?php echo $rf_data['rf_id'];?></dd>
+                <dt>Description</dt>
+                <dd><?php echo $rf_data['description'];?></dd>
                 <dt>Transcript count</dt>
                 <dd><?php echo $rf_data['num_transcripts'];?></dd>
                 <dt>Original RNA Family</dt>
                 <dd>
                     <?php
-                    echo "<td><a class='linkout' target='_blank' href='". $rfam_linkouts["base_url"] . $rfam_linkouts["family"] . $rf_data['rfam_rf_id'] . "'>" . $rf_data['rfam_rf_id'] . "</a></td>";
+                    echo "<a class='linkout' target='_blank' href='". $rfam_linkouts["base_url"] . $rfam_linkouts["family"] . $rf_data['rfam_rf_id'] . "'>" . $rf_data['name'] . " (" . $rf_data['rfam_rf_id'] . ")</a>";
                     if(isset($rf_data['rfam_clan_id'])){
-                        echo " (part of clan "
-                            . "<td><a class='linkout' target='_blank' href='". $rfam_linkouts["base_url"] . $rfam_linkouts["clan"] . $rf_data['rfam_clan_id'] . "'>" . $rf_data['rfam_clan_id'] . "</a></td>"
-                            . ")";
+                        echo ", member of clan "
+                            . "<a class='linkout' target='_blank' href='". $rfam_linkouts["base_url"] . $rfam_linkouts["clan"] . $rf_data['rfam_clan_id'] . "'>" . $rf_data['clan_name'] . " (" . $rf_data['rfam_clan_id'] . ")</a>"
+                            . ". ";
                     }
                     ?>
                 </dd>
+
             </dl>
         </div>
 
