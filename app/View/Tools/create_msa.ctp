@@ -40,7 +40,6 @@
 
 
         if(isset($previous_result) && $previous_result==true){
-            $msa_url_1= $this->Html->url(array("controller"=>"tools","action"=>"view_msa",$hashed_user_id,$exp_id,$gf_id,$msa_type),true);
             echo "<h3>".$msa_title."</h3>\n";
             echo "<div class='subdiv'>\n";
 //    		echo "<dl class='standard'>\n";
@@ -63,7 +62,7 @@
             <?php
             echo "<br><dl class='standard dl-horizontal'>\n";
             echo "<dt>Download</dt>\n";
-            echo "<dd>".$this->Html->link("Download multiple sequence alignment",$msa_url_1)."</dd>";
+            echo "<dd>".$this->Html->link("Download multiple sequence alignment", array("controller"=>"tools","action"=>"view_msa",$hashed_user_id,$exp_id,$gf_id,$msa_type))."</dd>";
             echo "</dl>\n";
 
 //		echo "<form action='http://bioinformatics.psb.ugent.be/webtools/jalview/jalview.jnlp' id='form_msa_norm' method='post'>";
@@ -118,7 +117,7 @@
         <div id="options_div" <?php echo $options_div_style;?> >
             <br/>
             <?php
-            echo $this->Form->create(false,array("action"=>"create_msa/".$exp_id."/".$gf_id,"type"=>"post"));
+            echo $this->Form->create(false, array("url"=>array("controller"=>"tools", "action"=>"create_msa", $exp_id, $gf_id), "type"=>"post"));
             ?>
 
 

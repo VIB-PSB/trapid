@@ -39,7 +39,7 @@
         echo "<h3>Change Access</h3>\n";
         echo "<div class='subdiv'>\n";
 
-        echo $this->Form->create(false, array("action" => "experiment_access/" . $exp_id . "/", "type" => "post"));
+        echo $this->Form->create(false, array("url"=>array("controller"=>"trapid", "action"=>"experiment_access", $exp_id), "type" => "post"));
 
         echo "<span>Provide the email-addresses of people with a TRAPID account with which you want to share this experiment.</span>\n";
         echo "<br/><br/>\n";

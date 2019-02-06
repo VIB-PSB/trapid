@@ -109,7 +109,7 @@
                     <div>
                         <?php
                         if ($transcript_info['transcript_sequence_corrected'] != "") {
-                            echo $this->Form->create(false, array("action" => "transcript/" . $exp_id . "/" . $transcript_info['transcript_id'], "type" => "post"));
+                            echo $this->Form->create(false, array("url"=>array("controller"=>"trapid", "action" => "transcript", $exp_id, $transcript_info['transcript_id']), "type" => "post"));
                             echo "<div class=\"textarea-wrapper\">";
                             echo "<textarea class='fixed-width-text' cols='80' rows='5'  name='corrected_sequence' id='corrected_sequence'>" . $transcript_info['transcript_sequence_corrected'] . "</textarea>\n";
                             echo "<br><div class='clipboard-copy' id=\"copy_corrected_sequence\">Copy to clipboard</div>";
@@ -132,7 +132,7 @@
                     <div>
                         <?php
                         if ($transcript_info['orf_sequence'] != "") {
-                            echo $this->Form->create(false, array("action" => "transcript/" . $exp_id . "/" . $transcript_info['transcript_id'], "type" => "post"));
+                            echo $this->Form->create(false, array("url"=>array("controller"=>"trapid", "action" => "transcript", $exp_id, $transcript_info['transcript_id']), "type" => "post"));
                             echo "<div class=\"textarea-wrapper\">";
                             echo "<textarea class='fixed-width-text' cols='80' rows='5' name='orf_sequence' id='orf_sequence'>" . $transcript_info['orf_sequence'] . "</textarea>\n";
                             echo "<br><div class='clipboard-copy' id=\"copy_orf_nt_sequence\">Copy to clipboard</div>";
@@ -223,7 +223,7 @@
                             "Full Length" => array("color" => "#000000"),
                             "Quasi Full Length" => array("color" => "#000000")
                         );
-                        echo $this->Form->create(false, array("action" => "transcript/" . $exp_id . "/" . $transcript_info['transcript_id'], "type" => "post"));
+                        echo $this->Form->create(false, array("url"=>array("controller"=>"trapid", "action" => "transcript", $exp_id, $transcript_info['transcript_id']), "type" => "post"));
                         echo "<span style='color:" . $possible_meta[$transcript_info['meta_annotation']]['color'] . "'>";
                         echo $transcript_info['meta_annotation'];
                         echo "</span>\n";
@@ -384,7 +384,7 @@
                     }
                     ?>
                 </section>
-            
+
                 <section class="page-section-sm">
                 <h3>InterPro domains</h3>
                 <dd>
@@ -459,7 +459,7 @@
             <?php
             // Subset table
             echo "<div id='all_subsets' style='display:none;'>\n";
-            echo $this->Form->create(false, array("action" => "transcript/" . $exp_id . "/" . $transcript_info['transcript_id'], "type" => "post"));
+            echo $this->Form->create(false, array("url"=>array("controller"=>"trapid", "action" => "transcript", $exp_id, $transcript_info['transcript_id']), "type" => "post"));
             echo "<input type='hidden' name='subsets' value='subsets'/>";
             echo "<table class='table table-striped table-condensed table-bordered table-hover' cellpadding='0' cellspacing='0' style='width:430px;'>\n";
             echo "<thead><tr><th style='width:15%'>Include</th><th style='width:60%'>Subset</th><th>#Transcripts</th></tr></thead>\n";

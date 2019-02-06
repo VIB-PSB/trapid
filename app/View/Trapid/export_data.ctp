@@ -30,7 +30,7 @@
             <h4>Export structural data</h4>
             <div class="subdiv bottom">
                 <span style="font-weight:bold;">Select columns for output data:</span><br/>
-                <?php echo $this->Form->create(false, array("action" => "export_data/" . $exp_id, "type" => "post")); ?>
+                <?php echo $this->Form->create(false, array("url" => array("controller" => "trapid", "action" => "export_data", $exp_id), "type" => "post")); ?>
                 <input type="hidden" name="export_type" value="structural"/>
 
                 <?php
@@ -75,7 +75,7 @@
 
                 <br/>
                 <div style="float:left;margin-right: 20px;">
-                    <?php echo $this->Form->create(false, array("action" => "export_data/" . $exp_id, "type" => "post")); ?>
+                    <?php echo $this->Form->create(false, array("url" => array("controller" => "trapid", "action" => "export_data", $exp_id), "type" => "post")); ?>
                     <input type="hidden" name="export_type" value="gf"/>
                     <input type="hidden" name="gf_type" value="transcript"/>
                    <button class="btn btn-default" type="submit"<?php echo $unfinished; ?>><span class="glyphicon glyphicon-download-alt"></span> Transcripts with GF</button>
@@ -83,7 +83,7 @@
                 </div>
 
                 <div style="float:left;margin-right: 20px;">
-                    <?php echo $this->Form->create(false, array("action" => "export_data/" . $exp_id, "type" => "post")); ?>
+                    <?php echo $this->Form->create(false, array("url" => array("controller" => "trapid", "action" => "export_data", $exp_id), "type" => "post")); ?>
                     <input type="hidden" name="export_type" value="gf"/>
                     <input type="hidden" name="gf_type" value="phylo"/>
                    <button class="btn btn-default" type="submit"<?php echo $unfinished; ?>><span class="glyphicon glyphicon-download-alt"></span> GF with transcripts</button>
@@ -91,7 +91,7 @@
                 </div>
 
                 <div style="float:left;">
-                    <?php echo $this->Form->create(false, array("action" => "export_data/" . $exp_id, "type" => "post")); ?>
+                    <?php echo $this->Form->create(false, array("url" => array("controller" => "trapid", "action" => "export_data", $exp_id), "type" => "post")); ?>
                     <input type="hidden" name="export_type" value="gf"/>
                     <input type="hidden" name="gf_type" value="reference"/>
                    <button class="btn btn-default" type="submit"<?php echo $unfinished; ?>><span class="glyphicon glyphicon-download-alt"></span> GF reference data</button>
@@ -115,7 +115,7 @@
             <div class="subdiv">
                 <p class="text-justify"><strong>Note:</strong> Protein sequences are translated ORF sequences. </p>
                 <div style="float:left;margin-right: 20px;">
-                    <?php echo $this->Form->create(false, array("action" => "export_data/" . $exp_id, "type" => "post")); ?>
+                    <?php echo $this->Form->create(false, array("url" => array("controller" => "trapid", "action" => "export_data", $exp_id), "type" => "post")); ?>
                     <input type="hidden" name="export_type" value="sequence"/>
                     <input type="hidden" name="sequence_type" value="original"/>
                     <button class="btn btn-default" type="submit"<?php echo $unfinished; ?>><span class="glyphicon glyphicon-download-alt"></span> Transcript sequences</button>
@@ -123,7 +123,7 @@
                 </div>
 
                 <div style="float:left;margin-right: 20px;">
-                    <?php echo $this->Form->create(false, array("action" => "export_data/" . $exp_id, "type" => "post")); ?>
+                    <?php echo $this->Form->create(false, array("url" => array("controller" => "trapid", "action" => "export_data", $exp_id), "type" => "post")); ?>
                     <input type="hidden" name="export_type" value="sequence"/>
                     <input type="hidden" name="sequence_type" value="orf"/>
                     <button class="btn btn-default" type="submit"<?php echo $unfinished; ?>><span class="glyphicon glyphicon-download-alt"></span> ORF sequences</button>
@@ -131,7 +131,7 @@
                 </div>
 
                 <div style="float:left;">
-                    <?php echo $this->Form->create(false, array("action" => "export_data/" . $exp_id, "type" => "post")); ?>
+                    <?php echo $this->Form->create(false, array("url" => array("controller" => "trapid", "action" => "export_data", $exp_id), "type" => "post")); ?>
                     <input type="hidden" name="export_type" value="sequence"/>
                     <input type="hidden" name="sequence_type" value="aa"/>
                     <button class="btn btn-default" type="submit" <?php echo $unfinished; ?>><span class="glyphicon glyphicon-download-alt"></span> Protein sequences</button>
@@ -164,7 +164,7 @@
                 </ul>
                 <br/>
                 <div style="float:left;margin-right: 20px;">
-                    <?php echo $this->Form->create(false, array("action" => "export_data/" . $exp_id, "type" => "post")); ?>
+                    <?php echo $this->Form->create(false, array("url" => array("controller" => "trapid", "action" => "export_data", $exp_id), "type" => "post")); ?>
                     <input type="hidden" name="export_type" value="go"/>
                     <input type="hidden" name="functional_type" value="transcript_go"/>
                     <button class="btn btn-default" type="submit" <?php echo $unfinished; ?>><span class="glyphicon glyphicon-download-alt"></span> Transcripts with GO</button>
@@ -173,7 +173,7 @@
 
 
                 <div style="float:left;width:220px;">
-                    <?php echo $this->Form->create(false, array("action" => "export_data/" . $exp_id, "type" => "post")); ?>
+                    <?php echo $this->Form->create(false, array("url" => array("controller" => "trapid", "action" => "export_data", $exp_id), "type" => "post")); ?>
                     <input type="hidden" name="export_type" value="go"/>
                     <input type="hidden" name="functional_type" value="meta_go"/>
                     <button class="btn btn-default" type="submit" <?php echo $unfinished; ?>><span class="glyphicon glyphicon-download-alt"></span> GO meta data</button>
@@ -204,7 +204,7 @@
                 </ul>
                 <br/>
                 <div style="float:left;margin-right: 20px;">
-                    <?php echo $this->Form->create(false, array("action" => "export_data/" . $exp_id, "type" => "post")); ?>
+                    <?php echo $this->Form->create(false, array("url" => array("controller" => "trapid", "action" => "export_data", $exp_id), "type" => "post")); ?>
                     <input type="hidden" name="export_type" value="interpro"/>
                     <input type="hidden" name="functional_type" value="transcript_ipr"/>
                     <button class="btn btn-default" type="submit" <?php echo $unfinished; ?>><span class="glyphicon glyphicon-download-alt"></span> Transcripts with protein domain</button>
@@ -213,7 +213,7 @@
 
 
                 <div style="float:left;">
-                    <?php echo $this->Form->create(false, array("action" => "export_data/" . $exp_id, "type" => "post")); ?>
+                    <?php echo $this->Form->create(false, array("url" => array("controller" => "trapid", "action" => "export_data", $exp_id), "type" => "post")); ?>
                     <input type="hidden" name="export_type" value="interpro"/>
                     <input type="hidden" name="functional_type" value="meta_ipr"/>
                     <button class="btn btn-default" type="submit" <?php echo $unfinished; ?>><span class="glyphicon glyphicon-download-alt"></span> Protein domain meta data</button>
@@ -236,7 +236,7 @@
             <h4>Export subsets</h4>
             <div class="subdiv">
                 <?php
-                echo $this->Form->create(false, array("action" => "export_data/" . $exp_id, "type" => "post"));
+                echo $this->Form->create(false, array("url" => array("controller" => "trapid", "action" => "export_data", $exp_id), "type" => "post"));
                 echo "<input type='hidden' name='export_type' value='subsets' />\n";
 
                 echo "<div style='float:left;width:290px;'>\n";

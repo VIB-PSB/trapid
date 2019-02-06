@@ -29,7 +29,7 @@
 
 
             <?php
-            echo $this->Form->create(false, array("controller" => "trapid", "action" => "import_labels/" . $exp_id,
+            echo $this->Form->create(false, array("url"=>array("controller" => "trapid", "action" => "import_labels", $exp_id),
                 "type" => "post", "enctype" => "multipart/form-data",
                 "id" => "import_labels_form", "name" => "import_labels_form"));
             ?>

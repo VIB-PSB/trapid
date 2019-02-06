@@ -60,7 +60,7 @@ echo $this->Html->css('https://cdn.rawgit.com/jshjohnson/Choices/3e889633/assets
             ?>
             <?php
                 // echo $this->Form->create(false, array("action" => "core_gf_completeness/" . $exp_id, "type" => "post", "default"=>"false", "id"=>"completeness-form"));
-                echo $this->Form->create(false, array("type" => "post", "default"=>"false", "id"=>"completeness-form"));
+                echo $this->Form->create(false, array("url"=>array("controller"=>"tools", "action"=>"core_gf_completeness", $exp_id), "type" => "post", "default"=>"false", "id"=>"completeness-form"));
             ?>
 
             <div class="row">

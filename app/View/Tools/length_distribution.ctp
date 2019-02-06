@@ -13,7 +13,7 @@
 
 		$disable_graph_type	= null;
 		if(!(isset($meta_partial)||isset($meta_noinfo))){$disable_graph_type=" disabled='disabled' ";}
-		echo $this->Form->create(false,array("action"=>"length_distribution/".$exp_id."/".$sequence_type,"type"=>"post"));
+		echo $this->Form->create(false, array("url"=>array("controller"=>"tools", "action"=>"length_distribution", $exp_id, $sequence_type),"type"=>"post"));
 
 		echo "<dl class='standard'>\n";
 		echo "<dt>#Bins</dt>\n";
@@ -172,7 +172,7 @@
 
 		$disable_normalize_data	= null;	if($selected_ref_species==""){$disable_normalize_data=" disabled='disabled' ";}
 
-		echo $this->Form->create(false,array("action"=>"length_distribution/".$exp_id."/".$sequence_type,"type"=>"post"));
+		echo $this->Form->create(false,array("url"=>array("controller"=>"tools", "action"=>"length_distribution", $exp_id, $sequence_type),"type"=>"post"));
 		echo "<dl class='standard'>\n";
 		echo "<dt>#Bins</dt>\n";
 		echo "<dd>\n";

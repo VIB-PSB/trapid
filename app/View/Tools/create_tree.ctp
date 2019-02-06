@@ -285,8 +285,8 @@
                             <strong>Export as:</strong>
                             <button class="btn btn-sm btn-primary" id="linkSVG">SVG</button>
                             <button class="btn btn-sm btn-primary" id="linkPNG">PNG</button>
-                            <a class="btn btn-sm btn-primary" href="<?php echo $this->Html->url(array("controller"=>"tools","action"=>"view_tree",$hashed_user_id,$exp_id,$gf_id,"newick"),true); ?>">Newick</a>
-                            <a class="btn btn-sm btn-primary" href="<?php echo $this->Html->url(array("controller"=>"tools","action"=>"view_tree",$hashed_user_id,$exp_id,$gf_id),true); ?>">XML</a>
+                            <a class="btn btn-sm btn-primary" href="<?php echo $this->Html->url(array("controller"=>"tools","action"=>"view_tree",$hashed_user_id,$exp_id,$gf_id,"newick")); ?>">Newick</a>
+                            <a class="btn btn-sm btn-primary" href="<?php echo $this->Html->url(array("controller"=>"tools","action"=>"view_tree",$hashed_user_id,$exp_id,$gf_id)); ?>">XML</a>
                         </div>
                     </div> <!--  end .panel -->
                     <p class="text-justify">Use your mouse to drag, zoom and modify the tree. <strong>Actions:</strong><br />
@@ -301,10 +301,8 @@
 
         <?php
 		echo "<div class='subdiv'>\n";
-		$data_url_tree	= $this->Html->url(array("controller"=>"tools","action"=>"view_tree",$hashed_user_id,$exp_id,$gf_id),true);
-		$data_url_tree_newick = $this->Html->url(array("controller"=>"tools","action"=>"view_tree",$hashed_user_id,$exp_id,$gf_id,"newick"),true);
-		$web_url_msa		= $this->Html->url(array("controller"=>"tools","action"=>"create_msa",$exp_id,$gf_id),true);
-		$web_url_msa_stripped	= $this->Html->url(array("controller"=>"tools","action"=>"create_msa",$exp_id,$gf_id,"stripped"),true);
+		$data_url_tree	= $this->Html->url(array("controller"=>"tools","action"=>"view_tree",$hashed_user_id,$exp_id,$gf_id),false);
+		$data_url_tree_newick = $this->Html->url(array("controller"=>"tools","action"=>"view_tree",$hashed_user_id,$exp_id,$gf_id,"newick"),false);
 
 		$jar_file_location = $this->Html->url("/files/forester/",true);
 		$config_url	   = TMP_WEB."experiment_data/".$exp_id."/atv_config.cfg";
@@ -321,8 +319,8 @@
 //		    echo "</ul>";
 		    echo "<h3>Multiple sequence alignment</h3>";
 		    echo "<ul style='margin-left:30px;'>";
-		    echo "<li>".$this->Html->link("Full MSA",$web_url_msa)." (Length: ".$full_msa_length." amino acids)</li>";
-		    echo "<li>".$this->Html->link("Stripped MSA",$web_url_msa_stripped)." (Length: ".$stripped_msa_length." amino acids)</li>";
+		    echo "<li>".$this->Html->link("Full MSA", array("controller"=>"tools","action"=>"create_msa",$exp_id,$gf_id)) . " (Length: ".$full_msa_length." amino acids)</li>";
+            echo "<li>" . $this->Html->link("Stripped MSA", array("controller"=>"tools","action"=>"create_msa",$exp_id,$gf_id,"stripped")) . " (Length: ". $stripped_msa_length . " amino acids)</li>";
 		    echo "</ul>";
 		    echo "<br/>\n";
 
@@ -371,7 +369,7 @@
 	<div id="options_div" <?php echo $options_div_style;?> >
 	<br/>
 	<?php
-		echo $this->Form->create(false,array("action"=>"create_tree/".$exp_id."/".$gf_id,"type"=>"post"));
+		echo $this->Form->create(false, array("url"=>array("controller"=>"tools", "action"=>"create_tree", $exp_id, $gf_id), "type"=>"post"));;
 	?>
 
 

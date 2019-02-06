@@ -22,7 +22,7 @@
             } ?>
 
             <?php
-            echo $this->Form->create(false, array("controller" => "trapid", "action" => "import_data/" . $exp_id,
+            echo $this->Form->create(false, array("url"=>array("controller" => "trapid", "action" => "import_data", $exp_id),
                 "type" => "post", "enctype" => "multipart/form-data",
                 "id" => "import_data_form", "name" => "import_data_form"));
             ?>
@@ -54,7 +54,7 @@
                     echo "<span class='error text-danger'><strong>Error: </strong>" . $error . "</span><br/><br/>\n";
                 } ?>
                 <?php
-                echo $this->Form->create(false, array("controller" => "trapid", "action" => "import_data/" . $exp_id,
+                echo $this->Form->create(false, array("url"=>array("controller" => "trapid", "action" => "import_data", $exp_id),
                     "type" => "post", "enctype" => "multipart/form-data",
                     "id" => "import_data_form", "name" => "import_data_form"));
                 ?>
@@ -100,12 +100,11 @@
         <?php endif; ?>
     </section>
 
-
     <section class="page-section-sm">
     <h3>Upload transcripts to database</h3>
         <div>
             <?php
-            echo $this->Form->create(false, array("controller" => "trapid", "action" => "import_data/" . $exp_id,
+            echo $this->Form->create(false, array("url"=>array("controller" => "trapid", "action" => "import_data", $exp_id),
                 "type" => "post", "enctype" => "multipart/form-data",
                 "id" => "import_data_form", "name" => "import_data_form"));
             ?>

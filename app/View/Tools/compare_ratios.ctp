@@ -10,7 +10,7 @@
 	<h3>Subset selection</h3>
 		<?php
 		if(isset($error)){echo "<span class='error text-danger'><strong>Error: </strong>".$error."</span><br>\n";}
-		echo $this->Form->create(false,array("action"=>"compare_ratios/".$exp_id."/".$type,"type"=>"post", "id"=>"compare-ratios-form", "class"=>"form-inline"));
+		echo $this->Form->create(false, array("url"=>array("controller"=>"tools", "action"=>"compare_ratios", $exp_id, $type),"type"=>"post", "id"=>"compare-ratios-form", "class"=>"form-inline"));
 //		echo "<dl class='standard dl-horizontal'>";
         echo "<div class='form-group' style='margin-right: 20px;'>";
 		echo "<label for='subset1'><strong>Subset 1</strong></label><br>";

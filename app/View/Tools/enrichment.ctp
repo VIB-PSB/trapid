@@ -2,8 +2,8 @@
     echo $this->Html->script("canvasXpress/canvasXpress.min.js");
     // TODO: host locally
     // Highcharts
-    echo $this->Html->script('http://code.highcharts.com/highcharts.js');
-    echo $this->Html->script('http://code.highcharts.com/modules/exporting.js');
+    echo $this->Html->script('https://code.highcharts.com/highcharts.js');
+    echo $this->Html->script('https://code.highcharts.com/modules/exporting.js');
     echo $this->Html->script("swfobject");
 ?>
 
@@ -88,7 +88,7 @@
         if (isset($error)) {
             echo "<span class='error'>" . $error . "</span>\n";
         }
-        echo $this->Form->create(false, array("action" => "enrichment/" . $exp_id . "/" . $type, "type" => "post", "id"=>"enrichment-form"));
+        echo $this->Form->create(false, array("url"=>array("controller"=>"tools", "action" => "enrichment", $exp_id, $type), "type" => "post", "id"=>"enrichment-form"));
         echo "<dl class='standard dl-horizontal' style='max-width:520px;'>";
         echo "<dt>Subset";
         echo "</dt>";

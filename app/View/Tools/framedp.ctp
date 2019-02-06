@@ -15,7 +15,7 @@
 		</span>
 		<?php else: ?>
 		<?php
-		echo $this->Form->create(false, array("action"=>"framedp/".$exp_id."/".$gf_id,"type"=>"post"));
+		echo $this->Form->create(false, array("url"=>array("controller"=>"tools", "action"=>"framedp", $exp_id, $gf_id),"type"=>"post"));
 		?>
 		<dl class="standard">
 			<dt>Gene family</dt>
