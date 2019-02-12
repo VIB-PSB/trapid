@@ -205,7 +205,9 @@
 <h2 id="transcripts">Transcripts</h2>
 <div class="subdiv">
     <?php if ($num_transcripts == 0): ?>
-        <p class="lead text-muted">Disabled prior to transcripts import. </p>
+        <p class="lead text-muted">Disabled prior to transcripts import.
+            <?php echo $this->Html->link("Import transcripts", array("controller" => "trapid", "action" => "import_data", $exp_id)); ?> to get started.
+        </p>
         <!--        <span class='disabled'>Disabled prior to transcripts import</span>-->
     <?php else: ?>
         <?php

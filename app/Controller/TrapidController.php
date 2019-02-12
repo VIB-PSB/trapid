@@ -1646,10 +1646,20 @@ class TrapidController extends AppController{
     // $exp_id	= mysql_real_escape_string($exp_id);
     parent::check_user_exp($exp_id);
     $exp_info	= $this->Experiments->getDefaultInformation($exp_id);
-    $this -> set('title_for_layout', "Import transcripts");
-    $this->TrapidUtils->checkPageAccess($exp_info['title'],$exp_info["process_state"],$this->process_states["start"]);
+      $this->set("active_sidebar_item", "Import data");
+      $this -> set('title_for_layout', "Import data");
+    // $this->TrapidUtils->checkPageAccess($exp_info['title'],$exp_info["process_state"],$this->process_states["start"]);
+    $this->TrapidUtils->checkPageAccess($exp_info['title'],$exp_info["process_state"],$this->process_states["default"]);
     $this->set("exp_info", $exp_info);
     $this->set("exp_id", $exp_id);
+
+    // Gey help tooltips data
+    $tooltips = $this->TrapidUtils->indexArraySimple(
+          $this->HelpTooltips->find("all", array("conditions"=>array("tooltip_id LIKE 'data_upload%'"))),
+          "HelpTooltips","tooltip_id","tooltip_text"
+      );
+    $this->set("tooltips", $tooltips);
+
     //this is a basis location for creating the temp storage for an experiment.
     $tmp_dir	= TMP."experiment_data/".$exp_id."/";
     if(!file_exists($tmp_dir) || !is_dir($tmp_dir)){mkdir($tmp_dir,0777);}
@@ -1660,6 +1670,17 @@ class TrapidController extends AppController{
     shell_exec("chmod -R a+rwx $upload_dir");
     chmod($upload_dir,0777);
 
+    // Check if there are any session data from `import_labels()` to handle -- can be an error (`subset_error`) or a message (`subset_message`)
+    if ($this->Session->check("subset_error")) {
+        $this->set("subset_error", $this->Session->read("subset_error"));
+        $this->Session->delete("subset_error");
+    }
+
+    if ($this->Session->check("subset_message")) {
+        $this->set("subset_message", $this->Session->read("subset_message"));
+        $this->Session->delete("subset_message");
+    }
+
     //give an overview of the content of the directory, so the user doesn't upload the same file twice
     //$uploaded_files = $this->TrapidUtils->readDir($upload_dir);
     // `Model::findAll` was removed in CakePHP 1.3
@@ -1668,7 +1689,6 @@ class TrapidController extends AppController{
     $this->set("uploaded_files",$uploaded_files);
     $uploaded_files_index = $this->TrapidUtils->indexArrayMulti($uploaded_files,"DataUploads","id",
 							array("user_id","experiment_id","type","name"));
-
     if($_POST && array_key_exists("type",$_POST)){
       //#########################################
       //     FILE OR URL UPLOAD
@@ -1970,50 +1990,57 @@ class TrapidController extends AppController{
   }
 
 
-
+  // NOTE: should this method be merged with the rest in `import_data()`?
   function import_labels($exp_id=null){
-    // $exp_id	= mysql_real_escape_string($exp_id);
     parent::check_user_exp($exp_id);
+    $this->autoRender = false;
+    $this->layout = "";
     $exp_info	= $this->Experiments->getDefaultInformation($exp_id);
     $this->TrapidUtils->checkPageAccess($exp_info['title'],$exp_info["process_state"],$this->process_states["default"]);
-    $this->set("exp_info",$exp_info);
-    $this->set("exp_id",$exp_id);
-    $this -> set('title_for_layout', "Import labels");
+      if ($exp_info['transcript_count'] == 0) {
+        return;
+    }
 
-    $MAX_FILE_SIZE_NORMAL		= 2000000;
-
-    if($_POST){
-	if(!isset($_FILES["uploadedfile"])){$this->redirect(array("controller"=>"trapid","action"=>"experiments"));}
+    // Handle subset creation
+    if ($this->request->is('post')) {
+        $MAX_FILE_SIZE_NORMAL = 2000000;
+        // Check for multiple invalid cases
+        if(!isset($_FILES["uploadedfile"])) {
+            // should we redirect somewhere else?
+            $this->redirect(array("controller"=>"trapid","action"=>"experiment"));
+        }
         if(($_FILES['uploadedfile']['name']=="") || ($_FILES['uploadedfile']['size'] == 0) ||($_FILES['uploadedfile']['tmp_name'] == "")){
-	  $this->set("error","Illegal input file");return;
-	}
+            $this->Session->write("subset_error", "Illegal input file");
+            $this->redirect(array("controller"=>"trapid","action"=>"import_data", $exp_id));
+        }
 
-	if(!isset($_POST['label'])||$_POST['label']==""){$this->set("error","No label defined");return;}
-	//$label	= mysql_real_escape_string($_POST['label']);
-	$label 		= Sanitize::paranoid($_POST['label'],array('.','_','-'));
-
-	if($_FILES['uploadedfile']['size']>$MAX_FILE_SIZE_NORMAL){$this->set("error","File is too large");return;}
-	$myFile 		= $_FILES['uploadedfile']['tmp_name'];
-	$fh 			= fopen($myFile,'r');
-    	$transcripts_input	= fread($fh,filesize($myFile));
-
-    	$transcripts		= preg_split("/[\s,]+/",$transcripts_input);
-	$transcripts		= array_unique($transcripts);
-	fclose($fh);
-        //check correctness of both the transcripts and whether label already exists for the indicated transcripts
-	$counter = $this->TranscriptsLabels->enterTranscripts($exp_id,$transcripts,$label);
-        $this->set("message",$counter." transcripts have been labeled as '".$label."' ");
-	$this->ExperimentLog->addAction($exp_id,"label_definition",$label);
-	return;
+        if(!isset($_POST['label'])||$_POST['label']==""){
+            $this->Session->write("subset_error", "No label defined");
+            $this->redirect(array("controller"=>"trapid","action"=>"import_data", $exp_id));
+        }
+        if($_FILES['uploadedfile']['size']>$MAX_FILE_SIZE_NORMAL){
+            $this->Session->write("subset_error", "File is too large");
+            $this->redirect(array("controller"=>"trapid","action"=>"import_data", $exp_id));
+        }
+        // Create the subset
+        $label 		= Sanitize::paranoid($_POST['label'],array('.','_','-'));
+        $myFile = $_FILES['uploadedfile']['tmp_name'];
+        $fh = fopen($myFile,'r');
+        $transcripts_input = fread($fh,filesize($myFile));
+        $transcripts = preg_split("/[\s,]+/",$transcripts_input);
+        $transcripts = array_unique($transcripts);
+        fclose($fh);
+        // Check correctness of both the transcripts and whether label already exists for the indicated transcripts
+        $counter = $this->TranscriptsLabels->enterTranscripts($exp_id, $transcripts, $label);
+        $this->ExperimentLog->addAction($exp_id,"label_definition", $label);
+        $this->Session->write("subset_message", $counter." transcripts have been labeled as '".$label."' ");
+        $this->redirect(array("controller"=>"trapid","action"=>"import_data", $exp_id));
+    }
+    else {
+        // throw new NotFoundException();
+        return;  // Return blank page instead?
     }
   }
-
-
-
-
-
-
-
 
 
   function export_data($exp_id=null){

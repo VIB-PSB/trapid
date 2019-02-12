@@ -112,33 +112,36 @@
     //                echo "<pre>".$exp_info['label_count']."</pre><br>";
     // print_r($exp_info);
     ?>
-    <!-- Experimenr sidebar navigation -->
+    <!-- Experiment sidebar navigation -->
     <ul class="nav sidebar-nav">
         <li>
             <?php echo $this->Html->link("Overview", array("controller" => "trapid", "action" => "experiment", $exp_id)); ?>
         </li>
-        <li class="dropdown">
-            <a class="ripple-effect dropdown-toggle" href="#" data-toggle="dropdown">
-                Import data
-                <b class="caret"></b>
-            </a>
-            <ul id="import-dropdown" class="dropdown-menu">
-                <?php if ($process_state == "empty" || $process_state == "upload") : ?>
-                    <li>
-                        <?php echo $this->Html->link("Transcripts", array("controller" => "trapid", "action" => "import_data", $exp_id)); ?>
-                    </li>
-                <?php else : ?>
-                    <li class="sidebar-text sidebar-disabled">Transcripts</li>
-                <?php endif ?>
-                <?php if ($exp_info['transcript_count'] != 0) : ?>
-                    <li>
-                        <?php echo $this->Html->link("Transcript subsets/labels", array("controller" => "trapid", "action" => "import_labels", $exp_id)); ?>
-                    </li>
-                <?php else : ?>
-                    <li class="sidebar-text sidebar-disabled">Transcript subsets/labels</li>
-                <?php endif ?>
-            </ul>
+        <li>
+            <?php echo $this->Html->link("Import data", array("controller" => "trapid", "action" => "import_data", $exp_id)); ?>
         </li>
+<!--        <li class="dropdown">-->
+<!--            <a class="ripple-effect dropdown-toggle" href="#" data-toggle="dropdown">-->
+<!--                Import data-->
+<!--                <b class="caret"></b>-->
+<!--            </a>-->
+<!--            <ul id="import-dropdown" class="dropdown-menu">-->
+<!--                --><?php //if ($process_state == "empty" || $process_state == "upload") : ?>
+<!--                    <li>-->
+<!--                        --><?php //echo $this->Html->link("Transcripts", array("controller" => "trapid", "action" => "import_data", $exp_id)); ?>
+<!--                    </li>-->
+<!--                --><?php //else : ?>
+<!--                    <li class="sidebar-text sidebar-disabled">Transcripts</li>-->
+<!--                --><?php //endif ?>
+<!--                --><?php //if ($exp_info['transcript_count'] != 0) : ?>
+<!--                    <li>-->
+<!--                        --><?php //echo $this->Html->link("Transcript subsets/labels", array("controller" => "trapid", "action" => "import_labels", $exp_id)); ?>
+<!--                    </li>-->
+<!--                --><?php //else : ?>
+<!--                    <li class="sidebar-text sidebar-disabled">Transcript subsets/labels</li>-->
+<!--                --><?php //endif ?>
+<!--            </ul>-->
+<!--        </li>-->
         <?php if ($exp_info['transcript_count'] != 0) : ?>
             <li>
                 <?php echo $this->Html->link("Export data", array("controller" => "trapid", "action" => "export_data", $exp_id)); ?>
@@ -154,7 +157,7 @@
             <li class="sidebar-text sidebar-disabled">Statistics</li>
             <li class="sidebar-text sidebar-disabled">Taxonomic binning</li>
             <li class="sidebar-text sidebar-disabled">Browse gene families</li>
-            <li class="sidebar-text sidebar-disabled">Browse RNA families</li>
+            <li class="sidebar-text sidebar-disabled">Browse RNA families (beta)</li>
 <!--            <li class="sidebar-text sidebar-disabled">Expanded/depleted GFs</li>-->
 <!--            <li class="sidebar-text sidebar-disabled">Core GF completeness</li>-->
         <?php else :
@@ -187,7 +190,7 @@
                 <?php echo $this->Html->link("Browse gene families", array("controller" => "gene_family", "action" => "index", $exp_id)); ?>
             </li>
             <li>
-                <?php echo $this->Html->link("Browse RNA families", array("controller" => "rna_family", "action" => "index", $exp_id)); ?>
+                <?php echo $this->Html->link("Browse RNA families (beta)", array("controller" => "rna_family", "action" => "index", $exp_id)); ?>
             </li>
 <!--            <li>-->
 <!--                --><?php //echo $this->Html->link("Expanded/depleted GFs", array("controller" => "gene_family", "action" => "expansion", $exp_id)); ?>
