@@ -8,7 +8,7 @@ Create default transcript subsets after initial processing.
 import common
 import sys
 
-SUBSET_NAMES = {"rf_gf": "RNA_ambiguous"}
+SUBSET_NAMES = {"rf_gf": "RNA_ambiguous", "gf_only": "Protein_coding", "rf_only": "RNA"}
 
 
 def delete_subset(exp_id, subset_name, trapid_db_data):
@@ -43,12 +43,45 @@ def create_subset(exp_id, subset_name, transcripts, trapid_db_data):
 
 def get_ambiguous_rna_transcripts(exp_id, trapid_db_data):
     """
-    Retrieve 'ambiguous' RNA transcripts, i.e. transcript that are part of both a gene family and a RNA family, for
+    Retrieve 'ambiguous' RNA transcripts, i.e. transcripts that are part of both a gene family and a RNA family, for
     experiment `exp_id`, and return them as set of transcript identifiers. TRAPID database is accessed using data in
     `trapid_db_data`.
     """
     sys.stderr.write("[Message] Retrieve ambiguous transcripts for experiment '%s'.\n" % exp_id)
     query_str = "SELECT `transcript_id` FROM `transcripts` WHERE `experiment_id`='{exp_id}' AND `gf_id` IS NOT NULL AND `rf_ids` IS NOT NULL;"
+    db_conn = common.db_connect(*trapid_db_data)
+    cursor = db_conn.cursor()
+    cursor.execute(query_str.format(exp_id=exp_id))
+    transcripts = set([record[0] for record in cursor.fetchall()])
+    db_conn.commit()
+    db_conn.close()
+    return transcripts
+
+
+def get_rna_transcripts(exp_id, trapid_db_data):
+    """
+    Retrieve RNA transcripts, i.e. transcripts that are part of a RNA family but no gene family, for experiment `exp_id`,
+    and return them as set of transcript identifiers. TRAPID database is accessed using data in `trapid_db_data`.
+    """
+    sys.stderr.write("[Message] Retrieve RNA transcripts for experiment '%s'.\n" % exp_id)
+    query_str = "SELECT `transcript_id` FROM `transcripts` WHERE `experiment_id`='{exp_id}' AND `gf_id` IS NULL AND `rf_ids` IS NOT NULL;"
+    db_conn = common.db_connect(*trapid_db_data)
+    cursor = db_conn.cursor()
+    cursor.execute(query_str.format(exp_id=exp_id))
+    transcripts = set([record[0] for record in cursor.fetchall()])
+    db_conn.commit()
+    db_conn.close()
+    return transcripts
+
+
+def get_protein_coding_transcripts(exp_id, trapid_db_data):
+    """
+    Retrieve protein-coding transcripts, i.e. transcripts that are part of a gene family but no RNA family, for
+    experiment `exp_id`, and return them as set of transcript identifiers. TRAPID database is accessed using data in
+    `trapid_db_data`.
+    """
+    sys.stderr.write("[Message] Retrieve protein-coding transcripts for experiment '%s'.\n" % exp_id)
+    query_str = "SELECT `transcript_id` FROM `transcripts` WHERE `experiment_id`='{exp_id}' AND `gf_id` IS NOT NULL AND `rf_ids` IS NULL;"
     db_conn = common.db_connect(*trapid_db_data)
     cursor = db_conn.cursor()
     cursor.execute(query_str.format(exp_id=exp_id))
@@ -69,12 +102,38 @@ def create_ambiguous_rna_transcripts_subset(exp_id, trapid_db_data):
         create_subset(exp_id, SUBSET_NAMES['rf_gf'], ambiguous_transcripts, trapid_db_data)
 
 
+def create_rna_transcripts_subset(exp_id, trapid_db_data):
+    """
+    Create subset for RNA transcripts of experiment `exp_id`. TRAPID DB is accessed using `trapid_db_data` information.
+    """
+    delete_subset(exp_id, SUBSET_NAMES['rf_only'], trapid_db_data)
+    rna_transcripts = get_rna_transcripts(exp_id, trapid_db_data)
+    sys.stderr.write("[Message] %d RNA transcripts were retrieved! \n" % len(rna_transcripts))
+    if rna_transcripts:
+        create_subset(exp_id, SUBSET_NAMES['rf_only'], rna_transcripts, trapid_db_data)
+
+
+def create_protein_coding_transcripts_subset(exp_id, trapid_db_data):
+    """
+    Create subset for protein-coding transcripts of experiment `exp_id`. TRAPID DB is accessed using `trapid_db_data`
+    information.
+    """
+    delete_subset(exp_id, SUBSET_NAMES['gf_only'], trapid_db_data)
+    pc_transcripts = get_protein_coding_transcripts(exp_id, trapid_db_data)
+    sys.stderr.write("[Message] %d protein-coding transcripts were retrieved! \n" % len(pc_transcripts))
+    if pc_transcripts:
+        create_subset(exp_id, SUBSET_NAMES['gf_only'], pc_transcripts, trapid_db_data)
+
+
 def main(config_dict):
     exp_id = config_dict["experiment"]["exp_id"]
     # List containing all needed parameters for `common.db_connect()`
     trapid_db_data = [config['trapid_db']['trapid_db_username'], config['trapid_db']['trapid_db_password'],
                       config['trapid_db']['trapid_db_server'], config['trapid_db']['trapid_db_name']]
+    # Create default subsets
     create_ambiguous_rna_transcripts_subset(exp_id, trapid_db_data)
+    create_rna_transcripts_subset(exp_id, trapid_db_data)
+    create_protein_coding_transcripts_subset(exp_id, trapid_db_data)
 
 
 if __name__ == '__main__':
