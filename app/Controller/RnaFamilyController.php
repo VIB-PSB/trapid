@@ -40,9 +40,11 @@ class RnaFamilyController extends AppController{
         // Are names only enough to display on this page?
         $rna_families_ids_original	= $this->TrapidUtils->reduceArray($rna_families_p, 'RnaFamilies','rfam_rf_id');
         $rna_clans_ids_original	= $this->TrapidUtils->reduceArray($rna_families_p, 'RnaFamilies','rfam_clan_id');
-        $rf_names = $this->Configuration->find("all", array("conditions"=>array("method"=>"rfam_families", "key"=>$rna_families_ids_original, "attr"=>"rfam_id"), "fields"=>array("key","value")));
+        // Here not using `IN` resulted in a SQL error when there is only one RNA family to display. The problem:
+        // backticks around 'key' would be missing (reserved word). Adding `IN` seems to solve the issue...
+        $rf_names = $this->Configuration->find("all", array("conditions"=>array("method"=>"rfam_families", "key IN"=>$rna_families_ids_original, "attr"=>"rfam_id"), "fields"=>array("key","value")));
+        $clan_names = $this->Configuration->find("all", array("conditions"=>array("method"=>"rfam_clans", "key IN"=>$rna_clans_ids_original, "attr"=>"clan_id"), "fields"=>array("key", "value")));
         $rf_names = $this->TrapidUtils->indexArraySimple($rf_names, "Configuration", "key", "value");
-        $clan_names = $this->Configuration->find("all", array("conditions"=>array("method"=>"rfam_clans", "key"=>$rna_clans_ids_original, "attr"=>"clan_id"), "fields"=>array("key", "value")));
         $clan_names = $this->TrapidUtils->indexArraySimple($clan_names, "Configuration", "key", "value");
         $rfam_linkouts = $this->Configuration->find("all", array('conditions'=>array('method'=>'linkout', 'key'=>'rfam')));
         $rfam_linkouts = $this->TrapidUtils->indexArraySimple($rfam_linkouts, "Configuration", "attr", "value");
