@@ -262,11 +262,11 @@ class FunctionalAnnotationController extends AppController{
     $this->set("transcript_data",$transcripts);
     $this->set("transcripts_go",$transcripts_go);
     $this->set("transcripts_ipr",$transcripts_ipr);
-    $this->set("transcripts_ipr",$transcripts_ko);
+    $this->set("transcripts_ko",$transcripts_ko);
     $this->set("transcripts_labels",$transcripts_labels);
     $this->set("go_info_transcripts",$go_info);
     $this->set("ipr_info_transcripts",$ipr_info);
-    $this->set("ipr_info_transcripts",$ko_info);
+    $this->set("ko_info_transcripts",$ko_info);
 
     $this -> set('title_for_layout', $interpro.' &middot; Protein domain ');
   }
