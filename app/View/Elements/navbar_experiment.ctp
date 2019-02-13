@@ -1,8 +1,42 @@
-<script type="text/javascript">
-    /* Sidebar is inspired by AdminLTE template (https://adminlte.io/themes/AdminLTE/), iGEM 2015 Evry wiki
-    (http://2015.igem.org/Team:Evry) and this CodePen snippet (https://codepen.io/zavoloklom/pen/dIgco).
-    */
+<?php
+/* This element corresponds to the sidebar (left menu) shown when the user is in an experiment.
 
+It is heavily inspired by:
+ * AdminLTE template (https://adminlte.io/themes/AdminLTE/),
+ * The Evry iGEM 2015 wiki (http://2015.igem.org/Team:Evry),
+ * and this CodePen snippet (https://codepen.io/zavoloklom/pen/dIgco).
+ */
+
+$process_state = $exp_info['process_state'];
+// All the possible menu links + their text and URLs (when there is one).
+$link_text = array(
+    "overview"=>array("Overview", $this->Html->Url(array("controller" => "trapid", "action" => "experiment", $exp_id))),
+    "import"=>array("Import data", $this->Html->Url(array("controller" => "trapid", "action" => "import_data", $exp_id))),
+    "export"=>array("Export data", $this->Html->Url(array("controller" => "trapid", "action" => "export_data", $exp_id))),
+    "stats"=>array("Statistics",  ""),
+    "gen_stats"=>array("General statistics",  $this->Html->Url(array("controller" => "tools", "action" => "statistics", $exp_id))),
+    "len_tr"=>array("Length distribution transcripts", $this->Html->Url(array("controller" => "tools", "action" => "length_distribution", $exp_id, "transcript"))),
+    "len_orf"=>array("Length distribution ORF", $this->Html->Url(array("controller" => "tools", "action" => "length_distribution", $exp_id, "orf"))),
+    "tax_binning"=>array("Taxonomic binning", $this->Html->Url(array("controller" => "tools", "action" => "tax_binning", $exp_id))),
+    "gf"=>array("Browse gene families", $this->Html->Url(array("controller" => "gene_family", "action" => "index", $exp_id))),
+    "rf"=>array("Browse RNA families (beta)", $this->Html->Url(array("controller" => "rna_family", "action" => "index", $exp_id))),
+    "cgfc"=>array("Core GF completeness", $this->Html->Url(array("controller" => "tools", "action" => "core_gf_completeness", $exp_id))),
+    "subsets"=>array("Explore subsets", $this->Html->Url(array("controller" => "labels", "action" => "subset_overview", $exp_id))),
+    "enrichment"=>array("Subset enrichment", ""),
+    "enrichment_go"=>array("GO term enrichment", $this->Html->Url(array("controller" => "tools", "action" => "enrichment", $exp_id, "go"))),
+    "enrichment_ipr"=>array("Protein domain enrichment", $this->Html->Url(array("controller" => "tools", "action" => "enrichment", $exp_id, "ipr"))),
+    "sankey"=>array("Sankey diagrams", ""),
+    "sankey_enriched_go_gf"=>array("Label→Enriched GO→GF", $this->Html->Url(array("controller" => "tools", "action" => "label_enrichedgo_gf2", $exp_id))),
+    "sankey_enriched_ipr_gf"=>array("Label→Enriched IPR→GF", $this->Html->Url(array("controller" => "tools", "action" => "label_enrichedinterpro_gf2", $exp_id))),
+    "compare_subsets"=>array("Compare subsets", ""),
+    "compare_subsets_go"=>array("GO terms between subsets", $this->Html->Url(array("controller" => "tools", "action" => "compare_ratios", $exp_id, "go"))),
+    "compare_subsets_ipr"=>array("Protein domains between subsets", $this->Html->Url(array("controller" => "tools", "action" => "compare_ratios", $exp_id, "ipr"))),
+    "doc"=>array("Documentation", $this->Html->Url(array("controller" => "documentation", "action" => "index"))),
+    "back_exp"=>array("Back to experiments", $this->Html->Url(array("controller" => "trapid", "action" => "experiments")))
+);
+?>
+
+<script type="text/javascript">
     // Toggle sidebar
     $(document).ready(function () {
         var overlay = $('.sidebar-overlay');
@@ -97,7 +131,7 @@
 
     <!-- Sidebar header -->
     <div class="sidebar-header">
-        <a class="sidebar-brand" href="<?php echo $this->Html->Url(array("controller" => "trapid", "action" => "experiments")); ?>">TRAPID <!-- font-family: 'Redensek', arial; -->
+        <a class="sidebar-brand" href="<?php echo $this->Html->Url(array("controller" => "trapid", "action" => "experiments")); ?>">TRAPID
             <label class="label label-beta">beta</label>
         </a>
         <!-- Sidebar brand image -->
@@ -105,164 +139,133 @@
         <!--            <img src="">-->
         <!--        </div>-->
     </div>
-    <?php
-    $process_state = $exp_info['process_state'];
-    //                $process_state =
-    //                echo "<pre>".$process_state."</pre><br>";
-    //                echo "<pre>".$exp_info['label_count']."</pre><br>";
-    // print_r($exp_info);
-    ?>
     <!-- Experiment sidebar navigation -->
     <ul class="nav sidebar-nav">
-        <li>
-            <?php echo $this->Html->link("Overview", array("controller" => "trapid", "action" => "experiment", $exp_id)); ?>
-        </li>
-        <li>
-            <?php echo $this->Html->link("Import data", array("controller" => "trapid", "action" => "import_data", $exp_id)); ?>
-        </li>
-<!--        <li class="dropdown">-->
-<!--            <a class="ripple-effect dropdown-toggle" href="#" data-toggle="dropdown">-->
-<!--                Import data-->
-<!--                <b class="caret"></b>-->
-<!--            </a>-->
-<!--            <ul id="import-dropdown" class="dropdown-menu">-->
-<!--                --><?php //if ($process_state == "empty" || $process_state == "upload") : ?>
-<!--                    <li>-->
-<!--                        --><?php //echo $this->Html->link("Transcripts", array("controller" => "trapid", "action" => "import_data", $exp_id)); ?>
-<!--                    </li>-->
-<!--                --><?php //else : ?>
-<!--                    <li class="sidebar-text sidebar-disabled">Transcripts</li>-->
-<!--                --><?php //endif ?>
-<!--                --><?php //if ($exp_info['transcript_count'] != 0) : ?>
-<!--                    <li>-->
-<!--                        --><?php //echo $this->Html->link("Transcript subsets/labels", array("controller" => "trapid", "action" => "import_labels", $exp_id)); ?>
-<!--                    </li>-->
-<!--                --><?php //else : ?>
-<!--                    <li class="sidebar-text sidebar-disabled">Transcript subsets/labels</li>-->
-<!--                --><?php //endif ?>
-<!--            </ul>-->
-<!--        </li>-->
-        <?php if ($exp_info['transcript_count'] != 0) : ?>
-            <li>
-                <?php echo $this->Html->link("Export data", array("controller" => "trapid", "action" => "export_data", $exp_id)); ?>
-            </li>
-        <?php else : ?>
-            <li class="sidebar-text sidebar-disabled">Export data</li>
 
-        <?php endif ?>
-
-        <li class="divider"></li>
-        <?php if ($exp_info['transcript_count'] == 0) :
-            // No transcripts == every tool is  disabled ?>
-            <li class="sidebar-text sidebar-disabled">Statistics</li>
-            <li class="sidebar-text sidebar-disabled">Taxonomic binning</li>
-            <li class="sidebar-text sidebar-disabled">Browse gene families</li>
-            <li class="sidebar-text sidebar-disabled">Browse RNA families (beta)</li>
-<!--            <li class="sidebar-text sidebar-disabled">Expanded/depleted GFs</li>-->
-<!--            <li class="sidebar-text sidebar-disabled">Core GF completeness</li>-->
-        <?php else :
-            // Transcripts uploaded == 'statistics' + GFs available ?>
-            <li class="dropdown">
-                <a class="ripple-effect dropdown-toggle" href="#" data-toggle="dropdown">
-                    Statistics
-                    <b class="caret"></b>
-                </a>
-                <ul id="stats-dropdown" class="dropdown-menu">
-                    <li>
-                        <?php echo $this->Html->link("General statistics", array("controller" => "tools", "action" => "statistics", $exp_id)); ?>
-                    </li>
-                    <li>
-                        <?php echo $this->Html->link("Length distribution transcripts", array("controller" => "tools", "action" => "length_distribution", $exp_id, "transcript")); ?>
-                    </li>
-                    <li>
-                        <?php echo $this->Html->link("Length distribution ORF", array("controller" => "tools", "action" => "length_distribution", $exp_id, "orf")); ?>
-                    </li>
-                </ul>
-            </li>
-            <?php if($exp_info['perform_tax_binning'] == 1): ?>
-            <li>
-                <?php echo $this->Html->link("Taxonomic binning", array("controller" => "tools", "action" => "tax_binning", $exp_id), array("escape" => false)); ?>
-            </li>
-            <?php else: ?>
-                <li class="sidebar-text sidebar-disabled">Taxonomic binning</li>
-            <?php endif; ?>
-            <li>
-                <?php echo $this->Html->link("Browse gene families", array("controller" => "gene_family", "action" => "index", $exp_id)); ?>
-            </li>
-            <li>
-                <?php echo $this->Html->link("Browse RNA families (beta)", array("controller" => "rna_family", "action" => "index", $exp_id)); ?>
-            </li>
-<!--            <li>-->
-<!--                --><?php //echo $this->Html->link("Expanded/depleted GFs", array("controller" => "gene_family", "action" => "expansion", $exp_id)); ?>
-<!--            </li>-->
-        <?php endif ?>
         <?php
-        // Some items should be unavailable until the experiment is fully finished? For example tax binning
-        if ($process_state == "finished"): ?>
-            <li>
-                <?php echo $this->Html->link("Core GF completeness", array("controller" => "tools", "action" => "core_gf_completeness", $exp_id), array("escape" => false)); ?>
-            </li>
-        <?php    // Some elements are still disabled
-        else: ?>
-            <li class="sidebar-text sidebar-disabled">Core GF completeness</li>
-        <?php endif ?>
-        <?php if ($exp_info['label_count'] < 1) :
-            // If no subsets are defined, lock other tools. ?>
-            <li class="sidebar-text sidebar-disabled">Explore subsets</li>
-            <li class="sidebar-text sidebar-disabled">Subset enrichment</li>
-            <li class="sidebar-text sidebar-disabled">Sankey diagrams</li>
-        <?php else : ?>
-            <li>
-                <?php echo $this->Html->link("Explore subsets", array("controller" => "labels", "action" => "subset_overview", $exp_id)); ?>
-            </li>
+        // if ($exp_info['transcript_count'] != 0)... Check on transcript counts too?
+        // First way to adjust availability of sidebar links is by checking the status of the experiment.
+        if (in_array($process_state, ["processing", "loading_db", "error"])): ?>
+        <?php foreach (["overview", "import", "export"] as $link_id) {
+            echo "<li class=\"sidebar-text sidebar-disabled\">"  . $link_text[$link_id][0] . "</li>\n";
+        }
+        ?>
+        <li class="divider"></li>
+        <?php foreach (["stats", "tax_binning", "gf", "rf", "cgfc", "subsets", "enrichment", "sankey", "compare_subsets"] as $link_id) {
+            echo "<li class=\"sidebar-text sidebar-disabled\">"  . $link_text[$link_id][0] . "</li>\n";
+        }
+        ?>
+
+        <?php elseif ($process_state == "empty"): ?>
+        <?php foreach (["overview", "import"] as $link_id) {
+            echo "<li><a href='"  . $link_text[$link_id][1] . "'>" . $link_text[$link_id][0] . "</a></li>\n";
+        }
+        echo "<li class=\"sidebar-text sidebar-disabled\">" . $link_text["export"][0] . "</li>\n";
+        ?>
+        <li class="divider"></li>
+        <?php foreach (["stats", "tax_binning", "gf", "rf", "cgfc", "subsets", "enrichment", "sankey", "compare_subsets"] as $link_id) {
+            echo "<li class=\"sidebar-text sidebar-disabled\">"  . $link_text[$link_id][0] . "</li>\n";
+        }
+        ?>
+
+        <?php elseif ($process_state == "upload"): ?>
+        <?php foreach (["overview", "import", "export"] as $link_id) {
+            echo "<li><a href='"  . $link_text[$link_id][1] . "'>" . $link_text[$link_id][0] . "</a></li>\n";
+        }
+        ?>
+        <li class="divider"></li>
+        <li class="dropdown">
+            <a class="ripple-effect dropdown-toggle" href="#" data-toggle="dropdown">
+                <?php echo $link_text["stats"][0];?><b class="caret"></b>
+            </a>
+            <ul id="stats-dropdown" class="dropdown-menu">
+                <?php foreach (["gen_stats", "len_tr", "len_orf"] as $link_id) {
+                    echo "<li><a href='"  . $link_text[$link_id][1] . "'>" . $link_text[$link_id][0] . "</a></li>\n";
+                }
+                ?>
+            </ul>
+        </li>
+        <?php
+        echo "<li class=\"sidebar-text sidebar-disabled\">"  . $link_text["tax_binning"][0] . "</li>\n";
+        foreach (["gf", "rf"] as $link_id) {
+            echo "<li><a href='"  . $link_text[$link_id][1] . "'>" . $link_text[$link_id][0] . "</a></li>\n";
+        }
+        foreach (["cgfc", "subsets", "enrichment", "sankey", "compare_subsets"] as $link_id) {
+            echo "<li class=\"sidebar-text sidebar-disabled\">"  . $link_text[$link_id][0] . "</li>\n";
+        }
+        ?>
+
+        <?php elseif ($process_state == "finished"): ?>
+        <?php foreach (["overview", "import", "export"] as $link_id) {
+            echo "<li><a href='"  . $link_text[$link_id][1] . "'>" . $link_text[$link_id][0] . "</a></li>\n";
+        }
+        ?>
+        <li class="divider"></li>
+        <li class="dropdown">
+            <a class="ripple-effect dropdown-toggle" href="#" data-toggle="dropdown">
+                <?php echo $link_text["stats"][0];?><b class="caret"></b>
+            </a>
+            <ul id="stats-dropdown" class="dropdown-menu">
+                <?php foreach (["gen_stats", "len_tr", "len_orf"] as $link_id) {
+                    echo "<li><a href='"  . $link_text[$link_id][1] . "'>" . $link_text[$link_id][0] . "</a></li>\n";
+                }
+                ?>
+            </ul>
+        </li>
+        <?php
+        if ($exp_info['perform_tax_binning'] == 1) {
+            echo "<li><a href='"  . $link_text["tax_binning"][1] . "'>" . $link_text["tax_binning"][0] . "</a></li>\n";
+        }
+        else {
+            echo "<li class=\"sidebar-text sidebar-disabled\">"  . $link_text["tax_binning"][0] . "</li>\n";
+        }
+        foreach (["gf", "rf", "cgfc"] as $link_id) {
+            echo "<li><a href='"  . $link_text[$link_id][1] . "'>" . $link_text[$link_id][0] . "</a></li>\n";
+        }
+        ?>
+        <?php if($exp_info['label_count'] == 0): ?>
+            <?php
+            foreach (["subsets", "enrichment", "sankey", "compare_subsets"] as $link_id) {
+                echo "<li class=\"sidebar-text sidebar-disabled\">"  . $link_text[$link_id][0] . "</li>\n";
+            }
+        ?>
+        <?php else: ?>
+            <?php echo "<li><a href='"  . $link_text["subsets"][1] . "'>" . $link_text["subsets"][0] . "</a></li>\n"; ?>
             <li class="dropdown">
                 <a class="ripple-effect dropdown-toggle" href="#" data-toggle="dropdown">
-                    Subset enrichment
-                    <b class="caret"></b>
+                    <?php echo $link_text["enrichment"][0];?><b class="caret"></b>
                 </a>
                 <ul id="stats-dropdown" class="dropdown-menu">
-                    <li>
-                        <?php echo $this->Html->link("GO term enrichment", array("controller" => "tools", "action" => "enrichment", $exp_id, "go")); ?>
-                    </li>
-                    <li>
-                        <?php echo $this->Html->link("Protein domain enrichment", array("controller" => "tools", "action" => "enrichment", $exp_id, "ipr")); ?>
-                    </li>
+                    <?php echo "<li><a href='"  . $link_text["enrichment_go"][1] . "'>" . $link_text["enrichment_go"][0] . "</a></li>\n"; ?>
+                    <?php echo "<li><a href='"  . $link_text["enrichment_ipr"][1] . "'>" . $link_text["enrichment_ipr"][0] . "</a></li>\n"; ?>
                 </ul>
             </li>
 
             <li class="dropdown">
                 <a class="ripple-effect dropdown-toggle" href="#" data-toggle="dropdown">
-                    Sankey diagrams
-                    <b class="caret"></b>
+                    <?php echo $link_text["sankey"][0];?><b class="caret"></b>
                 </a>
                 <ul id="stats-dropdown" class="dropdown-menu">
-                    <li>
-                        <?php echo $this->Html->link("Label→Enriched GO→GF", array("controller" => "tools", "action" => "label_enrichedgo_gf2", $exp_id)); ?>
-                    </li>
-                    <li>
-                        <?php echo $this->Html->link("Label→Enriched IPR→GF", array("controller" => "tools", "action" => "label_enrichedinterpro_gf2", $exp_id)); ?>
-                    </li>
+                    <?php echo "<li><a href='"  . $link_text["sankey_enriched_go_gf"][1] . "'>" . $link_text["sankey_enriched_go_gf"][0] . "</a></li>\n"; ?>
+                    <?php echo "<li><a href='"  . $link_text["sankey_enriched_ipr_gf"][1] . "'>" . $link_text["sankey_enriched_ipr_gf"][0] . "</a></li>\n"; ?>
                 </ul>
             </li>
-        <?php endif ?>
-        <?php if ($exp_info['label_count'] < 2) : ?>
-            <li class="sidebar-text sidebar-disabled">Compare subsets</li>
-        <?php else : ?>
-            <li class="dropdown">
+
+        <?php if($exp_info['label_count'] > 1): ?>
+        <li class="dropdown">
                 <a class="ripple-effect dropdown-toggle" href="#" data-toggle="dropdown">
-                    Compare subsets
-                    <b class="caret"></b>
+                    <?php echo $link_text["compare_subsets"][0];?><b class="caret"></b>
                 </a>
                 <ul id="stats-dropdown" class="dropdown-menu">
-                    <li>
-                        <?php echo $this->Html->link("GO terms between subsets", array("controller" => "tools", "action" => "compare_ratios", $exp_id, "go")); ?>
-                    </li>
-                    <li>
-                        <?php echo $this->Html->link("Protein domains between subsets", array("controller" => "tools", "action" => "compare_ratios", $exp_id, "ipr")); ?>
-                    </li>
+                    <?php echo "<li><a href='"  . $link_text["compare_subsets_go"][1] . "'>" . $link_text["compare_subsets_go"][0] . "</a></li>\n"; ?>
+                    <?php echo "<li><a href='"  . $link_text["compare_subsets_ipr"][1] . "'>" . $link_text["compare_subsets_ipr"][0] . "</a></li>\n"; ?>
                 </ul>
-            </li>
-        <?php endif ?>
+        </li>
+        <?php else : ?>
+        <?php echo "<li class=\"sidebar-text sidebar-disabled\">"  . $link_text["compare_subsets"][0] . "</li>\n"; ?>
+        <?php endif; // End -- label count > 1 ?>
+        <?php endif; //  End -- label count == 0 ?>
+    <?php endif; ?>
     </ul>
     <!-- Sidebar divider -->
     <!--     <div class="sidebar-divider"></div>-->
@@ -270,8 +273,8 @@
         <ul class="nav sidebar-nav">
             <li class="divider"></li>
             <!--    <div class="dropdown-header">Misc</div>-->
-            <li><?php echo $this->Html->link("Documentation", array("controller" => "documentation", "action" => "index"), array("escape" => false)); ?></li>
-            <li><?php echo $this->Html->link("Back to experiments", array("controller" => "trapid", "action" => "experiments")); ?></li>
+            <?php echo "<li><a href='"  . $link_text["doc"][1] . "'>" . $link_text["doc"][0] . "</a></li>\n"; ?>
+            <?php echo "<li><a href='"  . $link_text["back_exp"][1] . "'>" . $link_text["back_exp"][0] . "</a></li>\n"; ?>
         </ul>
     </div>
     <!-- Sidebar text -->
