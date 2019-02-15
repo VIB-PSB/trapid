@@ -90,6 +90,8 @@ class TrapidUtilsComponent extends Component{
     $internal_zip	= $tmp_dir."".$hash.".zip";
 
     //create shell file
+    // TODO: replace hardcoded path to Java (replaced since `/usr/bin/java` was pointing to nothing after migration)
+    $java_cmd = "/software/shared/apps/x86_64/java/1.6.0_17/bin/java"; // Not `usr/bin//java` anymore!
     $shell_file		= $tmp_dir."export_data.sh";
     $base_scripts_location	= APP."scripts/";
     $java_location	= $base_scripts_location."java/";
@@ -110,12 +112,13 @@ class TrapidUtilsComponent extends Component{
 
    //fwrite($fh,"module load java\n");
    //fwrite($fh,"java -cp ".$java_location.".:".$java_location."..:".$java_location."mysql.jar ".$java_program." ".implode(" ",$java_params)."\n");
-     fwrite($fh,"/usr/bin/java -cp ".$java_location.".:".$java_location."..:".$java_location."mysql.jar ".$java_program." ".implode(" ",$java_params)." 2>&1 \n");
+    fwrite($fh,$java_cmd . " -cp ".$java_location.".:".$java_location."..:".$java_location."mysql.jar ".$java_program." ".implode(" ",$java_params)." 2>&1\n");
     fclose($fh);
 
     //execute shell script with java program
     shell_exec("chmod a+x ".$shell_file);
     $output = shell_exec("sh ".$shell_file);
+
     pr($output);
 
     //zip result file and cleanup
