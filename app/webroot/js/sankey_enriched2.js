@@ -190,8 +190,15 @@ function add_checkboxes(){
             continue;
         }
         // check  all values in the initial view some values
-        checkbox.checked = true;
-        checked_labels[n] = 1;         
+        // Check the box only if there is enriched data for the subset?
+        if(Object.keys(enrichedIdents).indexOf(n) > -1){
+            checkbox.checked = true;
+            checked_labels[n] = 1;
+        }
+        else {
+            checkbox.checked = false;
+        }
+
     }
 }
 
@@ -199,7 +206,7 @@ function add_checkboxes(){
 function checkbox_changed(event){
     disable_everything();
     var chckbx = event.target;
-   
+
     if(chckbx.checked){
         checked_labels[chckbx.name] = 1;
     } else {
@@ -295,12 +302,11 @@ function determine_current_links(){
     var sign = parseInt($(enrichment_id + " option:selected").val()) === 0 ? 1 : -1;
 
 
-    for(var label in checked_labels){        
+    for(var label in checked_labels){
         if(!(label in first_links)){
             first_links[label] = Object.create(null);
             column[label] = 0;
         }
-
         for(var transcript in transcriptLabelGF[label]){
             for(var identifier in transcriptIdent[transcript]){
                 // Is the GO term enriched for this p_value? (this check is unnecessary, the second if catches this case too)

@@ -1795,6 +1795,7 @@ class ToolsController extends AppController{
 
 
   function label_enrichedgo_gf2($exp_id=null){
+    // ini_set('memory_limit', '1024M');
     $this->general_set_up($exp_id);
     $this -> set('title_for_layout', "Labels - Enriched GO terms - GF intersection");
 
@@ -1807,7 +1808,6 @@ class ToolsController extends AppController{
     $transcriptLabelGF = $this->FunctionalEnrichments->getTranscriptToLabelAndGF($exp_id);
     $transcriptGO = $this->FunctionalEnrichments->getTranscriptGOMapping($exp_id);
     $counts = $this->TranscriptsLabels->getLabels($exp_id);// not necessary anymore, still used though
-
     $go_ids = array();
     foreach($enriched_gos as $label){
         if(array_key_exists('0.1',$label)){
@@ -1820,9 +1820,9 @@ class ToolsController extends AppController{
 
     $this->set('counts',$counts);
 
-    $urls = array(Router::url(array("controller"=>"labels","action"=>"view",$exp_id,$place_holder)),
-                  Router::url(array("controller"=>"functional_annotation","action"=>"go",$exp_id,$place_holder)),
-                  Router::url(array("controller"=>"gene_family","action"=>"gene_family",$exp_id,$place_holder))
+    $urls = array(urldecode(Router::url(array("controller"=>"labels","action"=>"view",$exp_id,$place_holder))),
+        urldecode(Router::url(array("controller"=>"functional_annotation","action"=>"go",$exp_id,$place_holder))),
+        urldecode(Router::url(array("controller"=>"gene_family","action"=>"gene_family",$exp_id,$place_holder)))
     );
     $this->set('descriptions', $go_info);
     $this->set('enriched_gos',$enriched_gos);
@@ -1837,7 +1837,6 @@ class ToolsController extends AppController{
 
   function label_enrichedinterpro_gf2($exp_id=null){
     $this->general_set_up($exp_id);
-
     $this->set("col_names", array('Label','Interpro','Gene family'));
     $this->set('dropdown_names',array('Domains', 'Gene families'));
     $place_holder = '###';
@@ -1859,11 +1858,10 @@ class ToolsController extends AppController{
     $interpro_info	= $this->ProteinMotifs->retrieveInterproInformation($interpros);
     $this->set('counts', $counts);
 
-    $urls = array(Router::url(array("controller"=>"labels","action"=>"view",$exp_id,$place_holder)),
-                  Router::url(array("controller"=>"functional_annotation","action"=>"interpro",$exp_id,$place_holder)),
-                  Router::url(array("controller"=>"gene_family","action"=>"gene_family",$exp_id,$place_holder))
+    $urls = array(urldecode(Router::url(array("controller"=>"labels","action"=>"view",$exp_id,$place_holder))),
+        urldecode(Router::url(array("controller"=>"functional_annotation","action"=>"interpro",$exp_id,$place_holder))),
+        urldecode(Router::url(array("controller"=>"gene_family","action"=>"gene_family",$exp_id,$place_holder)))
     );
-
     $this->set('enriched_gos',$enriched_interpros);
     $this->set('transcriptGO', $transcriptInterpro);
     $this->set('transcriptLabelGF', $transcriptLabelGF);
