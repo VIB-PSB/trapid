@@ -15,7 +15,7 @@ $link_text = array(
     "export"=>array("Export data", $this->Html->Url(array("controller" => "trapid", "action" => "export_data", $exp_id))),
     "stats"=>array("Statistics",  ""),
     "gen_stats"=>array("General statistics",  $this->Html->Url(array("controller" => "tools", "action" => "statistics", $exp_id))),
-    "len_tr"=>array("Length distribution transcripts", $this->Html->Url(array("controller" => "tools", "action" => "length_distribution", $exp_id, "transcript"))),
+    "len_tr"=>array("Sequence length distribution", $this->Html->Url(array("controller" => "tools", "action" => "length_distribution", $exp_id, "transcript"))),
     "len_orf"=>array("Length distribution ORF", $this->Html->Url(array("controller" => "tools", "action" => "length_distribution", $exp_id, "orf"))),
     "tax_binning"=>array("Taxonomic binning", $this->Html->Url(array("controller" => "tools", "action" => "tax_binning", $exp_id))),
     "gf"=>array("Browse gene families", $this->Html->Url(array("controller" => "gene_family", "action" => "index", $exp_id))),
@@ -179,7 +179,7 @@ $link_text = array(
                 <?php echo $link_text["stats"][0];?><b class="caret"></b>
             </a>
             <ul id="stats-dropdown" class="dropdown-menu">
-                <?php foreach (["gen_stats", "len_tr", "len_orf"] as $link_id) {
+                <?php foreach (["gen_stats", "len_tr"] as $link_id) {
                     echo "<li><a href='"  . $link_text[$link_id][1] . "'>" . $link_text[$link_id][0] . "</a></li>\n";
                 }
                 ?>
@@ -206,7 +206,7 @@ $link_text = array(
                 <?php echo $link_text["stats"][0];?><b class="caret"></b>
             </a>
             <ul id="stats-dropdown" class="dropdown-menu">
-                <?php foreach (["gen_stats", "len_tr", "len_orf"] as $link_id) {
+                <?php foreach (["gen_stats", "len_tr"] as $link_id) {
                     echo "<li><a href='"  . $link_text[$link_id][1] . "'>" . $link_text[$link_id][0] . "</a></li>\n";
                 }
                 ?>

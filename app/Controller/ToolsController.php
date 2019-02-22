@@ -1468,37 +1468,108 @@ class ToolsController extends AppController{
 
 
 
-  function length_distribution($exp_id=null,$sequence_type=null){
-    // $exp_id	= mysql_real_escape_string($exp_id);
+  function length_distribution($exp_id=null, $sequence_type=null){
     parent::check_user_exp($exp_id);
-    $exp_info	= $this->Experiments->getDefaultInformation($exp_id);
+    $exp_info = $this->Experiments->getDefaultInformation($exp_id);
     $this->TrapidUtils->checkPageAccess($exp_info['title'],$exp_info["process_state"],$this->process_states["default"]);
-    $this->set("exp_info",$exp_info);
-    $this->set("exp_id",$exp_id);
+    $this->set("exp_info", $exp_info);
+    $this->set("exp_id", $exp_id);
 
-    if($sequence_type!=null){if(!($sequence_type=="transcript" || $sequence_type=="orf")){$sequence_type="transcript";}}
-    else{$sequence_type	= "transcript";}
-    $this->set("sequence_type",$sequence_type);
+    // Check sequence type
+    if($sequence_type!=null) {
+        if(!($sequence_type=="transcript" || $sequence_type=="orf")) {
+            $sequence_type="transcript";
+        }
+    }
+    else{
+        $sequence_type	= "transcript";
+    }
+    $this->set("sequence_type", $sequence_type);
 
 
     //Binning information
     $possible_bins	= array("5"=>"20","10"=>"15","20"=>"10","50"=>"5","100"=>"5","200"=>"5");
+    $range_bins = [5, 200];
+    $valid_sequence_types = ["transcript", "orf"];
     $this->set("possible_bins",$possible_bins);
-    $num_bins		= 50;
-    if($_POST && array_key_exists("num_bins",$_POST) && array_key_exists($_POST['num_bins'],$possible_bins)){
+    $num_bins = 30;
+    $this->set("default_bins", $num_bins);
+    $this->set("range_bins", $range_bins);
+    // Allowed chart types
+    $possible_graphtypes   = array("grouped"=>"","stacked"=>"normal");
+
+    if($this->request->is('post')) {
+        $this->layout = "";
+        $invalid_str = "<p class='text-center lead'>Invalid parameters. Cannot display graph!</p>";  // Quick and dirty error message
+
+        // Transcript sequences
+        $transcript_lengths	= $this->Transcripts->getLengths($exp_id, "transcript");
+        $num_bins	= $_POST['num_bins'];  // Already checked?
+        $show_partials = false;
+        $show_noinfo = false;
+        $bins_transcript = $this->Statistics->create_length_bins($transcript_lengths, $num_bins);
+        $json_transcript = $this->Statistics->create_json_data_infovis($bins_transcript,"Transcripts");
+
+
+
+        if($_POST && array_key_exists("meta_partial",$_POST)) {
+            $show_partials = true;
+        }
+        if($_POST && array_key_exists("meta_noinfo",$_POST)) {
+            $show_noinfo = true;
+        }
+        if($show_partials){
+            $partial_lengths = $this->Transcripts->getLengths($exp_id,"transcript", "Partial");
+            $json_transcript = $this->Statistics->update_json_data("Transcripts (Partial)",
+                $partial_lengths,$json_transcript,$bins_transcript);
+        }
+        if($show_noinfo){
+            $noinfo_lengths = $this->Transcripts->getLengths($exp_id,"transcript","No Information");
+            $json_transcript = $this->Statistics->update_json_data("Transcripts (No Information)",
+                $noinfo_lengths,$json_transcript,$bins_transcript);
+        }
+        // Update last label
+        $last_label_transcript	= explode(",",$bins_transcript["labels"][$num_bins-1]);
+        $json_transcript["values"][$num_bins-1]["label"]=">=".$last_label_transcript[0];
+        if(count($json_transcript["label"])>1){
+            $json_transcript["label"][0] = "Transcripts (full-length or quasi full-length)";
+        }
+
+
+        // Chart type
+        $graph_type = "grouped";
+        if(array_key_exists("graph_type", $_POST) && array_key_exists($_POST['graph_type'],$possible_graphtypes)){
+            $graph_type = $_POST['graph_type'];
+        }
+
+
+        $this->set("bins_transcript", $json_transcript);
+
+        $this->set("chart_title", "Sequence length distribution");
+        $this->set("chart_subtitle", "Sequence type: " . $sequence_type . " -- "  . $num_bins . " bins. ");
+        $this->set("chart_data", $json_transcript);
+        $this->set("stacking_str", $possible_graphtypes[$graph_type]);
+        $this->set("chart_div_id", "charty-mac-chart-face");
+//        pr($json_transcript);
+//        pr($_POST);
+        $this->render('/Elements/charts/bar_length_distribution');
+    }
+
+          if($_POST && array_key_exists("num_bins",$_POST) && array_key_exists($_POST['num_bins'],$possible_bins)){
       // $num_bins	= mysql_real_escape_string($_POST['num_bins']);
       $num_bins	= $_POST['num_bins'];  // Already checked?
     }
     $this->set("num_bins",$num_bins);
-    $this->set("bars_offset",$possible_bins[$num_bins]);
+//    $this->set("bars_offset",$possible_bins[$num_bins]);
+
+
 
     //based on sequence type, get different options
     //transcript : different meta types, different graphtypes
     if($sequence_type=="transcript"){
 	//get standard length information
         $transcript_lengths	= $this->Transcripts->getLengths($exp_id,"transcript");
-	//graphtype information
-    	$possible_graphtypes   = array("grouped"=>"Adjacent","stacked"=>"Stacked");
+
     	$this->set("possible_graphtypes",$possible_graphtypes);
    	$graphtype		   = "grouped";
     	if($_POST && array_key_exists("graphtype",$_POST) && array_key_exists($_POST['graphtype'],$possible_graphtypes)){
@@ -1508,6 +1579,7 @@ class ToolsController extends AppController{
     	$this->set("graphtype",$graphtype);
 	$bins_transcript		= $this->Statistics->create_length_bins($transcript_lengths,$num_bins);
 	$json_transcript		= $this->Statistics->create_json_data_infovis($bins_transcript,"Transcript lengths");
+//	pr($json_transcript);
 	//get extra information (partials/no info)
     	$show_partials	= false;
     	$show_noinfo	= false;
@@ -1533,6 +1605,7 @@ class ToolsController extends AppController{
 	}
 	 $this->set("bins_transcript",$json_transcript);
     }
+
     //orf: possible reference species
     else if($sequence_type=="orf"){
         $orf_lengths		= $this->Transcripts->getLengths($exp_id,"orf");
@@ -1589,7 +1662,7 @@ class ToolsController extends AppController{
       $this->redirect(array("controller"=>"trapid","action"=>"experiment",$exp_id));
     }
 
-
+    $this -> set('title_for_layout', 'Sequence length distribution');
   }
 
 
@@ -1599,7 +1672,7 @@ class ToolsController extends AppController{
   function statistics($exp_id=null, $pdf='0'){
     // $exp_id	= mysql_real_escape_string($exp_id);
     parent::check_user_exp($exp_id);
-    $this -> set('title_for_layout', "Statistics");
+    $this -> set('title_for_layout', "General statistics");
     $exp_info	= $this->Experiments->getDefaultInformation($exp_id);
     $this->TrapidUtils->checkPageAccess($exp_info['title'],$exp_info["process_state"],$this->process_states["default"]);
     $this->set("exp_info",$exp_info);

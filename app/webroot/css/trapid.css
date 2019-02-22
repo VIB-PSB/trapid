@@ -1572,10 +1572,34 @@ a.linkout:after {
 	background-color: #1abc9c;
 }
 
+.badge-go-nc {
+	background-color: #bbbbbb;
+}
+
 .badge-sm {
 	font-size: 70%;
 	padding: 3px 4px 3px;
 }
+
+span.badge-go {
+	border-radius: 0.8em;
+	-moz-border-radius: 0.8em;
+	-webkit-border-radius: 0.8em;
+	color: #ffffff;
+	display: inline-block;
+	line-height: 1.5em;
+	text-align: center;
+	width: 1.5em;
+	display: inline-block;
+	font-size:0.9em;
+	font-weight: normal;
+}
+
+
+span.badge-go-sm {
+	font-size:0.7em;
+}
+
 
 
 /* Clipboard copy link */
@@ -1594,23 +1618,148 @@ a.linkout:after {
 
 
 
-/* Lots of ugly borders: useful for debugging when things are not displayed as expected */
+.stats-progress {
+	margin-top: 11px;
+	margin-bottom: 0px;
+}
 
-/*body {*/
-/*border: yellow 2px solid;*/
-/*}*/
-/*.side-content {*/
-/*border: cyan 2px solid;*/
-/*}*/
-/*.content-wrapper {*/
-/*border: red 2px solid;*/
-/*}*/
-/*.sidebar .sidebar-header {*/
-/*border: pink 2px solid;*/
-/*}*/
-/*.container-fluid {*/
-/*border:orange 2px solid;*/
-/*}*/
-/*.header-bar {*/
-/*border: green 2px solid;*/
-/*}*/
+.stats-metric {
+	text-align: right;
+	font-weight: bold;
+	padding-right:25px;
+}
+
+.stats-value {
+	text-align: left;
+}
+
+#toggle-extra-hits {
+	cursor: pointer;
+}
+
+
+/* Make progress bars squared */
+.progress-bar:last-child {
+	border-radius: 0 0 0 0;
+}
+
+
+
+/* Make range input a bit more readable... */
+input[type=range] {
+	-webkit-appearance: none;
+	width: 100%;
+	margin: 4px 0;
+}
+input[type=range]:focus {
+	outline: none;
+}
+input[type=range]::-webkit-slider-runnable-track {
+	width: 100%;
+	height: 2px;
+	cursor: pointer;
+	box-shadow: 0px 0px 0px rgba(0, 34, 0, 0), 0px 0px 0px rgba(0, 60, 0, 0);
+	background: #cae6fc;
+	border-radius: 0px;
+	border: 0px solid #18d501;
+}
+input[type=range]::-webkit-slider-thumb {
+	box-shadow: 0px 0px 0px #00aa00, 0px 0px 0px #00c300;
+	border: 0px solid rgba(0, 0, 0, 0);
+	height: 10px;
+	width: 10px;
+	border-radius: 10px;
+	background: #2196f3;
+	cursor: pointer;
+	-webkit-appearance: none;
+	margin-top: -4px;
+}
+input[type=range]:focus::-webkit-slider-runnable-track {
+	background: #ffffff;
+}
+input[type=range]::-moz-range-track {
+	width: 100%;
+	height: 2px;
+	cursor: pointer;
+	box-shadow: 0px 0px 0px rgba(0, 34, 0, 0), 0px 0px 0px rgba(0, 60, 0, 0);
+	background: #cae6fc;
+	border-radius: 0px;
+	border: 0px solid #18d501;
+}
+input[type=range]::-moz-range-thumb {
+	box-shadow: 0px 0px 0px #00aa00, 0px 0px 0px #00c300;
+	border: 0px solid rgba(0, 0, 0, 0);
+	height: 10px;
+	width: 10px;
+	border-radius: 10px;
+	background: #2196f3;
+	cursor: pointer;
+}
+input[type=range]::-ms-track {
+	width: 100%;
+	height: 2px;
+	cursor: pointer;
+	background: transparent;
+	border-color: transparent;
+	color: transparent;
+}
+input[type=range]::-ms-fill-lower {
+	background: #7dc2f8;
+	border: 0px solid #18d501;
+	border-radius: 0px;
+	box-shadow: 0px 0px 0px rgba(0, 34, 0, 0), 0px 0px 0px rgba(0, 60, 0, 0);
+}
+input[type=range]::-ms-fill-upper {
+	background: #cae6fc;
+	border: 0px solid #18d501;
+	border-radius: 0px;
+	box-shadow: 0px 0px 0px rgba(0, 34, 0, 0), 0px 0px 0px rgba(0, 60, 0, 0);
+}
+input[type=range]::-ms-thumb {
+	box-shadow: 0px 0px 0px #00aa00, 0px 0px 0px #00c300;
+	border: 0px solid rgba(0, 0, 0, 0);
+	height: 10px;
+	width: 10px;
+	border-radius: 10px;
+	background: #2196f3;
+	cursor: pointer;
+	height: 2px;
+}
+input[type=range]:focus::-ms-fill-lower {
+	background: #cae6fc;
+}
+input[type=range]:focus::-ms-fill-upper {
+	background: #ffffff;
+}
+
+
+/* Vertically center content */
+.vcenter {
+	display: inline-block;
+	vertical-align: middle;
+	float: none;
+}
+
+
+/* Lots of ugly borders: useful for debugging when things are not displayed as expected */
+/*
+
+body {
+border: yellow 2px solid;
+}
+.side-content {
+border: cyan 2px solid;
+}
+.content-wrapper {
+border: red 2px solid;
+}
+.sidebar .sidebar-header {
+border: pink 2px solid;
+}
+.container-fluid {
+border:orange 2px solid;
+}
+.header-bar {
+border: green 2px solid;
+}
+*/

@@ -11,7 +11,8 @@ $go_categories = array(
 if(isset($go_category)) {
     // Default variables for styling (if nothing is set)
     $use_small_badge = false;
-    $small_badge_class = "badge-sm";
+    $small_badge_class = "badge-go-sm";
+    $no_color_class= "badge-go-nc";
     $use_no_color = false;
     // If some parameters were set, override defaults (i.e. oclored badge and normal size
     if(isset($small_badge)) {
@@ -21,9 +22,12 @@ if(isset($go_category)) {
         $use_no_color = $no_color;
     }
     // CSS classes to use ...
-    $classes = array("badge");
+    $classes = array("badge-go");
     if(!($use_no_color)) {
         array_push($classes, $go_categories[$go_category]["class"]);
+    }
+    else {
+        array_push($classes, $no_color_class);
     }
     if($use_small_badge) {
         array_push($classes, $small_badge_class);
