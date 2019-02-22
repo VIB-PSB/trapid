@@ -94,7 +94,7 @@ def run_cmpress(exp_id, tmp_exp_dir):
 
 def get_cmscan_z_value(exp_id, trapid_db_data):
     """Retrieve value needed for cmscan `-Z` parameter (total length in million of nucleotides of query sequences). """
-    query_str = "SELECT SUM(`len`) FROM (SELECT CHAR_LENGTH(`transcript_sequence`) AS len FROM `transcripts` WHERE experiment_id ='{exp_id}') tr;"
+    query_str = "SELECT SUM(`len`) FROM (SELECT CHAR_LENGTH(UNCOMPRESS(`transcript_sequence`)) AS len FROM `transcripts` WHERE experiment_id ='{exp_id}') tr;"
     db_conn = common.db_connect(*trapid_db_data)
     cursor = db_conn.cursor()
     cursor.execute(query_str.format(exp_id=exp_id))

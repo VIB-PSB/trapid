@@ -91,8 +91,8 @@ class Transcripts extends AppModel{
   }
 
   function getSequenceStats($exp_id){
-    $query	= "SELECT AVG(CHAR_LENGTH(`transcript_sequence`)) as avg_transcript_length,
-				AVG(CHAR_LENGTH(`orf_sequence`)) as avg_orf_length FROM `transcripts`
+    $query	= "SELECT AVG(CHAR_LENGTH(UNCOMPRESS(`transcript_sequence`))) as avg_transcript_length,
+				AVG(CHAR_LENGTH(UNCOMPRESS(`orf_sequence`))) as avg_orf_length FROM `transcripts`
 			WHERE `experiment_id`='".$exp_id."' ";
     $res	= $this->query($query);
     $result     = array();
@@ -109,10 +109,10 @@ class Transcripts extends AppModel{
     $result 	= array();
     $query	= null;
     if($sequence_type=="transcript"){
-      $query	= "SELECT CHAR_LENGTH(`transcript_sequence`) as `length` FROM `transcripts` WHERE `experiment_id`='".$exp_id."'";
+      $query	= "SELECT CHAR_LENGTH(UNCOMPRESS(`transcript_sequence`)) as `length` FROM `transcripts` WHERE `experiment_id`='".$exp_id."'";
     }
     else if($sequence_type=="orf"){
-      $query	= "SELECT CHAR_LENGTH(`orf_sequence`) as `length` FROM `transcripts` WHERE `experiment_id`='".$exp_id."'";
+      $query	= "SELECT CHAR_LENGTH(UNCOMPRESS(`orf_sequence`)) as `length` FROM `transcripts` WHERE `experiment_id`='".$exp_id."'";
     }
     else{
       return $result;

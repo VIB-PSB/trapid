@@ -16,19 +16,19 @@ class TranscriptsPagination extends AppModel{
     	//transcripts_go:		c,c1,c2,c3,...
     	//transcripts_interpro: 	d,d1,d2,d3,...
 	 $possible_parameters	=
-	      array("min_transcript_length"=>array("query"=>"CHAR_LENGTH(`transcript_sequence`)>=",
+	      array("min_transcript_length"=>array("query"=>"CHAR_LENGTH(UNCOMPRESS(`transcript_sequence`))>=",
 						   "table"=>"`transcripts`",
 						   "tabid"=>"a",
 						   "desc"=>"Minimum transcript length"),
-		    "max_transcript_length"=>array("query"=>"CHAR_LENGTH(`transcript_sequence`)<=",
+		    "max_transcript_length"=>array("query"=>"CHAR_LENGTH(UNCOMPRESS(`transcript_sequence`))<=",
 						   "table"=>"`transcripts`",
 						   "tabid"=>"a",
 						   "desc"=>"Maximum transcript length"),
-		    "min_orf_length"=>array("query"=>"CHAR_LENGTH(`orf_sequence`)>=",
+		    "min_orf_length"=>array("query"=>"CHAR_LENGTH(UNCOMPRESS(`orf_sequence`))>=",
 					    "table"=>"`transcripts`",
 					    "tabid"=>"a",
 					    "desc"=>"Minimum ORF length"),
-		    "max_orf_length"=>array("query"=>"CHAR_LENGTH(`orf_sequence`)<=",
+		    "max_orf_length"=>array("query"=>"CHAR_LENGTH(UNCOMPRESS(`orf_sequence`))<=",
 					    "table"=>"`transcripts`",
 					    "tabid"=>"a",
 					    "desc"=>"Maximum ORF length"),
