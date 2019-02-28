@@ -1,25 +1,13 @@
 <!-- Barchart div -->
-<div class="hc" id="<?php echo $chart_div_id; ?>" style="width:100%; height:475px;"></div>
-
-<style>
-    .highcharts-tooltip span {
-        background-color:white;
-        border:1px solid #2196f3;
-        opacity:0.8;
-        padding: 7px;
-        z-index:9999;
-    }
-    .tooltip-dot {
-        height: 8px;
-        width: 8px;
-        border-radius: 50%;
-        border: 0px solid #fff;
-        display: inline-block;
-        margin-right: 2px;
-    }
-</style>
+<div class="hc" id="<?php echo $chart_div_id; ?>" style="width:100%; height:480px;"></div>
 <?php
-// $length_ranges = $chart_data['labels'];
+    $min_url_str = "/min_transcript_length/";
+    $max_url_str = "/max_transcript_length/";
+    if(isset($sequence_type) && $sequence_type == "orf") {
+        $min_url_str = "/min_orf_length/";
+        $max_url_str = "/max_orf_length/";
+    }
+    // $length_ranges = $chart_data['labels'];
 ?>
 <!-- Barchart JS -->
 <script type='text/javascript' defer="defer">
@@ -57,23 +45,23 @@
             gridLineWidth: 1,
             gridLineColor: "white",
             tickInterval: 1,
+            title: {
+                text: 'Sequence nucleotide length'
+            },
             labels: {
                 rotation: -45,
                 formatter: function () {
-                    return '<a target=\'_blank\' href=\'<?php echo $this->Html->url(array("controller"=>"trapid","action"=>"transcript_selection",$exp_id)); ?>' + '/min_transcript_length/' + this.value.split(' - ')[0] + '/max_transcript_length/' + this.value.split(' - ')[1] + "\'>" + this.value + '</a>'
+                    return '<a target=\'_blank\' href=\'<?php echo $this->Html->url(array("controller"=>"trapid","action"=>"transcript_selection",$exp_id)); ?>' + <?php echo $min_url_str; ?> + this.value.split(' - ')[0] +  <?php echo $max_url_str; ?> + this.value.split(' - ')[1] + "\'>" + this.value + '</a>'
                 },
-                useHTML: true,
-                title: {
-                    text: 'Length'
-                }
+                useHTML: true
             }
         }],
-        yAxis: { // Primary yAxis
+        yAxis: {
             labels: {
-                format: '{value}' //,
+                format: '{value}'
             },
             title: {
-                text: 'Transcript count'
+                text: 'Sequence count'
             },
             gridLineColor: "white",
             gridLineWidth: 1
@@ -86,19 +74,16 @@
             shared: true,
             useHTML: true,
             formatter: function () {
-                console.log(this);
+                // console.log(this);
                 var s = '<strong>Range: ' + this.x + ' bp</strong>';
                 var n_series = this.points.length;
                 for (i = 0; i < n_series; i++) {
-                    s += '<br><i class="tooltip-dot" style="background-color:' + this.points[i].color + ';"></i> ';
+                    s += '<br><i class="hc-tooltip-dot" style="background-color:' + this.points[i].color + ';"></i> ';
                     s += this.points[i].series.name + ': <strong>' + this.points[i].y + '</strong>';
 
                 }
-//                s += '<br>' + this.points[1].series.name + ' (-log<sub>10</sub>): ' + Highcharts.numberFormat(this.points[1].y, 3);
-//                s = '<div class="tooltip">' + s + '</div>';
                 return s;
             }
-
         },
         legend: {
             title: {
@@ -139,9 +124,7 @@
             }
         }
 
-
     });
-
 </script>
 
 <?php // echo $this->element('sql_dump');  // Dump all MySQL queries (debug) ?>

@@ -1062,7 +1062,7 @@ class ToolsController extends AppController{
 
 
 
-  function enrichment($exp_id=null, $type=null){
+  function enrichment($exp_id=null){
     // $exp_id	= mysql_real_escape_string($exp_id);
     parent::check_user_exp($exp_id);
     $exp_info	= $this->Experiments->getDefaultInformation($exp_id);
@@ -1071,7 +1071,9 @@ class ToolsController extends AppController{
     $this->set("exp_id",$exp_id);
 
     $this -> set('title_for_layout', "Subset enrichment");
-    // Get tooltip content
+    $this->set("active_sidebar_item", "Subset enrichment");
+
+      // Get tooltip content
     $tooltips = $this->TrapidUtils->indexArraySimple(
         $this->HelpTooltips->find("all", array("conditions"=>array("tooltip_id LIKE 'enrichment_%'"))),
         "HelpTooltips","tooltip_id","tooltip_text"
@@ -1079,11 +1081,17 @@ class ToolsController extends AppController{
     $this->set("tooltips", $tooltips);
 
     $possible_types	= array("go"=>"GO","ipr"=>"Protein domain");
+
+      // Check DB type (quick and dirty)
+      if(strpos($exp_info["used_plaza_database"], "eggnog") !== false){
+          // Modify available types for EggNOG database
+          $possible_types = array("go"=>"GO");
+      }
+
     //check type
     // $type		= mysql_real_escape_string($type); // Not needed since checked just below?
-    if(!array_key_exists($type,$possible_types)){$this->redirect("/");}
+//    if(!array_key_exists($type,$possible_types)){$this->redirect("/");}
     $this->set("available_types",$possible_types);
-    $this->set("type",$type);
 
     //check whether the number of jobs in the queue for this experiment has not been reached.
     $current_job_number = $this->ExperimentJobs->getNumJobs($exp_id);
@@ -1102,6 +1110,19 @@ class ToolsController extends AppController{
 
     //see if the user posted form
     if($_POST){
+        // Check functional annotation type
+        $type = "";
+        if(!array_key_exists("annotation_type",$_POST)) {
+            $this->set("error","No functional annotation type indicated in form");return;
+        }
+        if(!in_array($_POST['annotation_type'], array_keys($possible_types))) {
+            $this->set("error","Invalid functional annotation type");return;
+        }
+        else {
+            $type = filter_var($_POST['annotation_type'], FILTER_SANITIZE_STRING);  // Useless filtering?
+        }
+        $this->set("type", $type);
+
       //check for present subset
       if(!array_key_exists("subset",$_POST)){$this->set("error","No subset indicated in form");return;}
       $subset		= filter_var($_POST['subset'], FILTER_SANITIZE_STRING);
@@ -1109,7 +1130,7 @@ class ToolsController extends AppController{
       $this->set("selected_subset",$subset);
 
       if(array_key_exists("pvalue",$_POST)){
-	$pvalue	= filter_var($_POST['pvalue'], FILTER_SANITIZE_NUMBER_FLOAT);
+	$pvalue	= filter_var($_POST['pvalue'], FILTER_SANITIZE_NUMBER_FLOAT, FILTER_FLAG_ALLOW_FRACTION);
 	if(in_array($pvalue,$possible_pvalues)){$selected_pvalue=$pvalue;}
 	$this->set("selected_pvalue",$selected_pvalue);
       }
@@ -1468,30 +1489,16 @@ class ToolsController extends AppController{
 
 
 
-  function length_distribution($exp_id=null, $sequence_type=null){
+  function length_distribution($exp_id=null){
     parent::check_user_exp($exp_id);
     $exp_info = $this->Experiments->getDefaultInformation($exp_id);
     $this->TrapidUtils->checkPageAccess($exp_info['title'],$exp_info["process_state"],$this->process_states["default"]);
     $this->set("exp_info", $exp_info);
     $this->set("exp_id", $exp_id);
 
-    // Check sequence type
-    if($sequence_type!=null) {
-        if(!($sequence_type=="transcript" || $sequence_type=="orf")) {
-            $sequence_type="transcript";
-        }
-    }
-    else{
-        $sequence_type	= "transcript";
-    }
-    $this->set("sequence_type", $sequence_type);
-
-
     //Binning information
-    $possible_bins	= array("5"=>"20","10"=>"15","20"=>"10","50"=>"5","100"=>"5","200"=>"5");
     $range_bins = [5, 200];
     $valid_sequence_types = ["transcript", "orf"];
-    $this->set("possible_bins",$possible_bins);
     $num_bins = 30;
     $this->set("default_bins", $num_bins);
     $this->set("range_bins", $range_bins);
@@ -1499,169 +1506,128 @@ class ToolsController extends AppController{
     $possible_graphtypes   = array("grouped"=>"","stacked"=>"normal");
 
     if($this->request->is('post')) {
+        $invalid_str = "<p class='text-center lead text-danger'>Invalid parameters. Cannot display graph!</p>";  // Quick and dirty error message
         $this->layout = "";
-        $invalid_str = "<p class='text-center lead'>Invalid parameters. Cannot display graph!</p>";  // Quick and dirty error message
+        $this->autoRender = false;
 
-        // Transcript sequences
-        $transcript_lengths	= $this->Transcripts->getLengths($exp_id, "transcript");
-        $num_bins	= $_POST['num_bins'];  // Already checked?
-        $show_partials = false;
-        $show_noinfo = false;
-        $bins_transcript = $this->Statistics->create_length_bins($transcript_lengths, $num_bins);
-        $json_transcript = $this->Statistics->create_json_data_infovis($bins_transcript,"Transcripts");
-
-
-
-        if($_POST && array_key_exists("meta_partial",$_POST)) {
-            $show_partials = true;
+        // Check value for bins
+        if(array_key_exists("num_bins",$_POST) && $_POST['num_bins'] >= $range_bins[0] && $_POST['num_bins'] <= $range_bins[1]) {
+            $num_bins = $_POST['num_bins'];  // Already checked?
         }
-        if($_POST && array_key_exists("meta_noinfo",$_POST)) {
-            $show_noinfo = true;
-        }
-        if($show_partials){
-            $partial_lengths = $this->Transcripts->getLengths($exp_id,"transcript", "Partial");
-            $json_transcript = $this->Statistics->update_json_data("Transcripts (Partial)",
-                $partial_lengths,$json_transcript,$bins_transcript);
-        }
-        if($show_noinfo){
-            $noinfo_lengths = $this->Transcripts->getLengths($exp_id,"transcript","No Information");
-            $json_transcript = $this->Statistics->update_json_data("Transcripts (No Information)",
-                $noinfo_lengths,$json_transcript,$bins_transcript);
-        }
-        // Update last label
-        $last_label_transcript	= explode(",",$bins_transcript["labels"][$num_bins-1]);
-        $json_transcript["values"][$num_bins-1]["label"]=">=".$last_label_transcript[0];
-        if(count($json_transcript["label"])>1){
-            $json_transcript["label"][0] = "Transcripts (full-length or quasi full-length)";
-        }
-
 
         // Chart type
         $graph_type = "grouped";
-        if(array_key_exists("graph_type", $_POST) && array_key_exists($_POST['graph_type'],$possible_graphtypes)){
+        if(array_key_exists("graph_type", $_POST) && array_key_exists($_POST['graph_type'], $possible_graphtypes)) {
             $graph_type = $_POST['graph_type'];
         }
 
+        // Transcript sequences
+        if(array_key_exists("sequence_type", $_POST) && $_POST['sequence_type'] == "transcript") {
+            $sequence_type = "transcript";
+            $transcript_lengths	= $this->Transcripts->getLengths($exp_id, "transcript");
+            $show_partials = false;
+            $show_noinfo = false;
+            $bins_transcript = $this->Statistics->create_length_bins($transcript_lengths, $num_bins);
+            $json_transcript = $this->Statistics->create_json_data_infovis($bins_transcript,"Transcripts");
 
-        $this->set("bins_transcript", $json_transcript);
+            if(array_key_exists("meta_partial",$_POST)) {
+                $show_partials = true;
+            }
+            if(array_key_exists("meta_noinfo",$_POST)) {
+                $show_noinfo = true;
+            }
+            if($show_partials){
+                $partial_lengths = $this->Transcripts->getLengths($exp_id,"transcript", "Partial");
+                $json_transcript = $this->Statistics->update_json_data("Transcripts (Partial)",
+                    $partial_lengths,$json_transcript,$bins_transcript);
+            }
+            if($show_noinfo){
+                $noinfo_lengths = $this->Transcripts->getLengths($exp_id,"transcript","No Information");
+                $json_transcript = $this->Statistics->update_json_data("Transcripts (No Information)",
+                    $noinfo_lengths,$json_transcript,$bins_transcript);
+            }
+            // Update last label
+            $last_label_transcript	= explode(",",$bins_transcript["labels"][$num_bins-1]);
+            $json_transcript["values"][$num_bins-1]["label"]=">=".$last_label_transcript[0];
+            if(count($json_transcript["label"])>1){
+                $json_transcript["label"][0] = "Transcripts (full-length or quasi full-length)";
+            }
 
-        $this->set("chart_title", "Sequence length distribution");
-        $this->set("chart_subtitle", "Sequence type: " . $sequence_type . " -- "  . $num_bins . " bins. ");
-        $this->set("chart_data", $json_transcript);
-        $this->set("stacking_str", $possible_graphtypes[$graph_type]);
-        $this->set("chart_div_id", "charty-mac-chart-face");
-//        pr($json_transcript);
-//        pr($_POST);
-        $this->render('/Elements/charts/bar_length_distribution');
+            $this->set("sequence_type", $sequence_type);
+            $this->set("bins_transcript", $json_transcript);
+            $this->set("chart_title", "Sequence length distribution");
+            $this->set("chart_subtitle", "Sequence type: " . $sequence_type . " -- "  . $num_bins . " bins. ");
+            $this->set("chart_data", $json_transcript);
+            $this->set("stacking_str", $possible_graphtypes[$graph_type]);
+            $this->set("chart_div_id", "transcript-length-chart");
+            $this->render('/Elements/charts/bar_length_distribution');
+        }
+
+        // ORF sequences
+        elseif(array_key_exists("sequence_type", $_POST) && $_POST['sequence_type'] == "orf") {
+            $sequence_type = "orf";
+            $orf_lengths = $this->Transcripts->getLengths($exp_id, "orf");
+            $num_bins	= $_POST['num_bins'];  // Already checked?
+            $selected_ref_species = "";
+
+            if(array_key_exists("reference_species", $_POST)){
+                $rs	= $_POST['reference_species']; // No need to check (find)?
+                if($this->AnnotSources->find("first",array("conditions"=>array("species"=>$rs)))){
+                    $selected_ref_species = $rs;
+                }
+            }
+            $normalize_data	= false;
+            // Normalize the values of the json data if necessary.
+            if(array_key_exists("normalize",$_POST) && $selected_ref_species!=""){
+                $normalize_data	= true;
+            }
+
+            $bins_orf			= $this->Statistics->create_length_bins($orf_lengths, $num_bins);
+            $json_orf			= $this->Statistics->create_json_data_infovis($bins_orf, "ORF sequences");
+
+            if($selected_ref_species!=""){
+                $ref_species_lengths	= $this->Annotation->getLengths($selected_ref_species);
+                $ref_species_data = $this->AnnotSources->find("first",array("conditions"=>array("species"=>$rs)));
+                $ref_species_name = $ref_species_data['AnnotSources']['common_name'];
+                $json_orf = $this->Statistics->update_json_data($ref_species_name, $ref_species_lengths,$json_orf,$bins_orf,false);
+            }
+            // Update last label
+            $last_label_orf		= explode(",",$bins_orf["labels"][$num_bins-1]);
+            $json_orf["values"][$num_bins-1]["label"]=">=".$last_label_orf[0];
+
+            if($normalize_data){
+                $json_orf			= $this->Statistics->normalize_json_data($json_orf);
+            }
+
+            $this->set("sequence_type", $sequence_type);
+            $this->set("bins_transcript", $json_orf);
+            $this->set("chart_title", "Sequence length distribution");
+            $this->set("chart_subtitle", "Sequence type: " . $sequence_type . " -- "  . $num_bins . " bins. ");
+            $this->set("chart_data", $json_orf);
+            $this->set("stacking_str", $possible_graphtypes[$graph_type]);
+            $this->set("chart_div_id", "orf-length-chart");
+            $this->render('/Elements/charts/bar_length_distribution');
+
+        }
+
+        else {
+            echo $invalid_str;
+        }
     }
 
-          if($_POST && array_key_exists("num_bins",$_POST) && array_key_exists($_POST['num_bins'],$possible_bins)){
-      // $num_bins	= mysql_real_escape_string($_POST['num_bins']);
-      $num_bins	= $_POST['num_bins'];  // Already checked?
-    }
-    $this->set("num_bins",$num_bins);
-//    $this->set("bars_offset",$possible_bins[$num_bins]);
+    // ORF reference species (used to populate form select options)
+    $reference_species	= $this->AnnotSources->find("all", array("order"=>"`species` ASC"));
+    $reference_species	= $this->TrapidUtils->indexArraySimple($reference_species, "AnnotSources", "species", "common_name");
+
+      // Get tooltip content
+      $tooltips = $this->TrapidUtils->indexArraySimple(
+          $this->HelpTooltips->find("all", array("conditions"=>array("tooltip_id LIKE 'seq_len_%'"))),
+          "HelpTooltips","tooltip_id","tooltip_text"
+      );
+      $this->set("tooltips", $tooltips);
 
 
-
-    //based on sequence type, get different options
-    //transcript : different meta types, different graphtypes
-    if($sequence_type=="transcript"){
-	//get standard length information
-        $transcript_lengths	= $this->Transcripts->getLengths($exp_id,"transcript");
-
-    	$this->set("possible_graphtypes",$possible_graphtypes);
-   	$graphtype		   = "grouped";
-    	if($_POST && array_key_exists("graphtype",$_POST) && array_key_exists($_POST['graphtype'],$possible_graphtypes)){
-      		// $graphtype	   = mysql_real_escape_string($_POST['graphtype']);
-      		$graphtype	   = $_POST['graphtype']; // Already checked?
-    	}
-    	$this->set("graphtype",$graphtype);
-	$bins_transcript		= $this->Statistics->create_length_bins($transcript_lengths,$num_bins);
-	$json_transcript		= $this->Statistics->create_json_data_infovis($bins_transcript,"Transcript lengths");
-//	pr($json_transcript);
-	//get extra information (partials/no info)
-    	$show_partials	= false;
-    	$show_noinfo	= false;
-    	if($_POST && array_key_exists("meta_partial",$_POST)){$show_partials=true;}
-    	if($_POST && array_key_exists("meta_noinfo",$_POST)){$show_noinfo=true;}
-	if($show_partials){
-	  	$partial_lengths	= $this->Transcripts->getLengths($exp_id,"transcript","Partial");
-		$json_transcript	= $this->Statistics->update_json_data("Transcript lengths (Partial)",
-					$partial_lengths,$json_transcript,$bins_transcript);
-		$this->set("meta_partial",1);
-    	}
-    	if($show_noinfo){
-	  	$noinfo_lengths		= $this->Transcripts->getLengths($exp_id,"transcript","No Information");
-      		$json_transcript	= $this->Statistics->update_json_data("Transcript lengths (No Information)",
-					$noinfo_lengths,$json_transcript,$bins_transcript);
-      		$this->set("meta_noinfo",1);
-    	}
-	//update last label
-    	$last_label_transcript	= explode(",",$bins_transcript["labels"][$num_bins-1]);
-	$json_transcript["values"][$num_bins-1]["label"]=">=".$last_label_transcript[0];
-	if(count($json_transcript["label"])>1){
-	  $json_transcript["label"][0] = "Transcript lengths (full-length or quasi full-length)";
-	}
-	 $this->set("bins_transcript",$json_transcript);
-    }
-
-    //orf: possible reference species
-    else if($sequence_type=="orf"){
-        $orf_lengths		= $this->Transcripts->getLengths($exp_id,"orf");
-	//reference species
-    	$reference_species	= $this->AnnotSources->find("all",array("order"=>"`species` ASC"));
-    	$reference_species	= $this->TrapidUtils->indexArraySimple($reference_species,"AnnotSources","species","common_name");
-    	$this->set("available_reference_species",$reference_species);
-    	$selected_ref_species	= "";
-    	if($_POST && array_key_exists("reference_species",$_POST)){
-      		// $rs	= mysql_real_escape_string($_POST['reference_species']);
-      		$rs	= $_POST['reference_species']; // No need to check (find)?
-      		if($this->AnnotSources->find("first",array("conditions"=>array("species"=>$rs)))){
-			$selected_ref_species	= $rs;
-      		}
-    	}
-    	$this->set("selected_ref_species",$selected_ref_species);
-
-	//default value graph type
-	$this->set("graphtype","grouped");
-
-	$normalize_data	= false;
-    	//normalize the values of the json data if necessary.
-    	if(array_key_exists("normalize",$_POST) && $selected_ref_species!=""){
-      		$normalize_data	= true;
-      		$this->set("normalize_data",true);
-    	}
-	$bins_orf			= $this->Statistics->create_length_bins($orf_lengths,$num_bins);
-	//Configure::write("debug",1);
-	//pr($bins_orf);
-        $json_orf			= $this->Statistics->create_json_data_infovis($bins_orf,"ORF lengths");
-
-	//pr($json_orf);
-
-	if($selected_ref_species!=""){
-      		$ref_species_lengths	= $this->Annotation->getLengths($selected_ref_species);
-		//pr($ref_species_lengths);
-      		$json_orf		= $this->Statistics->update_json_data($reference_species[$selected_ref_species],
-								      $ref_species_lengths,$json_orf,$bins_orf,false);
-    	}
-        $last_label_orf		= explode(",",$bins_orf["labels"][$num_bins-1]);
-	$json_orf["values"][$num_bins-1]["label"]=">=".$last_label_orf[0];
-	//pr($json_orf);
-	if($normalize_data){
-	  $json_orf			= $this->Statistics->normalize_json_data($json_orf);
-	}
-	//pr($json_orf);
-	//if(count($json_orf["label"])>1){
-	// $json_orf["label"][0] = "Transcript lengths (full-length or quasi full-length)";
-	//}
-	//pr($json_orf);
-	$this->set("bins_orf",$json_orf);
-    }
-    else{
-      $this->redirect(array("controller"=>"trapid","action"=>"experiment",$exp_id));
-    }
-
+      $this->set("available_reference_species", $reference_species);
     $this -> set('title_for_layout', 'Sequence length distribution');
   }
 
@@ -1959,8 +1925,8 @@ class ToolsController extends AppController{
     $this->set('descriptions', array());
     $this->set('counts',$this->TranscriptsLabels->getLabels($exp_id));
 
-    $urls = array(Router::url(array("controller"=>"labels","action"=>"view",$exp_id,$place_holder)),
-                  Router::url(array("controller"=>"gene_family","action"=>"gene_family",$exp_id,$place_holder))
+    $urls = array(urldecode(Router::url(array("controller"=>"labels","action"=>"view",$exp_id,$place_holder))),
+                  urldecode(Router::url(array("controller"=>"gene_family","action"=>"gene_family",$exp_id,$place_holder)))
     );
     $this->set('urls', $urls);
     $this->set('GO', false);
@@ -1988,8 +1954,8 @@ class ToolsController extends AppController{
     $this->set('descriptions', $interpro_info);
     $place_holder = '###';
     $this->set("place_holder", $place_holder);
-    $urls = array(Router::url(array("controller"=>"labels","action"=>"view",$exp_id,$place_holder)),
-                  Router::url(array("controller"=>"functional_annotation","action"=>"interpro",$exp_id,$place_holder))
+    $urls = array(urldecode(Router::url(array("controller"=>"labels","action"=>"view",$exp_id,$place_holder))),
+                  urldecode(Router::url(array("controller"=>"functional_annotation","action"=>"interpro",$exp_id,$place_holder)))
     );
     $this->set('urls', $urls);
     $this->set('GO', false);
@@ -2019,8 +1985,8 @@ function label_go_intersection($exp_id=null,$label=null){
     $this->set('descriptions', $go_info);
     $place_holder = '###';
     $this->set("place_holder", $place_holder);
-    $urls = array(Router::url(array("controller"=>"labels","action"=>"view",$exp_id,$place_holder)),
-                  Router::url(array("controller"=>"functional_annotation","action"=>"go",$exp_id,$place_holder))
+    $urls = array(urldecode(Router::url(array("controller"=>"labels","action"=>"view",$exp_id,$place_holder))),
+                  urldecode(Router::url(array("controller"=>"functional_annotation","action"=>"go",$exp_id,$place_holder)))
     );
     $this->set('urls', $urls);
     $this->set('GO', true);

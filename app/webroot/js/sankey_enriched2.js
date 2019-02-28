@@ -39,13 +39,13 @@ var enrichment_id = '#enrichment';
 var boxes = '#left_boxes';
 var col_classes = ['left_col','right_col'];
 
-/* Globals defined in sankey_enriched 
+/* Globals defined in sankey_enriched
 
     enrichedIdents : [label][p_val][identifier] = [hidden,sign]
         ['cluster1']['0.1'][GO:0000271] =  "1"
-    transcriptIdent : [transcript][identifier] = 1 
+    transcriptIdent : [transcript][identifier] = 1
         [contig00001][GO:0003824] = 1
-    transcriptLabelGF : [label][transcript] = gf_id 
+    transcriptLabelGF : [label][transcript] = gf_id
         [cluster1][contig00001] = "1_HOM005284"
      descriptions : [identifier] = {desc:'bla bla', type:'CC'}
     label_counts : [label] = count
@@ -71,7 +71,7 @@ $(document).ready(function () {
 
 // real_width is used for layout purposes
 var margin = {top: 1, right: 1, bottom: 6, left: 1},
-    real_width = calculate_good_width(),    
+    real_width = calculate_good_width(),
     width = real_width - margin.left - margin.right,
     height = calculate_good_height() - margin.top - margin.bottom;
 
@@ -80,7 +80,7 @@ var margin = {top: 1, right: 1, bottom: 6, left: 1},
     d3 will then fill in the shole space allocated to it, so for a small amount of transcripts we allocate less space
     Otherwise we've got a huge diagram without super big nodes, which looks ridiculous */
 function calculate_good_height(){
-    return Math.min(window.innerHeight - 200, Math.log2(2*Object.keys(transcriptIdent).length)* 200);   
+    return Math.min(window.innerHeight - 200, Math.log2(2*Object.keys(transcriptIdent).length)* 200);
 }
 
 
@@ -117,7 +117,7 @@ function fill_in_dropdown(){
         dropdown_elmt.add(new Option(option_string, options[i][0]));
     }
 
-    $(dropdown_id).value = minimum_size;
+    $(dropdown_id).val(minimum_size);
 }
 
 
@@ -142,7 +142,7 @@ function calculate_options(){
             options.push([i,total]);
             if(!minimum_size && total > nodes_to_show){
                 minimum_size = options[Math.max(0,options.length - 2)][0];
-            }            
+            }
         }
     }
     // show options in ascending order
@@ -172,12 +172,12 @@ function add_checkboxes(){
         label.htmlFor = checkbox.id;
 
         if(n !== null_label){
-            label.appendChild(document.createTextNode(' ' + n + ' [' + label_counts[n] + ' gene' + (label_counts[n] !== 1 ? 's] ' : '] ')));
+            label.appendChild(document.createTextNode(' ' + n + ' [' + label_counts[n] + ' tr' + (label_counts[n] !== 1 ? 's] ' : '] ')));
          } else {
             // To make only part of the label red & bold
             label.appendChild(document.createTextNode(''));
             // We can't just create a textNode with the text we want because this displays the span tags as text
-            label.html(' <span class="bad_label">' + n + '</span> [' + label_counts[n] + ' gene' + (label_counts[n] !== 1 ? 's] ' : '] '));
+            label.html(' <span class="bad_label">' + n + '</span> [' + label_counts[n] + ' tr' + (label_counts[n] !== 1 ? 's] ' : '] '));
         }
 
         // var container = $(boxes).select('.' + col_classes[i % 2])[0];
@@ -210,11 +210,11 @@ function checkbox_changed(event){
     if(chckbx.checked){
         checked_labels[chckbx.name] = 1;
     } else {
-        delete checked_labels[chckbx.name];        
-    }        
+        delete checked_labels[chckbx.name];
+    }
     // Other groupings, other options.
     update_middle_nodes();
-    
+
     enable_everything();
 }
 
@@ -242,15 +242,15 @@ function disable_everything(){
 
 function enable_everything(){
     var input_elements = document.getElementsByTagName('input');
-    for(var i = 0, len = input_elements.length; i < len ; i++){       
-         input_elements[i].disabled = false;       
+    for(var i = 0, len = input_elements.length; i < len ; i++){
+         input_elements[i].disabled = false;
     }
 }
 
 
 ////////// Sankey vizualization ////////////
 
-// Data Processing 
+// Data Processing
 var gftranscript = Object.create(null);
 function process_data(){
     names_list = Object.keys(transcriptLabelGF);
@@ -274,7 +274,7 @@ function process_data(){
                     log_enrichments[label][ident] = enrichedIdents[label][p][ident][1];
                 }
                 enrichedIdents[label][p][ident][1] = enrichedIdents[label][p][ident][1] > 0 ? 1 :-1; // only keep the sign
-            }            
+            }
         }
     }
 
@@ -283,7 +283,7 @@ function process_data(){
         for(var transcript in transcriptLabelGF[label]){
             if(transcriptLabelGF[label][transcript] ===  null){
                 transcriptLabelGF[label][transcript] = no_gf_label;
-                gftranscript[no_gf_label].push(transcript);                
+                gftranscript[no_gf_label].push(transcript);
             } else {
                 gftranscript[transcriptLabelGF[label][transcript]] = transcript;
             }
@@ -295,7 +295,7 @@ function process_data(){
 function determine_current_links(){
     first_links = Object.create(null);
     second_links = Object.create(null);
-    
+
     var p_value = $(p_val_id + " option:selected").text();  // $(p_val_id).options[$(p_val_id).selectedIndex].text;
     var type = $(type_id + " option:selected").text();
     var show_hidden = $(hidden_id).is(":checked");
@@ -337,17 +337,17 @@ function determine_current_links(){
                 var gf = transcriptLabelGF[label][transcript];
                 if(!(identifier in second_links)){
                     second_links[identifier] = Object.create(null);
-                }                
+                }
                 if(!(gf in second_links[identifier])){
                     second_links[identifier][gf] = 1;
                     column[gf] = 2;
                 } else {
                     second_links[identifier][gf]++;
-                }               
-            }                    
+                }
+            }
         }
     }
-}   
+}
 
 
 function calculate_current_flow(){
@@ -358,12 +358,12 @@ function calculate_current_flow(){
     determine_current_links();
 
     // calculate flow into each gf
-    for(var node in second_links){        
+    for(var node in second_links){
         var map = second_links[node];
          for(var target in map){
             if(!(target in flow)){
                 flow[target] = 0;
-             } 
+             }
              flow[target] += map[target];
         }
     }
@@ -413,7 +413,7 @@ function filter_links_to_use(){
 
 
 // 1: Every block has width 100, divide by the sum of outgoing links
-function normalize_links(links){    
+function normalize_links(links){
     // First we calculate the current divisor
     var divisors = Object.create(null);
     links.forEach(function(link){
@@ -421,19 +421,19 @@ function normalize_links(links){
             divisors[link[0]] += +link[2];
         } else {
             divisors[link[0]] = +link[2];
-        }                                           
+        }
     });
     // Divide by the calculated divisor
     links.forEach(function(link){
-        link[2] = link[2]*100/divisors[link[0]];                                           
-    });        
+        link[2] = link[2]*100/divisors[link[0]];
+    });
 }
 
 
 // The format of the numbers when hovering over a link or node
 var formatNumber = d3.format(",.0f"),
-    format = function(d) { return formatNumber(d) + " genes"; };
-var color = d3.scale.category20(); 
+    format = function(d) { return formatNumber(d) + " transcripts"; };
+var color = d3.scale.category20();
 
 var svg = d3.select("#sankey").append("svg")
 	    .attr("width", width + margin.left + margin.right)
@@ -451,7 +451,7 @@ function draw_sankey() {
 
     // Based on http://www.d3noob.org/2013/02/formatting-data-for-sankey-diagrams-in.html
     var graph = {"nodes" : [], "links" : []};
-    
+
     var good_links = filter_links_to_use();
     if($(normalization_id).is(":checked")){
         normalize_links(good_links);
@@ -483,7 +483,7 @@ function draw_sankey() {
                           href: urls[col].replace(place_holder,d).replace('GO:','GO-')};
      });
 
- 
+
     var sankey = d3.sankey()
 	    .size([width, height])
 	    .nodeWidth(15)
@@ -504,7 +504,7 @@ function draw_sankey() {
 
    link.append("title")
 	    .text(function(d) { return create_link_hovertext(d);});
-      
+
     // Work around to make something dragable also clickable
     // From http://jsfiddle.net/2EqA3/3/
 
@@ -515,7 +515,7 @@ function draw_sankey() {
 	    .attr("transform", function(d) { return "translate(" + d.x + "," + d.y + ")"; })
 	    .call(d3.behavior.drag()
 	    .origin(function(d) { return d; })
-	    .on("dragstart", function() { 
+	    .on("dragstart", function() {
                             d3.event.sourceEvent.stopPropagation();
                             this.parentNode.appendChild(this); })
 	    .on("drag", dragmove))
@@ -554,9 +554,9 @@ function draw_sankey() {
         function create_hovertext(d){
             if(d.name in descriptions){
                return d.name + "\n" + descriptions[d.name].desc;
-            } 
+            }
             if(d.name in label_counts){
-                return d.name + "\n" + label_counts[d.name] + " gene" + (label_counts[d.name] !== 1 ? 's' : '');
+                return d.name + "\n" + label_counts[d.name] + " transcript" + (label_counts[d.name] !== 1 ? 's' : '');
             } else {
                 var gf_prefix;
                 if(d.name === no_gf_label){
@@ -564,31 +564,31 @@ function draw_sankey() {
                 } else {
                     gf_prefix = exp_id + '_';
                 }
-                return d.name + "\n" + flow[gf_prefix + d.name] + " gene" + (flow[gf_prefix + d.name] !== 1 ? 's' : '');
+                return d.name + "\n" + flow[gf_prefix + d.name] + " transcript" + (flow[gf_prefix + d.name] !== 1 ? 's' : '');
             }
         }
 
         // The hovertext varies depending on the normalization used
         function create_link_hovertext(d){
-            var arrow = " → "; 
+            var arrow = " → ";
             var hover_string = d.source.name + arrow + d.target.name ;
             if($(normalization_id).is(":checked")){
-                hover_string += "\n" + parseFloat(d.value).toFixed(2) + '% of genes shown';
+                hover_string += "\n" + parseFloat(d.value).toFixed(2) + '% of transcripts shown';
             } else {
-                hover_string += "\n" + d.value + ' gene' + (d.value != 1 ? 's' : '');
+                hover_string += "\n" + d.value + ' transcript' + (d.value != 1 ? 's' : '');
             }
             if(d.source.name in log_enrichments && d.target.name in log_enrichments[d.source.name]){
                 hover_string +=  "\nlog enrichment: " + parseFloat(log_enrichments[d.source.name][d.target.name]).toFixed(4);
             }
-            return  hover_string ; 
+            return  hover_string ;
         }
 
-        
+
         function create_node_title(name){
             var max_length = 40;
             if(name in descriptions){
                 var descrip = descriptions[name].desc;
-                // max_lenght +5, so atleast 8 chars get cut.             
+                // max_lenght +5, so atleast 8 chars get cut.
                 if(descrip.length > max_length + 5){
                     descrip = descrip.substring(0,max_length - 3) + '...';
                 }
@@ -598,4 +598,3 @@ function draw_sankey() {
             }
         }
 }
-

@@ -439,6 +439,9 @@ div.selected_tabbed_div{
 .page-section-sm {
 	margin-bottom:30px;
 }
+.page-section-xs {
+	margin-bottom:10px;
+}
 /* Test */
 .page-header {
 	margin-top: 20px;
@@ -1395,7 +1398,7 @@ body {
 /* ICONS */
 /* Help icons: gray, stuck on the right */
 .help-tooltip-icon {
-	color : #777;
+	color : #8c8c8c;
 	cursor: default;
 	float: right;
 }
@@ -1740,6 +1743,22 @@ input[type=range]:focus::-ms-fill-upper {
 	float: none;
 }
 
+
+.highcharts-tooltip span {
+	background-color:white;
+	border:1px solid #2196f3;
+	opacity:0.8;
+	padding: 7px;
+	z-index:9999;
+}
+.hc-tooltip-dot {
+	height: 8px;
+	width: 8px;
+	border-radius: 50%;
+	border: 0px solid #fff;
+	display: inline-block;
+	margin-right: 2px;
+}
 
 /* Lots of ugly borders: useful for debugging when things are not displayed as expected */
 /*

@@ -1,4 +1,4 @@
-<?php 
+<?php
 if(isset($error)){
 	echo "<span class='error'>".$error."</span><br/>\n"; 
 }
@@ -172,10 +172,10 @@ else{
 //	echo "<table class='table table-bordered table-striped' cellpadding='0' cellspacing='0' style='width:900px;'>\n";
 	echo "<table id='go-table' class='table table-bordered table-striped' style=''>\n";
 	echo "<thead>";
-	echo "<th style='width:5%'>GO type</th>";
-	echo "<th style='width:10%'>GO term</th>";
-	echo "<th style='width:10%'>Enrichment</th>";
-	echo "<th style='width:10%'>p-value</th>";
+	echo "<th style='width:7%'>GO type</th>";
+	echo "<th style='width:9%'>GO term</th>";
+	echo "<th style='width:9%'>Enrichment</th>";
+	echo "<th style='width:9%'>p-value</th>";
 	echo "<th style='width:10%'>Subset ratio</th>";
 	echo "<th style='width:50%'>Description</th>";
 	echo "<th style='width:5%'>Shown</th>";
@@ -186,7 +186,7 @@ else{
 			$class		= null;
 			$lower_row	= null;
 			if($i++%2==0){$class=" class='altrow2' ";}
-			if($counter==(count($gos)-1)){$lower_row=" style='border-bottom:1px solid black;' ";}
+//			if($counter==(count($gos)-1)){$lower_row=" style='border-bottom:1px solid black;' ";}
 			$go_web_id	= str_replace(":","-",$go_id);
 			$res		= $result[$go_id];
 			echo "<tr $class>";
@@ -216,6 +216,11 @@ else{
 	}				
 	echo "</table>\n";
 	echo "</div>\n";
+
+	// DataTables
+    echo "<script type='text/javascript'>\n";
+    echo "$('#go-table').dataTable({\"scrollY\": \"360px\", \"scrollCollapse\": true, \"paging\": false});\n";
+    echo "</script>\n";
 	}
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -411,4 +416,10 @@ else{
 	echo "<input type='submit' class='btn btn-default' value='Download table' />\n";
 	echo "</form><br>";
 }
+
+// DataTables
+echo "<script type='text/javascript'>\n";
+echo "$('#ipr-table').dataTable({\"scrollY\": \"360px\", \"scrollCollapse\": true, \"paging\": false});\n";
+echo "</script>\n";
 ?>
+

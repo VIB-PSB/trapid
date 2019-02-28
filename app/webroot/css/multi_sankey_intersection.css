@@ -3,10 +3,12 @@
 }
 
 #choices {
-    display: flex;
-    justify-content: space-between;
+    /* display: flex; */
+    font-size: 88%;
+    /*justify-content: space-between;*/
 }
 
+/*
 #choices:last-child  {
     margin-right:50px;
 }
@@ -14,6 +16,7 @@
 .refine_box{
     text-align: justify;
 }
+*/
 
 .left_col, .right_col{
     display: inline-block;
@@ -36,11 +39,14 @@
 }
 
 .link {
+  cursor: help;
   fill: none;
   stroke: #000;
   stroke-opacity: .2;
+  transition: stroke-opacity 0.1s;
 }
 
 .link:hover {
   stroke-opacity: .5;
+  transition: stroke-opacity 0.1s;
 }

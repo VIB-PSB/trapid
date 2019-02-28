@@ -19,11 +19,14 @@
 }
 
 .link {
+  cursor: help;
   fill: none;
   stroke: #000;
   stroke-opacity: .2;
+  transition: stroke-opacity 0.1s;
 }
 
 .link:hover {
   stroke-opacity: .5;
+  transition: stroke-opacity 0.1s;
 }

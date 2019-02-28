@@ -66,12 +66,12 @@ function fill_in_dropdown(){
             if(!choice && total > 20){
                 choice = options[Math.max(0,options.length - 2)][0];
             }
-            
+
         }
     }
     // Clear the dropdown before adding new options
     $(dropdown_id).empty();
-    
+
     // If there are no options, ask the user to select something
     if(options.length === 0){
         dropdown_elmt.add(new Option("Please select labels", 0));
@@ -114,11 +114,11 @@ function add_checkboxes(){
             label.htmlFor = checkbox.id;
 
             if(n !== null_label){
-                label.appendChild(document.createTextNode(' ' + n + ' [' + label_counts[n] + ' gene' + (label_counts[n] !== 1 ? 's] ' : '] ')));
+                label.appendChild(document.createTextNode(' ' + n + ' [' + label_counts[n] + ' tr' + (label_counts[n] !== 1 ? 's] ' : '] ')));
              } else {
                 // To make only part of the label red & bold, otherwise the span tags are displayed.
                 label.appendChild(document.createTextNode(""));
-                label.innerHTML = ' <span class="bad_label">' + null_label_txt + '</span> [' + label_counts[n] + ' gene' + (label_counts[n] !== 1 ? 's] ' : '] ');
+                label.innerHTML = ' <span class="bad_label">' + null_label_txt + '</span> [' + label_counts[n] + ' tr' + (label_counts[n] !== 1 ? 's] ' : '] ');
             }
 
 
@@ -148,7 +148,7 @@ function add_checkboxes(){
                 }
             }
         }
-    });  
+    });
 }
 
 
@@ -169,8 +169,8 @@ function checkbox_changed(event,col){
     if(chckbx.checked){
         checked_labels[col][chckbx.name] = 1;
     } else {
-        delete checked_labels[col][chckbx.name];        
-    }        
+        delete checked_labels[col][chckbx.name];
+    }
     single_mode = Object.keys(checked_labels[col]).length === 0 || Object.keys(checked_labels[1 - col]).length === 0;
     // Other groupings, other options.
 
@@ -263,7 +263,7 @@ function calculate_current_flow(){
 
 ////////// Sankey vizualization ////////////
 
-// Data Processing 
+// Data Processing
 // The mappings contain their data as [[source1,target1,value1],[source2,target1,value2],...]
 // The processed data is put into global variables so other functions can read the computed values
 
@@ -283,7 +283,7 @@ function process_data(){
         var source = d[0];
         var target = d[1];
         var value = +d[2];
-        
+
         if(source  === null){
             d[0] = source = null_label;
         }
@@ -293,7 +293,7 @@ function process_data(){
             names[source] = 1;
             names_list.push(source);
             column[source] = 0;
-        } 
+        }
         per_label_mapping[source][target] = value;
 
         // Generate a list of reverse mappings
@@ -313,17 +313,17 @@ function process_data(){
 }
 
 function filter_links_to_use(){
-    var links = [];   
+    var links = [];
     var min_flow = $(dropdown_id + " option:selected").val();
     var type = $(type_id + " option:selected").text();
 
     if(!single_mode){
         mapping.forEach(function(s) {
             var left_flow = current_flow[s[1]] ? current_flow[s[1]][0]: 0;
-            var right_flow = current_flow[s[1]]? current_flow[s[1]][1]: 0;  
-            if(s[0] in checked_labels[0] && 
+            var right_flow = current_flow[s[1]]? current_flow[s[1]][1]: 0;
+            if(s[0] in checked_labels[0] &&
               ((right_flow >= min_flow && left_flow > 0) || (left_flow >= min_flow && right_flow > 0))){
-                  
+
                   if(GO && type !== "All" && type !== descriptions[s[1]].type){
                         // Do nothing
                  } else {
@@ -332,18 +332,18 @@ function filter_links_to_use(){
             }
         });
 
-        reverse_mapping.forEach(function(s) { 
+        reverse_mapping.forEach(function(s) {
             var left_flow = current_flow[s[0]]? current_flow[s[0]][0]: 0;
-            var right_flow = current_flow[s[0]]? current_flow[s[0]][1]: 0;  
-            if(s[1] in checked_labels[1] && 
+            var right_flow = current_flow[s[0]]? current_flow[s[0]][1]: 0;
+            if(s[1] in checked_labels[1] &&
               ((right_flow >= min_flow && left_flow > 0) || (left_flow >= min_flow && right_flow > 0))){
 
                   if(GO && type !== "All" && type !== descriptions[s[0]].type){
                         // Do nothing
                   } else {
                         links.push(copy_link(s));
-                  }                 
-            }        
+                  }
+            }
         });
     } else {
         // single_mode
@@ -391,7 +391,7 @@ function normalize_links(links){
                     divisors[link[0]] += +link[2];
                 } else {
                     divisors[link[1]] += +link[2];
-                }                                         
+                }
             });
             // Divide by the calculated divisor
             links.forEach(function(link){
@@ -399,13 +399,13 @@ function normalize_links(links){
                     link[2] = link[2]*100/divisors[link[0]];
                 } else {
                     link[2] = link[2]*100/divisors[link[1]];
-                }                                         
+                }
             });
         break;
         case 2:
             links.forEach(function(link){
                 var divisor = link[0] in names? label_counts[link[0]] :label_counts[link[1]];
-                link[2] = link[2]*100/divisor;                            
+                link[2] = link[2]*100/divisor;
             });
         break;
         default:
@@ -416,7 +416,7 @@ function normalize_links(links){
 
 // The format of the numbers when hovering over a link or node
 var formatNumber = d3.format(",.0f"),
-    format = function(d) { return formatNumber(d) + " gene" + (Math.floor(d) !== 1 ? 's' : '');; },
+    format = function(d) { return formatNumber(d) + " transcript" + (Math.floor(d) !== 1 ? 's' : '');; },
     color = d3.scale.category20();
 
 
@@ -427,7 +427,10 @@ var margin = {top: 1, right: 1, bottom: 6, left: 1},
     height = calculate_good_height() - margin.top - margin.bottom;
 
 function calculate_good_height(){
-    return Math.min(window.innerHeight - 200, Math.log2(2*(mapping.length + 1))* 200);
+    // return Math.min(window.innerHeight - 200, Math.log2(2*(mapping.length + 1))* 200);
+    // New height calculation taking into account a ~ 200px-high row for settings
+    // This should allow the user to scroll and have controls + diagram on the same screen
+    return Math.min(window.innerHeight - 320, Math.log2(2*(mapping.length + 1))* 200);
 }
 
 function calculate_good_width(){
@@ -454,7 +457,7 @@ function draw_sankey() {
 
     // Based on http://www.d3noob.org/2013/02/formatting-data-for-sankey-diagrams-in.html
     var graph = {"nodes" : [], "links" : []};
-    
+
     var good_links = filter_links_to_use();
     normalize_links(good_links);
     good_links.forEach(function (d) {
@@ -464,7 +467,7 @@ function draw_sankey() {
                          "target": d[1],
                          "value": +d[2]});
      });
-    
+
 
      // return only the distinct / unique nodes
      graph.nodes = d3.keys(d3.nest()
@@ -506,7 +509,7 @@ function draw_sankey() {
 
    link.append("title")
 	    .text(function(d) { return create_link_hovertext(d)});
-      
+
     // Work around to make something dragable also clickable
     // From http://jsfiddle.net/2EqA3/3/
 
@@ -517,7 +520,7 @@ function draw_sankey() {
 	    .attr("transform", function(d) { return "translate(" + d.x + "," + d.y + ")"; })
 	    .call(d3.behavior.drag()
 	    .origin(function(d) { return d; })
-	    .on("dragstart", function() { 
+	    .on("dragstart", function() {
                             d3.event.sourceEvent.stopPropagation();
                             this.parentNode.appendChild(this); })
 	    .on("drag", dragmove))
@@ -555,7 +558,7 @@ function draw_sankey() {
 
         function create_hovertext(d){
             if(d.name in label_counts ) {
-                return d.name + "\n" + label_counts[d.name] + " gene" + (label_counts[d.name] !== 1 ? 's' : '');
+                return d.name + "\n" + label_counts[d.name] + " transcript" + (label_counts[d.name] !== 1 ? 's' : '');
             }
             var hover_text = d.name;
             if(d.name in descriptions){
@@ -566,7 +569,7 @@ function draw_sankey() {
                 used_name = exp_id + '_' + used_name;
             }
             var flows = current_flow[used_name];
-            return hover_text + "\n" + flows[0]+ " gene" + (flows[0] !== 1 ? 's' : '') + ' | ' +  flows[1] + " gene" + (flows[1] !== 1 ? 's' : '');            
+            return hover_text + "\n" + flows[0]+ " transcript" + (flows[0] !== 1 ? 's' : '') + ' | ' +  flows[1] + " transcript" + (flows[1] !== 1 ? 's' : '');
         }
 
         // The hovertext varies depending on the normalization used
@@ -578,29 +581,29 @@ function draw_sankey() {
             } else {
                 label_node = d.target;
                 target_node = d.source;
-            } 
+            }
             var hover_string = label_node.name + arrow + target_node.name + "\n";
             var option = parseInt($(normalize_id + " option:selected").val());
             switch(option){
                 case 0:
-                    hover_string += d.value + " gene" + (d.value !== 1 ? 's' : '');
+                    hover_string += d.value + " transcript" + (d.value !== 1 ? 's' : '');
                 break;
                 case 1:
-                    hover_string += parseFloat(d.value).toFixed(2) + '% of genes in intersection';
+                    hover_string += parseFloat(d.value).toFixed(2) + '% of transcripts in intersection';
                 break;
                 case 2:
-                    hover_string += parseFloat(d.value).toFixed(2) + '% of genes in ' + label_node.name;
+                    hover_string += parseFloat(d.value).toFixed(2) + '% of transcripts in ' + label_node.name;
                 break;
                 default:
             }
-            return  hover_string ; 
+            return  hover_string ;
         }
 
 
         function create_node_title(name){
             var max_length = 40;
             if(name in descriptions){
-                var descrip = descriptions[name].desc;               
+                var descrip = descriptions[name].desc;
                 if(descrip.length > max_length + 5){
                     descrip = descrip.substring(0,max_length - 3) + '...';
                 }
@@ -610,4 +613,3 @@ function draw_sankey() {
             }
         }
 }
-

@@ -31,7 +31,10 @@ class TrapidController extends AppController{
 				"TranscriptsPagination"=>
 					array(
 					      "limit"=>10,
-					      "order"=>array("transcript_id"=>"ASC")
+					      "order"=>array(
+                              "TranscriptsPagination.experiment_id"=>"ASC, ", // Extra sorting needed too (see gitlab issue #5)
+                              "TranscriptsPagination.transcript_id"=>"ASC"
+                          )
 					)
 			  );
 
@@ -238,7 +241,7 @@ class TrapidController extends AppController{
     $this->layout = "external";  // Layout for external pages (i.e. not in experiment)
     $this -> set('title_for_layout', 'Experiments overview');
 
-    $MAX_USER_EXPERIMENTS	= 20;  // Put back to 10 when releasing
+    $MAX_USER_EXPERIMENTS	= 100;  // Put back to 10 when releasing
     $this->set("max_user_experiments",$MAX_USER_EXPERIMENTS);
 
     //check whether valid user id.
@@ -1316,67 +1319,74 @@ class TrapidController extends AppController{
 
 
   function enrichment_preprocessing($exp_id=null){
-    // $exp_id	= mysql_real_escape_string($exp_id);
     parent::check_user_exp($exp_id);
-    $exp_info	= $this->Experiments->getDefaultInformation($exp_id);
-    //important checks: is the experiment in finished state and is the enrichment_state not in 'processing'
+    $exp_info = $this->Experiments->getDefaultInformation($exp_id);
+    // Important checks: is the experiment in finished state and is the enrichment_state not in 'processing'?
     if($exp_info['process_state']!="finished" || $exp_info['enrichment_state']=='processing'){
       $this->redirect(array("controller"=>"trapid","action"=>"experiment",$exp_id));
     }
     $this->set("exp_info",$exp_info);
     $this->set("exp_id",$exp_id);
-    $all_subsets	= $this->TranscriptsLabels->getLabels($exp_id);
-    $this->set("num_subsets",count($all_subsets));
+    $all_subsets = $this->TranscriptsLabels->getLabels($exp_id);
+    $this->set("num_subsets", count($all_subsets));
 
     //ok, there are no actual settings: the p-value cutoff is set at the lowest, and these results are stored
     //if other p-values are needed, they can be extracted with filtering.
     $possible_pvalues	= array(0.1,0.05,0.01,0.005,0.001,1e-5);
-    $possible_types	= array("go"=>"GO","ipr"=>"Protein domain");
-    $this->set("possible_types",$possible_types);
 
-    //continue only after the user has selected the correct data type for which the enrichments need to be computed.
+    // Depending on the type of reference database, different type of functional annotation are available
+    // For PLAZA databases
+    $possible_types	= array("go"=>"GO","ipr"=>"Protein domain");
+    // Check DB type (quick and dirty)
+    if(strpos($exp_info["used_plaza_database"], "eggnog") !== false){
+        // Modify available types for EggNOG database
+        $possible_types = array("go"=>"GO");
+    }
+    // Users don't need to select an annotation type anymore. Instead, enrichments are computed for all possible types.
+    // $this->set("possible_types",$possible_types);
+    $this->set("title_for_layout", "Preprocess functional enrichments");
+
     if($_POST){
       $type		= null;
       // if(array_key_exists("type",$_POST)){$type	= mysql_real_escape_string($_POST['type']);}
       // `$type` is already checked against `$possible_types`
-      if(array_key_exists("type",$_POST)){$type	= $_POST['type'];}
-      if(!array_key_exists($type,$possible_types)){$this->redirect(array("controller"=>"trapid","action"=>"enrichment_preprocessing",$exp_id));}
-      //parameters are ok. we can now proceed with the actual pipeline organization.
-      //create shell file for submission to the web-cluster.
-      //Shell file contains both the necessary module load statements
+        foreach(array_keys($possible_types) as $type) {
+            if(!array_key_exists($type,$possible_types)) {
+                $this->redirect(array("controller"=>"trapid","action"=>"enrichment_preprocessing", $exp_id));
+            }
 
-      $qsub_file 	= $this->TrapidUtils->create_qsub_script($exp_id);
-      $shell_file	= $this->TrapidUtils->create_shell_file_enrichment_preprocessing($exp_id,$type,$exp_info['used_plaza_database'],$possible_pvalues,$all_subsets);
-      if($shell_file == null || $qsub_file == null ){$this->set("error","problem creating program files");return;}
+            //create shell file for submission to the web-cluster.
+            //Shell file contains both the necessary module load statements
+            $qsub_file 	= $this->TrapidUtils->create_qsub_script($exp_id);
+            $shell_file	= $this->TrapidUtils->create_shell_file_enrichment_preprocessing($exp_id,$type,$exp_info['used_plaza_database'],$possible_pvalues,$all_subsets);
+            if($shell_file == null || $qsub_file == null ){$this->set("error","problem creating program files");return;}
 
-      //ok, now we submit this program to the web-cluster
-      $tmp_dir	= TMP."experiment_data/".$exp_id."/";
-      $qsub_out	= $tmp_dir."/".$type."_enrichment_preprocessing.out";
-      $qsub_err	= $tmp_dir."/".$type."_enrichment_preprocessing.err";
-      if(file_exists($qsub_out)){unlink($qsub_out);}
-      if(file_exists($qsub_err)){unlink($qsub_err);}
+            //ok, now we submit this program to the web-cluster
+            $tmp_dir	= TMP."experiment_data/".$exp_id."/";
+            $qsub_out	= $tmp_dir."/".$type."_enrichment_preprocessing.out";
+            $qsub_err	= $tmp_dir."/".$type."_enrichment_preprocessing.err";
+            if(file_exists($qsub_out)){unlink($qsub_out);}
+            if(file_exists($qsub_err)){unlink($qsub_err);}
 
-      $output   = array();
-      $command  = "sh $qsub_file -q medium -o $qsub_out -e $qsub_err $shell_file";
-      exec($command,$output);
-      $job_id	= $this->TrapidUtils->getClusterJobId($output);
+            $output   = array();
+            $command  = "sh $qsub_file -q medium -o $qsub_out -e $qsub_err $shell_file";
+            exec($command,$output);
+            $job_id	= $this->TrapidUtils->getClusterJobId($output);
 
-      //indicate int the database the new job-id
-      $this->ExperimentJobs->addJob($exp_id,$job_id,"medium","enrichment_preprocessing");
+            //indicate int the database the new job-id
+            $this->ExperimentJobs->addJob($exp_id,$job_id,"medium","enrichment_preprocessing");
 
-      //indicate in the database that the current experiments enrichment_state is "processing"
-      $this->Experiments->updateAll(array("enrichment_state"=>"'processing'"),array("experiment_id"=>$exp_id));
+            //indicate in the database that the current experiments enrichment_state is "processing"
+            $this->Experiments->updateAll(array("enrichment_state"=>"'processing'"),array("experiment_id"=>$exp_id));
 
-      $this->ExperimentLog->addAction($exp_id,"enrichment_preprocessing","");
-      $this->ExperimentLog->addAction($exp_id,"enrichment_preprocessing","options",1);
-      $this->ExperimentLog->addAction($exp_id,"enrichment_preprocessing","data_type=".$type,2);
-      $this->ExperimentLog->addAction($exp_id,"enrichment_preprocessing","start",1);
-
-      //finally, redirect
-      $this->redirect(array("controller"=>"trapid","action"=>"experiments"));
-
-
-    }
+            $this->ExperimentLog->addAction($exp_id,"enrichment_preprocessing","");
+            $this->ExperimentLog->addAction($exp_id,"enrichment_preprocessing","options",1);
+            $this->ExperimentLog->addAction($exp_id,"enrichment_preprocessing","data_type=".$type,2);
+            $this->ExperimentLog->addAction($exp_id,"enrichment_preprocessing","start",1);
+        }
+        // Finally, redirect to experiments page
+        $this->redirect(array("controller"=>"trapid", "action"=>"experiments"));
+    } // end POST request
 
   }
 

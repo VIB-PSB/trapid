@@ -7,7 +7,7 @@ var margin = {top: 1, right: 1, bottom: 6, left: 1},
     height = calculate_good_height() - margin.top - margin.bottom;
 
 function calculate_good_height(){
-    return Math.min(window.innerHeight - 200, Math.log2(sankey_data.length + 1)* 200);   
+    return Math.min(window.innerHeight - 200, Math.log2(sankey_data.length + 1)* 200);
 }
 
 // TODO: update to fit new TRAPID layout!
@@ -62,11 +62,11 @@ var distribution = [];
 function calculate_distribution(){
     for(var i = 0; i < sankey_data.length; i++){
         if(sankey_data[i][1] === null){
-          sankey_data[i][1] = no_gf_label;  
+          sankey_data[i][1] = no_gf_label;
         }
         column[sankey_data[i][0]] = 0;
         column[sankey_data[i][1]] = 1;
-        
+
         var fl = sankey_data[i][2];
         if(!distribution[fl]){
             distribution[fl] = 1;
@@ -90,7 +90,7 @@ function calculate_options(){
             options.push([i,total]);
             if(!minimum_size && total > nodes_to_show){
                 minimum_size = options[Math.max(0,options.length - 2)][0];
-            }            
+            }
         }
     }
     // show options in ascending order
@@ -106,7 +106,7 @@ var dropdown_id = '#min';
 function fill_in_dropdown(){
     // Clear the dropdown before adding new options
     $(dropdown_id).empty();
-    
+
     // If there are no options, ask the user to select something
     if(options.length === 0){
         document.getElementById(dropdown_id.substring(1)).add(new Option("Please select labels", 0));
@@ -126,7 +126,7 @@ function fill_in_dropdown(){
 
 // The format of the numbers when hovering over a link or node
 var formatNumber = d3.format(",.0f"),
-    format = function(d) { return formatNumber(d) + " gene" + (Math.floor(d) !== 1 ? 's' : ''); },
+    format = function(d) { return formatNumber(d) + " transcript" + (Math.floor(d) !== 1 ? 's' : ''); },
     color = d3.scale.category20();
 
 var svg = d3.select("#sankey").append("svg")
@@ -141,7 +141,7 @@ function draw_sankey() {
     var svg = d3.select("svg")
 	    .append("g")
 	    .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
-   
+
     var sankey_data_copy =JSON.parse(JSON.stringify(sankey_data));
     var min_flow = 0;
     var n_options = $(dropdown_id + ' option').length;  // Should not be zero if dropdown was populated
@@ -149,10 +149,10 @@ function draw_sankey() {
         min_flow = +$(dropdown_id + " option:selected").val();
     }
     var links = sankey_data_copy.filter(function(link){
-        return +link[2] >= min_flow;        
+        return +link[2] >= min_flow;
     });
     var graph = {"nodes" : [], "links" : []};
-    
+
     var good_links = links;
 
     good_links.forEach(function (d) {
@@ -181,7 +181,7 @@ function draw_sankey() {
        graph.nodes[i] = { name: d.replace(/^\d+_/g,''),
                           href: urls[col].replace(place_holder,d).replace('GO:','GO-')};
      });
- 
+
 var sankey = d3.sankey()
 	.size([width, height])
 	.nodeWidth(15)
@@ -202,7 +202,7 @@ var link = svg.append("g").selectAll(".link")
 
 link.append("title")
 	.text(function(d) { return d.source.name + " → " + d.target.name + "\n" + format(d.value); });
-  
+
 // Work around to make something dragable also clickable
 // From http://jsfiddle.net/2EqA3/3/
 
@@ -213,7 +213,7 @@ var node = svg.append("g").selectAll(".node")
 	.attr("transform", function(d) { return "translate(" + d.x + "," + d.y + ")"; })
 	.call(d3.behavior.drag()
 	.origin(function(d) { return d; })
-	.on("dragstart", function() { 
+	.on("dragstart", function() {
                         d3.event.sourceEvent.stopPropagation();
                         this.parentNode.appendChild(this); })
 	.on("drag", dragmove))
@@ -254,14 +254,14 @@ node.append("text")
         var hover_text = d.name + "\n";
         if(d.name in descriptions){
            hover_text += descriptions[d.name].desc + "\n";
-        } 
-        return hover_text + format(d.value);        
+        }
+        return hover_text + format(d.value);
     }
-  
+
     function create_node_title(d){
         var max_length = 40;
         if(d.name in descriptions){
-            var descrip = descriptions[d.name].desc;               
+            var descrip = descriptions[d.name].desc;
             if(descrip.length > max_length + 5){
                 descrip = descrip.substring(0,max_length - 3) + '...';
             }
@@ -269,7 +269,6 @@ node.append("text")
         } else {
             return d.name;
         }
-    } 
+    }
 
 }
-

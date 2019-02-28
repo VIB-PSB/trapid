@@ -143,6 +143,8 @@ class TranscriptsPagination extends AppModel{
     $use_limit = true;
 
     if($order){
+      // $custom_query		= $custom_query." ORDER BY ";
+      // Hardcoding ordering w/ `experiment_id` seems to force MySQL to use the correct index ...
       $custom_query		= $custom_query." ORDER BY ";
       foreach($order as $k=>$v){
           // CakePHP may add the class name as prefix, causing the queries defined here to fail.

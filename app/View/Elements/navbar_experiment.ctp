@@ -22,7 +22,7 @@ $link_text = array(
     "rf"=>array("Browse RNA families (beta)", $this->Html->Url(array("controller" => "rna_family", "action" => "index", $exp_id))),
     "cgfc"=>array("Core GF completeness", $this->Html->Url(array("controller" => "tools", "action" => "core_gf_completeness", $exp_id))),
     "subsets"=>array("Explore subsets", $this->Html->Url(array("controller" => "labels", "action" => "subset_overview", $exp_id))),
-    "enrichment"=>array("Subset enrichment", ""),
+    "enrichment"=>array("Subset enrichment", $this->Html->Url(array("controller" => "tools", "action" => "enrichment", $exp_id))),
     "enrichment_go"=>array("GO term enrichment", $this->Html->Url(array("controller" => "tools", "action" => "enrichment", $exp_id, "go"))),
     "enrichment_ipr"=>array("Protein domain enrichment", $this->Html->Url(array("controller" => "tools", "action" => "enrichment", $exp_id, "ipr"))),
     "sankey"=>array("Sankey diagrams", ""),
@@ -231,15 +231,7 @@ $link_text = array(
         ?>
         <?php else: ?>
             <?php echo "<li><a href='"  . $link_text["subsets"][1] . "'>" . $link_text["subsets"][0] . "</a></li>\n"; ?>
-            <li class="dropdown">
-                <a class="ripple-effect dropdown-toggle" href="#" data-toggle="dropdown">
-                    <?php echo $link_text["enrichment"][0];?><b class="caret"></b>
-                </a>
-                <ul id="stats-dropdown" class="dropdown-menu">
-                    <?php echo "<li><a href='"  . $link_text["enrichment_go"][1] . "'>" . $link_text["enrichment_go"][0] . "</a></li>\n"; ?>
-                    <?php echo "<li><a href='"  . $link_text["enrichment_ipr"][1] . "'>" . $link_text["enrichment_ipr"][0] . "</a></li>\n"; ?>
-                </ul>
-            </li>
+                    <?php echo "<li><a href='"  . $link_text["enrichment"][1] . "'>" . $link_text["enrichment"][0] . "</a></li>\n"; ?>
 
             <li class="dropdown">
                 <a class="ripple-effect dropdown-toggle" href="#" data-toggle="dropdown">

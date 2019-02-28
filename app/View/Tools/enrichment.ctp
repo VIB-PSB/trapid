@@ -9,7 +9,7 @@
 
 <div>
     <div class="page-header">
-        <h1 class="text-primary"><?php echo $available_types[$type]; ?> enrichment</h1>
+        <h1 class="text-primary">Subset functional enrichment</h1>
     </div>
     <section class="page-section">
         <p class="text-justify">
@@ -83,13 +83,27 @@
 <!--    --><?php //echo "</form>\n"; ?>
 
     <h3>Subset selection</h3>
-    <div class="subdiv">
+    <div class="subdiv page-section-sm">
         <?php
         if (isset($error)) {
-            echo "<span class='error'>" . $error . "</span>\n";
+            echo "<span class='error text-danger'><strong>Error: " . $error . "</strong></span><br>\n";
         }
-        echo $this->Form->create(false, array("url"=>array("controller"=>"tools", "action" => "enrichment", $exp_id, $type), "type" => "post", "id"=>"enrichment-form"));
-        echo "<dl class='standard dl-horizontal' style='max-width:520px;'>";
+        echo $this->Form->create(false, array("url"=>array("controller"=>"tools", "action" => "enrichment", $exp_id), "type" => "post", "id"=>"enrichment-form"));
+        echo "<dl class='standard dl-horizontal' style='max-width:530px;'>";
+        echo "<dt>Annotation type</dt>";
+        echo "<dd>";
+        echo $this->element("help_tooltips/create_tooltip", array("tooltip_text"=>$tooltips['enrichment_type'], "tooltip_placement"=>"right"));
+        $i = 0;
+        foreach($available_types as $type_id=>$type_str) {
+            if($i == 0) {
+                $checked = "checked";
+            } else {
+                $checked = '';
+            }
+            echo "<label><input type='radio' name='annotation_type' id='annotation_type' value='" . $type_id . "' " . $checked . "> <strong>" . $type_str . "</strong></label>&nbsp; &nbsp;";
+            $i++;
+        }
+        echo "</dd>";
         echo "<dt>Subset";
         echo "</dt>";
         echo "<dd>";
@@ -122,7 +136,7 @@
         echo "<input type='submit' class='btn btn-primary' value='Compute enrichment' />\n";
         echo "<input type='checkbox' style='margin-left:20px;' id='use_cache' name='use_cache' checked='checked' />\n";
         echo "<label style='margin-left:5px;' for='use_cache'><strong>Use cached results</strong></label>\n";
-        echo "</form>\n";
+        echo $this->Form->end();
         ?>
     </div>
     <br/><br/>
