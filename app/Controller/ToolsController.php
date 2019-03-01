@@ -1834,7 +1834,7 @@ class ToolsController extends AppController{
 
 
   function label_enrichedgo_gf2($exp_id=null){
-    // ini_set('memory_limit', '1024M');
+     ini_set('memory_limit', '512M');  // Hack-ish?
     $this->general_set_up($exp_id);
     $this -> set('title_for_layout', "Labels - Enriched GO terms - GF intersection");
 

@@ -197,6 +197,7 @@ function add_checkboxes(){
         }
         else {
             checkbox.checked = false;
+            // checkbox.disabled = true;  // Disable them too?
         }
 
     }

@@ -61,8 +61,8 @@
 
             <div class="panel-footer">
                 <div class="text-right"> <strong>Export as: </strong>
-                    <button class="btn btn-default btn-xs" onclick="alert('To do!');" title="Export Sankey diagram (PNG)">PNG</button> <!-- TODO! -->
-                    <button class="btn btn-default btn-xs" onclick="alert('To do!');" title="Export Sankey diagram (SVG)">SVG</button> |
+                    <button id="export_sankey_png" class="btn btn-default btn-xs" title="Export Sankey diagram (PNG)">PNG</button> <!-- TODO! -->
+                    <button id="export_sankey_svg" class="btn btn-default btn-xs" title="Export Sankey diagram (SVG)">SVG</button> |
                     <button type="submit" class="btn btn-primary btn-sm" onclick="draw_sankey()" title="Redraw Sankey diagram">
                         <span class="glyphicon glyphicon-repeat"></span> Redraw</button>
                 </div>
@@ -91,9 +91,135 @@
     echo '</script>';
 
 	echo $this->Html->css('multi_sankey_intersection');
-	echo $this->Html->script(array('d3-3.5.6.min','sankey','sankey_enriched2'));	
+	echo $this->Html->script(array('d3-3.5.6.min','sankey','sankey_enriched2'));
+    echo $this->Html->script(array('https://cdn.rawgit.com/eligrey/canvas-toBlob.js/f1a01896135ab378aa5c0118eadd81da55e698d8/canvas-toBlob.js',
+        'https://cdn.rawgit.com/eligrey/FileSaver.js/e9d941381475b5df8b7d7691013401e171014e89/FileSaver.min.js'));
+
 
 
 ?>
 </div>
 </section>
+
+<script type="text/javascript">
+
+    // Set-up export buttons
+    var export_base_name = "Sankey_Diagram_<?php echo str_replace(' ', '_', $col_names[0]) . '_' .  str_replace(' ', '_', $col_names[1]) . '_' .  str_replace(' ', '_', $col_names[2]);?>";
+    // PNG
+    d3.select('#export_sankey_png').on('click', function(){
+        var svgString = getSVGString(svg.node());
+        svgString2Image( svgString, 2*width, 2*height, 'png', save ); // passes Blob and filesize String to the callback
+
+        function save( dataBlob, filesize ){
+            saveAs( dataBlob, export_base_name + '.png' ); // FileSaver.js function
+        }
+    });
+
+    // SVG
+    d3.select('#export_sankey_svg').on('click', function(){
+        var svgString = getSVGString(svg.node()).split('\n');
+//        var svgBlob = ;
+        saveAs( new Blob([svgString],  {type: "image/svg+xml;charset=utf-8"}), export_base_name + '.svg' ); // FileSaver.js function
+    });
+
+    // Below are the functions that handle actual exporting:
+    // getSVGString ( svgNode ) and svgString2Image( svgString, width, height, format, callback )
+    function getSVGString( svgNode ) {
+        svgNode.setAttribute('xlink', 'http://www.w3.org/1999/xlink');
+        var cssStyleText = getCSSStyles( svgNode );
+        appendCSS( cssStyleText, svgNode );
+
+        var serializer = new XMLSerializer();
+        var svgString = serializer.serializeToString(svgNode);
+        svgString = svgString.replace(/(\w+)?:?xlink=/g, 'xmlns:xlink='); // Fix root xlink without namespace
+        svgString = svgString.replace(/NS\d+:href/g, 'xlink:href'); // Safari NS namespace fix
+
+        return svgString;
+
+        function getCSSStyles( parentElement ) {
+            var selectorTextArr = [];
+
+            // Add Parent element Id and Classes to the list
+            selectorTextArr.push( '#'+parentElement.id );
+            for (var c = 0; c < parentElement.classList.length; c++)
+                if ( !contains('.'+parentElement.classList[c], selectorTextArr) )
+                    selectorTextArr.push( '.'+parentElement.classList[c] );
+
+            // Add Children element Ids and Classes to the list
+            var nodes = parentElement.getElementsByTagName("*");
+            for (var i = 0; i < nodes.length; i++) {
+                var id = nodes[i].id;
+                if ( !contains('#'+id, selectorTextArr) )
+                    selectorTextArr.push( '#'+id );
+
+                var classes = nodes[i].classList;
+                for (var c = 0; c < classes.length; c++)
+                    if ( !contains('.'+classes[c], selectorTextArr) )
+                        selectorTextArr.push( '.'+classes[c] );
+            }
+
+            // Extract CSS Rules
+            var extractedCSSText = "";
+            for (var i = 0; i < document.styleSheets.length; i++) {
+                var s = document.styleSheets[i];
+
+                try {
+                    if(!s.cssRules) continue;
+                } catch( e ) {
+                    if(e.name !== 'SecurityError') throw e; // for Firefox
+                    continue;
+                }
+
+                var cssRules = s.cssRules;
+                for (var r = 0; r < cssRules.length; r++) {
+                    if ( contains( cssRules[r].selectorText, selectorTextArr ) )
+                        extractedCSSText += cssRules[r].cssText;
+                }
+            }
+
+
+            return extractedCSSText;
+
+            function contains(str,arr) {
+                return arr.indexOf( str ) === -1 ? false : true;
+            }
+
+        }
+
+        function appendCSS( cssText, element ) {
+            var styleElement = document.createElement("style");
+            styleElement.setAttribute("type","text/css");
+            styleElement.innerHTML = cssText;
+            var refNode = element.hasChildNodes() ? element.children[0] : null;
+            element.insertBefore( styleElement, refNode );
+        }
+    }
+
+
+    function svgString2Image( svgString, width, height, format, callback ) {
+        var format = format ? format : 'png';
+
+        var imgsrc = 'data:image/svg+xml;base64,'+ btoa( unescape( encodeURIComponent( svgString ) ) ); // Convert SVG string to data URL
+
+        var canvas = document.createElement("canvas");
+        var context = canvas.getContext("2d");
+
+        canvas.width = width;
+        canvas.height = height;
+
+        var image = new Image();
+        image.onload = function() {
+            context.clearRect ( 0, 0, width, height );
+            context.drawImage(image, 0, 0, width, height);
+
+            canvas.toBlob( function(blob) {
+                var filesize = Math.round( blob.length/1024 ) + ' KB';
+                if ( callback ) callback( blob, filesize );
+            });
+
+
+        };
+
+        image.src = imgsrc;
+    }
+</script>
