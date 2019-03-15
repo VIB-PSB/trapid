@@ -16,6 +16,7 @@ our %idswitch;
 
 our $PHYML_prot_settings 	= "-m WAG -f e -c 4 -a e"; #phyml 3.0 aa settings NO PARAMETER OPTIMIZATION DEFINED
 our $FASTTREE_prot_settings 	= "-wag -gamma ";
+our $IQTREE_prot_settings 	= "-st AA -mset JTT,LG,WAG,Blosum62,VT,Dayhoff -mfreq F -mrate R ";
 
 #our $PHYML_prot_settings = "-m WAG -f e -c 4 -a e -o n"; #phyml 3.0 aa settings NO PARAMETER OPTIMIZED
 #our $PHYML_prot_settings2 = "-m WAG -f e -c 4 -a e -o tl"; #phyml 3.0 aa settings TOPOLOGY + BL OPTIMIZED
@@ -112,7 +113,7 @@ sub create_tree ($ $ $ $ $ $){
     my $tmp_dir             = $_[5];
     my $outtree;
 
-    print STDERR "Running algorithm $tree_program on gene family $gf_id from experiment $exp_id";
+    print STDERR "Running algorithm $tree_program on gene family $gf_id from experiment $exp_id\n";
 
     #create tree by running phyml
     if($tree_program eq "phyml"){
@@ -125,6 +126,7 @@ sub create_tree ($ $ $ $ $ $){
 	    #remove temp files
     	    system("rm -f $phylip_file*");
     }
+
     #create tree by running fasttree
     elsif($tree_program eq "fasttree"){
     	    my $stripped_msa_file = $tmp_dir."stripped_msa_".$exp_id."_".$gf_id.".fasta";
@@ -134,6 +136,17 @@ sub create_tree ($ $ $ $ $ $){
        	    $outtree = &_run_fasttree($stripped_msa_file,$bootstrap_mode)."\n";
 	    #rempove tmp files
 	    system("rm -f $stripped_msa_file*");
+    }
+
+    # Create tree using IQ-TREE
+    elsif($tree_program eq "iqtree"){
+        my $stripped_msa_file = $tmp_dir."stripped_msa_".$exp_id."_".$gf_id.".fasta";
+        if(! &create_msa_file($stripped_msa,$stripped_msa_file)){
+            print STDERR "* Empty strip_aln; quit!\n";
+        }
+        $outtree = &_run_iqtree($stripped_msa_file, $bootstrap_mode)."\n";
+        #rempove tmp files
+        system("rm -f $stripped_msa_file*");
     }
 
     return $outtree;
@@ -156,6 +169,37 @@ sub _run_fasttree ( $ $){
  my $constree;
  if(! -e $fout){
      print STDERR "ERROR: Cannot open fasttree output file $fout\n";
+     return $result;
+ }
+ print STDERR "Parsing output tree from $fout \n";
+ open (TREE,$fout);
+ while (<TREE>){
+  chomp;
+  $constree.=$_;
+ }
+ close TREE;
+ return $constree;
+}
+
+
+
+sub _run_iqtree ( $ $){
+ my $fin           = $_[0];
+ my $bs            = $_[1];
+ print STDERR "Running IQ-TREE with input file : $fin\n";
+
+ my $error_file_location = $fin."_iqtree_error.txt";
+ my $fout_prefix          = $fin."_iqtree_tree";
+ my $fout          = $fout_prefix . ".contree";
+
+ my $command = "iqtree -nt 1 $IQTREE_prot_settings  -bb 1000 -s $fin -pre $fout_prefix 2> $error_file_location";
+ print STDERR "Command for iqtree : ".$command."\n";
+    system("sleep 100;");
+    system($command);
+ my $result        = 0;
+ my $constree;
+ if(! -e $fout){
+     print STDERR "ERROR: Cannot open iqtree output file $fout\n";
      return $result;
  }
  print STDERR "Parsing output tree from $fout \n";

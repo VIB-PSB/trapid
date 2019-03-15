@@ -604,7 +604,7 @@ class TrapidUtilsComponent extends Component{
     $inc_met = 0; if($include_meta){$inc_met=1;}
     $base_scripts_location	= APP."scripts/";
     $tmp_dir			= TMP."experiment_data/".$exp_id."/";
-    $necessary_modules		= array("perl","muscle","java");
+    $necessary_modules		= array("perl","muscle","python/x86_64/2.7.14");
     $necessary_modules[]	= $tree_program;
 
     //create actual shell script file
@@ -614,7 +614,6 @@ class TrapidUtilsComponent extends Component{
     foreach($necessary_modules as $nm){
 	  fwrite($fh,"module load ".$nm." \n");
     }
-    $java_location	 	= $base_scripts_location."java/";
 
     $parameters_msa		= array(
                     // PLAZA_DB_SERVER,$plaza_db,PLAZA_DB_PORT,PLAZA_DB_USER,PLAZA_DB_PASSWORD,
@@ -628,24 +627,22 @@ class TrapidUtilsComponent extends Component{
     $parameters_tree		= array(TRAPID_DB_SERVER,TRAPID_DB_NAME,TRAPID_DB_PORT,TRAPID_DB_USER,TRAPID_DB_PASSWORD,
 					$tmp_dir,$exp_id,$gf_id,$bootstrap_mode,$tree_program);
 
-    $parameters_phyloxml	= array(
-                    // PLAZA_DB_SERVER,$plaza_db,PLAZA_DB_USER,PLAZA_DB_PASSWORD,
-                    TRAPID_DB_SERVER, $plaza_db, TRAPID_DB_USER, TRAPID_DB_PASSWORD,
-					TRAPID_DB_SERVER,TRAPID_DB_NAME,TRAPID_DB_USER,TRAPID_DB_PASSWORD,
-					"db_trapid_dev",
-					// "db_trapid_01_taxonomy",
-					$exp_id,$gf_id,$inc_sub,$inc_met,$tmp_dir,
-					$java_location."forester.jar",
-					$base_scripts_location."cfg/atv_config_file.cfg"
-					);
+    $parameters_phyloxml = array($exp_id, $gf_id, TRAPID_DB_NAME, TRAPID_DB_SERVER, TRAPID_DB_USER, TRAPID_DB_PASSWORD, $tmp_dir);
+    if($inc_sub) {
+        array_push($parameters_phyloxml, "-s");
+    }
+    if($inc_met) {
+        array_push($parameters_phyloxml, "-m");
+    }
+
 
     fwrite($fh,"\n#Launching perl script for creating necessary files, then MSA \n");
     $program_location_msa	= $base_scripts_location."perl/create_msa.pl";
     $command_line_msa		= "perl ".$program_location_msa." ".implode(" ",$parameters_msa);
     $program_location_tree	= $base_scripts_location."perl/create_tree.pl";
     $command_line_tree		= "perl ".$program_location_tree." ".implode(" ",$parameters_tree);
-    $program_phyloxml		= "transcript_pipeline.CreatePhyloXML";
-    $command_line_phyloxml	= "java -cp ".$java_location.":.:..:".$java_location."mysql.jar ".$program_phyloxml." ".implode(" ",$parameters_phyloxml)."\n";
+    $program_location_phyloxml		= $base_scripts_location . "python/create_phyloxml.py";
+    $command_line_phyloxml	= "python " . $program_location_phyloxml . " " . implode(" ",$parameters_phyloxml) . "\n";
 
     fwrite($fh,$command_line_msa."\n");
     fwrite($fh,$command_line_tree."\n");

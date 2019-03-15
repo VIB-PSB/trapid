@@ -489,9 +489,9 @@ class ToolsController extends AppController{
      * Get computed phylogenetic tree for a given experiment and gene family from the DB, as raw text.
      */
     // When using an incorrect exp_id, some warnings are thrown: should disappear after debug mode is disabled?
-    // 2018-01-07: there seem to be a problem with phyloXML, so let's make PhyD3 work with newick tree for now.
     function get_tree($exp_id=null, $gf_id=null, $format="newick"){
-        $this->layout = "";
+        $this->layout = "ajax";
+        // $this->autoRender = false;
         // $exp_id	= mysql_real_escape_string($exp_id);
         parent::check_user_exp($exp_id);
         if(!$gf_id) {
@@ -582,7 +582,7 @@ class ToolsController extends AppController{
     $MAX_GENES_MSA_TREE		= 200;
     $this->set("MAX_GENES",$MAX_GENES_MSA_TREE);
 
-    $tree_programs	= array("fasttree"=>"FastTree","phyml"=>"PhyML");
+    $tree_programs	= array("fasttree"=>"FastTree", "iqtree"=>"IQ-TREE", "phyml"=>"PhyML");
     $this->set("tree_programs",$tree_programs);
     $tree_program	= "fasttree";
     $this->set("tree_program",$tree_program);
@@ -602,7 +602,7 @@ class ToolsController extends AppController{
     //$optimization_mode	= "n";
     //$this->set("optimization_mode",$optimization_mode);
     $include_subsets	= false;
-    $include_meta	= true;
+    $include_meta	= false;
     $this->set("include_subsets",$include_subsets);
 
     //ok, check whether there is already a multiple sequence alignment present in the database.
@@ -682,9 +682,11 @@ class ToolsController extends AppController{
       $this->set("bootstrap_mode",$bootstrap_mode);
 
       //select subset presence
-      if(array_key_exists('include_extra',$_POST)){
-	if($_POST['include_extra'] == "subsets"){$include_subsets=true;$include_meta=false;}
-	if($_POST['include_extra'] == "meta"){$include_subsets=false;$include_meta=true;}
+      if(array_key_exists('include_subsets', $_POST) && $_POST['include_subsets'] == "y") {
+          $include_subsets=true;
+      }
+	  if(array_key_exists('include_meta_annotation', $_POST) && $_POST['include_meta_annotation'] == "y") {
+          $include_meta=true;
       }
       $this->set("include_subsets",$include_subsets);
 
@@ -718,7 +720,7 @@ class ToolsController extends AppController{
       $qsub_err	= $tmp_dir."tree_".$exp_id."_".$gf_id.".err";
       if(file_exists($qsub_out)){unlink($qsub_out);}
       if(file_exists($qsub_err)){unlink($qsub_err);}
-      $command  	= "sh $qsub_file -q short -o $qsub_out -e $qsub_err $shell_file";
+      $command  	= "sh $qsub_file -q medium -o $qsub_out -e $qsub_err $shell_file";
       $output		= array();
       exec($command,$output);
       $cluster_job	= $this->TrapidUtils->getClusterJobId($output);
@@ -727,7 +729,7 @@ class ToolsController extends AppController{
       //add job to the cluster queue, and then redirect the entire program.
       //the user will receive an email to notify him when the job is done, together with a link to this page.
       //the result will then automatically be opened.
-      $this->ExperimentJobs->addJob($exp_id,$cluster_job,"short","create_tree ".$gf_id);
+      $this->ExperimentJobs->addJob($exp_id,$cluster_job,"medium","create_tree ".$gf_id);
 
       $this->ExperimentLog->addAction($exp_id,"create_tree",$gf_id);
       //declare options in the log
@@ -739,7 +741,8 @@ class ToolsController extends AppController{
       $this->ExperimentLog->addAction($exp_id,"create_tree","editing=".$editing_mode,2);
       $this->ExperimentLog->addAction($exp_id,"create_tree","bootstrap=".$bootstrap_mode,2);
       //$this->ExperimentLog->addAction($exp_id,"create_tree","parameter_opt=".$optimization_mode,2);
-      $this->ExperimentLog->addAction($exp_id,"create_tree","incl_subsets=".$include_subsets,2);
+      $this->ExperimentLog->addAction($exp_id,"create_tree","incl_meta=".(int)$include_meta,2);
+      $this->ExperimentLog->addAction($exp_id,"create_tree","incl_subsets=".(int)$include_subsets,2);
       $this->ExperimentLog->addAction($exp_id,"create_tree_start",$gf_id,1);
       $this->set("run_pipeline",true);
       return;

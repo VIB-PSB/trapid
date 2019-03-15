@@ -1,22 +1,15 @@
 <?php
 	// Load the necessary javascript libraries
     echo $this->Html->script(array('ftiens4.js', 'ua.js', 'd3-3.5.6.min.js', 'phyd3.min.js'));
+    // Load PhyD3 style
     echo $this->Html->css('phyd3.min.css');
 ?>
-
-<style>
-    /* Experimenting with styling the tree viewer */
-    text {
-        font-family: sans-serif;
-    }
-</style>
 
 <div>
     <div class="page-header">
         <h1 class="text-primary">Create phylogenetic tree</h1>
     </div>
 <div class="subdiv">
-	<?php echo $this->element("trapid_experiment");?>
 
     <p class="text-justify">
         <strong>Gene family: </strong> <?php echo $this->Html->link($gf_id,array("controller"=>"gene_family","action"=>"gene_family", $exp_id, $gf_id));?>
@@ -43,10 +36,14 @@
         <?php if(!$stripped_msa_length==0): ?>
             <!-- First trial with PhyD3! Controls copied from the example given in the doc then adapted. -->
             <div id="phyd3-row" class="row phyd3-controls" style="margin-top: 10px;">
+                <!-- PhyD3 settings -->
                 <div id="phyd3-settings" class="col-sm-3">
                     <div class="panel panel-default">
                         <div class="panel-heading">Visualization settings & export</div>
                         <div class="panel-body">
+
+
+
                             <div class="form-group">
                                 <div class="checkbox">
                                     <label>
@@ -60,17 +57,17 @@
                                         <input id="invertColors" type="checkbox"> invert colors
                                     </label>
                                     <span class="input-group-btn">
-                                    <div class="input-group colorpicker-component" id="foregroundColorButton">
-                                        <input type="text" class="form-control hidden" name="foregroundColor" id="foregroundColor" />
-                                        <span class="input-group-addon btn btn-fab btn-fab-mini"><i></i></span>
-                                    </div>
-                                </span>
+                            <div class="input-group colorpicker-component" id="foregroundColorButton">
+                                <input type="text" class="form-control hidden" name="foregroundColor" id="foregroundColor" />
+                                <span class="input-group-addon btn btn-fab btn-fab-mini"><i></i></span>
+                            </div>
+                        </span>
                                     <span class="input-group-btn">
-                                    <div class="input-group colorpicker-component" id="backgroundColorButton">
-                                        <input type="text" class="form-control hidden" name="backgroundColor" id="backgroundColor" />
-                                        <span class="input-group-addon btn btn-fab btn-fab-mini"><i></i></span>
-                                    </div>
-                                </span>
+                            <div class="input-group colorpicker-component" id="backgroundColorButton">
+                                <input type="text" class="form-control hidden" name="backgroundColor" id="backgroundColor" />
+                                <span class="input-group-addon btn btn-fab btn-fab-mini"><i></i></span>
+                            </div>
+                        </span>
                                 </div>
                             </div>
                             <div class="form-group">
@@ -110,7 +107,7 @@
                             <div class="row">
                                 <div class="col-xs-4 text-right left-dropdown middle-padding">decimals</div>
                                 <div class="col-xs-3 no-padding">
-                                    <input id="maxDecimalsSupportValues" type="number" min="0" id="domainLevel" class="form-control no-padding col-sm-6" value="1" disabled />
+                                    <input id="maxDecimalsSupportValues" type="number" min="0" id="domainLevel" class="form-control no-padding col-sm-6" value="3" disabled />
                                 </div>
                             </div>
                             <div class="form-group">
@@ -140,30 +137,31 @@
                                     </label>
                                 </div>
                             </div>
+<!--                            <div class="form-group">-->
+<!--                                <div class="checkbox">-->
+<!--                                    <label>-->
+<!--                                        <input id="sequences" type="checkbox"> show additional node information-->
+<!--                                    </label>-->
+<!--                                </div>-->
+<!--                            </div>-->
                             <div class="form-group">
                                 <div class="checkbox">
                                     <label>
-                                        <input id="sequences" type="checkbox"> show additional node information
+                                        <input id="taxonomy" type="checkbox" checked="checked"> show taxonomy
                                     </label>
                                 </div>
                             </div>
-<!--                            <div class="form-group">-->
-<!--                                <div class="checkbox">-->
-<!--                                    <label>-->
-<!--                                        <input id="taxonomy" type="checkbox" checked="checked"> show taxonomy-->
-<!--                                    </label>-->
-<!--                                </div>-->
-<!--                            </div>-->
-<!--                            <div class="form-group">-->
-<!--                                <div class="checkbox">-->
-<!--                                    <label>-->
-<!--                                        <input id="taxonomyColors" type="checkbox" checked="checked"> taxonomy colorization-->
-<!--                                    </label>-->
-<!--                                </div>-->
-<!--                            </div>-->
-<!--                            <div class="row">-->
-<!--                                <div class="col-xs-11 text-right left-dropdown middle-padding"><a class="pointer" data-toggle="modal" data-target="#taxonomyColorsModal">show taxonomy colors table</a></div>-->
-<!--                            </div>-->
+                            <div class="form-group">
+                                <div class="checkbox">
+                                    <label>
+                                        <input id="taxonomyColors" type="checkbox" checked="checked"> taxonomy colorization
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-xs-11 text-right left-dropdown middle-padding"><a class="pointer" data-toggle="modal" data-target="#taxonomyColorsModal">show taxonomy colors table</a></div>
+                            </div>
+                            <br>
                             <div class="row">
                                 <div class="col-xs-3">
                                     node size
@@ -177,7 +175,8 @@
                                 <div class="col-xs-3 text-left">
                                     <button id="nodeHeightHigher" class="btn btn-primary" title="make them bigger"><span class="glyphicon glyphicon-zoom-in" aria-hidden="true"></span></button>
                                 </div>
-                            </div><br>
+                            </div>
+                            <br>
                             <div class="row">
                                 <div class="col-xs-4 col-xs-offset-4 text-center">
                                     <button id="zoominY" class="btn btn-primary" title="zoom in along Y axis"><span class="glyphicon glyphicon-zoom-in" aria-hidden="true"></span> Y</button>
@@ -199,6 +198,7 @@
                                     <button id="zoomoutY" class="btn btn-primary" title="zoom out alongY axis"><span class="glyphicon glyphicon-zoom-out" aria-hidden="true"></span> Y</button>
                                 </div>
                             </div>
+                            <br>
 <!--                            <div class="form-group">-->
 <!--                                <div class="checkbox">-->
 <!--                                    <label>-->
@@ -249,34 +249,34 @@
 <!--                                    <button id="domainLevelHigher" class="btn btn-primary" title="higher the threshold">+</button>-->
 <!--                                </div>-->
 <!--                            </div>-->
-<!--                            <div class="form-group">-->
-<!--                                <div class="checkbox">-->
-<!--                                    <label>-->
-<!--                                        <input id="graphs" type="checkbox" checked="checked"> show graphs-->
-<!--                                    </label>-->
-<!--                                </div>-->
-<!--                            </div>-->
-<!--                            <div class="form-group">-->
-<!--                                <div class="checkbox">-->
-<!--                                    <label>-->
-<!--                                        <input id="graphLegend" type="checkbox" checked="checked"> show graphs legend-->
-<!--                                    </label>-->
-<!--                                </div>-->
-<!--                            </div>-->
-<!--                            <div class="row">-->
-<!--                                <div class="col-xs-3">-->
-<!--                                    graph scale-->
-<!--                                </div>-->
-<!--                                <div class="col-xs-3 text-right">-->
-<!--                                    <button id="graphWidthLower" class="btn btn-primary" title="make them shorter"><span class="glyphicon glyphicon-zoom-out" aria-hidden="true"></span></button>-->
-<!--                                </div>-->
-<!--                                <div class="col-xs-3 text-center middle-padding">-->
-<!--                                    <input type="text" id="graphWidth" disabled="disabled" class="form-control" />-->
-<!--                                </div>-->
-<!--                                <div class="col-xs-3 text-left">-->
-<!--                                    <button id="graphWidthHigher" class="btn btn-primary" title="make them longer"><span class="glyphicon glyphicon-zoom-in" aria-hidden="true"></span></button>-->
-<!--                                </div>-->
-<!--                            </div>-->
+                            <div class="form-group">
+                                <div class="checkbox">
+                                    <label>
+                                        <input id="graphs" type="checkbox" checked="checked"> show graphs
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <div class="checkbox">
+                                    <label>
+                                        <input id="graphLegend" type="checkbox" checked="checked"> show graphs legend
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-xs-3">
+                                    graph scale
+                                </div>
+                                <div class="col-xs-3 text-right">
+                                    <button id="graphWidthLower" class="btn btn-primary" title="make them shorter"><span class="glyphicon glyphicon-zoom-out" aria-hidden="true"></span></button>
+                                </div>
+                                <div class="col-xs-3 text-center middle-padding">
+                                    <input type="text" id="graphWidth" disabled="disabled" class="form-control" />
+                                </div>
+                                <div class="col-xs-3 text-left">
+                                    <button id="graphWidthHigher" class="btn btn-primary" title="make them longer"><span class="glyphicon glyphicon-zoom-in" aria-hidden="true"></span></button>
+                                </div>
+                            </div>
                             <br>
                             <strong>Search in tree</strong> (regexp supported):
                                 <input type="text" id="searchQuery" placeholder="Type your search..." class="form-control no-padding form-inline" />
@@ -295,7 +295,27 @@
                         <kbd><kbd>mouse click</kbd></kbd> show node info
                     </p>
                 </div> <!--  end column -->
+                <!-- PhyD3 viewer -->
                 <div id="phyd3-viewer" class="col-sm-9"></div>
+            </div>
+            <!-- Taxonomy colors modal, opened when user clicks on the 'show colors' link  -->
+            <div class="modal fade" id="taxonomyColorsModal" tabindex="-1" role="dialog" aria-labelledby="taxonomyColorsModalLabel">
+                <div class="modal-dialog modal-lg" role="document">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                            <h4 class="modal-title" id="taxonomyColorsModalLabel">Taxonomy colors</h4>
+                        </div>
+                        <div class="modal-body phyd3-modal">
+                            &nbsp;
+                            <form class="row form-horizontal" id="taxonomyColorsList">
+                            </form>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-primary" id="applyTaxonomyColors">Apply</button>
+                        </div>
+                    </div>
+                </div>
             </div>
         <?php endif; ?>
 
@@ -838,12 +858,12 @@ $css6	= "background: -webkit-gradient(linear,left top,right top,color-stop(".($p
 			<?php
 			$checked	= null;
 			if(isset($include_subsets) && $include_subsets){$checked = " checked='checked' ";}
-			echo "<input name='include_extra' $checked type='radio' value='subsets'/>\n";
+			echo "<input name='include_subsets' $checked type='checkbox' value='y'/>\n";
 			echo "<span style='margin-left:20px;'>Include subsets in tree</span>\n";
 			echo "<br/>\n";
 			$checked2	= " checked='checked' ";
 			if($checked){$checked2 = null;}
-			echo "<input name='include_extra' $checked2 type='radio' value='meta'/>\n";
+			echo "<input name='include_meta_annotation' $checked2 type='checkbox' value='y'/>\n";
 			echo "<span style='margin-left:20px;'>Include meta-annotation in tree</span>\n";
 			?>
 			</div>
@@ -866,12 +886,12 @@ $css6	= "background: -webkit-gradient(linear,left top,right top,color-stop(".($p
 </div>
 <?php if(isset($previous_result) && $previous_result==true && $stripped_msa_length!=0): ?>
     <script type="text/javascript">
-        var treeUrl = "<?php echo $this->Html->url(array("controller"=>"tools","action"=>"get_tree",$exp_id, $gf_id)); ?>"; // , "xml_tree"
+        var treeUrl = "<?php echo $this->Html->url(array("controller"=>"tools","action"=>"get_tree",$exp_id, $gf_id, "xml_tree")); ?>";
         console.log(treeUrl);
         var phyD3Elmt = "phyd3-viewer";
         var opts = {
             dynamicHide: true,
-            height: 750,
+            height: 780,
             invertColors: false,
             lineupNodes: true,
             // showDomains: true,
@@ -881,8 +901,7 @@ $css6	= "background: -webkit-gradient(linear,left top,right top,color-stop(".($p
             showGraphLegend: true,
             showLength: false,
             showNodeNames: true,
-            // showNodesType: "only leaf",
-            showNodesType: "all",
+            showNodesType: "only leaf",
             showPhylogram: false,
             showTaxonomy: true,
             showFullTaxonomy: false,
@@ -890,8 +909,11 @@ $css6	= "background: -webkit-gradient(linear,left top,right top,color-stop(".($p
             showTaxonomyColors: true,
             backgroundColor: "#f5f5f5",
             foregroundColor: "#000000",
-            nanColor: "#f5f5f5"
+            nanColor: "#f5f5f5",
+            maxDecimalsLengthValues: 3,
+            maxDecimalsSupportValues: 3
         };
+
 
         function loadPhyd3() {
             jQuery('#foregroundColor').val(opts.foregroundColor);
@@ -899,29 +921,14 @@ $css6	= "background: -webkit-gradient(linear,left top,right top,color-stop(".($p
             jQuery('#foregroundColorButton').colorpicker({color: opts.foregroundColor});
             jQuery('#backgroundColorButton').colorpicker({color: opts.backgroundColor});
             d3.select("#" + phyD3Elmt).text("Loading tree viewer... ");
-            d3.text(treeUrl, function (data) {
+            d3.xml(treeUrl, "application/xml", function (xml) {
                 d3.select("#" + phyD3Elmt).text(null);
-                var tree = phyd3.newick.parse(data);
+                var tree = phyd3.phyloxml.parse(xml);
                 phyd3.phylogram.build("#" + phyD3Elmt, tree, opts);
-
             });
         }
-/*
-            d3.xml(treeUrl, "application/xml", function(xml) {
-                d3.select("#" + phyD3Elmt).text(null);
-                if(xml == null) {
-                    d3.select("#phyd3").text("Error while reading PhyloXML file from the server");
-                }
-                else {
-                    console.log(phyd3.phyloxml.parse(xml));
-                    console.log("wqdqwdqw");
-                    var tree = phyd3.phyloxml.parse(xml);
-                    phyd3.phylogram.build("#" + phyD3Elmt, tree, opts);
-                }
-            });
-        };
-*/
 
+        // Load tree on page load
         $(document).ready(function () {
             loadPhyd3();
         });
