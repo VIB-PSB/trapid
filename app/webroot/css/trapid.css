@@ -1744,6 +1744,7 @@ input[type=range]:focus::-ms-fill-upper {
 }
 
 
+/* Highcharts tooltip style (used in a hack where we want tooltips to be displayed on top of the axis labels) */
 .highcharts-tooltip span {
 	background-color:white;
 	border:1px solid #2196f3;
@@ -1751,6 +1752,7 @@ input[type=range]:focus::-ms-fill-upper {
 	padding: 7px;
 	z-index:9999;
 }
+
 .hc-tooltip-dot {
 	height: 8px;
 	width: 8px;
@@ -1758,6 +1760,22 @@ input[type=range]:focus::-ms-fill-upper {
 	border: 0px solid #fff;
 	display: inline-block;
 	margin-right: 2px;
+}
+
+
+/* Override navbar height to be more consistent between external and experiment layouts */
+.navbar {
+	min-height:50px !important;
+}
+
+nav .navbar-nav > li > a, .navbar-brand {
+	padding-top:14px !important; padding-bottom:0 !important;
+	height: 50px;
+}
+
+nav .navbar-nav .navbar-form {
+	margin-top: 7px;
+	margin-bottom: 7px;
 }
 
 /* Lots of ugly borders: useful for debugging when things are not displayed as expected */
