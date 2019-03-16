@@ -2117,6 +2117,13 @@ class TrapidController extends AppController{
     $this->redirect($file_path);
           return;
       }
+
+    else if($export_type=="tax"){
+	$file_path = $this->TrapidUtils->performExport($plaza_database,$user_id,$exp_id,"TAX_CLASSIFICATION","transcripts_tax_exp".$exp_id.".txt");
+	$this->set("file_path",$file_path);
+    $this->redirect($file_path);
+          return;
+      }
       else if($export_type=="gf"){
 	if(!array_key_exists("gf_type",$_POST)){return;}
 	$gf_type	= $_POST['gf_type'];
@@ -2135,7 +2142,26 @@ class TrapidController extends AppController{
     $this->redirect($file_path);
           return;
       }
-      else if($export_type=="go" || $export_type=="interpro"){
+
+      else if($export_type=="rf"){
+          if(!array_key_exists("rf_type", $_POST)){
+              return;
+          }
+          $rf_type	= $_POST['rf_type'];
+          $file_path	= null;
+          if($rf_type=="transcript"){
+              $file_path = $this->TrapidUtils->performExport($plaza_database,$user_id,$exp_id,"TRANSCRIPT_RF","transcripts_rf_exp".$exp_id.".txt");
+          }
+          else if($rf_type=="rf"){
+              $file_path = $this->TrapidUtils->performExport($plaza_database,$user_id,$exp_id,"RF_TRANSCRIPT","rf_transcripts_exp".$exp_id.".txt");
+          }
+          $this->set("file_path", $file_path);
+          $this->redirect($file_path);
+          return;
+      }
+
+
+      else if($export_type=="go" || $export_type=="interpro" || $export_type=="ko"){
 	if(!array_key_exists("functional_type",$_POST)){return;}
 	$functional_type	= $_POST['functional_type'];
  	$file_path		= null;
@@ -2150,6 +2176,12 @@ class TrapidController extends AppController{
 	}
 	else if($functional_type=="meta_ipr"){
 	 $file_path = $this->TrapidUtils->performExport($plaza_database,$user_id,$exp_id,"INTERPRO_TRANSCRIPT","interpro_transcripts_exp".$exp_id.".txt");
+	}
+	else if($functional_type=="transcript_ko"){
+	 $file_path = $this->TrapidUtils->performExport($plaza_database,$user_id,$exp_id,"TRANSCRIPT_KO","transcripts_ko_exp".$exp_id.".txt");
+	}
+	else if($functional_type=="meta_ko"){
+	 $file_path = $this->TrapidUtils->performExport($plaza_database,$user_id,$exp_id,"KO_TRANSCRIPT","ko_transcripts_exp".$exp_id.".txt");
 	}
 	$this->set("file_path",$file_path);
     $this->redirect($file_path);

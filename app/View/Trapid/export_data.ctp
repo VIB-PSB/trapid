@@ -15,9 +15,11 @@
     <p class="text-justify"><strong>Note: </strong> exported files are generated on-the-fly and can take a while (up to ~1 minute) to be created.</p>
     <!-- Navigation tabs -->
     <br>
-    <ul class="nav nav-tabs" id="tabs" data-tabs="tabs">
+    <ul class="nav nav-tabs nav-justified" id="tabs" data-tabs="tabs">
         <li class="active"><a href="#structural-data" data-toggle="tab">Structural data</a></li>
+        <li><a href="#tax-data" data-toggle="tab">Taxonomic classification</a></li>
         <li><a href="#gf-data" data-toggle="tab">Gene family data</a></li>
+        <li><a href="#rf-data" data-toggle="tab">RNA family data</a></li>
         <li><a href="#sqces-data" data-toggle="tab">Sequences</a></li>
         <li><a href="#functional-data" data-toggle="tab">Functional data</a></li>
         <li><a href="#subset-data" data-toggle="tab">Subsets</a></li>
@@ -56,6 +58,20 @@
                 }
                 ?>
             </div>
+        </div>
+
+        <div id="tax-data" class="tab-pane"><br>
+            <h4>Export taxonomic classification (Kaiju) data</h4>
+            <p class="text-justify">
+                 The taxonomic classification export file contains all transcripts with their associated taxonomic label (tax ID, lineage) and
+                classification metrics (score, number of matching tax IDs, number of matching sequences).
+            </p>
+                <div style="float:left;margin-right: 20px;">
+                    <?php echo $this->Form->create(false, array("url" => array("controller" => "trapid", "action" => "export_data", $exp_id), "type" => "post")); ?>
+                    <input type="hidden" name="export_type" value="tax"/>
+                    <button class="btn btn-default" type="submit"<?php echo $unfinished; ?>><span class="glyphicon glyphicon-download-alt"></span> Transcripts tax. classification</button>
+                    </form>
+                </div>
         </div>
 
         <div id="gf-data" class="tab-pane"><br>
@@ -97,6 +113,48 @@
                    <button class="btn btn-default" type="submit"<?php echo $unfinished; ?>><span class="glyphicon glyphicon-download-alt"></span> GF reference data</button>
                     </form>
                 </div>
+
+                <div style="clear:both;width:800px;">
+                    <?php
+                    if (isset($export_type) && $export_type == "gf" && isset($file_path)) {
+                        echo "<br/><a href='" . $file_path . "'>Download file</a>\n";
+                    } else {
+                        echo "<span style='font-size:x-small;'>&nbsp;</span>";
+                    }
+                    ?>
+                </div>
+            </div>
+        </div>
+
+        <div id="rf-data" class="tab-pane"><br>
+            <h4>Export RNA family data</h4>
+            <div class="subdiv">
+                <ul>
+                    <li>
+                        <strong>Transcripts with RF</strong> contains all transcripts with their associated RNA family (if existing).
+                    </li>
+                    <li>
+                        <strong>RF with transcripts</strong> contains all the RNA families, with their associated transcripts.
+                    </li>
+                </ul>
+
+                <br/>
+                <div style="float:left;margin-right: 20px;">
+                    <?php echo $this->Form->create(false, array("url" => array("controller" => "trapid", "action" => "export_data", $exp_id), "type" => "post")); ?>
+                    <input type="hidden" name="export_type" value="rf"/>
+                    <input type="hidden" name="rf_type" value="transcript"/>
+                   <button class="btn btn-default" type="submit"<?php echo $unfinished; ?>><span class="glyphicon glyphicon-download-alt"></span> Transcripts with RF</button>
+                    </form>
+                </div>
+
+                <div style="float:left;margin-right: 20px;">
+                    <?php echo $this->Form->create(false, array("url" => array("controller" => "trapid", "action" => "export_data", $exp_id), "type" => "post")); ?>
+                    <input type="hidden" name="export_type" value="rf"/>
+                    <input type="hidden" name="rf_type" value="rf"/>
+                   <button class="btn btn-default" type="submit"<?php echo $unfinished; ?>><span class="glyphicon glyphicon-download-alt"></span> RF with transcripts</button>
+                    </form>
+                </div>
+
 
                 <div style="clear:both;width:800px;">
                     <?php
@@ -153,6 +211,7 @@
         <div id="functional-data" class="tab-pane"><br>
             <h4>Export functional data</h4>
             <div class="page-section-sm">
+                <section class="page-section-sm">
                 <h5>Gene Ontology data</h5>
                 <ul>
                     <li>
@@ -190,9 +249,9 @@
                     }
                     ?>
                 </div>
+                </section>
 
-                <div style="clear:both;width:800px;font-size:x-small;">&nbsp;</div>
-
+                <section class="page-section-sm">
                 <h5>Protein domain data</h5>
                 <ul>
                     <li>
@@ -229,6 +288,46 @@
                     }
                     ?>
                 </div>
+                </section>
+
+                <section class="page-section-sm">
+                <h5>KEGG Orthology data</h5>
+                <ul>
+                    <li>
+                        <strong>Transcripts with KO</strong> contains transcripts with the associated protein domains.
+                    </li>
+                    <li>
+                        <strong>KO meta data</strong> contains protein domains with counts and associated transcripts.
+                    </li>
+                </ul>
+                <br/>
+                <div style="float:left;margin-right: 20px;">
+                    <?php echo $this->Form->create(false, array("url" => array("controller" => "trapid", "action" => "export_data", $exp_id), "type" => "post")); ?>
+                    <input type="hidden" name="export_type" value="ko"/>
+                    <input type="hidden" name="functional_type" value="transcript_ko"/>
+                    <button class="btn btn-default" type="submit" <?php echo $unfinished; ?>><span class="glyphicon glyphicon-download-alt"></span> Transcripts with KO</button>
+                    </form>
+                </div>
+
+
+                <div style="float:left;">
+                    <?php echo $this->Form->create(false, array("url" => array("controller" => "trapid", "action" => "export_data", $exp_id), "type" => "post")); ?>
+                    <input type="hidden" name="export_type" value="ko"/>
+                    <input type="hidden" name="functional_type" value="meta_ko"/>
+                    <button class="btn btn-default" type="submit" <?php echo $unfinished; ?>><span class="glyphicon glyphicon-download-alt"></span> KO meta data</button>
+                    </form>
+                </div>
+
+                <div style="clear:both;width:800px;">
+                    <?php
+                    if (isset($export_type) && $export_type == "interpro" && isset($file_path)) {
+                        echo "<br/><a href='" . $file_path . "'>Download file</a>\n";
+                    } else {
+                        echo "<span style='font-size:x-small;'>&nbsp;</span>";
+                    }
+                    ?>
+                </div>
+                </section>
             </div>
         </div>
 

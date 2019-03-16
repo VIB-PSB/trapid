@@ -21,10 +21,13 @@ public class ExportManager {
 	public enum EXPORT_TYPE
 		{NONE,
 		STRUCTURAL,
+        TAX_CLASSIFICATION,
 		SEQ_TRANSCRIPT,SEQ_ORF,SEQ_AA,
 		TRANSCRIPT_GF,GF_TRANSCRIPT,GF_REFERENCE,
+		TRANSCRIPT_RF,RF_TRANSCRIPT,
 		TRANSCRIPT_GO,GO_TRANSCRIPT,
 		TRANSCRIPT_INTERPRO,INTERPRO_TRANSCRIPT,
+		TRANSCRIPT_KO,KO_TRANSCRIPT,
 		TRANSCRIPT_LABEL
 		};
 
@@ -69,16 +72,21 @@ public class ExportManager {
 
 			switch(export_type){
 			case STRUCTURAL: em.exportStructuralData(trapid_db_connection,trapid_experiment_id,output_file,filter);break;
+			case TAX_CLASSIFICATION: em.exportTaxClassification(trapid_db_connection,trapid_experiment_id,output_file); break;
 			case SEQ_TRANSCRIPT: em.exportTranscriptSequences(trapid_db_connection,trapid_experiment_id,output_file); break;
 			case SEQ_ORF: em.exportOrfSequences(trapid_db_connection,trapid_experiment_id,output_file); break;
 			case SEQ_AA: em.exportAASequences(trapid_db_connection,trapid_experiment_id,output_file);break;
 			case TRANSCRIPT_GF: em.exportTranscriptGf(trapid_db_connection,trapid_experiment_id,output_file);break;
 			case GF_TRANSCRIPT: em.exportGfTranscript(trapid_db_connection,trapid_experiment_id,output_file);break;
 			case GF_REFERENCE:em.exportGfReference(plaza_db_connection,trapid_db_connection,trapid_experiment_id,output_file);break;
+			case TRANSCRIPT_RF: em.exportTranscriptRf(trapid_db_connection,trapid_experiment_id,output_file);break;
+			case RF_TRANSCRIPT: em.exportRfTranscript(trapid_db_connection,trapid_experiment_id,output_file);break;
 			case TRANSCRIPT_GO: em.exportTranscriptGo(plaza_db_connection,trapid_db_connection,trapid_experiment_id,output_file);break;
 			case GO_TRANSCRIPT: em.exportGoTranscript(plaza_db_connection,trapid_db_connection,trapid_experiment_id,output_file);break;
 			case TRANSCRIPT_INTERPRO: em.exportTranscriptInterpro(plaza_db_connection,trapid_db_connection,trapid_experiment_id,output_file);break;
 			case INTERPRO_TRANSCRIPT: em.exportInterproTranscript(plaza_db_connection,trapid_db_connection,trapid_experiment_id,output_file);break;
+			case TRANSCRIPT_KO: em.exportTranscriptKo(plaza_db_connection,trapid_db_connection,trapid_experiment_id,output_file);break;
+			case KO_TRANSCRIPT: em.exportKoTranscript(plaza_db_connection,trapid_db_connection,trapid_experiment_id,output_file);break;
 			case TRANSCRIPT_LABEL: em.exportTranscriptLabel(trapid_db_connection,trapid_experiment_id,output_file,filter); break;
 			}
 
@@ -134,6 +142,49 @@ public class ExportManager {
 		stmt.close();
 		writer.close();
 	}
+
+
+
+    	public void exportTaxClassification(Connection conn,String exp_id,String output_file) throws Exception{
+            BufferedWriter writer	= new BufferedWriter(new FileWriter(new File(output_file)));
+            Map<String,String> tax_id_lineages = new HashMap<String,String>();
+    		String sql				= "SELECT `transcript_id`,`txid`, UNCOMPRESS(`tax_results`) as tr FROM `transcripts_tax` WHERE `experiment_id`='" + exp_id + "' ";
+            String lineage_sql				= "SELECT `tax` FROM `full_taxonomy` WHERE `txid`=?";
+    		Statement stmt			= conn.createStatement();
+    		PreparedStatement lineage_stmt			= conn.prepareStatement(lineage_sql);
+    		ResultSet set			= stmt.executeQuery(sql);
+    		int counter				= 0;
+    		writer.write("#counter\ttranscript_id\ttax_id\tscore\tn_match_tax\tn_match_seqs\tlineage\n");
+    		while(set.next()){
+    			counter++;
+    			String transcript_id		= set.getString("transcript_id");
+    			String tax_id				= set.getString("txid");
+    			String tax_results	= set.getString("tr");
+                // If it's a tax id we never saw, get the lineage and add it to `tax_id_lineages`
+                if(!tax_id_lineages.containsKey(tax_id)) {
+                    lineage_stmt.setString(1, tax_id);
+                    ResultSet lineage_set			= lineage_stmt.executeQuery();
+                    while(lineage_set.next()) {
+                        String lineage = lineage_set.getString("tax");
+    					tax_id_lineages.put(tax_id, lineage);
+                    }
+                }
+    			if(tax_id.equals("0") || tax_id.equals("null")){
+                    writer.write(counter+"\t"+transcript_id+"\t"+tax_id+"\n");
+                }
+                else {
+                    String[] splitted_results = tax_results.split(";");
+                    String score = splitted_results[0].split("=")[1];
+                    String n_tax = splitted_results[1].split("=")[1];
+                    String n_seq = splitted_results[2].split("=")[1];
+                    writer.write(counter+"\t"+transcript_id+"\t"+tax_id+"\t"+score+"\t"+n_tax+"\t"+n_seq+"\t"+tax_id_lineages.get(tax_id)+"\n");
+                }
+    		}
+    		stmt.close();
+            lineage_stmt.close();
+    		writer.close();
+    	}
+
 
 
 	public void exportTranscriptSequences(Connection conn,String exp_id,String output_file) throws Exception{
@@ -324,6 +375,70 @@ public class ExportManager {
 	}
 
 
+    	public void exportTranscriptRf(Connection conn,String exp_id,String output_file) throws Exception{
+    		BufferedWriter writer	= new BufferedWriter(new FileWriter(new File(output_file)));
+    		String sql				= "SELECT `transcript_id`,`rf_ids` FROM `transcripts` WHERE `experiment_id`='"+exp_id+"' ";
+    		Statement stmt			= conn.createStatement();
+    		ResultSet set			= stmt.executeQuery(sql);
+    		int counter				= 0;
+    		writer.write("#counter\ttranscript_id\trf_id\n");
+    		while(set.next()){
+    			counter++;
+    			String transcript_id		= set.getString("transcript_id");
+    			String rf_ids				= set.getString("rf_ids");
+    			if(rf_ids==null || rf_ids.equals("null")){rf_ids="";}
+                if(rf_ids.contains(",")) {
+                    for(String rf_id : rf_ids.split(",")){
+                        writer.write(counter+"\t"+transcript_id+"\t"+rf_id+"\n");
+                    }
+                }
+                else {
+                    writer.write(counter+"\t"+transcript_id+"\t"+rf_ids+"\n");
+                }
+    		}
+    		stmt.close();
+    		writer.close();
+    	}
+
+
+    	public void exportRfTranscript(Connection conn,String exp_id,String output_file) throws Exception{
+    		String sql				= "SELECT `transcript_id`,`rf_ids` FROM `transcripts` WHERE `experiment_id`='"+exp_id+"' ";
+    		Statement stmt			= conn.createStatement();
+    		ResultSet set			= stmt.executeQuery(sql);
+    		SortedMap<String,Set<String>> tmp	= new TreeMap<String,Set<String>>();
+    		while(set.next()){
+    			String transcript_id		= set.getString("transcript_id");
+    			String rf_ids				= set.getString("rf_ids");
+    			if(rf_ids==null || rf_ids.equals("null")){rf_ids="";}
+    			if(!rf_ids.equals("")){
+                    // Multiple RFs (will change)
+                    if(rf_ids.contains(",")) {
+                        for(String rf_id : rf_ids.split(",")){
+                            if(!tmp.containsKey(rf_id)){tmp.put(rf_id, new HashSet<String>());}
+                            tmp.get(rf_id).add(transcript_id);
+                        }
+                    }
+                    else {
+                        if(!tmp.containsKey(rf_ids)){tmp.put(rf_ids, new HashSet<String>());}
+                        tmp.get(rf_ids).add(transcript_id);
+                    }
+    			}
+    		}
+    		stmt.close();
+    		BufferedWriter writer	= new BufferedWriter(new FileWriter(new File(output_file)));
+    		writer.write("#counter\trf_id\ttranscript_count\ttranscripts\n");
+    		int counter			= 0;
+    		for(String rf_id:tmp.keySet()){
+    			counter++;
+    			Set<String> genes	= tmp.get(rf_id);
+    			String genes_string	= make_string(genes);
+    			writer.write(counter+"\t"+rf_id+"\t"+genes.size()+"\t"+genes_string+"\n");
+    		}
+    		writer.close();
+    	}
+
+
+
 	private Map<String,String> getGoDescriptions(Connection conn) throws Exception{
 		Map<String,String> result		= new HashMap<String,String>();
 		// TRAPID v2 database does not have this structure anymore
@@ -343,8 +458,6 @@ public class ExportManager {
 
 	private Map<String,String> getProteinDomainDescriptions(Connection conn) throws Exception{
 		Map<String,String> result		= new HashMap<String,String>();
-        // TRAPID v2 database does not have this structure anymore
-// 		String sql						= "SELECT `motif_id`,`desc` FROM `protein_motifs` ";
 		String sql						= "SELECT `name`,`desc` FROM `functional_data` WHERE `type`='interpro'";
 		Statement stmt					= conn.createStatement();
 		ResultSet set					= stmt.executeQuery(sql);
@@ -352,6 +465,22 @@ public class ExportManager {
 			String motif_id				= set.getString(1);
 			String desc					= set.getString(2);
 			result.put(motif_id,desc);
+		}
+		set.close();
+		stmt.close();
+		return result;
+	}
+
+
+	private Map<String,String> getKoDescriptions(Connection conn) throws Exception{
+		Map<String,String> result		= new HashMap<String,String>();
+		String sql						= "SELECT `name`,`desc` FROM `functional_data` WHERE `type`='ko'";
+		Statement stmt					= conn.createStatement();
+		ResultSet set					= stmt.executeQuery(sql);
+		while(set.next()){
+			String ko_id				= set.getString(1);
+			String desc					= set.getString(2);
+			result.put(ko_id,desc);
 		}
 		set.close();
 		stmt.close();
@@ -462,6 +591,56 @@ public class ExportManager {
 			String genes_string	= this.make_string(genes);
 			String desc			= interpro_descriptions.get(interpro);
 			writer.write(counter+"\t"+interpro+"\t"+desc+"\t"+genes.size()+"\t"+genes_string+"\n");
+		}
+		writer.close();
+	}
+
+
+
+	public void exportTranscriptKo(Connection plaza_connection,Connection conn,String exp_id,String output_file) throws Exception{
+		Map<String,String> ko_descriptions	= this.getKoDescriptions(plaza_connection);
+		BufferedWriter writer	= new BufferedWriter(new FileWriter(new File(output_file)));
+		String sql				= "SELECT `transcript_id`,`name` FROM `transcripts_annotation` WHERE `experiment_id`='"+exp_id+"' AND `type`='ko'";
+		Statement stmt			= conn.createStatement();
+		ResultSet set			= stmt.executeQuery(sql);
+		int counter				= 0;
+		writer.write("#counter\ttranscript_id\tko\tdescription\n");
+		while(set.next()){
+			counter++;
+			String transcript_id		= set.getString("transcript_id");
+			String ko				= set.getString("name");
+			String desc					= ko_descriptions.get(ko);
+			writer.write(counter+"\t"+transcript_id+"\t"+ko+"\t"+desc+"\n");
+		}
+		stmt.close();
+		writer.close();
+	}
+
+
+
+	public void exportKoTranscript(Connection plaza_connection,Connection conn,String exp_id,String output_file) throws Exception{
+		Map<String,String> ko_descriptions	= this.getKoDescriptions(plaza_connection);
+		String sql				= "SELECT `transcript_id`,`name` FROM `transcripts_annotation` WHERE `experiment_id`='"+exp_id+"' AND `type`='ko'";
+		Statement stmt			= conn.createStatement();
+		ResultSet set			= stmt.executeQuery(sql);
+		SortedMap<String,Set<String>> tmp	= new TreeMap<String,Set<String>>();
+		while(set.next()){
+			String transcript_id		= set.getString("transcript_id");
+			String ko				= set.getString("name");
+			if(!tmp.containsKey(ko)){tmp.put(ko, new HashSet<String>());}
+			tmp.get(ko).add(transcript_id);
+		}
+		stmt.close();
+
+		BufferedWriter writer	= new BufferedWriter(new FileWriter(new File(output_file)));
+		int counter				= 0;
+		writer.write("#counter\tko\tdescription\tnum_transcripts\ttranscripts\n");
+		for(String ko:tmp.keySet()){
+			counter++;
+			Set<String> genes	= tmp.get(ko);
+			String genes_string	= this.make_string(genes);
+			String desc			= ko_descriptions.get(ko);
+			writer.write(counter+"\t"+ko+"\t"+desc+"\t"+genes.size()+"\t"+genes_string+"\n");
 		}
 		writer.close();
 	}
