@@ -44,11 +44,7 @@
 </div>
 <p class="text-justify">Current experiments for <strong><?php echo $user_email['Authentication']['email'];?></strong>: </p>
 <div class="subdiv">
-
-	<dl class="standard">
-	<dt></dt>
-	<dd>
-	<div>
+    <div>
 		<!--table cellspacing="0" cellpadding="0" style="width:900px;"-->
 		<table class="table table-hover table-striped">
 		<thead>
@@ -102,10 +98,10 @@
 			    	echo "</tr>\n";
 			}
 			else if ($e['process_state']=="loading_db"){
-				echo "<tr class='processing_state'>";
+				echo "<tr class='processing_state loading_state'>";
 			    	echo "<td>".$e['title']."</td>";
 				//echo "<td>".$experiment['count']."</td>";
-				echo "<td><span id='exp_count_".$e['experiment_id']."'>".$experiment['count']."</span></td>";
+				echo "<td><span class='exp_count' id='exp_count_".$e['experiment_id']."'>".$experiment['count']."</span></td>";
 				// echo "<td>".$this->Html->link($e['process_state'],array("controller"=>"trapid","action"=>"change_status",$e['experiment_id']),array("style"=>"color:blue;text-decoration:underline;"))."</td>";
 				echo "<td>".$this->Html->link($e['process_state'],array("controller"=>"trapid","action"=>"change_status",$e['experiment_id']))."</td>";
 				echo "<td>".$e['last_edit_date']."</td>";
@@ -196,8 +192,7 @@
                   $(span_id).html(data);
               },
               error: function() {
-                  // alert("Failure - Unable to retrieve transcripts count. ");
-                  console.log("Failure - Unable to retrieve transcripts count. ");
+                  console.log("Unable to retrieve transcripts count for experiment \'" + exp_id + "\'. ");
               },
               complete: function() {
                 // Debug
@@ -208,24 +203,61 @@
           });
         }
 
-				for(var i=0;i<experiments.length;i++) {
-				  var experiment_id = experiments[i]["Experiments"]["experiment_id"];
-          get_exp_num_trancripts(experiment_id);
-				}
-		</script>
-	</div>
-	</dd>
+        for(var i=0;i<experiments.length;i++) {
+            var experiment_id = experiments[i]["Experiments"]["experiment_id"];
+            get_exp_num_trancripts(experiment_id);
+		}
+
+        // Reload transcript count of experiments in `loading_db` state every x milliseconds
+        // TODO: although this is working, execution is not perfect (page is reloaded after 2 loops, not 1)
+        $(document).ready(function() {
+                // Check if there are any experiments loading data
+                var loading_exps = document.querySelectorAll(".loading_state");
+                var exps_trs = {};
+                var timeout_ms = 5000;
+                // Reload data after `timeout_ms` milliseconds
+                function reload_transcript_count() {
+                    // Get loading experiments and their IDs
+                    loading_exps = document.querySelectorAll(".loading_state");
+                    // If none were found, stop running the function
+                    if(loading_exps.length===0){
+                        clearInterval(func_loop);
+                    }
+                    var loading_exps_span = document.querySelectorAll(".loading_state [id^=\"exp_count\"]");
+                    for(var i=0 ; i<loading_exps_span.length ; i++) {
+                        var span_id = loading_exps_span[i].id;
+                        var exp_id = span_id.split("_").slice(-1)[0];
+                        var exp_trs = exps_trs[exp_id];
+                        get_exp_num_trancripts(parseInt(exp_id));
+                        exps_trs[exp_id] = document.getElementById(span_id).textContent;
+                        // console.log(exp_trs);
+                        // console.log(exps_trs[exp_id]);
+                        // Check if transcript count matches the updated count (i.e. no change for `timeout_ms`)
+                        if((exp_trs === exps_trs[exp_id]) && (exps_trs[exp_id] !== "N/A")) {
+                            // Check if the user is doing something (new experiment creation modal is open)
+                            // If it is not the case, refresh the page: at least one experiment (probably) finished loading
+                            var exp_modal = document.getElementById("newExpModal");
+                            if(!exp_modal.classList.contains("in")) {
+                                location.reload(true);
+                            }
+                        }
+                    }
+                }
+                var func_loop = setInterval(reload_transcript_count, timeout_ms)
+            });
+        </script>
+    </div>
 
 
 	<?php if(count($experiments)<$max_user_experiments): ?>
 <p class="text-right">
-	<button data-toggle="modal" data-target="#squarespaceModal" class="btn btn-primary btn-lg" name="" id="">
+	<button data-toggle="modal" data-target="#newExpModal" class="btn btn-primary btn-lg" name="" id="">
 	  <span class="glyphicon glyphicon-plus"> </span> Add new experiment
   </button>
 </p>
 
 
-<div class="modal fade" id="squarespaceModal" tabindex="-1" role="dialog" aria-labelledby="modalLabel" aria-hidden="true">
+<div class="modal fade" id="newExpModal" tabindex="-1" role="dialog" aria-labelledby="modalLabel" aria-hidden="true">
   <div class="modal-dialog">
 	<div class="modal-content">
 		<div class="modal-header">
@@ -326,7 +358,6 @@
 		</p>
 	<!--dt>Add new experiment</dt-->
 	<?php endif;?>
-	</dl>
 
     <?php if(count($shared_experiments)!=0): ?>
         <br>
@@ -334,7 +365,7 @@
 
         <dd>
             <div>
-                <table class="table table-hover table-striped">
+                <table class="table table-hover table-striped" id="experiments-table">
                     <thead>
                     <tr>
                         <th style="width:30%;">Name</th>
