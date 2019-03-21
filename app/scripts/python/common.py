@@ -38,9 +38,9 @@ def db_connect(username, password, host, db_name):
 def update_experiment_log(experiment_id, action, params, depth, db_conn):
     """Update experiment log (i.e. insert a new record in `experiment_log` table). """
     sql_str = "INSERT INTO `experiment_log`(`experiment_id`,`date`,`action`,`parameters`,`depth`) VALUES ({values_str});"
-    values_str = "\'{exp_id}\', \'{date_time}\', \'{action}\', \'{params}\', {depth}"
+    values_str = "\'{exp_id}\', {date_time}, \'{action}\', \'{params}\', {depth}"
     # Get current time
-    current_time = time.strftime('%Y-%m-%d %H:%M:%S')
+    current_time = "NOW()" # time.strftime('%Y-%m-%d %H:%M:%S')
     # Format value string, then try to update the experiment log
     current_values = values_str.format(exp_id=experiment_id, date_time=current_time, action=action, params=params, depth=depth)
     # print sql_str.format(values_str=current_values)
