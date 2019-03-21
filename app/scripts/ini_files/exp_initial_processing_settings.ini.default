@@ -26,6 +26,7 @@ gf_type = "<gf_type>"
 num_top_hits = "<num_top_hits>"
 func_annot = "<func_annot>"
 tax_scope = "<tax_scope>"
+use_cds = "<use_cds>"
 
 [sim_search]
 blast_db_dir = "/path/to/blast_db/"

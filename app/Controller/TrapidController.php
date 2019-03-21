@@ -1509,6 +1509,7 @@ class TrapidController extends AppController{
           $tax_scope = filter_var($_POST['tax-scope'], FILTER_SANITIZE_STRING);
       }
       $perform_tax_binning = false;
+      $use_cds = false;
       $used_blast_desc	= "";
       if(!(array_key_exists($blast_db_type, $possible_db_types) &&
 	   array_key_exists($gf_type, $possible_gf_types) &&
@@ -1540,6 +1541,11 @@ class TrapidController extends AppController{
         if(isset($_POST['tax-binning']) && $_POST['tax-binning'] == 'y') {
           $perform_tax_binning = true;
         }
+
+      // Sequence type (i.e. input sequences are CDS).
+      if(isset($_POST['use-cds']) && $_POST['use-cds'] == 'y') {
+        $use_cds = true;
+      }
 
       // EggNOG taxonomic scope data check (should be in the list of possible choice or 'auto')
       // `$tax_scope` not empty == we are working with EggNOG
@@ -1578,7 +1584,7 @@ class TrapidController extends AppController{
       // A single "initial processing" job should only run on a single cluster node
       $qsub_file  = $this->TrapidUtils->create_qsub_script($exp_id);
       // Create configuration file for initial processing of this experiment
-      $ini_file = $this->TrapidUtils->create_ini_file_initial($exp_id,$exp_info['used_plaza_database'],$blast_db,$gf_type,$num_blast_hits,$blast_evalue, $func_annot, $perform_tax_binning, $tax_scope, $rfam_clans_str);
+      $ini_file = $this->TrapidUtils->create_ini_file_initial($exp_id,$exp_info['used_plaza_database'],$blast_db,$gf_type,$num_blast_hits,$blast_evalue, $func_annot, $perform_tax_binning, $tax_scope, $rfam_clans_str, $use_cds);
       // pr($ini_file);
       // $shell_file = $this->TrapidUtils->create_shell_file_initial($exp_id,$exp_info['used_plaza_database'],$blast_db,$gf_type,$num_blast_hits,$possible_evalues[$blast_evalue],$func_annot, $perform_tax_binning);
       // $shell_file = $this->TrapidUtils->create_shell_file_initial($exp_id,$exp_info['used_plaza_database'],$blast_db,$gf_type,$num_blast_hits,$blast_evalue, $func_annot, $perform_tax_binning, $tax_scope);

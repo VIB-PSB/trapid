@@ -1084,7 +1084,7 @@ class TrapidUtilsComponent extends Component{
     // This function uses the template INI file found in `<INI>/exp_initial_processing_settings.ini.default`
     // Note: it may be better to avoid using a 'base' ini file altogether, as most of the information there is redundant
     // with other ini files / variables.
-    function create_ini_file_initial($exp_id, $plaza_db, $blast_db, $gf_type, $num_top_hits, $evalue, $func_annot, $tax_binning, $tax_scope, $rfam_clans){
+    function create_ini_file_initial($exp_id, $plaza_db, $blast_db, $gf_type, $num_top_hits, $evalue, $func_annot, $tax_binning, $tax_scope, $rfam_clans, $use_cds){
         $tmp_dir = TMP . "experiment_data/" . $exp_id . "/";
         // Read base ini file
         $initial_processing_ini_file = INI . "exp_initial_processing_settings.ini";
@@ -1106,6 +1106,8 @@ class TrapidUtilsComponent extends Component{
         $initial_processing_ini_data["initial_processing"]["tax_scope"] = ($tax_scope) ? $tax_scope : 'None';
         // Convert tax binning boolean to string
         $initial_processing_ini_data["tax_binning"]["perform_tax_binning"] = ($tax_binning) ? 'true' : 'false';
+        // Convert `use_cds` boolean to string
+        $initial_processing_ini_data["initial_processing"]["use_cds"] = ($use_cds) ? 'true' : 'false';
         $initial_processing_ini_data["infernal"]["rfam_clans"] = $rfam_clans;
         // Create and populate new ini file for experiment
         $exp_initial_processing_ini_file = $tmp_dir . "initial_processing_settings_" . $exp_id . ".ini";

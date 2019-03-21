@@ -17,9 +17,11 @@ import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
+import org.ini4j.Ini;
 
 
 /**
@@ -41,6 +43,7 @@ public class InitialTranscriptsProcessing {
 
 	public enum GF_TYPE {NONE,HOM,IORTHO};
 	public enum FUNC_ANNOT {NONE,GF,BESTHIT,GF_BESTHIT};
+    public enum SEQ_TYPE {TR,CDS};
 
 	public static void main(String[] args){
 
@@ -48,9 +51,18 @@ public class InitialTranscriptsProcessing {
 
 		InitialTranscriptsProcessing itp	= new InitialTranscriptsProcessing();
 		/*
-		 * Retrieving the necessary variables from the command line
+		 * Parse experiment initial processing configuration (INI file) and retrieve the necessary variables
 		 * =========================================================
 		 */
+
+         Ini expConfig = new Ini();
+         try {
+           expConfig = itp.readExpConfig(args[0]);
+         }
+         catch(java.io.IOException e) {
+           e.printStackTrace();
+           System.exit(1);
+         }
 
 		//IMPORTANT!!!
 		//DATABASE VARIABLES HERE ARE NOT STORED IN JAVA CODE - DUE TO SECURITY CONSTRAINTS -
@@ -58,29 +70,29 @@ public class InitialTranscriptsProcessing {
 
 		//database variables, necessary for retrieving homology/orthology information from the
 		//similarity hits
-		String plaza_database_server		= args[0];	// normally psbsql03.psb.ugent.be
-		String plaza_database_name			= args[1];
-		String plaza_database_login			= args[2];
-		String plaza_database_password		= args[3];
+		String plaza_database_server		= expConfig.get("reference_db", "reference_db_server");	// normally psbsql01.psb.ugent.be
+		String plaza_database_name			= expConfig.get("reference_db", "reference_db_name");
+		String plaza_database_login			= expConfig.get("reference_db", "reference_db_username");
+		String plaza_database_password		= expConfig.get("reference_db", "reference_db_password");
 
 		// TRAPID DB varianles, necessary for storing homology/orthology information
-		String trapid_server				= args[4];
-		String trapid_name					= args[5];
-		String trapid_login					= args[6];
-		String trapid_password				= args[7];
+		String trapid_server				= expConfig.get("trapid_db", "trapid_db_server");
+		String trapid_name					= expConfig.get("trapid_db", "trapid_db_name");
+		String trapid_login					= expConfig.get("trapid_db", "trapid_db_username");
+		String trapid_password				= expConfig.get("trapid_db", "trapid_db_password");
 
 		// user experiment id
-		String trapid_experiment_id			= args[8];
+		String trapid_experiment_id			= expConfig.get("experiment", "exp_id");
 
 		//location of the output file of the similarity search
 		//This similarity output file is normally coming from Rapsearch2 (but any m8 formatted
 		//file is actually OK).
-		String similarity_search_file		= args[9];
+		String similarity_search_file		= args[1];
 
 		//type of gene family assignment to be performed. Defined in enum GF_TYPE
 		//dependend on this type of gf assignment, the correct function(s) should be called,
 		//also filling in extra columns in table gene_families
-		String gf_type_string				= args[10];
+		String gf_type_string				= expConfig.get("initial_processing", "gf_type");
 		GF_TYPE gf_type						= GF_TYPE.NONE;
 		for(GF_TYPE g : GF_TYPE.values()){if(g.toString().equalsIgnoreCase(gf_type_string)){gf_type	= g;}}
 		if(gf_type == GF_TYPE.NONE){
@@ -92,12 +104,12 @@ public class InitialTranscriptsProcessing {
 		//homology assignment. See methods and results from paper for explanation.
 		//normally this number is 1 when the reference databases are either clade or species,
 		//but 5 when the reference database is gene-family-representatives
-		int num_top_hits					= Integer.parseInt(args[11]);
+		int num_top_hits					= Integer.parseInt(expConfig.get("initial_processing", "num_top_hits"));
 
 		//functional annotation transfer mode. Defined in type FUNC_ANNOT
 		//depended on this type, the functional annotation will be transferred through the gene family
 		//or through the best hit
-		String func_annot_string			= args[12];
+		String func_annot_string			= expConfig.get("initial_processing", "func_annot");
 		FUNC_ANNOT func_annot				= FUNC_ANNOT.NONE;
 		for(FUNC_ANNOT fa:FUNC_ANNOT.values()){if(fa.toString().equalsIgnoreCase(func_annot_string)){func_annot=fa;}}
 		if(func_annot==FUNC_ANNOT.NONE){
@@ -106,12 +118,18 @@ public class InitialTranscriptsProcessing {
 		}
 
 		// Taxonomic scope (only used when processing transcripts with EggNOG. Should be `None` otherwise
-		String chosen_scope = args[13];  // "auto";
+		String chosen_scope = expConfig.get("initial_processing", "tax_scope");  // "auto";
 		// The minimum representation frequency of GF members to transfer functional annotation (e.g. if a GO term is
 		// represented in at least this fraction of members of a gene family, assign it to the transcript).
-		double gf_min_rep = Double.parseDouble(args[14]);
+		double gf_min_rep = Double.parseDouble(args[2]);
 
-
+        // Check if input sequences are CDS or not. If they are, ORF prefiction is jsut translating everything in +1 frame
+        // We keep track of that with `seq_type`.
+        SEQ_TYPE seq_type = SEQ_TYPE.TR;
+        boolean use_cds = Boolean.valueOf(expConfig.get("initial_processing", "use_cds"));  // "auto";
+        if(use_cds) {
+            seq_type = SEQ_TYPE.CDS;
+        }
 		Connection plaza_db_connection		= null;
 		Connection trapid_db_connection		= null;
 
@@ -208,10 +226,15 @@ public class InitialTranscriptsProcessing {
 
                 // Step 6: get longest ORFs in preferred frame.
     			// TODO: update this procedure to work with multiple translation tables
-    			plaza_db_connection			= itp.createDbConnection(plaza_database_server,plaza_database_name,plaza_database_login,plaza_database_password);
-    			trapid_db_connection		= itp.createDbConnection(trapid_server,trapid_name,trapid_login,trapid_password);
-    			long t61	= System.currentTimeMillis();
-    			itp.performInitialORFPrediction(trapid_db_connection,trapid_experiment_id);
+                plaza_db_connection			= itp.createDbConnection(plaza_database_server,plaza_database_name,plaza_database_login,plaza_database_password);
+                trapid_db_connection		= itp.createDbConnection(trapid_server,trapid_name,trapid_login,trapid_password);
+                long t61	= System.currentTimeMillis();
+                if(seq_type.toString().equalsIgnoreCase("cds")) {
+                    itp.translateCDSsequences(trapid_db_connection,trapid_experiment_id);
+                }
+                else {
+                    itp.performInitialORFPrediction(trapid_db_connection,trapid_experiment_id);
+                }
     			long t62	= System.currentTimeMillis();
     			timing("ORF prediction",t61,t62);
     			itp.update_log(trapid_db_connection,trapid_experiment_id,"orf_prediction","","3");
@@ -383,10 +406,15 @@ public class InitialTranscriptsProcessing {
 
 			// Step 6: get longest ORFs in preferred frame.
 			// TODO: update this procedure to work with multiple translation tables
-			plaza_db_connection			= itp.createDbConnection(plaza_database_server,plaza_database_name,plaza_database_login,plaza_database_password);
-			trapid_db_connection		= itp.createDbConnection(trapid_server,trapid_name,trapid_login,trapid_password);
-			long t61	= System.currentTimeMillis();
-			itp.performInitialORFPrediction(trapid_db_connection,trapid_experiment_id);
+            plaza_db_connection			= itp.createDbConnection(plaza_database_server,plaza_database_name,plaza_database_login,plaza_database_password);
+            trapid_db_connection		= itp.createDbConnection(trapid_server,trapid_name,trapid_login,trapid_password);
+            long t61	= System.currentTimeMillis();
+            if(seq_type.toString().equalsIgnoreCase("cds")) {
+                itp.translateCDSsequences(trapid_db_connection,trapid_experiment_id);
+            }
+            else {
+                itp.performInitialORFPrediction(trapid_db_connection,trapid_experiment_id);
+            }
 			long t62	= System.currentTimeMillis();
 			timing("ORF prediction",t61,t62);
 			itp.update_log(trapid_db_connection,trapid_experiment_id,"orf_prediction","","3");
@@ -773,6 +801,53 @@ public class InitialTranscriptsProcessing {
 				stmt_update_frame.setString(3,gene);
 				stmt_update_frame.execute();
 			}
+		}
+		stmt_update_transcripts.close();
+		stmt_update_frame.close();
+        System.out.println(update_transcripts.toString());
+	}
+
+
+	/**
+	 * Function based on `performInitialORFPrediction()` that translates all sequence in '+1' frame.
+	 */
+	public void translateCDSsequences(Connection db_connection,String experiment_id) throws Exception{
+		ORFFinder orf_finder = new ORFFinder();
+
+		//First get all genes + transcripts in the experiment
+		Hashtable<String, String> geneSequences = new Hashtable<String, String>();
+
+		String query_transcripts	= "SELECT `transcript_id`, UNCOMPRESS(`transcript_sequence`), `detected_strand`, `detected_frame`  FROM `transcripts` WHERE `experiment_id` = " + experiment_id;
+		Statement stmt				= db_connection.createStatement();
+		ResultSet set				= stmt.executeQuery(query_transcripts);
+		while(set.next()){
+			geneSequences.put(set.getString(1), set.getString(2));
+		}
+		set.close();
+		stmt.close();
+		String update_transcripts 					= "UPDATE `transcripts` SET `orf_sequence`= COMPRESS(?) , `orf_start` = ? , `orf_stop` = ?, `orf_contains_start_codon` = ?, `orf_contains_stop_codon` = ?  WHERE `experiment_id`='"+experiment_id+"' AND `transcript_id` = ? ";
+		PreparedStatement stmt_update_transcripts	= db_connection.prepareStatement(update_transcripts);
+		String update_frame_info					= "UPDATE `transcripts` SET `detected_frame`=? , `detected_strand` = ? WHERE `experiment_id`='"+experiment_id+"' AND `transcript_id` = ? ";
+		PreparedStatement stmt_update_frame			= db_connection.prepareStatement(update_frame_info);
+		for (String gene: geneSequences.keySet()){
+			String sequence 		= geneSequences.get(gene);
+			char strand 			= '+';
+			int frame 				= 1;
+			Map<String,String> res	= orf_finder.findLongestORF(sequence, strand, frame);
+			//default update of ORF information
+			stmt_update_transcripts.setString(1,res.get("ORF"));
+			stmt_update_transcripts.setString(2,res.get("start"));
+			stmt_update_transcripts.setString(3,res.get("stop"));
+			stmt_update_transcripts.setString(4,Boolean.parseBoolean(res.get("hasStartCodon"))?"1":"0");
+			stmt_update_transcripts.setString(5,Boolean.parseBoolean(res.get("hasStopCodon"))?"1":"0");
+			stmt_update_transcripts.setString(6, gene);
+			stmt_update_transcripts.execute();
+            // We ignore frame/strand detected before (using homology information)
+            // Shouldn't we just not retrieve it at all?
+            stmt_update_frame.setString(1, String.valueOf(frame));
+            stmt_update_frame.setString(2, Character.toString(strand));
+            stmt_update_frame.setString(3, gene);
+            stmt_update_frame.execute();
 		}
 		stmt_update_transcripts.close();
 		stmt_update_frame.close();
@@ -3431,5 +3506,9 @@ public class InitialTranscriptsProcessing {
 		return(transcript_go);
 	}
 
-
+    // Parse experiment's initial processing configuration file.
+    public Ini readExpConfig(String expConfigFilepath) throws java.io.IOException {
+       Ini expConfig = new Ini(new File(expConfigFilepath));
+       return(expConfig);
+    }
 }

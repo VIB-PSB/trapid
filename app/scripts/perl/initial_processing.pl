@@ -185,10 +185,8 @@ if($par{plaza_db_name} eq "db_trapid_ref_eggnog_test_02") {
 my $java_program	= "transcript_pipeline.InitialTranscriptsProcessing";
 my $java_location	= $par{"base_script_location"}."java/";
 
-my $java_command        = "java -cp .:..:".$java_location.":".$java_location."mysql.jar ".$java_program;
-my @java_options        = ($par{"plaza_db_server"},$par{"plaza_db_name"},$par{"plaza_db_user"},$par{"plaza_db_password"},
-	$par{"trapid_db_server"},$par{"trapid_db_name"},$par{"trapid_db_user"},$par{"trapid_db_password"},
-	$par{"experiment"},$similarity_output,$par{"gf_type"},$par{"num_top_hits"},$par{"func_annot"},  $par{"tax_scope"}, 0.50);
+my $java_command        = "java -cp .:..:".$java_location.":".$java_location."ini4j-0.5.4.jar".":".$java_location."mysql.jar ".$java_program;
+my @java_options        = ($initial_processing_ini_file, $similarity_output, 0.50);
 
 my $java_exec           = $java_command." ".join(" ",@java_options);
 print STDOUT $java_exec."\n";
@@ -388,7 +386,7 @@ sub perform_similarity_search($ $ $ $ $){
 	print STDOUT "Used DIAMOND database : ".$blast_dir."\n";
 
 	# my $exec_command	= $DIAMOND_EXECUTABLE." --query ".$multi_fasta_file." --db ".$blast_dir." --evalue 1e".$DIAMOND_EVALUE." --out ".$output_file.".m8 -p 2 -k 100 --more-sensitive --log";
-	my $exec_command	= $DIAMOND_EXECUTABLE." --query ".$multi_fasta_file." --db ".$blast_dir." --evalue 1e".$DIAMOND_EVALUE." --out ".$output_file.".m8 -p 2 --more-sensitive --log";
+	my $exec_command	= $DIAMOND_EXECUTABLE." --query ".$multi_fasta_file." --db ".$blast_dir." --evalue 1e".$DIAMOND_EVALUE." --out ".$output_file.".m8 -p 2 --more-sensitive -k 100 --log";
 	print STDOUT $exec_command."\n";
 
 	#perform similarity search
