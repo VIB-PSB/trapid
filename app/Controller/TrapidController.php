@@ -1624,6 +1624,9 @@ class TrapidController extends AppController{
       if($tax_scope) {
           $this->ExperimentLog->addAction($exp_id,"initial_processing_options","taxonomic_scope=".$tax_scope, 2);
       }
+      if($use_cds) {
+            $this->ExperimentLog->addAction($exp_id,"initial_processing_options","use_cds=". (int)$use_cds, 2);
+        }
       $this->ExperimentLog->addAction($exp_id,"initial_processing_options","n_rfam_clans=".sizeof($rfam_clans), 2);
       // TODO: If too many clans are selected, the value will be too long for `parameters`! Solve that once prototype works.
         if(sizeof($rfam_clans) <= 30){
