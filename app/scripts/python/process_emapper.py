@@ -52,7 +52,8 @@ def cleanup_db(trapid_db_conn, exp_id):
     "UPDATE `transcripts` SET `gf_id`=NULL, `orf_sequence`=NULL, `detected_frame`='0', `detected_strand`='+', `full_frame_info`=NULL, `putative_frameshift`='0', `is_frame_corrected`='0', `orf_start`=NULL,`orf_stop`=NULL, `orf_contains_start_codon`=NULL,`orf_contains_stop_codon`=NULL, `meta_annotation`='No Information',`meta_annotation_score`=NULL,`gf_id_score`=NULL WHERE `experiment_id`='{exp_id}';",
     "DELETE FROM `gene_families` WHERE `experiment_id`='{exp_id}'",
     "DELETE FROM `transcripts_annotation` WHERE `experiment_id`='{exp_id}'",
-    "DELETE FROM `similarities` WHERE `experiment_id`='{exp_id}'"
+    "DELETE FROM `similarities` WHERE `experiment_id`='{exp_id}'",
+    "DELETE FROM `experiment_stats` WHERE `experiment_id`='{exp_id}'"
     ]
     for query_str in sql_queries:
         sys.stderr.write(query_str.format(exp_id=exp_id) + "\n")
@@ -203,13 +204,15 @@ def read_rfam_go_data(rfam_go_file):
         return rfam_transcript_gos
     with open(rfam_go_file, 'r') as in_file:
         for line in in_file:
-            splitted = line.strip().split('\t')
-            transcript = splitted[1]
-            go = splitted[2]
-            if transcript not in rfam_transcript_gos:
-                rfam_transcript_gos[transcript] = set([go])
-            else:
-                rfam_transcript_gos[transcript].add(go)
+            stripped = line.strip()
+            if stripped:
+                splitted = stripped.split('\t')
+                transcript = splitted[1]
+                go = splitted[2]
+                if transcript not in rfam_transcript_gos:
+                    rfam_transcript_gos[transcript] = set([go])
+                else:
+                    rfam_transcript_gos[transcript].add(go)
     return rfam_transcript_gos
 
 
@@ -276,6 +279,18 @@ def perform_go_annotation(emapper_results, rfam_transcript_gos, trapid_db_conn, 
         sys.stderr.write("[Message] %s: Inserted %d rows...\n" % (time.strftime('%H:%M:%S'), chunk_size))
     trapid_db_conn.commit()
 
+    # Populate `experiment_stats`
+    n_trs = len([elmt for elmt in transcript_gos.values() if elmt])  # Number of transcripts having GO annotation
+    all_gos = set([])
+    {all_gos.update(gos) for gos in transcript_gos.values()}  # Works?
+    n_gos = len(all_gos) # Number of distinct GO terms
+    exp_stats_query_trs = "INSERT INTO `experiment_stats` (`experiment_id`, `stat_type`, `stat_value`) VALUES({exp_id}, 'trs_go', {n_trs})"
+    exp_stats_query_gos = "INSERT INTO `experiment_stats` (`experiment_id`, `stat_type`, `stat_value`) VALUES({exp_id}, 'n_go', {n_gos})"
+    cursor.execute(exp_stats_query_trs.format(exp_id=exp_id, n_trs=str(n_trs)))
+    cursor.execute(exp_stats_query_gos.format(exp_id=exp_id, n_gos=str(n_gos)))
+    trapid_db_conn.commit()
+
+
 
 def perform_ko_annotation(emapper_results, trapid_db_conn, exp_id, chunk_size=10000):
     """
@@ -284,11 +299,15 @@ def perform_ko_annotation(emapper_results, trapid_db_conn, exp_id, chunk_size=10
     sys.stderr.write("[Message] Perform KO annotation...\n")
     ko_annot_query = "INSERT INTO `transcripts_annotation` (`experiment_id`, `type`, `transcript_id`, `name`, `is_hidden`) VALUES (%s, 'ko', %s, %s, %s)"
     ko_annot_values = []
+    all_kos = set([])
+    n_trs = 0  # Number of transcripts having KO annotation
 
     # Create a list of tuples with the values to insert
     for transcript, results in emapper_results.items():
         if results['ko_terms']!= set(['']):
+            n_trs += 1
             for ko in results['ko_terms']:
+                all_kos.add(ko)
                 values = (exp_id, transcript, ko, 0)
                 ko_annot_values.append(values)
     # Populate `transcripts_annotation`
@@ -296,6 +315,14 @@ def perform_ko_annotation(emapper_results, trapid_db_conn, exp_id, chunk_size=10
     cursor = trapid_db_conn.cursor()
     for i in range(0, len(ko_annot_values), chunk_size):
         cursor.executemany(ko_annot_query, ko_annot_values[i:min(i+chunk_size, len(ko_annot_values))])
+    trapid_db_conn.commit()
+
+    # Populate `experiment_stats`
+    n_kos = len(all_kos) # Number of distinct KO terms
+    exp_stats_query_trs = "INSERT INTO `experiment_stats` (`experiment_id`, `stat_type`, `stat_value`) VALUES({exp_id}, 'trs_ko', {n_trs})"
+    exp_stats_query_kos = "INSERT INTO `experiment_stats` (`experiment_id`, `stat_type`, `stat_value`) VALUES({exp_id}, 'n_ko', {n_kos})"
+    cursor.execute(exp_stats_query_trs.format(exp_id=exp_id, n_trs=str(n_trs)))
+    cursor.execute(exp_stats_query_kos.format(exp_id=exp_id, n_kos=str(n_kos)))
     trapid_db_conn.commit()
 
 

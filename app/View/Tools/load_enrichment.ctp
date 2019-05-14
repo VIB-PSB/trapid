@@ -3,29 +3,38 @@ if(isset($error)){
 	echo "<span class='error'>".$error."</span><br/>\n"; 
 }
 else if(!isset($result)){
-	echo "<span class='error text-danger'>Undefined error: no output data</span><br/>\n";
+	echo "<p class='lead error text-danger'>Undefined error: no output data</p><br/>\n";
 }
 else if(count($result)==0){
-	echo "<span class='message text-primary'>No enriched terms found for this subset</span><br/>\n";
+	echo "<p class='lead'>No enriched terms found for selected subset and settings. </p><br/>\n";
 }
-else{	
+else{
+
+    //create a download URL
+    $download_url = $this->Html->url(array("controller"=>"tools","action"=>"download_enrichment",$exp_id,$type,$subset,$selected_pvalue));
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	if($type=="go"){
 		?>
-		<section class="page-section-sm">
-			<p class="text-justify"><strong>Jump to:</strong>
-		<ul>
-				<li><a href="#go-charts">GO enrichment charts</a></li>
-				<li><a href="#go-table">GO enrichment table</a></li>
-		</ul>
-			</p>
+        <section class="page-section-sm">
+        <ul class="nav nav-tabs" id="tabs" data-tabs="tabs">
+<!--            <li style="margin-top:10px;"><strong>View: </strong></li>-->
+            <li class="active"><a href="#go-charts-tab" data-toggle="tab">GO enrichment charts</a></li>
+            <li><a href="#go-table-tab" data-toggle="tab">GO enrichment table</a></li>
+            <div class="btn-group" role="group" style="float: right; margin-top: 10px;">
+                <form action="<?php echo $download_url; ?>" method="post">
+                        <button class="btn btn-default btn-sm" type="submit"><span
+                            class="glyphicon glyphicon-download-alt"></span> Download results</button>
+                </form>
+            </div>
+        </ul>
 		</section>
+        <div class="tab-content">
 
+        <div class="tab-pane active" id="go-charts-tab"><br>
 <?php
 	//CHARTS
 	echo "<div style='margin-bottom:20px;'>\n";
-	echo "<h4>GO enrichment charts</h4><br>\n";
 	// echo "<div style='width:860px;background-color:white;padding:20px;margin-top:10px;border:1px solid black;' id='go-charts'>";
 	echo "<div class='page-section' id='go-charts'>";
 	$go_types_titles	= array("MF"=>"Molecular Function","CC"=>"Cellular Component","BP"=>"Biological Process");
@@ -163,14 +172,15 @@ else{
 
 	echo "</div>\n";
 	echo "</div>\n";
-	
-
+	?>
+</div><!-- end GO charts tab -->
+<div class="tab-pane" id="go-table-tab"><br>
+        <?php
 
 	//TABLE 
 	echo "<div>\n";
-	echo "<h4>GO enrichment data table</h4><br>\n";
 //	echo "<table class='table table-bordered table-striped' cellpadding='0' cellspacing='0' style='width:900px;'>\n";
-	echo "<table id='go-table' class='table table-bordered table-striped' style=''>\n";
+	echo "<table id='go-table' class='table table-bordered table-striped'>\n";
 	echo "<thead>";
 	echo "<th style='width:7%'>GO type</th>";
 	echo "<th style='width:9%'>GO term</th>";
@@ -216,15 +226,36 @@ else{
 	}				
 	echo "</table>\n";
 	echo "</div>\n";
+//	echo "</div>\n";
 
 	// DataTables
     echo "<script type='text/javascript'>\n";
-    echo "$('#go-table').dataTable({\"scrollY\": \"360px\", \"scrollCollapse\": true, \"paging\": false});\n";
+    // echo "$('#go-table').dataTable({\"scrollY\": \"400px\", \"scrollCollapse\": true, \"paging\": false});\n";
+    echo "$('#go-table').dataTable();\n";
     echo "</script>\n";
 	}
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	else if($type=="ipr"){
+	    ?>
+        <section class="page-section-sm">
+            <ul class="nav nav-tabs" id="tabs" data-tabs="tabs">
+                <li class="active"><a href="#ipr-charts-tab" data-toggle="tab">Protein domain enrichment chart</a></li>
+                <li><a href="#ipr-table-tab" data-toggle="tab">Protein domain enrichment table</a></li>
+                <div class="btn-group" role="group" style="float: right; margin-top: 10px;">
+                    <form action="<?php echo $download_url; ?>" method="post">
+                        <button class="btn btn-default btn-sm" type="submit"><span
+                                    class="glyphicon glyphicon-download-alt"></span> Download results</button>
+                    </form>
+                </div>
+
+            </ul>
+        </section>
+        <div class="tab-content">
+        <div class="tab-pane active" id="ipr-charts-tab"><br>
+
+
+            <?php
 		//CHARTS	
 		echo "<div style='margin-bottom:20px;'>\n";
 //		echo "<h4>Protein domain enrichment chart</h4><br>\n";
@@ -353,13 +384,14 @@ else{
 				*/
 
 		echo "</div>\n";
-		echo "</div>\n";
-	
+		?>
+        </div>
+        <div class="tab-pane" id="ipr-table-tab"><br>
 
-
-		//TABLE 
+    <?php
+		//TABLE
 		echo "<div>\n";
-		echo "<h4>Protein domain enrichment data table</h4><br>\n";
+//		echo "<h4>Protein domain enrichment data table</h4><br>\n";
 		echo "<table id='ipr-table' class='table table-bordered table-striped'>\n";
 		echo "<thead>";
 		echo "<tr>";	
@@ -403,23 +435,14 @@ else{
 		echo "</tbody>\n";
 		echo "</table>\n";
 		echo "</div>\n";
-	
-
-
 
 	}
 
-	//create a download option
-	// echo "<h4>Download table</h4>\n";
-	$download_url = $this->Html->url(array("controller"=>"tools","action"=>"download_enrichment",$exp_id,$type,$subset,$selected_pvalue),true);
-	echo "<form action='".$download_url."' method='post' >\n";
-	echo "<input type='submit' class='btn btn-default' value='Download table' />\n";
-	echo "</form><br>";
 }
 
 // DataTables
 echo "<script type='text/javascript'>\n";
-echo "$('#ipr-table').dataTable({\"scrollY\": \"360px\", \"scrollCollapse\": true, \"paging\": false});\n";
+//echo "$('#ipr-table').dataTable({\"scrollY\": \"400px\", \"scrollCollapse\": true, \"paging\": false});\n";
+echo "$('#ipr-table').dataTable();\n";
 echo "</script>\n";
 ?>
-

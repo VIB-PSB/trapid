@@ -49,6 +49,7 @@ function getEnrichedIdentifier($exp_id,$type){
       if(!isset($result[$label][$p_val]))$result[$label][$p_val] = array();
       $result[$label][$p_val][$ident] = array($hidden,$sign);
     }
+    // pr($result);
     return $result;
   }
 
@@ -77,11 +78,11 @@ function getEnrichedIdentifier($exp_id,$type){
                     FROM  `transcripts_labels`
                     WHERE experiment_id =$exp_id)";
     $res	= $this->query($query);
-    foreach($res as $r){
-      $transcr = $r['transcripts_annotation']['transcript_id'];
-      $GO      = $r['transcripts_annotation']['name'];
-      if(!isset($result[$transcr]))$result[$transcr] = array();
-      $result[$transcr][$GO] = 1;
+    foreach($res as $r) {
+        $transcr = $r['transcripts_annotation']['transcript_id'];
+        $GO = $r['transcripts_annotation']['name'];
+        if (!isset($result[$transcr])) $result[$transcr] = array();
+        $result[$transcr][$GO] = 1;
     }
     return $result;
   }

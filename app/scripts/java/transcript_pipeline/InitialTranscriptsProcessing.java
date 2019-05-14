@@ -536,8 +536,9 @@ public class InitialTranscriptsProcessing {
 		// String sql3	= "DELETE FROM `transcripts_go` WHERE `experiment_id`='"+trapid_experiment+"' ";
 		// String sql4	= "DELETE FROM `transcripts_interpro` WHERE `experiment_id`='"+trapid_experiment+"' ";
 		String sql4 = "DELETE FROM `similarities` WHERE `experiment_id`='"+trapid_experiment+"' ";
+		String sql5 = "DELETE FROM `experiment_stats` WHERE `experiment_id`='"+trapid_experiment+"' ";
 		// String sql5 = "DELETE FROM `similarities` WHERE `experiment_id`='"+trapid_experiment+"' ";
-		String[] sql_queries	= {sql1,sql2,sql3,sql4};
+		String[] sql_queries	= {sql1,sql2,sql3,sql4,sql5};
 		for(String sql:sql_queries){
 			Statement stmt	= db_connection.createStatement();
 			stmt.execute(sql);
@@ -1533,7 +1534,7 @@ public class InitialTranscriptsProcessing {
 	/*--------------------------------------------------------------------------------------------*/
 
 	/**
-	 * Store all the transcript - interpro associations, that were detected
+	 * Store all the transcript - GO associations, that were detected
 	 * @param trapid_connection Connection to trapid database
 	 * @param trapid_exp_id Trapid experiment id
 	 * @param transcript_interpro Mapping from transcripts to protein domains
@@ -1547,9 +1548,11 @@ public class InitialTranscriptsProcessing {
 		PreparedStatement ins_go_annot		= trapid_connection.prepareStatement(insert_go_annot);
 		boolean prev_commit_state			= trapid_connection.getAutoCommit();
 		trapid_connection.setAutoCommit(false);
+        Set<String> all_gos = new HashSet<String>();
 
 		for(String transcript_id:transcript_go_hidden.keySet()){
 			for(String go_id:transcript_go_hidden.get(transcript_id).keySet()){
+                all_gos.add(go_id);
 				String hidden_status	= ""+transcript_go_hidden.get(transcript_id).get(go_id);
 				ins_go_annot.setString(1,transcript_id);
 				ins_go_annot.setString(2,go_id);
@@ -1560,6 +1563,17 @@ public class InitialTranscriptsProcessing {
 			trapid_connection.commit();
 			ins_go_annot.clearBatch();
 		}
+
+        // Store GO annotation stats in `experiment_stats`
+        int n_go = all_gos.size();
+        int n_trs = transcript_go_hidden.size();
+        String query_trs_go_exp_stats = "INSERT INTO `experiment_stats` (`experiment_id`, `stat_type`, `stat_value`) VALUES('" + trapid_exp_id + "', 'trs_go', '" + String.valueOf(n_trs) + "')";
+        String query_n_go_exp_stats = "INSERT INTO `experiment_stats` (`experiment_id`, `stat_type`, `stat_value`) VALUES('" + trapid_exp_id + "', 'n_go', '" + String.valueOf(n_go) + "')";
+        Statement stmt_exp_stats = trapid_connection.createStatement();
+        stmt_exp_stats.execute(query_trs_go_exp_stats);
+        stmt_exp_stats.execute(query_n_go_exp_stats);
+        trapid_connection.commit();
+
 
 		trapid_connection.setAutoCommit(prev_commit_state);
 		long t52	= System.currentTimeMillis();
@@ -1590,9 +1604,11 @@ public class InitialTranscriptsProcessing {
 		PreparedStatement ins_ipr_annot		= trapid_connection.prepareStatement(insert_ipr_annot);
 		boolean prev_commit_state			= trapid_connection.getAutoCommit();
 		trapid_connection.setAutoCommit(false);
+        Set<String> all_ipr	= new HashSet<String>();
 
 		for(String transcript_id:transcript_interpro.keySet()){
 			for(String ipr_id:transcript_interpro.get(transcript_id)){
+                all_ipr.add(ipr_id);
 				ins_ipr_annot.setString(1,transcript_id);
 				ins_ipr_annot.setString(2,ipr_id);
 				// System.out.println(ins_ipr_annot.toString());
@@ -1602,6 +1618,16 @@ public class InitialTranscriptsProcessing {
 			trapid_connection.commit();
 			ins_ipr_annot.clearBatch();
 		}
+
+        // Store ipr annotation stats in `experiment_stats`
+        int n_ipr = all_ipr.size();
+        int n_trs = transcript_interpro.size();
+        String query_trs_ipr_exp_stats = "INSERT INTO `experiment_stats` (`experiment_id`, `stat_type`, `stat_value`) VALUES('" + trapid_exp_id + "', 'trs_ipr', '" + String.valueOf(n_trs) + "')";
+        String query_n_ipr_exp_stats = "INSERT INTO `experiment_stats` (`experiment_id`, `stat_type`, `stat_value`) VALUES('" + trapid_exp_id + "', 'n_ipr', '" + String.valueOf(n_ipr) + "')";
+        Statement stmt_exp_stats = trapid_connection.createStatement();
+        stmt_exp_stats.execute(query_trs_ipr_exp_stats);
+        stmt_exp_stats.execute(query_n_ipr_exp_stats);
+        trapid_connection.commit();
 
 		trapid_connection.setAutoCommit(prev_commit_state);
 		long t52	= System.currentTimeMillis();

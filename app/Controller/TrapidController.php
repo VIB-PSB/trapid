@@ -601,8 +601,8 @@ class TrapidController extends AppController{
     $this->set("exp_info",$exp_info);
     $this->set("exp_id",$exp_id);
     $this->TrapidUtils->checkPageAccess($exp_info['title'],$exp_info["process_state"],$this->process_states["default"]);
+    $transcript_id 	= urldecode($transcript_id);
     //check whether transcript is valid
-    // $transcript_id 	= mysql_real_escape_string($transcript_id);
     $transcript_info    = $this->Transcripts->find("first",array("conditions"=>array("experiment_id"=>$exp_id,"transcript_id"=>$transcript_id)));
     if(!$transcript_info){$this->redirect(array("controller"=>"trapid","action"=>"experiment",$exp_id));}
     $this->set("transcript_info",$transcript_info['Transcripts']);
@@ -783,6 +783,7 @@ class TrapidController extends AppController{
 
 
 
+  // Unused function? To remove?
   function detect_orfs($exp_id=null,$transcript_id=null){
     $this->layout = "";
     if(!$exp_id || !$transcript_id){$this->redirect(array("controller"=>"trapid","action"=>"experiments"));}
@@ -796,11 +797,7 @@ class TrapidController extends AppController{
     //check whether transcript is valid
     // $transcript_id 	= mysql_real_escape_string($transcript_id);
     $transcript_info    = $this->Transcripts->find("first",array("conditions"=>array("experiment_id"=>$exp_id,"transcript_id"=>$transcript_id)));
-    //pr($transcript_info);
     if(!$transcript_info){$this->redirect(array("controller"=>"trapid","action"=>"experiment",$exp_id));}
-
-
-
   }
 
 
@@ -815,6 +812,7 @@ class TrapidController extends AppController{
     $this->TrapidUtils->checkPageAccess($exp_info['title'],$exp_info["process_state"],$this->process_states["default"]);
 
     //check whether transcript is valid
+    $transcript_id = urldecode($transcript_id);
     // $transcript_id 	= mysql_real_escape_string($transcript_id);
     $transcript_info    = $this->Transcripts->find("first",array("conditions"=>array("experiment_id"=>$exp_id,"transcript_id"=>$transcript_id)));
     // pr($transcript_info);
@@ -1358,7 +1356,8 @@ class TrapidController extends AppController{
             //create shell file for submission to the web-cluster.
             //Shell file contains both the necessary module load statements
             $qsub_file 	= $this->TrapidUtils->create_qsub_script($exp_id);
-            $shell_file	= $this->TrapidUtils->create_shell_file_enrichment_preprocessing($exp_id,$type,$exp_info['used_plaza_database'],$possible_pvalues,$all_subsets);
+            $ini_file = $this->TrapidUtils->create_ini_file_enrichment($exp_id, $exp_info['used_plaza_database']);
+            $shell_file	= $this->TrapidUtils->create_shell_file_enrichment_preprocessing($exp_id,$ini_file,$type,$possible_pvalues,$all_subsets);
             if($shell_file == null || $qsub_file == null ){$this->set("error","problem creating program files");return;}
 
             //ok, now we submit this program to the web-cluster
@@ -1625,7 +1624,7 @@ class TrapidController extends AppController{
           $this->ExperimentLog->addAction($exp_id,"initial_processing_options","taxonomic_scope=".$tax_scope, 2);
       }
       if($use_cds) {
-            $this->ExperimentLog->addAction($exp_id,"initial_processing_options","use_cds=". (int)$use_cds, 2);
+            $this->ExperimentLog->addAction($exp_id,"initial_processing_options","use_cds=". (int) $use_cds, 2);
         }
       $this->ExperimentLog->addAction($exp_id,"initial_processing_options","n_rfam_clans=".sizeof($rfam_clans), 2);
       // TODO: If too many clans are selected, the value will be too long for `parameters`! Solve that once prototype works.

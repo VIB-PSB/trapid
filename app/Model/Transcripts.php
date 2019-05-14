@@ -102,6 +102,26 @@ class Transcripts extends AppModel{
   }
 
 
+  function getAvgTranscriptLength($exp_id){
+    $query	= "SELECT AVG(CHAR_LENGTH(UNCOMPRESS(`transcript_sequence`))) as avg_transcript_length FROM `transcripts`
+			WHERE `experiment_id`='".$exp_id."' ";
+    $res	= $this->query($query);
+//    $result     = 0;
+    $result	= round($res[0][0]['avg_transcript_length'],1);
+    return $result;
+  }
+
+
+  function getAvgOrfLength($exp_id){
+    $query	= "SELECT AVG(CHAR_LENGTH(UNCOMPRESS(`orf_sequence`))) as avg_orf_length FROM `transcripts`
+			WHERE `experiment_id`='".$exp_id."' ";
+    $res	= $this->query($query);
+//    $result     = 0;
+    $result	= round($res[0][0]['avg_orf_length'],1);
+    return $result;
+  }
+
+
 
 
 

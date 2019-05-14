@@ -683,6 +683,37 @@ class TrapidUtilsComponent extends Component{
 
 
 
+
+    // Create functional enrichment configuration file and return file name.
+    // This function uses the template INI file found in `<INI>/func_enrichment_settings.ini`
+    // Not all values necessary to the enrichment wrapper scripts are provided, so the same ini file can be used for
+    // enrichment preprocessing (i.e. all subsets) or single enrichment jobs.
+    function create_ini_file_enrichment($exp_id, $plaza_db){
+        $tmp_dir = TMP . "experiment_data/" . $exp_id . "/";
+        // Read base ini file
+        $initial_processing_ini_file = INI . "funct_enrichment_settings.ini";
+        $initial_processing_ini_data = parse_ini_file($initial_processing_ini_file, true);
+        // Replace values with experiment-specific values
+        $initial_processing_ini_data["experiment"]["tmp_exp_dir"] = $tmp_dir;
+        $initial_processing_ini_data["experiment"]["exp_id"] = $exp_id;
+        $initial_processing_ini_data["reference_db"]["reference_db_name"] = $plaza_db;
+        // Create and populate new ini file for experiment
+        $funct_enrichment_ini_file = $tmp_dir . "funct_enrichment_settings_" . $exp_id . ".ini";
+        $fh	= fopen($funct_enrichment_ini_file,"w");
+        foreach($initial_processing_ini_data as $section => $parameters) {
+            fwrite($fh, "[" . $section . "]\n");
+            foreach($parameters as $param => $value) {
+                $param_str = $param . " = " . $value . "\n";
+                fwrite($fh, $param_str);
+            }
+            fwrite($fh,"\n");
+        }
+        fclose($fh);
+        // Return INI file name
+        return $funct_enrichment_ini_file;
+    }
+
+
   /**
    * Create shell file for go enrichment preprocessing (i.e. generate enrichment for all subsets)
    *
@@ -691,12 +722,11 @@ class TrapidUtilsComponent extends Component{
    *
    * @param int $exp_id The experiment identifier
    * @param string $data_type GO/InterPro
-   * @param string $reference_db The name of the reference database
    * @param float|array $pvalue The p-value(s) which is/are used. Can be either a float or an array of floats.
    * @param array $all_subsets Array containing all subsets present in the experiment
    * @param string $selected_subset Optional, when we need to reprocess only for a given subset.
    */
-  function create_shell_file_enrichment_preprocessing($exp_id,$data_type,$reference_db,$pvalue,$all_subsets,$selected_subset=null){
+  function create_shell_file_enrichment_preprocessing($exp_id,$ini_file,$data_type,$pvalue,$all_subsets,$selected_subset=null){
 	$base_scripts_location	= APP."scripts/";
        	$tmp_dir		= TMP."experiment_data/".$exp_id."/";
 
@@ -726,74 +756,22 @@ class TrapidUtilsComponent extends Component{
 	  $shell_file		= $tmp_dir.$data_type."_enrichmentpreprocessing_".$exp_id."_".$selected_subset.".sh";
 	}
       	$fh 			= fopen($shell_file,"w");
-	$necessary_modules	= array("java","perl");
+      $necessary_modules = array("perl", "python/x86_64/2.7.2", "gcc/x86_64/6.3");
 	fwrite($fh,"#Loading necessary modules\n");
 	foreach($necessary_modules as $nm){
 	  fwrite($fh,"module load ".$nm." \n");
 	}
-
-	//1) Generate gene-go files for each subset. We enforce the creation of the background frequency DB for the first one.
-	//2) Compute GO enrichment for each subset
-	$java_params_filedump	= array(TRAPID_DB_SERVER,TRAPID_DB_NAME,TRAPID_DB_USER,TRAPID_DB_PASSWORD,$exp_id,$data_type);
-  // $java_params_enrichment	= array(PLAZA_DB_SERVER,$reference_db,PLAZA_DB_USER,PLAZA_DB_PASSWORD,$data_type);
-	$java_params_enrichment	= array(TRAPID_DB_SERVER, $reference_db, TRAPID_DB_USER, TRAPID_DB_PASSWORD, $data_type);
-	$java_params_loaddb	= array(TRAPID_DB_SERVER,TRAPID_DB_NAME,TRAPID_DB_USER,TRAPID_DB_PASSWORD,$exp_id,$data_type);
 	$perl_params		= array(TRAPID_DB_SERVER,TRAPID_DB_NAME,TRAPID_DB_PORT,TRAPID_DB_USER,TRAPID_DB_PASSWORD,$exp_id,$data_type);
-	$java_location		= $base_scripts_location."java/";
-	$java_program_filedump	= "transcript_pipeline.PrepareEnrichment";
-	$java_program_enrichment= "transcript_pipeline.GeneralEnrichment";
-	$java_program_loaddb	= "transcript_pipeline.LoadEnrichmentDB";
-	$perl_location		= $base_scripts_location."perl/";
+	$perl_location		= $base_scripts_location . "perl/";
 	$perl_program_utils	= "enrichment_preprocessing_utils.pl";
 
-	//delete the previous enrichments. This is done scriptwise, in order not to block the website.
-	fwrite($fh,"\n#Deleting previous enrichment results from database\n");
-	for($i=0;$i<count($subset_filepaths);$i++){
-	  if(is_array($pvalue)){
-	    foreach($pvalue as $pval){
-		fwrite($fh,"perl ".$perl_location."/".$perl_program_utils." delete_previous_results ".implode(" ",$perl_params)." ".$subset_filepaths[$i]['subset']." ".$pval."\n");
-	    }
-	  }
-	  else{
-	    fwrite($fh,"perl ".$perl_location."/".$perl_program_utils." delete_previous_results ".implode(" ",$perl_params)." ".$subset_filepaths[$i]['subset']." ".$pvalue."\n");
-	  }
-	}
+    $py_location = $base_scripts_location . "python/";
+    $py_program = "run_funct_enrichment_preprocess.py";
+    $py_params = [$ini_file, $data_type, "--subsets", implode(" ", array_keys($all_subsets)), "--max_pvals", implode(" ", $pvalue), "--verbose"];
+    fwrite($fh,"\n#Launching python wrapper for deletion of previous results, enricher file creation, enrichment analysis, and DB upload\n");
+    fwrite($fh,"python " . $py_location . $py_program . " ".implode(" ",$py_params)."\n");
 
-	//generate files
-	fwrite($fh,"\n#Launching java program for file creation\n");
-	for($i=0;$i<count($subset_filepaths);$i++){
-	  $print_background 	= "false";
-	  if($i===0){$print_background="true";}
-	  fwrite($fh,"java -cp ".$java_location.".:..:".$java_location."mysql.jar ".$java_program_filedump." ".implode(" ",$java_params_filedump)." ".$background_frequency_file_path." ".$subset_filepaths[$i]['data']." ".$subset_filepaths[$i]['subset']." ".$print_background."\n");
-	}
-
-	//compute enrichments
-	fwrite($fh,"\n#Launching java program for enrichments\n");
-	for($i=0;$i<count($subset_filepaths);$i++){
-	  if(is_array($pvalue)){
-	    foreach($pvalue as $pval){
-	      fwrite($fh,"java -cp ".$java_location.".:..:".$java_location."mysql.jar ".$java_program_enrichment." ".implode(" ",$java_params_enrichment)." ".$background_frequency_file_path." ".$subset_filepaths[$i]['data']." ".$subset_filepaths[$i]['result']["".$pval]." ".$pval." false \n");
-	    }
-	  }
-	  else{
-	    fwrite($fh,"java -cp ".$java_location.".:..:".$java_location."mysql.jar ".$java_program_enrichment." ".implode(" ",$java_params_enrichment)." ".$background_frequency_file_path." ".$subset_filepaths[$i]['data']." ".$subset_filepaths[$i]['result']["".$pvalue]." ".$pvalue." false \n");
-	  }
-	}
-
-	//new custom script which will load each of the enrichment files, and put them into the database
-	fwrite($fh,"\n#Launching java program for loading enrichments into DB\n");
-	for($i=0;$i<count($subset_filepaths);$i++){
-	  if(is_array($pvalue)){
-	    foreach($pvalue as $pval){
-	      fwrite($fh,"java -cp ".$java_location.".:..:".$java_location."mysql.jar ".$java_program_loaddb." ".implode(" ",$java_params_loaddb)." ".$subset_filepaths[$i]['subset']." ".$pval." ".$subset_filepaths[$i]['result']["".$pval]."\n");
-	    }
-	  }
-	  else{
-	    fwrite($fh,"java -cp ".$java_location.".:..:".$java_location."mysql.jar ".$java_program_loaddb." ".implode(" ",$java_params_loaddb)." ".$subset_filepaths[$i]['subset']." ".$pvalue." ".$subset_filepaths[$i]['result']["".$pvalue]."\n");
-	  }
-	}
-
-	//clean up:
+      //clean up:
 	// - indicate in the database (logging purposes) that the job is finished
 	// - send email
 	// - delete job from table experiment_jobs
@@ -801,7 +779,6 @@ class TrapidUtilsComponent extends Component{
 	fwrite($fh,"\n#Launching perl script for cleaning up the job\n");
 	#fwrite($fh,"perl ".$perl_location."/".$perl_program_utils." cleanup ".$exp_id."\n");
 	fwrite($fh,"perl ".$perl_location."/".$perl_program_utils." cleanup ".implode(" ",$perl_params)."\n");
-
 	fclose($fh);
 	shell_exec("chmod a+x ".$shell_file);
 	return $shell_file;
@@ -809,36 +786,22 @@ class TrapidUtilsComponent extends Component{
 
 
 
-  //function to create shell file for go  enrichment
-  function create_shell_file_enrichment($exp_id,$type,$plaza_db,$fa_file_all,$fa_file_subset,$result_file,$subset,$pvalue){
-	$base_scripts_location	= APP."scripts/";
-       	$tmp_dir		= TMP."experiment_data/".$exp_id."/";
-	$necessary_modules	= array("java");
-        //create actual file
-      	$shell_file		= $tmp_dir.$type."_enrichment_".$exp_id."_".$subset.".sh";
-      	$fh 			= fopen($shell_file,"w");
-	fwrite($fh,"#Loading necessary modules\n");
+  // Function to create shell file for functional enrichment analysis
+  function create_shell_file_enrichment($exp_id, $ini_file, $type, $subset, $pvalue){
+	$base_scripts_location = APP . "scripts/";
+    $tmp_dir = TMP . "experiment_data/".$exp_id."/";
+	$necessary_modules = array("python/x86_64/2.7.2", "gcc/x86_64/6.3");
+    // Create actual file
+    $shell_file = $tmp_dir . $type . "_enrichment_" . $exp_id . "_" . $subset . ".sh";
+    $fh = fopen($shell_file,"w");
+	fwrite($fh,"# Loading necessary modules\n");
 	foreach($necessary_modules as $nm){
 	  fwrite($fh,"module load ".$nm." \n");
 	}
-
-
-	$java_params1		= array(TRAPID_DB_SERVER,TRAPID_DB_NAME,TRAPID_DB_USER,TRAPID_DB_PASSWORD,
-					$exp_id,$type,$fa_file_all,$fa_file_subset,$subset);
-//	$java_params2		= array(PLAZA_DB_SERVER,$plaza_db,PLAZA_DB_USER,PLAZA_DB_PASSWORD,
-	$java_params2		= array(TRAPID_DB_SERVER, $plaza_db, TRAPID_DB_USER, TRAPID_DB_PASSWORD,
-					$type,$fa_file_all,$fa_file_subset,$result_file,$pvalue,"false");
-
-	$java_location		= $base_scripts_location."java/";
-	$java_program1		= "transcript_pipeline.PrepareEnrichment";
-	$java_program2		= "transcript_pipeline.GeneralEnrichment";
-	fwrite($fh,"\n#Launching java program for file creation\n");
-	fwrite($fh,"java -cp ".$java_location.".:..:".$java_location."mysql.jar ".$java_program1." ".implode(" ",$java_params1)."\n");
-	fwrite($fh,"\n#Launching java program for Go enrichment\n");
-	fwrite($fh,"java -cp ".$java_location.".:..:".$java_location."mysql.jar ".$java_program2." ".implode(" ",$java_params2)."\n");
-	fwrite($fh,"\n#Deleting transcript-go files\n");
-	fwrite($fh,"rm -f ".$fa_file_all."\n");
-	fwrite($fh,"rm -f ".$fa_file_subset."\n");
+	$py_location = $base_scripts_location . "python/";
+	$py_program = "run_funct_enrichment.py";
+	$py_params = [$ini_file, $type, $subset, $pvalue, "--verbose"];
+	fwrite($fh,"python " . $py_location . $py_program . " ".implode(" ",$py_params)."\n");
 	fclose($fh);
 	shell_exec("chmod a+x ".$shell_file);
 	return $shell_file;

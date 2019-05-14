@@ -7,7 +7,7 @@ if(isset($file_name)){
 	}
 	else{		
 		if($type=="go"){
-			echo "#Type\tGO-id\tEnrichment\tp-value\tsubset-ratio\tdescription\n";
+			echo "#Type\tGO\tEnrichment\tp-value\tsubset-ratio\tdescription\n";
 			foreach($go_types as $go_type=>$go_ids){
 				foreach($go_ids as $go_id){
 					$res	= $result[$go_id];
@@ -17,7 +17,7 @@ if(isset($file_name)){
 			}		
 		}
 		else if($type=="ipr"){
-			echo "ProteinDomain\tEnrichment\tp-value\tsubset-ratio\tdescription\n";
+			echo "#ProteinDomain\tEnrichment\tp-value\tsubset-ratio\tdescription\n";
 			foreach($result as $res){
 				$desc	= $ipr_descriptions[$res["ipr"]][0];
 				echo $res["ipr"]."\t".$res["enrichment"]."\t".$res["p-value"]."\t".$res["subset_ratio"]."\t".$desc."\n";

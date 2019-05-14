@@ -17,12 +17,14 @@ class ToolsController extends AppController{
   "DataSources",
   "Transcripts",
   "GeneFamilies",
+  "RnaFamilies",
   "TranscriptsGo",
   "TranscriptsInterpro",
   "TranscriptsKo",
   "TranscriptsLabels",
   "ExperimentLog",
   "ExperimentJobs",
+  "ExperimentStats",
   "FunctionalEnrichments",
   "FullTaxonomy",
   "CompletenessResults",
@@ -1137,26 +1139,20 @@ class ToolsController extends AppController{
 	if(in_array($pvalue,$possible_pvalues)){$selected_pvalue=$pvalue;}
 	$this->set("selected_pvalue",$selected_pvalue);
       }
+      // Check if previous results exist in the DB
+      $enrichment_results = $this->FunctionalEnrichments->find("all", array("conditions"=>array("experiment_id"=>$exp_id, "label"=>$subset, "max_p_value"=>$pvalue, "data_type"=>$type)));
 
-      //file locations
+      // File locations
       $tmp_dir		= TMP."experiment_data/".$exp_id."/";
-      $result_file 	= $type."_enrichment_".$exp_id."_".$subset."_".$selected_pvalue.".txt";
-      $all_fa_file	= $type."_transcript_".$exp_id."_all.txt";
-      $subset_fa_file	= $type."_transcript_".$exp_id."_".$subset.".txt";
-      $result_file_path	= $tmp_dir."".$result_file;
-      $all_fa_file_path	= $tmp_dir."".$all_fa_file;
-      $subset_fa_file_path	= $tmp_dir."".$subset_fa_file;
 
-      if(!array_key_exists("use_cache",$_POST)){	//force recomputation : delete result
-	if(file_exists($result_file_path)){unlink($result_file_path);}
-      }
-
-
-      //if force computation or result does not exist: perform go enrichment computation
-      if(!file_exists($result_file_path)){
-	//create shell file which contains necessary java programs
-	$qsub_file  = $this->TrapidUtils->create_qsub_script($exp_id);
-        $shell_file = $this->TrapidUtils->create_shell_file_enrichment($exp_id,$type,$exp_info['used_plaza_database'],$all_fa_file_path,$subset_fa_file_path,$result_file_path,$subset,$selected_pvalue);
+      // If force computation or result does not exist: perform go enrichment computation
+      if(empty($enrichment_results) || !array_key_exists("use_cache",$_POST)){
+        // Create shell script to `qsub` jobs on the web cluster
+    	$qsub_file  = $this->TrapidUtils->create_qsub_script($exp_id);
+        // Create enrichment configuration file (contains paths / db information)
+        $ini_file = $this->TrapidUtils->create_ini_file_enrichment($exp_id, $exp_info['used_plaza_database']);
+        //create shell file which contains necessary java programs
+        $shell_file = $this->TrapidUtils->create_shell_file_enrichment($exp_id, $ini_file,  $type, $subset, $selected_pvalue);
 	if($shell_file == null || $qsub_file == null ){$this->set("error","problem creating program files");return;}
 	$qsub_out	= $tmp_dir.$type."_enrichment_".$subset.".out";
       	$qsub_err	= $tmp_dir.$type."_enrichment_".$subset.".err";
@@ -1168,14 +1164,12 @@ class ToolsController extends AppController{
 	$cluster_job	= $this->TrapidUtils->getClusterJobId($output);
 	if($cluster_job==null){$this->set("error","Problem with retrieving job identifier from web cluster");return;}
 	$this->set("job_id",$cluster_job);
-	$this->set("result_file",$result_file);
+	$this->set("load_results", true);
 	return;
       }
-      else{
-	//Configure::write("debug",1);
-	//	pr($result_file);
-	$this->set("result_file",$result_file);
-	return;
+      else {
+          $this->set("load_results", true);
+          return;
       }
     }
   }
@@ -1208,27 +1202,30 @@ class ToolsController extends AppController{
     $this->set("go_type",$go_type);
     $this->set("pvalue",$pvalue);
 
-    //file locations
-    $tmp_dir		= TMP."experiment_data/".$exp_id."/";
-    $result_file_path 	= $tmp_dir."go_enrichment_".$exp_id."_".$selected_subset."_".$pvalue.".txt";
-    if(!file_exists($result_file_path)){$this->redirect(array("controller"=>"tools","action"=>"go_enrichment",$exp_id));}
+    // Retrieve enrichment results
+    $enrichment_results = $this->FunctionalEnrichments->find("all", array("conditions"=>array("experiment_id"=>$exp_id, "label"=>$selected_subset, "max_p_value"=>$pvalue, "data_type"=>"go")));
+    if(empty($enrichment_results)){$this->redirect(array("controller"=>"tools","action"=>"enrichment",$exp_id));}
 
-    //ok, now read the file.
-    $result_data_string	= array();
-    if(filesize($result_file_path)!=0){
-	$fh	      		= fopen($result_file_path,"r");
-    	$result_data_string	= fread($fh,filesize($result_file_path));
-    	fclose($fh);
-    }
+    // Read the results.
+
     $result	= array();
-    foreach(explode("\n",$result_data_string) as $r){
-      $s	= explode("\t",$r);
-      if(count($s)==5){
-	if($s[3]>0){
-		$result[$s[0]]	= array("go"=>$s[0],"hidden"=>$s[1],"p_value"=>$s[2],"ratio"=>$s[3],"perc"=>$s[4]);
-	}
+//    foreach(explode("\n",$result_data_string) as $r){
+//      $s	= explode("\t",$r);
+//      if(count($s)==5){
+//	if($s[3]>0){
+//		$result[$s[0]]	= array("go"=>$s[0],"hidden"=>$s[1],"p_value"=>$s[2],"ratio"=>$s[3],"perc"=>$s[4]);
+//	}
+//      }
+//    }
+//
+      foreach($enrichment_results as $r){
+          $res = $r['FunctionalEnrichments'];
+          // Only working with enrichment (not depletion), so keep only results with log2 enrichment > 0
+          if($res['log_enrichment'] > 0) {
+              $result[$res['identifier']] = array("go"=>$res['identifier'],"hidden"=>$res['is_hidden'],"p_value"=>$res['p_value'], "ratio"=>$res['log_enrichment'], "perc"=>$res['subset_ratio']);
+          }
       }
-    }
+
 //    $go_data		= $this->ExtendedGo->find("all",array("conditions"=>array("go"=>array_keys($result))));
 //    $go_types		= $this->TrapidUtils->indexArraySimple($go_data,"ExtendedGo","go","type");
 //    $go_sptr		= $this->TrapidUtils->indexArraySimple($go_data,"ExtendedGo","go","num_sptr_steps");
@@ -1302,8 +1299,8 @@ class ToolsController extends AppController{
     // $exp_id	= mysql_real_escape_string($exp_id);
     parent::check_user_exp($exp_id);
     $this->layout = "";
-    //file locations
-    $tmp_dir		= TMP."experiment_data/".$exp_id."/";
+//    //file locations
+//    $tmp_dir		= TMP."experiment_data/".$exp_id."/";
     if($type==null || $selected_subset==null || $pvalue==null){
       $this->set("error","Cannot instantiate data");
       return;
@@ -1313,46 +1310,40 @@ class ToolsController extends AppController{
     $selected_subset	= filter_var($selected_subset, FILTER_SANITIZE_STRING);
     $pvalue		= filter_var($pvalue, FILTER_SANITIZE_STRING);
     $this->set("file_name",$type."_enrichment_".$exp_id."_".$selected_subset."_".$pvalue.".txt");
-    $this->set("type",$type);
+    $this->set("type", $type);
 
-    $result_file_path 	= $tmp_dir."/".$type."_enrichment_".$exp_id."_".$selected_subset."_".$pvalue.".txt";
-    if(!file_exists($result_file_path)){
-      $this->set("error","Cannot load data");
+    // Retrieve enrichment results from db
+    $db_results = $this->FunctionalEnrichments->find("all", array(
+        "fields"=>array("identifier", "label", "p_value", "log_enrichment", "subset_ratio", "is_hidden"),
+        "conditions"=>array("experiment_id"=>$exp_id, "label"=>$selected_subset, "max_p_value"=>$pvalue, "data_type"=>$type)
+    ));
+    if(empty($db_results)){
+      $this->set("error", "No data found");
       return;
     }
-    $fh	      		= fopen($result_file_path,"r");
-    $result_data_string	= fread($fh,filesize($result_file_path));
-    fclose($fh);
 
-    $result	= array();
-    foreach(explode("\n",$result_data_string) as $r){
-      $s	= explode("\t",$r);
-      if(count($s)==5){
-	if($s[3]>0){
-	  if($type=="go"){
-		$result[$s[0]]	= array("go"=>$s[0],"is_hidden"=>$s[1],"p-value"=>$s[2],"enrichment"=>$s[3],"subset_ratio"=>$s[4]);
-	  }
-	  else if($type=="ipr"){
-		$result[$s[0]]	= array("ipr"=>$s[0],"is_hidden"=>$s[1],"p-value"=>$s[2],"enrichment"=>$s[3],"subset_ratio"=>$s[4]);
-	  }
-	}
+      $result	= array();
+      foreach($db_results as $r){
+          $res = $r['FunctionalEnrichments'];
+          // Only working with enrichment (not depletion), so keep only results with log2 enrichment > 0
+          if($res['log_enrichment'] > 0) {
+              if($type=="go"){
+                  $result[$res['identifier']] = array("go"=>$res['identifier'],"is_hidden"=>$res['is_hidden'],"p-value"=>$res['p_value'], "enrichment"=>$res['log_enrichment'], "subset_ratio"=>$res['subset_ratio']);
+              }
+              else if($type=="ipr"){
+                  $result[$res['identifier']] = array("ipr"=>$res['identifier'],"is_hidden"=>$res['is_hidden'],"p-value"=>$res['p_value'], "enrichment"=>$res['log_enrichment'], "subset_ratio"=>$res['subset_ratio']);
+              }
+          }
       }
-    }
+
     $this->set("result",$result);
 
-    //get extra information
+    // Get extra information
     if($type=="go"){
-//    	$go_data		= $this->ExtendedGo->find("all",array("conditions"=>array("go"=>array_keys($result))));
-//    	$go_descriptions	= $this->TrapidUtils->indexArray($go_data,"ExtendedGo","go","desc");
     	$go_data		= $this->ExtendedGo->find("all",array("conditions"=>array("name"=>array_keys($result), "type"=>"go")));
     	$go_descriptions	= $this->TrapidUtils->indexArray($go_data,"ExtendedGo","name","desc");
     	$go_types		= array("MF"=>array(),"BP"=>array(),"CC"=>array());
-//    	pr($go_data);
-//    	pr($go_types);
-//    	pr($go_descriptions);
     	foreach($go_data as $gd){
-//      		$go_type	= $gd['ExtendedGo']['type'];
-//      		$go_types[$go_type][] = $gd['ExtendedGo']['go'];
       		$go_type	= $gd['ExtendedGo']['info'];
       		$go_types[$go_type][] = $gd['ExtendedGo']['name'];
     	}
@@ -1360,8 +1351,6 @@ class ToolsController extends AppController{
     	$this->set("go_types",$go_types);
     }
     else if($type=="ipr"){
-//      $ipr_data			= $this->ProteinMotifs->find("all",array("conditions"=>array("motif_id"=>array_keys($result))));
-//      $ipr_descriptions		= $this->TrapidUtils->indexArray($ipr_data,"ProteinMotifs","motif_id","desc");
       $ipr_data			= $this->ProteinMotifs->find("all",array("conditions"=>array("name"=>array_keys($result), "type"=>"interpro")));
       $ipr_descriptions		= $this->TrapidUtils->indexArray($ipr_data,"ProteinMotifs","name","desc");
       $this->set("ipr_descriptions",$ipr_descriptions);
@@ -1369,9 +1358,8 @@ class ToolsController extends AppController{
   }
 
 
-  function load_enrichment($exp_id=null,$type=null,$subset_title=null,$pvalue=null,$result_file=null,$job_id=null){
+  function load_enrichment($exp_id=null,$type=null,$subset_title=null,$pvalue=null,$job_id=null){
     // Configure::write("debug",2);
-    // pr($result_file);
     // $exp_id	= mysql_real_escape_string($exp_id);
     parent::check_user_exp($exp_id);
     $exp_info	= $this->Experiments->getDefaultInformation($exp_id);
@@ -1400,52 +1388,43 @@ class ToolsController extends AppController{
     }
     $this->set("selected_pvalue",$pvalue);
 
-    if($result_file==null){
-      $this->set("error","No result file defined");
-      return;
-    }
-    $result_file_path	= TMP."experiment_data/".$exp_id."/".$result_file;
-    //pr($result_file_path);
+    // Handle running cluster job (i.e. $job_id is not null)
     if($job_id!=null){
-      $cluster_res	= $this->TrapidUtils->waitfor_cluster($exp_id,$job_id,300,10);
-      if(isset($cluster_res["error"])){$this->set("error",$cluster_res["error"]);return;}
-      $file_sync	= $this->TrapidUtils->sync_file($result_file_path);
-      if(!$file_sync){$this->set("error","Error syncing files");return;}
-    }
-
-    //ok, no error, so just read the result file
-    //account for possible
-    $cont		= true;
-    $result_data_string	= array();
-    if(filesize($result_file_path)!=0){
-	$fh	      		= fopen($result_file_path,"r");
-    	$result_data_string	= fread($fh,filesize($result_file_path));
-    	fclose($fh);
-    }
-    $result	= array();
-    foreach(explode("\n",$result_data_string) as $r){
-      $s	= explode("\t",$r);
-      if(count($s)==5){
-	if($s[3]>0){
-	  if($type=="go"){
-		$result[$s[0]]	= array("go"=>$s[0],"is_hidden"=>$s[1],"p-value"=>$s[2],"enrichment"=>$s[3],"subset_ratio"=>$s[4]);
-	  }
-	  else if($type=="ipr"){
-		$result[$s[0]]	= array("ipr"=>$s[0],"is_hidden"=>$s[1],"p-value"=>$s[2],"enrichment"=>$s[3],"subset_ratio"=>$s[4]);
-	  }
-	}
+      $cluster_res	= $this->TrapidUtils->waitfor_cluster($exp_id,$job_id, 300, 5);
+      if(isset($cluster_res["error"])){
+          $this->set("error",$cluster_res["error"]);
+          return;
       }
     }
+
+    // No error when running enrichment job on the cluster, so let's retrieve the results from the database
+    $db_results = $this->FunctionalEnrichments->find("all", array(
+        "fields"=>array("identifier", "label", "p_value", "log_enrichment", "subset_ratio", "is_hidden"),
+        "conditions"=>array("experiment_id"=>$exp_id, "label"=>$subset_title, "max_p_value"=>$pvalue, "data_type"=>$type)
+    ));
+    // pr($db_results);
+
+    $result	= array();
+    foreach($db_results as $r){
+        $res = $r['FunctionalEnrichments'];
+      // Only working with enrichment (not depletion)
+      if($res['log_enrichment'] > 0) {
+	    if($type=="go"){
+		  $result[$res['identifier']] = array("go"=>$res['identifier'],"is_hidden"=>$res['is_hidden'],"p-value"=>$res['p_value'], "enrichment"=>$res['log_enrichment'], "subset_ratio"=>$res['subset_ratio']);
+	    }
+	    else if($type=="ipr"){
+          $result[$res['identifier']] = array("ipr"=>$res['identifier'],"is_hidden"=>$res['is_hidden'],"p-value"=>$res['p_value'], "enrichment"=>$res['log_enrichment'], "subset_ratio"=>$res['subset_ratio']);
+	    }
+	  }
+    }
+
     $this->set("result",$result);
-//      pr($result);
+      // pr($result);
 
 
-    //get extra information
+    // Get extra information
     if($type=="go"){
-//    	$go_data		= $this->ExtendedGo->find("all",array("conditions"=>array("go"=>array_keys($result))));
     	$go_data		= $this->ExtendedGo->find("all",array("conditions"=>array("name"=>array_keys($result))));
-//    	pr($go_data);
-    	// $go_descriptions	= $this->TrapidUtils->indexArray($go_data,"ExtendedGo","go","desc");
     	$go_descriptions	= $this->TrapidUtils->indexArray($go_data,"ExtendedGo","name","desc");
 //    	pr($go_descriptions);
     	$go_types		= array("MF"=>array(),"BP"=>array(),"CC"=>array());
@@ -1460,13 +1439,10 @@ class ToolsController extends AppController{
     	$this->set("go_types",$go_types);
     }
     else if($type=="ipr"){
-      // $ipr_data			= $this->ProteinMotifs->find("all",array("conditions"=>array("motif_id"=>array_keys($result))));
-//      $ipr_descriptions		= $this->TrapidUtils->indexArray($ipr_data,"ProteinMotifs","motif_id","desc");
       $ipr_data			= $this->ProteinMotifs->find("all",array("conditions"=>array("name"=>array_keys($result))));
       $ipr_descriptions		= $this->TrapidUtils->indexArray($ipr_data,"ProteinMotifs","name","desc");
       $this->set("ipr_descriptions",$ipr_descriptions);
     }
-
   }
 
 
@@ -1509,6 +1485,9 @@ class ToolsController extends AppController{
     $possible_graphtypes   = array("grouped"=>"","stacked"=>"normal");
 
     if($this->request->is('post')) {
+//        pr(ini_get('memory_limit'));
+        ini_set('memory_limit', '256M');
+//        pr(ini_get('memory_limit'));
         $invalid_str = "<p class='text-center lead text-danger'>Invalid parameters. Cannot display graph!</p>";  // Quick and dirty error message
         $this->layout = "";
         $this->autoRender = false;
@@ -1636,9 +1615,37 @@ class ToolsController extends AppController{
 
 
 
+    // Get average transcript length for experiment `$exp_id`.
+    function avg_transcript_length($exp_id=null) {
+        $this->autoRender = false;
+        if(!$exp_id){echo "";return;}
+        parent::check_user_exp($exp_id);
+        $avg_transcript_length = 0;  // Default value to display
+        $seq_len_data = $this->Transcripts->getAvgTranscriptLength($exp_id);
+        // Useless condition?
+         if($seq_len_data) {
+            $avg_transcript_length = $seq_len_data;
+         }
+        echo $avg_transcript_length;
+    }
 
 
-  function statistics($exp_id=null, $pdf='0'){
+    // Get average ORF length for experiment `$exp_id`.
+    function avg_orf_length($exp_id) {
+        $this->autoRender = false;
+        if(!$exp_id){echo "";return;}
+        parent::check_user_exp($exp_id);
+        $avg_transcript_length = 0;  // Default value to display
+        $seq_len_data = $this->Transcripts->getAvgOrfLength($exp_id);
+        // Useless condition?
+        if($seq_len_data) {
+            $avg_transcript_length = $seq_len_data;
+        }
+        echo $avg_transcript_length;
+  }
+
+
+    function statistics($exp_id=null, $pdf='0'){
     // $exp_id	= mysql_real_escape_string($exp_id);
     parent::check_user_exp($exp_id);
     $this -> set('title_for_layout', "General statistics");
@@ -1653,7 +1660,7 @@ class ToolsController extends AppController{
 
     //get transcript information
     $num_transcripts	= $this->Transcripts->find("count",array("conditions"=>array("experiment_id"=>$exp_id)));
-    $seq_stats		= $this->Transcripts->getSequenceStats($exp_id);
+    // $seq_stats		= $this->Transcripts->getSequenceStats($exp_id);
     $num_orfs	= $this->Transcripts->getOrfCount($exp_id);
     $num_start_codons	= $this->Transcripts->find("count",array("conditions"=>array("experiment_id"=>$exp_id,"orf_contains_start_codon"=>1)));
     $num_stop_codons	= $this->Transcripts->find("count",array("conditions"=>array("experiment_id"=>$exp_id,"orf_contains_stop_codon"=>1)));
@@ -1665,7 +1672,7 @@ class ToolsController extends AppController{
     $meta_annot_noinfo	= $this->Transcripts->find("count",array("conditions"=>array("experiment_id"=>$exp_id,"meta_annotation"=>"No Information")));
 
     $this->set("num_transcripts",$num_transcripts);
-    $this->set("seq_stats",$seq_stats);
+    // $this->set("seq_stats",$seq_stats);
     $this->set("num_orfs",$num_orfs);
     $this->set("num_start_codons",$num_start_codons);
     $this->set("num_stop_codons",$num_stop_codons);
@@ -1689,27 +1696,66 @@ class ToolsController extends AppController{
     $this->set("biggest_gf",$biggest_gf_res);
     $this->set("single_copy",$single_copy);
 
+    // Get RNA family information
+    $num_rf = $this->RnaFamilies->find("count", array("conditions"=>array("experiment_id"=>$exp_id)));
+    $num_transcript_rf = $this->Transcripts->find("count", array("conditions"=>array("experiment_id"=>$exp_id, "not"=>array("rf_ids"=>null))));
+    $biggest_rf = $this->RnaFamilies->find("first", array("conditions"=>array("experiment_id"=>$exp_id),"order"=>array("num_transcripts DESC")));
+    if(!$biggest_rf) {
+        $biggest_rf_res = array("rf_id"=>"N/A","num_transcripts"=>0);
+    }
+    else {
+        $biggest_rf_res = array("rf_id"=>$biggest_rf['RnaFamilies']['rf_id'],"num_transcripts"=>$biggest_rf['RnaFamilies']['num_transcripts']);
+    }
+
+    $this->set("num_rf",$num_rf);
+    $this->set("num_transcript_rf",$num_transcript_rf);
+    $this->set("biggest_rf",$biggest_rf_res);
+
+
+    // Get high-level tax. classification information (if this step was performed)
+      if($exp_info['perform_tax_binning'] == 1) {
+          // Number of unclassified transcripts
+          $num_unclassified_trs = $this->TranscriptsTax->find("count", array("conditions"=>array("experiment_id"=>$exp_id, "txid"=>"0")));
+          // Number of classified transcripts
+          $num_classified_trs = $this->TranscriptsTax->find("count", array("conditions"=>array("experiment_id"=>$exp_id, "not"=>array("txid"=>"0"))));
+          // Superkingdom-level tax. classification summary
+          $top_tax_domain = $this->read_top_tax_data($exp_id=$exp_id, $tax_rank="domain");
+          $this->set("num_unclassified_trs", $num_unclassified_trs);
+          $this->set("num_classified_trs", $num_classified_trs);
+          $this->set("top_tax_domain", $top_tax_domain);
+      }
+
     //get functional data information
-    $go_stats		= $this->TranscriptsGo->getStats($exp_id);
+    $go_stats = $this->ExperimentStats->getFuncAnnotStats($exp_id, "go");
+
 //    debug($go_stats);
     $this->set("num_go",$go_stats['num_go']);
     $this->set("num_transcript_go",$go_stats['num_transcript_go']);
-    $interpro_stats	= $this->TranscriptsInterpro->getStats($exp_id);
+    $interpro_stats	= $this->ExperimentStats->getFuncAnnotStats($exp_id, "ipr");
     $this->set("num_interpro",$interpro_stats['num_interpro']);
     $this->set("num_transcript_interpro",$interpro_stats['num_transcript_interpro']);
+    $ko_stats	= $this->ExperimentStats->getFuncAnnotStats($exp_id, "ko");
+    $this->set("num_ko",$ko_stats['num_ko']);
+    $this->set("num_transcript_ko",$ko_stats['num_transcript_ko']);
 
+    // PDF output
+    // Values that were retrieved via AJAX calls need to be retrrieved prior to generating the PDF output
     if($_POST || $pdf=='1'){
       if($pdf=='1' || (array_key_exists("export_type",$_POST) && $_POST['export_type']=="pdf")){
 	$this->set("pdf_view",1);
 	$this->layout	= "fpdf";
-	$pdf_transcript_info	= array(
-			"#Transcripts"=>$num_transcripts,
-			"Average transcript length"=>$seq_stats['transcript']." basepairs",
-			"#Transcripts with ORF"=>$num_orfs,
-			"Average ORF length"=>$seq_stats['orf']." basepairs",
-			"#ORFs with start codon"=>$num_start_codons." (".round(100*$num_start_codons/$num_transcripts,1)."%)",
-			"#ORFs with stop codon"=>$num_stop_codons." (".round(100*$num_stop_codons/$num_transcripts,1)."%)"
-					);
+
+	// Retrieve average transcript/orf length
+    $seq_stats		= $this->Transcripts->getSequenceStats($exp_id);
+
+    $pdf_transcript_info	= array(
+        "#Transcripts"=>$num_transcripts,
+        "Average transcript length"=>$seq_stats['transcript']." basepairs",
+        "#Transcripts with ORF"=>$num_orfs,
+        "Average ORF length"=>$seq_stats['orf']." basepairs",
+        "#ORFs with start codon"=>$num_start_codons." (".round(100*$num_start_codons/$num_transcripts,1)."%)",
+        "#ORFs with stop codon"=>$num_stop_codons." (".round(100*$num_stop_codons/$num_transcripts,1)."%)"
+    );
 
 	$pdf_frameshift_info	= array(
 		        "#Transcripts with putative frameshift"=>$num_putative_fs." (".round(100*$num_putative_fs/$num_transcripts,1)."%)",
@@ -1728,9 +1774,15 @@ class ToolsController extends AppController{
 			 "#Transcripts in GF"=>$num_transcript_gf." (".round(100*$num_transcript_gf/$num_transcripts,1)."%)"
 				);
 
+	$pdf_rf_info		= array(
+			 "#RNA families"=>$num_rf,
+			 "#Transcripts in RF"=>$num_transcript_rf." (".round(100*$num_transcript_rf/$num_transcripts,1)."%)"
+				);
+
 	$pdf_func_info		= array(
 	   "#Transcripts with GO"=>$go_stats['num_transcript_go']." (".round(100*$go_stats['num_transcript_go']/$num_transcripts,1)."%)",
 	   "#Transcripts with Protein Domain"=>$interpro_stats['num_transcript_interpro']." (".round(100*$interpro_stats['num_transcript_interpro']/$num_transcripts,1)."%)",
+	   "#Transcripts with KO"=>$ko_stats['num_transcript_ko']." (".round(100*$ko_stats['num_transcript_ko']/$num_transcripts,1)."%)",
 				);
 
 
@@ -1738,6 +1790,7 @@ class ToolsController extends AppController{
 	$this->set("pdf_frameshift_info",$pdf_frameshift_info);
 	$this->set("pdf_meta_info",$pdf_meta_info);
 	$this->set("pdf_gf_info",$pdf_gf_info);
+	$this->set("pdf_rf_info", $pdf_rf_info);
 	$this->set("pdf_func_info",$pdf_func_info);
 
 //	$this->render();
@@ -2325,7 +2378,7 @@ function label_go_intersection($exp_id=null,$label=null){
     function handle_core_gf_completeness($exp_id, $cluster_job_id, $clade_tax_id, $label, $tax_source, $species_perc, $top_hits) {
         parent::check_user_exp($exp_id);
         $this->autoRender=false;
-        $job_result = $this->TrapidUtils->waitfor_cluster($exp_id, $cluster_job_id, 300, 5);
+        $job_result = $this->TrapidUtils->waitfor_cluster($exp_id, $cluster_job_id, 600, 5);
         // Once our job finished running (with error or not) remove it from the `experiment_jobs` table
         $this->ExperimentJobs->deleteJob($exp_id, $cluster_job_id);
         // Load results.

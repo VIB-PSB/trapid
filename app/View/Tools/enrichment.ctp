@@ -139,10 +139,9 @@
         echo $this->Form->end();
         ?>
     </div>
-    <br/><br/>
-    <?php if (isset($result_file)) : ?>
-        <!--	<h3>Enrichment --><?php //echo "<i>".$selected_subset."</i>"; ?><!--</h3>-->
-        <h2>Enrichment <?php echo "<code>" . $selected_subset . "</code>"; ?></h2>
+    <?php if (isset($load_results)) : ?>
+        <hr>
+        <h3>Enrichment - <?php echo "<code>" . $selected_subset . "</code>"; ?></h3>
         <br/>
         <div class="subdiv">
             <div class="subdiv">
@@ -157,10 +156,10 @@
                 <script type="text/javascript">
                 /* Ajax calls were replaced after removal of JS/Ajax helpers in CakePHP 2.0 */
                 <?php if(isset($job_id)) : ?>
-                var ajax_url = <?php echo "\"" . $this->Html->url("/tools/load_enrichment/" . $exp_id . "/" . $type . "/" . $selected_subset . "/" . $selected_pvalue . "/" . $result_file . "/" . $job_id . "/") . "\"";?>;
+                var ajax_url = <?php echo "\"" . $this->Html->url("/tools/load_enrichment/" . $exp_id . "/" . $type . "/" . $selected_subset . "/" . $selected_pvalue . "/" . "/" . $job_id . "/") . "\"";?>;
                 // pr("using job id ".$job_id);
                 <?php else : ?>
-                var ajax_url = <?php echo "\"" . $this->Html->url("/tools/load_enrichment/" . $exp_id . "/" . $type . "/" . $selected_subset . "/" . $selected_pvalue . "/" . $result_file . "/") . "\"";?>;
+                var ajax_url = <?php echo "\"" . $this->Html->url("/tools/load_enrichment/" . $exp_id . "/" . $type . "/" . $selected_subset . "/" . $selected_pvalue . "/" ) . "\"";?>;
                 // pr("not using job id");
                 <?php endif ?>
                 $.ajax({
