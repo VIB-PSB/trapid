@@ -12,8 +12,13 @@
 	    return "<div class=\"progress stats-progress\"><div class=\"progress-bar\" role=\"progressbar\" style=\"width: " . $perc . "%;\" aria-valuenow=\"" . $perc . "\" aria-valuemin=\"0\" aria-valuemax=\"100\"></div></div>";
     }
 
-    function create_stats_row($metrics_name, $metrics_value, $metrics_perc) {
-	    echo "<div class=\"row\">\n";
+    function create_stats_row($metrics_name, $metrics_value, $metrics_perc, $row_id=null, $ajax=false) {
+	    if(!$row_id) {
+    	    echo "<div class=\"row\">\n";
+        }
+        else {
+    	    echo "<div class=\"row\" id='" . $row_id . "'>\n";
+        }
 	    echo "<div class=\"col-md-4 col-md-offset-1 col-xs-8 stats-metric\">" . $metrics_name . "</div>\n";
 	    if($metrics_perc) {
 	    echo "<div class=\"col-md-2 col-xs-4 stats-value\">" . $metrics_value . " (" . $metrics_perc . "%)" . "</div>\n";
@@ -26,6 +31,9 @@
             }
 	    echo "</div>\n";
     }
+
+    // A string that contains html for a 'loading' span element
+    $loading_span_elmt = "<span class=\"text-muted\">" . $this->Html->image('small-ajax-loader.gif', array("style"=>"max-height: 14px;")) . " &nbsp; loading...</span>";
 ?>
 
 <?php if(!isset($pdf_view)) : ?>
@@ -55,9 +63,9 @@
         </div>
         <div class="panel-body">
             <?php create_stats_row("#Transcripts", $num_transcripts, null); ?>
-            <?php create_stats_row("Average sequence length", $seq_stats["transcript"], null); ?>
+            <?php create_stats_row("Average sequence length",  $loading_span_elmt, null, "avg_trs_length"); ?>
             <?php create_stats_row("#Transcripts with ORF", $num_orfs, null); ?>
-            <?php create_stats_row("Average ORF length", $seq_stats["orf"], null); ?>
+            <?php create_stats_row("Average ORF length", $loading_span_elmt, null,  "avg_orf_length"); ?>
             <?php create_stats_row("#ORFs with a start codon", $num_start_codons, perc($num_start_codons,$num_transcripts,1,false)); ?>
             <?php create_stats_row("#ORFs with a stop codon", $num_stop_codons, perc($num_stop_codons,$num_transcripts,1,false)); ?>
         </div>
@@ -82,6 +90,29 @@
             <?php create_stats_row("#Quasi full-length", $meta_annot_quasi, perc($meta_annot_quasi,$num_transcripts,1,false)); ?>
             <?php create_stats_row("#Partial", $meta_annot_partial, perc($meta_annot_partial,$num_transcripts,1,false)); ?>
             <?php create_stats_row("#No information", $meta_annot_noinfo, perc($meta_annot_noinfo,$num_transcripts,1,false)); ?>
+        </div>
+    </div>
+
+    <div class="panel panel-default">
+        <div class="panel-heading">
+            <h3 class="panel-title">Taxonomic classification information</h3>
+        </div>
+        <div class="panel-body">
+        <?php if($exp_info['perform_tax_binning'] == 1): ?>
+            <?php create_stats_row("#Classified", $num_classified_trs, perc($num_classified_trs, $num_transcripts,2,false)); ?>
+            <?php create_stats_row("#Unclassified", $num_unclassified_trs, perc($num_unclassified_trs, $num_transcripts,2,false)); ?>
+            <h5>Domain composition</h5>
+<!--            <p class="text-justify">Number of transcript by domain of life</p>-->
+            <?php
+            foreach ($top_tax_domain as $top_tax) {
+                if($top_tax[0] != "Unclassified") {
+                    create_stats_row("#" . $top_tax[0], (int) $top_tax[1], perc((int)$top_tax[1], $num_transcripts,2,false));
+                }
+            }
+            ?>
+        <?php else: ?>
+            <p class="lead text-muted">No taxonomic classification was performed or this experiment. </p>
+        <?php endif; ?>
         </div>
     </div>
 
@@ -138,6 +169,25 @@
         </div>
     </div>
 
+
+    <div class="panel panel-default">
+        <div class="panel-heading">
+            <h3 class="panel-title">RNA family information</h3>
+        </div>
+        <div class="panel-body">
+            <?php create_stats_row("#RNA families", $num_rf, null); ?>
+            <?php create_stats_row("#Transcripts in RF", $num_transcript_rf, perc($num_transcript_rf, $num_transcripts,1,false)); ?>
+            <?php
+            if($biggest_rf['rf_id']=='N/A') {
+                create_stats_row("Largest RF", $biggest_rf['rf_id'] . " (".$biggest_rf['num_transcripts']." transcripts)", null);
+            }
+            else {
+                create_stats_row("Largest RF", $this->Html->link($biggest_rf['rf_id'],array("controller"=>"rna_family","action"=>"rna_family",$exp_id,$biggest_rf['rf_id']))." (".$biggest_rf['num_transcripts']." transcripts)", null);
+            }
+            ?>
+        </div>
+    </div>
+
     <div class="panel panel-default">
         <div class="panel-heading">
             <h3 class="panel-title">Functional annotation information</h3>
@@ -149,14 +199,16 @@
             <h5>InterPro</h5>
             <?php create_stats_row("#InterPro domains", $num_interpro, null); ?>
             <?php create_stats_row("#Transcripts with Protein Domain", $num_transcript_interpro,  perc($num_transcript_interpro, $num_transcripts,1, false)); ?>
-<!--            <h4>KEGG orthology</h4>-->
+            <h5>KEGG Orthology</h5>
+            <?php create_stats_row("#KO terms", $num_ko, null); ?>
+            <?php create_stats_row("#Transcripts with KO", $num_transcript_ko,  perc($num_transcript_ko, $num_transcripts,1, false)); ?>
         </div>
     </div>
 
 </div>
 
     <?php if ($extra_div) :?>
-        <script type="text/javascript">
+        <script type="text/javascript" defer="defer">
             // Toggle extra similarity search hits. Called on click of 'toggle-extra-hits' link.
             function toggleExtraHits() {
                 var extraHitsDiv = "extra-hits";
@@ -170,9 +222,57 @@
                     ehIconElmt.classList.replace("glyphicon-menu-down", "glyphicon-menu-right");
                 }
             }
+
         </script>
     <?php endif; ?>
-
+    <script type="text/javascript" defer="defer">
+        // Retrieve sequence stats data (avg. transcript/orf lengths)
+        // TODO: If more than 2 values are retrieved that way, rewrite proper function
+        function get_avg_transcript_length(exp_id) {
+            var row_id = "#avg_trs_length";
+            var stat_val_elmt = document.querySelector(row_id).querySelector('.stats-value');
+            var ajax_url = <?php echo "\"".$this->Html->url(array("controller"=>"tools", "action"=>"avg_transcript_length"))."\"";?>+"/" + exp_id + "/";
+            $.ajax({
+                type: "GET",
+                url: ajax_url,
+                contentType: "application/json;charset=UTF-8",
+                success: function(data) {
+                    $(stat_val_elmt).html(data);
+                },
+                error: function() {
+                    console.log("Unable to retrieve average transcript length for experiment \'" + exp_id + "\'. ");
+                },
+                complete: function() {
+                    // Debug
+                    // console.log(experiment_id);
+                    // console.log(ajax_url);
+                }
+            });
+        }
+        function get_avg_orf_length(exp_id) {
+            var row_id = "#avg_orf_length";
+            var stat_val_elmt = document.querySelector(row_id).querySelector('.stats-value');
+            var ajax_url = <?php echo "\"".$this->Html->url(array("controller"=>"tools", "action"=>"avg_orf_length"))."\"";?>+"/" + exp_id + "/";
+            $.ajax({
+                type: "GET",
+                url: ajax_url,
+                contentType: "application/json;charset=UTF-8",
+                success: function(data) {
+                    $(stat_val_elmt).html(data);
+                },
+                error: function() {
+                    console.log("Unable to retrieve average ORF length for experiment \'" + exp_id + "\'. ");
+                },
+                complete: function() {
+                    // Debug
+                    // console.log(experiment_id);
+                    // console.log(ajax_url);
+                }
+            });
+        }
+        get_avg_transcript_length(<?php echo $exp_id; ?>);
+        get_avg_orf_length(<?php echo $exp_id; ?>);
+    </script>
 <?php else: ?>
 <?php
 
@@ -253,6 +353,9 @@
 	$fpdf->Ln();
 	$fpdf->Ln();
 
+	// Next, taxonomic classification information
+
+
 	//next, similarity search information
 	$fpdf->SetFont('Arial','U',12);
 	$fpdf->Cell(60,10,"Similarity search information");
@@ -291,7 +394,23 @@
 	$fpdf->Ln();
 	$fpdf->Ln();
 
-	//next, gene family information
+	// next, RNA family information
+	$fpdf->SetFont('Arial','U',12);
+	$fpdf->Cell(60,10,"RNA family information");
+	$fpdf->Ln();
+	$fpdf->SetFont("Arial","",10);
+	foreach($pdf_rf_info as $k=>$v){
+		$fpdf->SetFont("","B");
+		$fpdf->Cell(60,5,$k);
+		$fpdf->SetFont("","");
+		$fpdf->Cell(10);
+		$fpdf->Cell(60,5,$v);
+		$fpdf->Ln();
+	}
+	$fpdf->Ln();
+	$fpdf->Ln();
+
+	//next, functional annotation information
 	$fpdf->SetFont('Arial','U',12);
 	$fpdf->Cell(60,10,"Functional annotation information");
 	$fpdf->Ln();
