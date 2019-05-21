@@ -826,7 +826,7 @@ class TrapidController extends AppController{
           $transcript_info['Transcripts'][$sqce_type] = $sqce_str;
       }
       if($transcript_info['Transcripts']['orf_sequence'] !=""){
-      $transcript_info['Transcripts']['aa_sequence'] = $this->Sequence->translate_cds_php($transcript_info['Transcripts']['orf_sequence']);
+      $transcript_info['Transcripts']['aa_sequence'] = $this->Sequence->translate_cds_php($transcript_info['Transcripts']['orf_sequence'], $transcript_info['Transcripts']['transl_table']);
     }
 
     //check whether the number of jobs in the queue for this experiment has not been reached.
@@ -1071,10 +1071,11 @@ class TrapidController extends AppController{
     $result	= array();
     foreach($transcript_data as $td){
       $transcript_id		= $td['Transcripts']['transcript_id'];
+      $transl_table = $td['Transcripts']['transl_table'];
       $transcript_sequence	= $td['Transcripts']['orf_sequence'];
       $result[$transcript_id]	= $transcript_sequence;
     }
-    $result	= $this->Sequence->translate_multicds_php($result);
+    $result	= $this->Sequence->translate_multicds_php($result, $transl_table);
     return $result;
   }
 
@@ -1110,7 +1111,8 @@ class TrapidController extends AppController{
 
     //convert to protein sequences
     if($seq_type=="DNA"){
-      $result	= $this->Sequence->translate_multicds_php($result);
+        pr($result);
+      $result	= $this->Sequence->translate_multicds_php($result); // TODO: handle alternative translation tables here too! But solve that when fixing download.
     }
     return $result;
   }

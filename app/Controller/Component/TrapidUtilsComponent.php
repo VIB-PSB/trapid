@@ -112,7 +112,7 @@ class TrapidUtilsComponent extends Component{
 
    //fwrite($fh,"module load java\n");
    //fwrite($fh,"java -cp ".$java_location.".:".$java_location."..:".$java_location."mysql.jar ".$java_program." ".implode(" ",$java_params)."\n");
-    fwrite($fh,$java_cmd . " -cp ".$java_location.".:".$java_location."..:".$java_location."mysql.jar ".$java_program." ".implode(" ",$java_params)." 2>&1\n");
+    fwrite($fh,$java_cmd . " -cp ".$java_location.".:".$java_location."..:".$java_location."lib/* ".$java_program." ".implode(" ",$java_params)." 2>&1\n");
     fclose($fh);
 
     //execute shell script with java program
@@ -592,7 +592,7 @@ class TrapidUtilsComponent extends Component{
     $java_program		= "transcript_pipeline.UpdateData";
 
     fwrite($fh,"\n#Launching java program\n");
-    fwrite($fh,"java -cp ".$java_location.".:..:".$java_location."mysql.jar ".$java_program." ".implode(" ",$parameters)."\n");
+    fwrite($fh,"java -cp ".$java_location.".:..:".$java_location."lib/* ".$java_program." ".implode(" ",$parameters)."\n");
     fclose($fh);
     shell_exec("chmod a+x ".$shell_file);
     return $shell_file;
@@ -901,7 +901,7 @@ class TrapidUtilsComponent extends Component{
 					$exp_id,$framedp_dir_evalgf,$selected_file,$multifasta_file);
 	$java_location		= $base_scripts_location."java/";
 	$java_program		= "transcript_pipeline.FrameDPProgram";
-	fwrite($fh,"java -cp ".$java_location.".:..:".$java_location."mysql.jar ".$java_program." ".implode(" ",$java_parameters)."\n");
+	fwrite($fh,"java -cp ".$java_location.".:..:".$java_location."lib/* ".$java_program." ".implode(" ",$java_parameters)."\n");
 	fwrite($fh,"echo \"Stopping java postprocessing\"\n");
 
 	fwrite($fh,"chmod --recursive a+rwx ".$framedp_dir_evalgf."\n");
@@ -996,7 +996,7 @@ class TrapidUtilsComponent extends Component{
 					$exp_id,$framedp_dir_training,$multifasta_file);
 	$java_location		= $base_scripts_location."java/";
 	$java_program		= "transcript_pipeline.FrameDPProgram";
-	fwrite($fh,"java -cp ".$java_location.".:..:".$java_location."mysql.jar ".$java_program." ".implode(" ",$java_parameters)."\n");
+	fwrite($fh,"java -cp ".$java_location.".:..:".$java_location."lib/* ".$java_program." ".implode(" ",$java_parameters)."\n");
 	fwrite($fh,"echo \"Stopping java postprocessing\"\n");
 
 	fwrite($fh,"chmod --recursive a+rwx ".$framedp_dir_evalgf."\n");
@@ -1264,7 +1264,7 @@ class TrapidUtilsComponent extends Component{
 	fwrite($fh,"#Extracting training sequences for FrameDp\n");
 	$java_location		= $base_scripts_location."java/";
 	$java_program		= "transcript_pipeline.FrameDPProgram";
-	fwrite($fh,"java -cp ".$java_location.".:..:".$java_location."mysql.jar ".$java_program." ".implode(" ",$java_parameters)."\n");
+	fwrite($fh,"java -cp ".$java_location.".:..:".$java_location."/lib/* ".$java_program." ".implode(" ",$java_parameters)."\n");
 
 	//ok, copy the configuration file from the default location, to the experiment page. Append location of blast database
 	//since this blast database is dependent on the selected reference database.
@@ -1306,7 +1306,7 @@ class TrapidUtilsComponent extends Component{
 	//finished state, and later on updates the framedp state
        	$java_parameters	= array("check_training_output",TRAPID_DB_SERVER,TRAPID_DB_NAME,TRAPID_DB_USER,TRAPID_DB_PASSWORD,
 							$exp_id,$framedp_dir_training);
-	fwrite($fh,"java -cp ".$java_location.".:..:".$java_location."mysql.jar ".$java_program." ".implode(" ",$java_parameters)."\n");
+	fwrite($fh,"java -cp ".$java_location.".:..:".$java_location."/lib/* ".$java_program." ".implode(" ",$java_parameters)."\n");
 
 	fclose($fh);
 	shell_exec("chmod a+x ".$shell_file);
@@ -1351,6 +1351,29 @@ class TrapidUtilsComponent extends Component{
         return $shell_file;
     }
 
+
+    function create_shell_script_retranslate_subset($exp_id, $label_id, $transl_table=1){
+        $base_scripts_location = SCRIPTS;
+        $transl_tables_file = $base_scripts_location . "cfg/all_translation_tables.json";
+        $tmp_dir = TMP."experiment_data/".$exp_id."/";
+        $necessary_modules = array("java");
+        // Create shell file
+        $shell_file	= $tmp_dir . "retranslate_subset_" . $label_id . "_" . $exp_id . ".sh";
+        $fh	= fopen($shell_file,"w");
+        fwrite($fh,"# Loading necessary modules\n");
+        foreach($necessary_modules as $nm){
+            fwrite($fh,"module load ".$nm." \n");
+        }
+        fwrite($fh,"\n# Java parameters\nexport _JAVA_OPTIONS=\"-Xmx8g\" \n");
+        $java_program	= "transcript_pipeline.PredictOrfSubset";
+        $java_location		= $base_scripts_location."java/";
+        $parameters = array(TRAPID_DB_SERVER, TRAPID_DB_NAME, TRAPID_DB_USER, TRAPID_DB_PASSWORD, $exp_id, $label_id, $transl_tables_file, $transl_table);
+        $command_line = "java -cp ".$java_location."lib/*:".$java_location.". ".$java_program." ".implode(" ",$parameters);
+        fwrite($fh,$command_line . "\n");
+        fclose($fh);
+        shell_exec("chmod a+x ".$shell_file);
+        return $shell_file;
+    }
 
 
     // Generate a random character string

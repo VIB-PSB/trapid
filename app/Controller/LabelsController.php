@@ -6,11 +6,11 @@ App::uses('Sanitize', 'Utility');
 class LabelsController extends AppController{
   var $name		= "Labels";
   var $helpers		= array("Html", "Form");  // ,"Javascript","Ajax");
-  var $uses		= array("Authentication","Experiments","Configuration","Transcripts","AnnotSources","Annotation",
+  var $uses		= array("Authentication","Experiments", "ExperimentJobs", "ExperimentLog", "Configuration","Transcripts","AnnotSources","Annotation",
 				"PlazaConfiguration","GeneFamilies","ExtendedGo","KoTerms","ProteinMotifs", "GoParents", "GfData",
 				"TranscriptsGo","TranscriptsInterpro", "TranscriptsKo","TranscriptsLabels");
 
-  var $components	= array("Cookie","TrapidUtils","Statistics");
+  var $components	= array("Cookie","TrapidUtils","Statistics", "Session");
 
 
 
@@ -61,6 +61,22 @@ class LabelsController extends AppController{
     $transcripts_labels	= $this->TrapidUtils->indexArray($this->TranscriptsLabels->find("all",array("conditions"=>array("experiment_id"=>$exp_id,"transcript_id"=>$transcript_ids))),"TranscriptsLabels","transcript_id","label");
 
 
+    // Retrieve translation table descriptions
+    $transl_table_data = $this->Configuration->find("all", array("conditions"=>array("method"=>"transl_tables", "attr"=>"desc"), "fields"=>array("key","value")));
+    $transl_table_descs = array();
+      foreach ($transl_table_data as $tt){
+        $idx = $tt['Configuration']['key'];
+        $desc = $tt['Configuration']['value'];
+        $transl_table_descs[$idx] = $desc;
+      }
+    ksort($transl_table_descs);
+
+
+      if ($this->Session->check("error")) {
+          $this->set("error", $this->Session->read("error"));
+          $this->Session->delete("error");
+      }
+
     $this->set("transcript_data",$transcripts);
     $this->set("transcripts_go",$transcripts_go);
     $this->set("transcripts_ipr",$transcripts_ipr);
@@ -69,6 +85,7 @@ class LabelsController extends AppController{
     $this->set("go_info_transcripts",$go_info);
     $this->set("ipr_info_transcripts",$ipr_info);
     $this->set("ko_info_transcripts",$ko_info);
+    $this->set("transl_table_descs", $transl_table_descs);
 
     $this -> set('title_for_layout', $label.' &middot; Subset');
 
@@ -106,6 +123,65 @@ class LabelsController extends AppController{
         $this->TranscriptsLabels->query("DELETE FROM `functional_enrichments` WHERE `experiment_id`='".$exp_id."' AND `label` = ".$label_id.";");
         $this->redirect(array("controller"=>"labels","action"=>"subset_overview", $exp_id));
     }
+
+
+    // Retranslate all sequences of subset `$label_id` from experiment `$experiment_id` using translation table `$transl_table` (ORF prediction).
+    function retranslate_sqces($exp_id=null, $label_id=null){
+        $this->autoRender = false;
+        if($this->request->is('post')) {
+            // Check experiment
+            if(!$exp_id || !$label_id) {
+                $this->redirect(array("controller"=>"trapid","action"=>"experiments"));
+            }
+            parent::check_user_exp($exp_id);
+            // Check subset/label id
+            $label_id = filter_var($label_id, FILTER_SANITIZE_STRING);
+            $label_data = $this->TranscriptsLabels->find("all",array("fields"=>"DISTINCT label", "conditions"=>array("experiment_id"=>$exp_id)));
+            $all_labels = array_map(function($x) {return $x['TranscriptsLabels']['label'];}, $label_data);
+            if(!in_array($label_id, $all_labels)) {
+                $this->redirect(array("controller"=>"trapid","action"=>"experiments"));  // Maybe redirect somewhere else?
+            }
+            // Check translation table
+            $transl_table_data = $this->Configuration->find("all", array("conditions"=>array("method"=>"transl_tables", "attr"=>"desc"), "fields"=>array("key")));
+            $possible_transl_tables = array_map(function($x) {return $x['Configuration']['key'];}, $transl_table_data);
+            if(!isset($_POST['transl_table']) || !in_array($_POST['transl_table'], $possible_transl_tables)){
+                $this->Session->write("error", "Problem with the selected genetic code/translation table, please try again. ");
+                $this->redirect(array("controller"=>"labels","action"=>"view", $exp_id, $label_id));
+            }
+
+            // Everything should be ok, so create everything necessary to run retranslation job
+            $transl_table = $_POST['transl_table'];
+            $qsub_file  = $this->TrapidUtils->create_qsub_script($exp_id);
+            $shell_file = $this->TrapidUtils->create_shell_script_retranslate_subset($exp_id, $label_id, $transl_table);
+            if($shell_file == null || $qsub_file == null){
+              $this->Session->write("error", "Problem during job submission, impossible to create program files. ");
+              $this->redirect(array("controller"=>"labels","action"=>"view", $exp_id, $label_id));
+            }
+            $tmp_dir	= TMP . "experiment_data/" . $exp_id . "/";
+            $base_name = "retranslate_" . $label_id;
+            $qsub_out	= $tmp_dir. $base_name . ".out";
+            $qsub_err	= $tmp_dir . $base_name . ".err";
+            if(file_exists($qsub_out)){unlink($qsub_out);}
+            if(file_exists($qsub_err)){unlink($qsub_err);}
+
+            $output   = array();
+            $command  = "sh $qsub_file -pe serial 1 -q medium -o $qsub_out -e $qsub_err $shell_file";
+            exec($command, $output);
+            $job_id	= $this->TrapidUtils->getClusterJobId($output);
+            // Create new job in DB
+            $this->ExperimentJobs->addJob($exp_id, $job_id, "medium", "retranslate_subset");
+            // Update experiment log
+            $this->ExperimentLog->addAction($exp_id,"retranslate_subset_sequences", "");
+            $this->ExperimentLog->addAction($exp_id,"retranslate_subset_sequences","subset=" . $label_id, 1);
+            $this->ExperimentLog->addAction($exp_id,"retranslate_subset_sequences","translation_table=" . $transl_table, 1);
+            // Redirect to experiments overview page
+            $this->redirect(array("controller"=>"trapid","action"=>"experiments"));  // Maybe redirect somewhere else?
+          }
+          else {
+            return;
+          }
+    }
+
 
 
 

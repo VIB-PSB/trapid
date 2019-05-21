@@ -2,41 +2,29 @@
 App::uses("Component", "Controller");
 class SequenceComponent extends Component{
 
- 
 
-  function translate_multicds_php($dna_sequences){
-    $lookup	= array("TC"=>"S","CT"=>"L","CC"=>"P","CG"=>"R","AC"=>"T","GT"=>"V","GC"=>"A","GG"=>"G",
-			"TAA"=>"*","TAG"=>"*","TAR"=>"*","TGA"=>"*",
-			"TTT"=>"F","TTC"=>"F","TTY"=>"F",
-			"TTA"=>"L","TTG"=>"L","TTR"=>"L",
-			"TAT"=>"Y","TAC"=>"Y","TAY"=>"Y",			
-			"TGT"=>"C","TGC"=>"C","TGY"=>"C",
-			"TGG"=>"W",
-			"CAT"=>"H","CAC"=>"H","CAY"=>"H",
-			"CAA"=>"Q","CAG"=>"Q","CAR"=>"Q",
-			"ATT"=>"I","ATC"=>"I","ATA"=>"I","ATH"=>"I","ATY"=>"I","ATW"=>"I","ATM"=>"I",
-			"ATG"=>"M",
-			"AAT"=>"N","AAC"=>"N","AAY"=>"N",
-			"AAA"=>"K","AAG"=>"K","AAR"=>"K",
-			"AGT"=>"S","AGC"=>"S","AGY"=>"S",
-			"AGA"=>"R","AGG"=>"R","AGR"=>"R",
-			"GAT"=>"D","GAC"=>"D","GAY"=>"D",
-			"GAA"=>"E","GAG"=>"E","GAR"=>"E",
-			);
-    $result	= array();
-    foreach($dna_sequences as $transcript_id=>$dna_sequence){
-	$res	= "";
-	for($i=0;$i<strlen($dna_sequence);$i+=3){
-	  $start	= $i;
-	  $stop	= $i+3; if($stop>=strlen($dna_sequence)){$stop = strlen($dna_sequence)-1;}
-	  $codon	= substr($dna_sequence,$start,($stop-$start));
-	  if(array_key_exists($codon,$lookup)){$res=$res."".$lookup[$codon];}
-	  else{
-	    $codon	= substr($dna_sequence,$start,2);
-	    if(array_key_exists($codon,$lookup)){$res=$res."".$lookup[$codon];}
-	    else{$res=$res."X";}
-	  }		       
-	}
+  // This function does not deal with start codons properly! This should be changed!
+  function translate_multicds_php($dna_sequences, $transl_table=1){
+      // Read translation tables
+      $transl_tables_file = new File(SCRIPTS . "cfg/all_translation_tables.json");
+      $json = $transl_tables_file->read(true, 'r');
+      $transl_tables = json_decode($json, true);
+      $lookup = $transl_tables[$transl_table]['table'];
+      $start_codons = $transl_tables[$transl_table]['start_codons'];
+      $result	= array();
+      foreach($dna_sequences as $transcript_id=>$dna_sequence){
+	  $res	= "";
+	  for($i=0;$i<strlen($dna_sequence);$i+=3){
+          $start	= $i;
+          $stop	= $i+3; if($stop>=strlen($dna_sequence)){$stop = strlen($dna_sequence)-1;}
+          $codon	= substr($dna_sequence,$start,($stop-$start));
+          if(array_key_exists($codon,$lookup)){$res=$res."".$lookup[$codon];}
+          else{
+              $codon	= substr($dna_sequence,$start,2);
+              if(array_key_exists($codon,$lookup)){$res=$res."".$lookup[$codon];}
+              else{$res=$res."X";}
+          }
+    }
 	$onemin	= substr($res,0,strlen($res)-1);
 	$last	= substr($res,strlen($res)-1);
 	$final_res	= $res;
@@ -48,9 +36,9 @@ class SequenceComponent extends Component{
 
 
 
-  function translate_cds_php($dna_sequence){
+  function translate_cds_php($dna_sequence, $transl_table=1){
     $tmp	= array("tmp"=>$dna_sequence);
-    $result	= $this->translate_multicds_php($tmp);
+    $result	= $this->translate_multicds_php($tmp, $transl_table);
     $res	= $result['tmp'];
     return $res;			
   }

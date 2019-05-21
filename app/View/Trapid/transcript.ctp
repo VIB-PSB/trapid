@@ -32,7 +32,7 @@
             "Similarity search" => array(
                 array(
                     "Browse similarity search output",
-                    $this->Html->url(array("controller" => "trapid", "action" => "similarity_hits", $exp_id, $transcript_info['transcript_id'])),
+                    $this->Html->url(array("controller" => "trapid", "action" => "similarity_hits", $exp_id, urlencode($transcript_info['transcript_id']))),
                     "some_image.png"
                 )
             ),
@@ -130,31 +130,29 @@
                 <dt>ORF sequence</dt>
                 <dd>
                     <div>
-                        <?php
-                        if ($transcript_info['orf_sequence'] != "") {
-                            echo $this->Form->create(false, array("url"=>array("controller"=>"trapid", "action" => "transcript", $exp_id, $transcript_info['transcript_id']), "type" => "post"));
-                            echo "<div class=\"textarea-wrapper\">";
-                            echo "<textarea class='fixed-width-text' cols='80' rows='5' name='orf_sequence' id='orf_sequence'>" . $transcript_info['orf_sequence'] . "</textarea>\n";
-                            echo "<br><div class='clipboard-copy' id=\"copy_orf_nt_sequence\">Copy to clipboard</div>";
-                            echo "</div>";
-                            echo "<br/>\n";
-                            echo "<span>Sequence length: " . strlen($transcript_info['orf_sequence']) . " nt &nbsp; / &nbsp; " . (number_format(strlen($transcript_info['orf_sequence']) / 3, 0)) . " aa ";
-                            echo "(<a href='javascript:show_aa();'>show protein sequence</a>)</span>\n";
-                            echo "<br/>\n";
-                            echo "<input type='submit' class='btn btn-sm btn-default' value='Store changed ORF sequence' style='margin-bottom:10px;'/>\n";
-                            echo "</form>\n";
-                            echo "<script type='text/javascript'>\n";
-                            echo "//<![CDATA[\n";
-                            echo "function show_aa(){\n";
-                            echo "document.getElementById('aa_seq_dt').style.display='block';\n";
-                            echo "document.getElementById('aa_seq_dd').style.display='block';\n";
-                            echo "}\n";
-                            echo "//]]>\n";
-                            echo "</script>\n";
-                        } else {
+                        <?php if ($transcript_info['orf_sequence'] != ""): ?>
+                            <?php echo $this->Form->create(false, array("url"=>array("controller"=>"trapid", "action" => "transcript", $exp_id, $transcript_info['transcript_id']), "type" => "post")); ?>
+                            <div class="textarea-wrapper">
+                            <textarea class='fixed-width-text' cols='80' rows='5' name='orf_sequence' id='orf_sequence'><?php echo $transcript_info['orf_sequence']; ?></textarea>
+                            <br>
+                            <div class='clipboard-copy' id="copy_orf_nt_sequence">Copy to clipboard</div>
+                            </div>
+                            <strong>Sequence length: </strong>
+                            <?php echo strlen($transcript_info['orf_sequence']) . " nt &nbsp; / &nbsp; " . (number_format(strlen($transcript_info['orf_sequence']) / 3, 0)) . " aa &nbsp; -- &nbsp; <strong>Translation table: </strong>" . $transcript_info['transl_table']; ?>
+                            <span style='margin-left:15px;'><a href='javascript:show_aa();' class='label label-primary'>Show protein sequence</a></span>
+                            <br/>
+                            <input type='submit' class='btn btn-sm btn-default' value='Store changed ORF sequence' style='margin-bottom:13px; margin-top:4px;'/>
+                            </form>
+                            <script type='text/javascript'>
+                                function show_aa(){
+                                document.getElementById('aa_seq_dt').style.display='block';
+                                document.getElementById('aa_seq_dd').style.display='block';
+                                }
+                            </script>
+                        <?php else: ?>
                             echo "<span class='disabled'>Unavailable</span>\n";
                         }
-                        ?>
+                        <?php endif ; ?>
                     </div>
                 </dd>
 
