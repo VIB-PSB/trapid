@@ -1,3 +1,17 @@
+<?php
+// Create HTML for export file example (<pre> wrapped in bootstrap collapsible element) with id `$elmt_id` and
+// using data from `$example_data`.
+function create_export_example($elmt_id, $example_data){
+    echo "<div class=\"collapse\" id=\"" . $elmt_id . "\">\n";
+    if($example_data) {
+        echo "<pre>" . $example_data . "</pre>\n";
+    }
+    else {
+        echo "<pre>Error: no example data found for this type of export. </pre>\n";
+    }
+    echo "</div>\n";
+}
+?>
 <div class="container">
     <div class="page-header">
         <h1 class="text-primary">TRAPID General Documentation</h1>
@@ -31,8 +45,8 @@
                         <li><a href="#toolbox">Toolbox</a></li>
                     </ul>
                 </li>
-                <li><a href="#frameshift">Framshift correction</a></li>
-                <li><a href="#enrichment">Functional enrichment analysis</a></li>
+                <li><a href="#frameshift">Frameshift correction</a></li>
+                <li><a href="#enrichment">Functional enrichment</a></li>
                 <li><a href="#msa">Multiple sequence alignments</a></li>
                 <li><a href="#tree">Phylogenetic trees</a></li>
                 <li><a href="#orthology">Orthology</a></li>
@@ -301,12 +315,115 @@
                 <p class="text-justify">The TRAPID platform allows the export of both the original data and the
                     annotated and processed data of a user experiment.
                     This data access is available under the <em>Export data</em> header on an experiment page and
-                    includes structural ORF information, transcript/ORF/protein sequences and functional GO/InterPro
-                    information.</p>
-                <p class="text-justify">The export of the functional GO information has an extra column 'is_hidden',
-                    indicating whether a GO term is flagged as hidden,
-                    due to the presence of more informative GO codes in the GO graph for the given transcript.
-                </p>
+                    includes structural ORF information, transcript/ORF/protein sequences, taxonomic classification,
+                    gene/RNA family information, and functional GO/InterPro information.</p>
+                <p class="text-justify">The remainder of this section consists of a description of each type of export file, organized by category, complemented by minimal examples (ten first records).
+                Please click on the <span class='label label-primary'>Toggle example</span> links to show the corresponding minimal example export file. </p>
+
+                <section class="page-section-sm">
+                    <h5>Structural data</h5>
+                    <p class="text-justify">
+                        The structural data export file is a tab-delimited file providing the following information for each sequence of an experiment:
+                    <ul>
+                        <li><code>Transcript identifier</code>: the transcript sequence identifier. </li>
+                        <li><code>Frame information</code>: the detected frame, strand, and full frame information (homology support) for the inferred ORF sequence of the transcript.</li>
+                        <li><code>Frameshift information</code>: flag putative frameshift and potential frameshift correction (0/1 boolean values). </li>
+                        <li><code>ORF information</code>: the start/stop coordinates of the inferred ORF sequence and the presence of start/stop codons. </li>
+                        <li><code>Meta annotation </code>: the meta-annotation complemented by meta-annotation scoring information. </li>
+                    </ul>
+                    Users can choose to export any combination of the above information.
+                    <span class="pull-right"><a class='label label-primary' data-toggle="collapse" data-target="#collapse-structural" aria-expanded="false" aria-controls="collapse-structural">Toggle example</a></span>
+                    </p>
+                    <?php create_export_example("collapse-structural", $export_examples['structural']); ?>
+                </section>
+
+                <section class="page-section-sm">
+                    <h5>Taxonomic classification</h5>
+                    <p class="text-justify">
+                        The taxonomic classification export file is a tab-delimited file that provides, for each transcript of an experiment, their associated taxonomic label (NCBI tax ID of the lowest common ancestor, set to 0 if a transcript was not classified).
+                        In case a transcript was classified, classification metrics (score, number of matching tax IDs, number of matching sequences) and full taxonomic lineage are also provided.
+                        The classification score corresponds to the length of the best MEM sequence found by Kaiju.
+                    <span class="pull-right"><a class='label label-primary' data-toggle="collapse" data-target="#collapse-tax-class" aria-expanded="false" aria-controls="collapse-tax-class">Toggle example</a></span>
+                    </p>
+                    <?php create_export_example("collapse-tax-class", $export_examples['tax_class']); ?>
+                </section>
+
+                <section class="page-section-sm">
+                    <h5>Gene family data</h5>
+                    <p class="text-justify">Three types of gene family data export files are available:
+                        <ol>
+                            <li>
+                                <code>Transcripts with GF</code>: a tab-delimited file that contains the transcripts of an experiment and their associated gene family (if any).
+                                <span class="pull-right"><a class='label label-primary' data-toggle="collapse" data-target="#collapse-trs-gf" aria-expanded="false" aria-controls="collapse-trs-gf">Toggle example</a></span>
+                            </li>
+                            <li>
+                                <code>GF with transcripts</code>: a tab-delimited file that contains, for each gene family of an experiment, the number and identifiers of transcripts assigned to the gene family (on a single line).
+                                <span class="pull-right"><a class='label label-primary' data-toggle="collapse" data-target="#collapse-gf-trs" aria-expanded="false" aria-controls="collapse-gf-trs">Toggle example</a></span>
+                            </li>
+                            <li>
+                                <code>GF reference data</code>: a tab-delimited file that contains the reference data (GF name and members from the reference database) for each gene family of an experiment.
+                                <span class="pull-right"><a class='label label-primary' data-toggle="collapse" data-target="#collapse-gf-ref" aria-expanded="false" aria-controls="collapse-gf-ref">Toggle example</a></span>
+                            </li>
+                        </ol>
+                    </p>
+                    <?php create_export_example("collapse-trs-gf", $export_examples['trs_gf']); ?>
+                    <?php create_export_example("collapse-gf-trs", $export_examples['gf_trs']); ?>
+                    <?php create_export_example("collapse-gf-ref", $export_examples['gf_ref']); ?>
+
+                </section>
+
+                <section class="page-section-sm">
+                    <h5>RNA family data</h5>
+                    <p class="text-justify">The export files for RNA family data are identical to the gene family data export files (but containing RNA family information).
+                    However, no export file for reference information of RNA families is available, as this data is not stored anywhere within TRAPID.
+                        Please visit the <a href="http://rfam.xfam.org/" target="_blank" class="linkout">RFAM website</a> to retrieve this information.  </p>
+                </section>
+
+                <section class="page-section-sm">
+                    <h5>Sequences</h5>
+                    <p class="text-justify">
+                        Sequence export files are FASTA files for a chosen type of sequence and a selection of transcript sequences from an experiment.
+                        Exported sequences can either be the uploaded transcript sequences, the inferred ORF sequences, or aminoacid (translated ORF) sequences.
+                        It is possible to export sequences for all the transcripts of an experiment (default) or for any defined transcript subset.
+                        <span class="pull-right"><a class='label label-primary' data-toggle="collapse" data-target="#collapse-sequences" aria-expanded="false" aria-controls="collapse-sequences">Toggle example</a></span>
+                    </p>
+                    <?php create_export_example("collapse-sequences", $export_examples['sequences']); ?>
+                </section>
+
+                <section class="page-section-sm">
+                    <h5>Functional data</h5>
+                    <p class="text-justify">For each type of available functional annotation data (GO terms, protein domains, KO terms), two types of export files are available:
+                        <ol>
+                            <li>
+                                <code>Transcripts with functional annotation</code>: a tab-delimited file that contains the transcripts of an experiment and their associated functional annotation labels (identifiers and descriptions).
+                                <span class="pull-right"><a class='label label-primary' data-toggle="collapse" data-target="#collapse-funct-data" aria-expanded="false" aria-controls="collapse-funct-data">Toggle example</a></span>
+                            </li>
+                            <li>
+                                <code>Functional annotation metadata</code>: a tab-delimited file that contains, for each of every functional annotation label (identifier and description), the number and identifiers of associated transcripts (on a single line).
+                                <span class="pull-right"><a class='label label-primary' data-toggle="collapse" data-target="#collapse-funct-metadata" aria-expanded="false" aria-controls="collapse-funct-metadata">Toggle example</a></span>
+                            </li>
+                        </ol>
+                    </p>
+                    <p class="text-justify"><strong>Note: </strong>the export of GO functional information has extra columns. The <code>is_hidden</code> column
+                        indicates whether a GO term is flagged as hidden, due to the presence of more informative GO codes in the GO graph for the given transcript,
+                        while the <code>evidence_code</code> column (value set to <code>ISS</code>) indicates that the GO annotation was assigned to the transcript via sequence similarity search.
+                    </p>
+                    <?php create_export_example("collapse-funct-data", $export_examples['funct_data']); ?>
+                    <?php create_export_example("collapse-funct-metadata", $export_examples['funct_metadata']); ?>
+
+
+                </section>
+                <section class="page-section-sm">
+                    <h5>Subsets</h5>
+                    <p class="text-justify">
+                        Subset export files enable the retrieval of the list of sequences that are part of a given transcript subset.
+                        They simply consist in a list of sequence identifiers (one identifier per line).
+                        <span class="pull-right"><a class='label label-primary' data-toggle="collapse" data-target="#collapse-subsets" aria-expanded="false" aria-controls="collapse-subsets">Toggle example</a></span>
+                    </p>
+                    <?php create_export_example("collapse-subsets", $export_examples['subset']); ?>
+                </section>
+
+                <hr>
 
                 <h4 id="toolbox">The toolbox</h4>
                 <p class="text-justify">On most pages (experiment/transcript/gene family/GO/protein domain) a toolbox is
@@ -524,12 +641,12 @@
         </div> <!-- End column -->
         </div> <!-- End row -->
     </div>
-</div>
+
 <script>
     $(document).ready(function () {
+        // Affix navigation (bootstrap)
         $('body').attr('data-spy', 'scroll');
         $('body').attr('data-target', '.scrollspy');
-        // Affix navigation (bootstrap)
         $('#sidebar-nav').affix({
             offset: {
                 top: $('#sidebar-nav').offset().top
@@ -544,5 +661,4 @@
             return false;
         });
     });
-
 </script>

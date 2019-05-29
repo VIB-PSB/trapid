@@ -12,6 +12,9 @@
     </div>
 
     <?php // echo $this->element("trapid_experiment"); ?>
+    <p class="text-justify">Detailed descriptions and minimal examples of export files can be found in the
+        <?php echo $this->Html->link("documentation", array("controller" => "documentation", "action" => "general", "#"=>"data-export")); ?>.
+    </p>
     <p class="text-justify"><strong>Note: </strong> exported files are generated on-the-fly and can take a while (up to ~1 minute) to be created.</p>
     <!-- Navigation tabs -->
     <br>
@@ -170,31 +173,38 @@
 
         <div id="sqces-data" class="tab-pane"><br>
             <h4>Export sequences</h4>
+
+            <p class="text-justify"><strong>Note:</strong> Protein sequences are translated ORF sequences. </p>
+
+            <?php echo $this->Form->create(false, array("url" => array("controller" => "trapid", "action" => "export_data", $exp_id), "type" => "post", "class"=>"form-inline")); ?>
+            <input type="hidden" name="export_type" value="sequence"/>
+                <div class="form-group">
+                    <label for="sequence_type"><strong>Sequence type</strong></label>&nbsp;
+                    <label>
+                        <input type="radio" <?php echo $unfinished; ?>  id="sequence_type_original" name="sequence_type" value="original" checked>Transcript&nbsp;
+                    </label>
+                    <label>
+                        <input type="radio" <?php echo $unfinished; ?> id="sequence_type_orf" name="sequence_type" value="orf">ORF&nbsp;
+                    </label>
+                    <label>
+                        <input type="radio" <?php echo $unfinished; ?> id="sequence_type_aa" name="sequence_type" value="aa">Protein&nbsp;
+                    </label>
+                </div>
+                <div class="form-group" style="margin-left:20px;">
+                    <label for="subset_label"><strong>Transcript selection</strong></label>&nbsp;
+                    <select name='subset_label' id='subset_label' style='max-width:280px;' class='form-control'>
+                    <option selected value="">All transcripts</option>
+                    <?php
+                        foreach ($available_subsets as $subset => $count) {
+                            echo "<option value='" . $subset . "' >" . $subset . " (" . $count . " transcripts)</option>\n";
+                        }
+                    ?>
+                    </select>
+                </div>
+                <button <?php echo $unfinished; ?> type="submit" class="btn btn-default" style="margin-left:20px;"><span class="glyphicon glyphicon-download-alt"></span> Export sequences</button>
+            <?php echo $this->Form->end(); ?>
+
             <div class="subdiv">
-                <p class="text-justify"><strong>Note:</strong> Protein sequences are translated ORF sequences. </p>
-                <div style="float:left;margin-right: 20px;">
-                    <?php echo $this->Form->create(false, array("url" => array("controller" => "trapid", "action" => "export_data", $exp_id), "type" => "post")); ?>
-                    <input type="hidden" name="export_type" value="sequence"/>
-                    <input type="hidden" name="sequence_type" value="original"/>
-                    <button class="btn btn-default" type="submit"<?php echo $unfinished; ?>><span class="glyphicon glyphicon-download-alt"></span> Transcript sequences</button>
-                    </form>
-                </div>
-
-                <div style="float:left;margin-right: 20px;">
-                    <?php echo $this->Form->create(false, array("url" => array("controller" => "trapid", "action" => "export_data", $exp_id), "type" => "post")); ?>
-                    <input type="hidden" name="export_type" value="sequence"/>
-                    <input type="hidden" name="sequence_type" value="orf"/>
-                    <button class="btn btn-default" type="submit"<?php echo $unfinished; ?>><span class="glyphicon glyphicon-download-alt"></span> ORF sequences</button>
-                    </form>
-                </div>
-
-                <div style="float:left;">
-                    <?php echo $this->Form->create(false, array("url" => array("controller" => "trapid", "action" => "export_data", $exp_id), "type" => "post")); ?>
-                    <input type="hidden" name="export_type" value="sequence"/>
-                    <input type="hidden" name="sequence_type" value="aa"/>
-                    <button class="btn btn-default" type="submit" <?php echo $unfinished; ?>><span class="glyphicon glyphicon-download-alt"></span> Protein sequences</button>
-                    </form>
-                </div>
 
                 <div style="clear:both;width:800px;">
                     <?php

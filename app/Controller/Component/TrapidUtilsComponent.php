@@ -85,15 +85,22 @@ class TrapidUtilsComponent extends Component{
     $tmp_dir		= TMP."experiment_data/".$exp_id."/";
     $ext_dir		= TMP_WEB."experiment_data/".$exp_id."/";
     $salt  		= $exp_id;
+    $timestamp = date("Ymd_Gis",time());
     $hash		= hash("sha256",$email."".$salt);
     $internal_file	= $tmp_dir."".$filename;
-    $internal_zip	= $tmp_dir."".$hash.".zip";
-
+    // $internal_zip	= $tmp_dir."".$hash.".zip";
+    // Give more meaningful file name to the zip archive
+    $zip_name	= strtolower($export_key) . "_" . $exp_id . "_" . $timestamp . "_" . substr($hash, 0, 14) . ".zip";
+    // Zip archives to remove (pattern for 'rm' command) when a new zip archive is generated
+    $zip_rm	= $tmp_dir . "*_" . substr($hash, 0, 14) . ".zip";
+    $internal_zip	= $tmp_dir . $zip_name;
     //create shell file
     // TODO: replace hardcoded path to Java (replaced since `/usr/bin/java` was pointing to nothing after migration)
     $java_cmd = "/software/shared/apps/x86_64/java/1.6.0_17/bin/java"; // Not `usr/bin//java` anymore!
     $shell_file		= $tmp_dir."export_data.sh";
     $base_scripts_location	= APP."scripts/";
+    // Translation table json file location is needed if exporting protein sequences
+    $transl_tables_file = $base_scripts_location . "cfg/all_translation_tables.json";
     $java_location	= $base_scripts_location."java/";
     $fh			= fopen($shell_file,"w");
 
@@ -104,7 +111,7 @@ class TrapidUtilsComponent extends Component{
 				$exp_id,$export_key,$internal_file); */
     // New parameters... TODO: create separate user to read from the reference databases
     $java_params	= array(TRAPID_DB_SERVER, $plaza_db, TRAPID_DB_USER, TRAPID_DB_PASSWORD,
-          TRAPID_DB_SERVER,TRAPID_DB_NAME,TRAPID_DB_USER,TRAPID_DB_PASSWORD,
+          TRAPID_DB_SERVER,TRAPID_DB_NAME,TRAPID_DB_USER,TRAPID_DB_PASSWORD, $transl_tables_file,
           $exp_id,$export_key,$internal_file);
     if($filter!=null){
       $java_params[]	= $filter;
@@ -122,17 +129,20 @@ class TrapidUtilsComponent extends Component{
     pr($output);
 
     //zip result file and cleanup
-    if(file_exists($internal_zip)){
-	shell_exec("rm -f ".$internal_zip);
-    }
+    // if(file_exists($internal_zip)){
+	// shell_exec("rm -f ".$internal_zip);
+    // Now export files are generated with different names. Should every zip archive be removed?
+	shell_exec("rm -f " . $zip_rm);
+    // }
     shell_exec("zip -j ".$internal_zip." ".$internal_file);
     shell_exec("rm -f ".$internal_file);
-    $result		= $ext_dir."".$hash.".zip";
+    // $result		= $ext_dir."".$hash.".zip";
+    $result		= $ext_dir."".$zip_name;
     return $result;
   }
 
 
-
+  // Unused
   function createZipFileData($email,$exp_id,$data,$columnHeader,$filename){
     $tmp_dir		= TMP."experiment_data/".$exp_id."/";
     $ext_dir		= TMP_WEB."experiment_data/".$exp_id."/";
@@ -164,6 +174,7 @@ class TrapidUtilsComponent extends Component{
   }
 
 
+  // Unused
   function createZipSeqFile($email,$exp_id,$data,$filetitle){
     $tmp_dir		= TMP."experiment_data/".$exp_id."/";
     $ext_dir		= TMP_WEB."experiment_data/".$exp_id."/";
@@ -1115,7 +1126,7 @@ class TrapidUtilsComponent extends Component{
         foreach($necessary_modules as $nm){
             fwrite($fh,"module load ".$nm." \n");
         }
-        fwrite($fh,"\n# Java parameters\nexport _JAVA_OPTIONS=\"-Xmx8g\" \n");
+        fwrite($fh,"\n# Java parameters\nexport _JAVA_OPTIONS=\"-Xmx10g\" \n");
         fwrite($fh,"\n# Launching perl script for initial processing, with necessary configuration file\n");
         $program_location = $base_scripts_location . "perl/initial_processing.pl";
         $command_line = "perl ".$program_location . " " . $exp_initial_processing_ini_file;

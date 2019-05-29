@@ -1,7 +1,9 @@
 package transcript_pipeline;
 
 import java.io.BufferedWriter;
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileReader;
 import java.io.FileWriter;
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -14,6 +16,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
+import org.json.*;
+
 
 public class ExportManager {
 
@@ -48,17 +52,20 @@ public class ExportManager {
 			String trapid_login					= args[6];
 			String trapid_password				= args[7];
 
+            // Translation table json file -> to move somewhere else, since it is useless for most exports?
+            String transl_tables_file = args[8];
+
 			//user experiment id
-			String trapid_experiment_id			= args[8];
+			String trapid_experiment_id			= args[9];
 
 			//type of export
-			String export_type_string			= args[9];
+			String export_type_string			= args[10];
 
 			//output file
-			String output_file					= args[10];
+			String output_file					= args[11];
 
 			String filter						= null;
-			if(args.length==12){filter			= args[11];}
+			if(args.length==13){filter			= args[12];}
 
 			EXPORT_TYPE export_type				= EXPORT_TYPE.NONE;
 			for(EXPORT_TYPE et:EXPORT_TYPE.values()){
@@ -73,9 +80,9 @@ public class ExportManager {
 			switch(export_type){
 			case STRUCTURAL: em.exportStructuralData(trapid_db_connection,trapid_experiment_id,output_file,filter);break;
 			case TAX_CLASSIFICATION: em.exportTaxClassification(trapid_db_connection,trapid_experiment_id,output_file); break;
-			case SEQ_TRANSCRIPT: em.exportTranscriptSequences(trapid_db_connection,trapid_experiment_id,output_file); break;
-			case SEQ_ORF: em.exportOrfSequences(trapid_db_connection,trapid_experiment_id,output_file); break;
-			case SEQ_AA: em.exportAASequences(trapid_db_connection,trapid_experiment_id,output_file);break;
+			case SEQ_TRANSCRIPT: em.exportTranscriptSequences(trapid_db_connection,trapid_experiment_id,output_file,filter); break;
+			case SEQ_ORF: em.exportOrfSequences(trapid_db_connection,trapid_experiment_id,output_file,filter); break;
+			case SEQ_AA: em.exportAASequences(trapid_db_connection, transl_tables_file, trapid_experiment_id,output_file,filter);break;
 			case TRANSCRIPT_GF: em.exportTranscriptGf(trapid_db_connection,trapid_experiment_id,output_file);break;
 			case GF_TRANSCRIPT: em.exportGfTranscript(trapid_db_connection,trapid_experiment_id,output_file);break;
 			case GF_REFERENCE:em.exportGfReference(plaza_db_connection,trapid_db_connection,trapid_experiment_id,output_file);break;
@@ -186,10 +193,16 @@ public class ExportManager {
     	}
 
 
+    // For sequence exports, `filter` is expected to be a transcript subset name (if it is not null).
+    // In this case, the exported data corresponds to the subset only!
 
-	public void exportTranscriptSequences(Connection conn,String exp_id,String output_file) throws Exception{
+	public void exportTranscriptSequences(Connection conn,String exp_id,String output_file, String filter) throws Exception{
 		BufferedWriter writer	= new BufferedWriter(new FileWriter(new File(output_file)));
 		String sql			= "SELECT `transcript_id`,UNCOMPRESS(`transcript_sequence`) as `transcript_sequence` FROM `transcripts` WHERE `experiment_id`='"+exp_id+"' ";
+        // Retrieve data only for subset `filter`
+        if(filter != null && !filter.isEmpty()) {
+            sql = "SELECT `transcript_id`, UNCOMPRESS(`transcript_sequence`) as `transcript_sequence` FROM `transcripts` WHERE `experiment_id` = \'" + exp_id + "\' AND `transcript_id` IN (SELECT `transcript_id` FROM `transcripts_labels` WHERE `experiment_id` = \'" + exp_id + "\' AND `label` = \'" + filter + "\')";
+        }
 		Statement stmt		= conn.createStatement();
 		ResultSet set		= stmt.executeQuery(sql);
 		while(set.next()){
@@ -203,9 +216,13 @@ public class ExportManager {
 	}
 
 
-	public void exportOrfSequences(Connection conn,String exp_id,String output_file) throws Exception{
+	public void exportOrfSequences(Connection conn,String exp_id,String output_file, String filter) throws Exception{
 		BufferedWriter writer	= new BufferedWriter(new FileWriter(new File(output_file)));
 		String sql			= "SELECT `transcript_id`, UNCOMPRESS(`orf_sequence`) as `orf_sequence` FROM `transcripts` WHERE `experiment_id`='"+exp_id+"' ";
+        // Retrieve data only for subset `filter`
+        if(filter != null && !filter.isEmpty()) {
+            sql = "SELECT `transcript_id`, UNCOMPRESS(`orf_sequence`) as `orf_sequence` FROM `transcripts` WHERE `experiment_id` = \'" + exp_id + "\' AND `transcript_id` IN (SELECT `transcript_id` FROM `transcripts_labels` WHERE `experiment_id` = \'" + exp_id + "\' AND `label` = \'" + filter + "\')";
+        }
 		Statement stmt		= conn.createStatement();
 		ResultSet set		= stmt.executeQuery(sql);
 		while(set.next()){
@@ -218,17 +235,39 @@ public class ExportManager {
 		writer.close();
 	}
 
-	public void exportAASequences(Connection conn,String exp_id,String output_file) throws Exception{
-		Map<String,Character> map	= this.getTranslateMap();
+    // To update (alternative start codons)!
+	public void exportAASequences(Connection conn, String transl_tables_file, String exp_id,String output_file, String filter) throws Exception{
+        // Read translation tables data from json file
+        String transl_tables_str = "";
+        BufferedReader buf = new BufferedReader(new FileReader(transl_tables_file));
+        String lineJustFetched = null;
+        String[] wordsArray;
+        while (true) {
+            lineJustFetched = buf.readLine();
+            if (lineJustFetched == null) {
+                break;
+            } else {
+                transl_tables_str = transl_tables_str + lineJustFetched;
+            }
+        }
+        buf.close();
+        JSONObject all_transl_tables = new JSONObject(transl_tables_str);
+		// Map<String,Character> map	= this.getTranslateMap();
 		BufferedWriter writer	= new BufferedWriter(new FileWriter(new File(output_file)));
-		String sql			= "SELECT `transcript_id`, UNCOMPRESS(`orf_sequence`) as `orf_sequence` FROM `transcripts` WHERE `experiment_id`='"+exp_id+"' ";
+		String sql			= "SELECT `transcript_id`, `transl_table`, UNCOMPRESS(`orf_sequence`) as `orf_sequence` FROM `transcripts` WHERE `experiment_id`='"+exp_id+"' ";
+        // Retrieve data only for subset `filter`
+        if(filter != null && !filter.isEmpty()) {
+            sql = "SELECT `transcript_id`, `transl_table`, UNCOMPRESS(`orf_sequence`) as `orf_sequence` FROM `transcripts` WHERE `experiment_id` = \'" + exp_id + "\' AND `transcript_id` IN (SELECT `transcript_id` FROM `transcripts_labels` WHERE `experiment_id` = \'" + exp_id + "\' AND `label` = \'" + filter + "\')";
+        }
 		Statement stmt		= conn.createStatement();
 		ResultSet set		= stmt.executeQuery(sql);
 		while(set.next()){
 			String transcript_id		= set.getString("transcript_id");
+            String transl_table		= set.getString("transl_table");
 			String orf_sequence			= set.getString("orf_sequence");
-			String aa_sequence			= this.translateSequence(orf_sequence,map);
-			writer.write(">"+transcript_id+"\n");
+			// String aa_sequence			= this.translateSequence(orf_sequence, map);
+			String aa_sequence			= this.translateSequenceAltGenCode(orf_sequence, all_transl_tables, transl_table);
+			writer.write(">"+transcript_id+"\n");  // Should translation table information be added?
 			writer.write(aa_sequence+"\n");
 		}
 		stmt.close();
@@ -683,6 +722,41 @@ public class ExportManager {
 				c		= 'X';
 			}
 			buffer.append(c);
+		}
+		result = buffer.toString();
+		return result;
+	}
+
+
+    // An updated sequence translation function that supports alternative genetic code
+    // `cds_sequence`: CDS sequence string to translate
+    // `all_transl_tables`: translation table data from JSON object
+    // `transl_table`: translation table index to use to translate the cds sequence
+	private String translateSequenceAltGenCode(String cds_sequence, JSONObject all_transl_tables, String transl_table)throws Exception{
+        // System.out.println(transl_table);  // Print used translation table (debug)
+        // Retrieve codon->AA mapping from `all_transl_tables`
+        JSONObject transl_table_lookup = all_transl_tables.getJSONObject(transl_table).getJSONObject("table");
+		String result = null;
+		while(cds_sequence.length()%3!=0){
+			cds_sequence+="N";
+		}
+		StringBuffer buffer = new StringBuffer();
+		for(int i=0;i<cds_sequence.length()-2;i+=3){
+			String codon = cds_sequence.substring(i,i+3);
+            char aa = 'X';  // 'X' by default, wil lchange if there is any data in the current translation table
+            String transl_table_aa = transl_table_lookup.optString(codon);
+            if(!transl_table_aa.isEmpty()) {
+                aa = transl_table_aa.charAt(0);
+            }
+            // Check for 4-fold degenerate if no AA was found for the current codon
+            else {
+                String transl_table_ff = transl_table_lookup.optString(codon.substring(0, 2));
+                // If there was a correspondence, update `aa` value
+                if(!transl_table_ff.isEmpty()) {
+                    aa = transl_table_ff.charAt(0);
+                }
+            }
+			buffer.append(aa);
 		}
 		result = buffer.toString();
 		return result;

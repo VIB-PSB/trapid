@@ -33,6 +33,16 @@ class DocumentationController extends AppController{
 
 
   function general(){
+      // Retrieve export file examples from `configuration` table.
+      $export_data = $this->Configuration->find("all", array('conditions'=>array('method'=>'doc_export_files', 'attr'=>'file_content'), 'fields'=>array('key', 'value')));
+      $export_examples = array();
+      foreach($export_data as $ed){
+          $export_type = $ed['Configuration']['key'];
+          $export_content = $ed['Configuration']['value'];
+          $export_examples[$export_type] = $export_content;
+      }
+
+      $this -> set("export_examples", $export_examples);
       $this -> set('title_for_layout', 'General documentation');
   }
 

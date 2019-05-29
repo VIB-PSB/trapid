@@ -1375,7 +1375,7 @@ class TrapidController extends AppController{
             $job_id	= $this->TrapidUtils->getClusterJobId($output);
 
             //indicate int the database the new job-id
-            $this->ExperimentJobs->addJob($exp_id,$job_id,"medium","enrichment_preprocessing");
+            $this->ExperimentJobs->addJob($exp_id,$job_id,"long","enrichment_preprocessing");
 
             //indicate in the database that the current experiments enrichment_state is "processing"
             $this->Experiments->updateAll(array("enrichment_state"=>"'processing'"),array("experiment_id"=>$exp_id));
@@ -2113,15 +2113,22 @@ class TrapidController extends AppController{
 
 	if(!array_key_exists("sequence_type",$_POST)){return;}
 	$sequence_type	= $_POST['sequence_type'];
+	$subset_label = null;
+	$outfile_suffix = "_exp" . $exp_id;
+	// ok check?
+	if(array_key_exists("subset_label",$_POST) && !empty($_POST['subset_label'])) {
+        $subset_label = filter_var($_POST['subset_label'], FILTER_SANITIZE_STRING);
+        $outfile_suffix = $outfile_suffix . "_" . $subset_label;
+    }
 	$file_path	= null;
 	if($sequence_type=="original"){
-	  $file_path = $this->TrapidUtils->performExport($plaza_database,$user_id,$exp_id,"SEQ_TRANSCRIPT","transcripts_exp".$exp_id.".fasta");
+	  $file_path = $this->TrapidUtils->performExport($plaza_database,$user_id,$exp_id,"SEQ_TRANSCRIPT","transcripts" . $outfile_suffix . ".fasta", $subset_label);
 	}
 	else if($sequence_type=="orf"){
-	 $file_path = $this->TrapidUtils->performExport($plaza_database,$user_id,$exp_id,"SEQ_ORF","orfs_exp".$exp_id.".fasta");
+	 $file_path = $this->TrapidUtils->performExport($plaza_database,$user_id,$exp_id,"SEQ_ORF","orfs" . $outfile_suffix . ".fasta", $subset_label);
 	}
 	else if($sequence_type=="aa"){
-	 $file_path = $this->TrapidUtils->performExport($plaza_database,$user_id,$exp_id,"SEQ_AA","proteins_exp".$exp_id.".fasta");
+	 $file_path = $this->TrapidUtils->performExport($plaza_database,$user_id,$exp_id,"SEQ_AA","proteins" . $outfile_suffix . ".fasta", $subset_label);
 	}
 	$this->set("file_path",$file_path);
     $this->redirect($file_path);

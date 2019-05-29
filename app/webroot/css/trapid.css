@@ -1778,6 +1778,11 @@ nav .navbar-nav .navbar-form {
 	margin-bottom: 7px;
 }
 
+
+.well-export {
+	font-family:monospace;
+	font-size:88%;
+}
 /* Lots of ugly borders: useful for debugging when things are not displayed as expected */
 /*
 
