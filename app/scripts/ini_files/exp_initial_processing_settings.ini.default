@@ -27,6 +27,8 @@ num_top_hits = "<num_top_hits>"
 func_annot = "<func_annot>"
 tax_scope = "<tax_scope>"
 use_cds = "<use_cds>"
+transl_table = "<transl_table_idx>"
+transl_tables_file = "/path/to/all_translation_tables.json"
 
 [sim_search]
 blast_db_dir = "/path/to/blast_db/"

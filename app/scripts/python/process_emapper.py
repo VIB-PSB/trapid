@@ -49,7 +49,7 @@ def cleanup_db(trapid_db_conn, exp_id):
     """
     sys.stderr.write("[Message] Cleanup TRAPID db...\n")
     sql_queries = [
-    "UPDATE `transcripts` SET `gf_id`=NULL, `orf_sequence`=NULL, `detected_frame`='0', `detected_strand`='+', `full_frame_info`=NULL, `putative_frameshift`='0', `is_frame_corrected`='0', `orf_start`=NULL,`orf_stop`=NULL, `orf_contains_start_codon`=NULL,`orf_contains_stop_codon`=NULL, `meta_annotation`='No Information',`meta_annotation_score`=NULL,`gf_id_score`=NULL WHERE `experiment_id`='{exp_id}';",
+    "UPDATE `transcripts` SET `gf_id`=NULL, `orf_sequence`=NULL, `detected_frame`='0', `detected_strand`='+', `full_frame_info`=NULL, `putative_frameshift`='0', `is_frame_corrected`='0', `orf_start`=NULL,`orf_stop`=NULL, `orf_contains_start_codon`=NULL,`orf_contains_stop_codon`=NULL, `meta_annotation`='No Information',`meta_annotation_score`=NULL,`gf_id_score`=NULL, `transl_table`=1 WHERE `experiment_id`='{exp_id}';",
     "DELETE FROM `gene_families` WHERE `experiment_id`='{exp_id}'",
     "DELETE FROM `transcripts_annotation` WHERE `experiment_id`='{exp_id}'",
     "DELETE FROM `similarities` WHERE `experiment_id`='{exp_id}'",

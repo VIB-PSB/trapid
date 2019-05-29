@@ -113,11 +113,11 @@
             </div>
         </div>
 
-        <!-- Extra: tax. binning, RNA genes annotation -->
+        <!-- Extra: tax. binning, sequence tpye, RNA genes annotation -->
         <div class="col-md-4">
             <div class="panel panel-default">
                 <div class="panel-heading">
-                    <h3 class="panel-title">Taxonomic binning options</h3>
+                    <h3 class="panel-title">Extra options</h3>
                 </div>
                 <div class="panel-body">
                     <div class="form-group">
@@ -126,31 +126,60 @@
                     </div>
 
                     <div class="form-group">
+                        <label for="use-cds"><strong>Input sequences are CDS</strong></label> &nbsp;<?php echo $this->element("help_tooltips/create_tooltip", array("tooltip_text"=>$tooltips['initial_processing_use_cds'], "tooltip_placement"=>"top")); ?>
+                        <span class="pull-right" style="margin-right:12%;"><input id="use-cds" name="use-cds" value="y" type="checkbox"></span>
+                    </div>
+
+                    <div class="form-group">
                         <label for="tax-binning" class="text-muted"><strong>Stop after taxonomic binning</strong></label> &nbsp;<?php echo $this->element("help_tooltips/create_tooltip", array("tooltip_text"=>$tooltips['initial_processing_stop_tax_binning'], "tooltip_placement"=>"top")); ?>
                         <span class="pull-right" style="margin-right:12%;"><input id="not-yet" name="not-yet" value="y" type="checkbox" disabled></span>
                     </div>
-
 
                 </div>
             </div>
         </div>
     </div>
-    <div style="border:1px gray dotted;">
-        <div class="form-group">
-            <label for="rfam-clans"><strong>RFAM clans</strong></label>
-            <label style="margin-left:5px;" class="label label-primary pull-right">work in progress</label>
-            <?php echo $this->element("help_tooltips/create_tooltip", array("tooltip_text"=>$tooltips['initial_processing_rfam_clans'], "tooltip_placement"=>"top")); ?>
-            <br>
-            <select id="rfam-clans" name="rfam-clans[]" multiple size="8">
-<!--                <option value="rrrrrr">dddddd</option>-->
-                <?php foreach($rfam_clans as $clan_acc=>$clan_data) {
-                    $selected_str = in_array($clan_acc, $rfam_clans_default) ? 'selected' : '';
-                    echo "<option value='" . $clan_acc . "' " . $selected_str . ">" . $clan_data["clan_id"] . " (" . $clan_data["clan_desc"]. ")</option>";
-                }
-                ?>
-            </select>
+    <div class="row">
+        <div class="col-md-6">
+            <div style="border:1px gray dotted;">
+                    <label style="margin-left:5px;" class="label label-primary pull-right">work in progress</label>
+                <h6>RNA annotation</h6>
+                <div class="form-group">
+                    <label for="rfam-clans"><strong>RFAM clans</strong></label>
+                    <?php echo $this->element("help_tooltips/create_tooltip", array("tooltip_text"=>$tooltips['initial_processing_rfam_clans'], "tooltip_placement"=>"top")); ?>
+                    <br>
+                    <select id="rfam-clans" name="rfam-clans[]" multiple size="8">
+                        <!--                <option value="rrrrrr">dddddd</option>-->
+                        <?php foreach($rfam_clans as $clan_acc=>$clan_data) {
+                            $selected_str = in_array($clan_acc, $rfam_clans_default) ? 'selected' : '';
+                            echo "<option value='" . $clan_acc . "' " . $selected_str . ">" . $clan_data["clan_id"] . " (" . $clan_data["clan_desc"]. ")</option>";
+                        }
+                        ?>
+                    </select>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div style="border:1px gray dotted;">
+
+                    <label style="margin-left:5px;" class="label label-primary pull-right">work in progress</label>
+                    <h6>Translation tables</h6>
+                    <div class="form-group">
+                        <label for="transl_table"><strong>Genetic code to use: </strong></label>
+                        <?php echo $this->element("help_tooltips/create_tooltip", array("tooltip_text"=>$tooltips['initial_processing_transl_table'], "tooltip_placement"=>"top")); ?>
+                        <select class="form-control" name="transl_table">
+                            <?php
+                            foreach($transl_table_descs as $idx=>$desc){
+                                echo "<option value='" . $idx . "'>" . $idx . " - " . $desc . "</option>\n";
+                            }
+                            ?>
+                        </select>
+                        <p class="help-block" style="font-size: 88%;"><strong>Nb:</strong> More information about genetic codes can be found on the <a href="https://www.ncbi.nlm.nih.gov/Taxonomy/taxonomyhome.html/index.cgi?chapter=cgencodes" class="linkout" target="_blank">NCBI Taxonomy</a>.</p>
+                    </div>
+            </div>
         </div>
     </div>
+
     <?php
     if (isset($error)) {
         echo "<span class='error'><strong>" . $error . "</strong></span>\n";

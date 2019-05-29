@@ -1417,7 +1417,19 @@ class TrapidController extends AppController{
     $this->set("rfam_clans_default", $rfam_clans_default);
     $this->set("rfam_clans", $rfam_clans);
 
-    $possible_db_types	= array("SINGLE_SPECIES"=>"Single Species","CLADE"=>"Phylogenetic Clade","GF_REP"=>"Gene Family Representatives");
+    // Retrieve translation table information
+      $transl_table_data = $this->Configuration->find("all", array("conditions"=>array("method"=>"transl_tables", "attr"=>"desc"), "fields"=>array("key","value")));
+      $transl_table_descs = array();
+      foreach ($transl_table_data as $tt){
+          $idx = $tt['Configuration']['key'];
+          $desc = $tt['Configuration']['value'];
+          $transl_table_descs[$idx] = $desc;
+      }
+      ksort($transl_table_descs);
+      $this->set("transl_table_descs", $transl_table_descs);
+
+
+      $possible_db_types	= array("SINGLE_SPECIES"=>"Single Species","CLADE"=>"Phylogenetic Clade","GF_REP"=>"Gene Family Representatives");
     $possible_gf_types	= array("HOM"=>"Gene Families","IORTHO"=>"Integrative Orthology");
     // $possible_gf_types	= array("HOM"=>"Gene Families");  // ,"IORTHO"=>"Integrative Orthology");
 
@@ -1484,10 +1496,11 @@ class TrapidController extends AppController{
       $this->set("tax_scope_data", $tax_scope_data);
 
     if($_POST){
-       // pr($_POST);
+        pr($_POST);
+//        return;
 
       // Parameter checking.
-      // TODO: check existence of new keys (tax binning, nc RNA annotation, etc.)
+      // TODO: check existence of new keys (tax binning, nc RNA annotation, translation table, etc.)
       if(!(array_key_exists("blast_db_type",$_POST) && array_key_exists("blast_db",$_POST)
 	   && array_key_exists("blast_evalue",$_POST) && array_key_exists("gf_type",$_POST)
 	   && array_key_exists("functional_annotation",$_POST)
@@ -1511,6 +1524,7 @@ class TrapidController extends AppController{
       }
       $perform_tax_binning = false;
       $use_cds = false;
+      $transl_table = 1;
       $used_blast_desc	= "";
       if(!(array_key_exists($blast_db_type, $possible_db_types) &&
 	   array_key_exists($gf_type, $possible_gf_types) &&
@@ -1546,6 +1560,17 @@ class TrapidController extends AppController{
       // Sequence type (i.e. input sequences are CDS).
       if(isset($_POST['use-cds']) && $_POST['use-cds'] == 'y') {
         $use_cds = true;
+      }
+
+      // Check translation table existence/validity
+      $possible_transl_tables = array_keys($transl_table_descs);
+      if(!isset($_POST['transl_table'])){
+          $this->set("error","Incorrect genetic code/translation table, please try again. ");return;
+      }
+      // if it's invalid, just ignore it seilently and use translation table 1.
+      // If it's in the list of possible translation tables, update the value of `$transl_table`
+      if(in_array($_POST['transl_table'], $possible_transl_tables)) {
+          $transl_table = filter_var($_POST['transl_table'], FILTER_SANITIZE_STRING);  // To move up with the rest? Let's first make it work.
       }
 
       // EggNOG taxonomic scope data check (should be in the list of possible choice or 'auto')
@@ -1585,7 +1610,7 @@ class TrapidController extends AppController{
       // A single "initial processing" job should only run on a single cluster node
       $qsub_file  = $this->TrapidUtils->create_qsub_script($exp_id);
       // Create configuration file for initial processing of this experiment
-      $ini_file = $this->TrapidUtils->create_ini_file_initial($exp_id,$exp_info['used_plaza_database'],$blast_db,$gf_type,$num_blast_hits,$blast_evalue, $func_annot, $perform_tax_binning, $tax_scope, $rfam_clans_str, $use_cds);
+      $ini_file = $this->TrapidUtils->create_ini_file_initial($exp_id,$exp_info['used_plaza_database'],$blast_db,$gf_type,$num_blast_hits,$blast_evalue, $func_annot, $perform_tax_binning, $tax_scope, $rfam_clans_str, $use_cds, $transl_table);
       // pr($ini_file);
       // $shell_file = $this->TrapidUtils->create_shell_file_initial($exp_id,$exp_info['used_plaza_database'],$blast_db,$gf_type,$num_blast_hits,$possible_evalues[$blast_evalue],$func_annot, $perform_tax_binning);
       // $shell_file = $this->TrapidUtils->create_shell_file_initial($exp_id,$exp_info['used_plaza_database'],$blast_db,$gf_type,$num_blast_hits,$blast_evalue, $func_annot, $perform_tax_binning, $tax_scope);
@@ -1622,6 +1647,7 @@ class TrapidController extends AppController{
       $this->ExperimentLog->addAction($exp_id,"initial_processing_options","e_value=1e-".$blast_evalue,2);
       $this->ExperimentLog->addAction($exp_id,"initial_processing_options","gf_type=".$gf_type,2);
       $this->ExperimentLog->addAction($exp_id,"initial_processing_options","func_annot=".$func_annot,2);
+      $this->ExperimentLog->addAction($exp_id,"initial_processing_options","transl_table=".$transl_table,2);
       if($tax_scope) {
           $this->ExperimentLog->addAction($exp_id,"initial_processing_options","taxonomic_scope=".$tax_scope, 2);
       }

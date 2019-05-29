@@ -22,6 +22,7 @@ import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
 import org.ini4j.Ini;
+import org.json.*;
 
 
 /**
@@ -99,6 +100,13 @@ public class InitialTranscriptsProcessing {
 			System.err.println("Incorrect parameter for the gene family type!");
 			System.exit(1);
 		}
+
+        // Experiment tmp directory, used to get path to RFAM GO annotation tsv file
+        String tmp_exp_dir = expConfig.get("experiment", "tmp_exp_dir");  // Used to get path to translation table JSON file
+
+        // Translation tables
+        String transl_table = expConfig.get("initial_processing", "transl_table");
+        String transl_tables_file = expConfig.get("initial_processing", "transl_tables_file");
 
 		//number of top-hits from similarity search to take into account to decide on the
 		//homology assignment. See methods and results from paper for explanation.
@@ -230,10 +238,10 @@ public class InitialTranscriptsProcessing {
                 trapid_db_connection		= itp.createDbConnection(trapid_server,trapid_name,trapid_login,trapid_password);
                 long t61	= System.currentTimeMillis();
                 if(seq_type.toString().equalsIgnoreCase("cds")) {
-                    itp.translateCDSsequences(trapid_db_connection,trapid_experiment_id);
+                    itp.translateCDSsequences(trapid_db_connection,trapid_experiment_id, transl_tables_file, transl_table);
                 }
                 else {
-                    itp.performInitialORFPrediction(trapid_db_connection,trapid_experiment_id);
+                    itp.performInitialORFPrediction(trapid_db_connection,trapid_experiment_id, transl_tables_file, transl_table);
                 }
     			long t62	= System.currentTimeMillis();
     			timing("ORF prediction",t61,t62);
@@ -355,9 +363,8 @@ public class InitialTranscriptsProcessing {
 
 
             // Step 4.a.: also add GO terms derived from Infernal/RFAM to `transcript_go`
-            String tmp_dir = similarity_search_file.replaceAll("[^/]+m8$", "");
             // Get name of the file containing the RFAM GO data
-            String rfam_go_file = tmp_dir + "rfam_go_data.tsv";
+            String rfam_go_file = tmp_exp_dir + "rfam_go_data.tsv";
             // Update `transcript_go`
             transcript_go = itp.addTranscriptRfamGoData(transcript_go, rfam_go_file);
 
@@ -410,10 +417,10 @@ public class InitialTranscriptsProcessing {
             trapid_db_connection		= itp.createDbConnection(trapid_server,trapid_name,trapid_login,trapid_password);
             long t61	= System.currentTimeMillis();
             if(seq_type.toString().equalsIgnoreCase("cds")) {
-                itp.translateCDSsequences(trapid_db_connection,trapid_experiment_id);
+                itp.translateCDSsequences(trapid_db_connection,trapid_experiment_id, transl_tables_file, transl_table);
             }
             else {
-                itp.performInitialORFPrediction(trapid_db_connection,trapid_experiment_id);
+                itp.performInitialORFPrediction(trapid_db_connection,trapid_experiment_id, transl_tables_file, transl_table);
             }
 			long t62	= System.currentTimeMillis();
 			timing("ORF prediction",t61,t62);
@@ -528,7 +535,7 @@ public class InitialTranscriptsProcessing {
 		String sql1	= "UPDATE `transcripts` SET `gf_id`= NULL,`orf_sequence`=NULL,`detected_frame`='0'," +
 				" `detected_strand`='+',`full_frame_info`=NULL,`putative_frameshift`='0', " +
 				" `is_frame_corrected`='0', `orf_start`=NULL,`orf_stop`=NULL," +
-				" `orf_contains_start_codon`=NULL,`orf_contains_stop_codon`=NULL," +
+				" `orf_contains_start_codon`=NULL,`orf_contains_stop_codon`=NULL, `transl_table`=1, " +
 				" `meta_annotation`='No Information',`meta_annotation_score`=NULL,`gf_id_score`=NULL WHERE `experiment_id`='"+trapid_experiment+"' ";
 		String sql2	= "DELETE FROM `gene_families` WHERE `experiment_id`='"+trapid_experiment+"' ";
 		// TRAPID db structure update for version 2: all the annotations are in one table, `transcripts_annotation`
@@ -760,8 +767,8 @@ public class InitialTranscriptsProcessing {
 	 *
 	 *
 	 */
-	public void performInitialORFPrediction(Connection db_connection,String experiment_id) throws Exception{
-		ORFFinder orf_finder = new ORFFinder();
+	public void performInitialORFPrediction(Connection db_connection,String experiment_id, String transl_tables_file, String transl_table_idx) throws Exception{
+		ORFFinder orf_finder = new ORFFinder(transl_tables_file, transl_table_idx);
 
 		//First get all genes + transcripts in the experiment
 		Hashtable<String, String> geneSequences = new Hashtable<String, String>();
@@ -778,7 +785,7 @@ public class InitialTranscriptsProcessing {
 		}
 		set.close();
 		stmt.close();
-		String update_transcripts 					= "UPDATE `transcripts` SET `orf_sequence`= COMPRESS(?) , `orf_start` = ? , `orf_stop` = ?, `orf_contains_start_codon` = ?, `orf_contains_stop_codon` = ?  WHERE `experiment_id`='"+experiment_id+"' AND `transcript_id` = ? ";
+		String update_transcripts 					= "UPDATE `transcripts` SET `orf_sequence`= COMPRESS(?) , `orf_start` = ? , `orf_stop` = ?, `orf_contains_start_codon` = ?, `orf_contains_stop_codon` = ?, `transl_table` = " + transl_table_idx + "  WHERE `experiment_id`='" + experiment_id + "' AND `transcript_id` = ? ";
 		PreparedStatement stmt_update_transcripts	= db_connection.prepareStatement(update_transcripts);
 		String update_frame_info					= "UPDATE `transcripts` SET `detected_frame`=? , `detected_strand` = ? WHERE `experiment_id`='"+experiment_id+"' AND `transcript_id` = ? ";
 		PreparedStatement stmt_update_frame			= db_connection.prepareStatement(update_frame_info);
@@ -812,8 +819,8 @@ public class InitialTranscriptsProcessing {
 	/**
 	 * Function based on `performInitialORFPrediction()` that translates all sequence in '+1' frame.
 	 */
-	public void translateCDSsequences(Connection db_connection,String experiment_id) throws Exception{
-		ORFFinder orf_finder = new ORFFinder();
+	public void translateCDSsequences(Connection db_connection,String experiment_id, String transl_tables_file, String transl_table_idx) throws Exception{
+		ORFFinder orf_finder = new ORFFinder(transl_tables_file, transl_table_idx);
 
 		//First get all genes + transcripts in the experiment
 		Hashtable<String, String> geneSequences = new Hashtable<String, String>();
@@ -826,7 +833,7 @@ public class InitialTranscriptsProcessing {
 		}
 		set.close();
 		stmt.close();
-		String update_transcripts 					= "UPDATE `transcripts` SET `orf_sequence`= COMPRESS(?) , `orf_start` = ? , `orf_stop` = ?, `orf_contains_start_codon` = ?, `orf_contains_stop_codon` = ?  WHERE `experiment_id`='"+experiment_id+"' AND `transcript_id` = ? ";
+		String update_transcripts 					= "UPDATE `transcripts` SET `orf_sequence`= COMPRESS(?) , `orf_start` = ? , `orf_stop` = ?, `orf_contains_start_codon` = ?, `orf_contains_stop_codon` = ?, `transl_table` = " + transl_table_idx + "  WHERE `experiment_id`='" + experiment_id + "' AND `transcript_id` = ? ";
 		PreparedStatement stmt_update_transcripts	= db_connection.prepareStatement(update_transcripts);
 		String update_frame_info					= "UPDATE `transcripts` SET `detected_frame`=? , `detected_strand` = ? WHERE `experiment_id`='"+experiment_id+"' AND `transcript_id` = ? ";
 		PreparedStatement stmt_update_frame			= db_connection.prepareStatement(update_frame_info);
@@ -2306,85 +2313,118 @@ public class InitialTranscriptsProcessing {
 	public class ORFFinder{
 
 		private Hashtable<String,Character> codonLookUp;
-		public ORFFinder() {
-			//initiate lookup table
-			codonLookUp = new Hashtable<String,Character>();
+        private Hashtable<String, Character> alternateCodonLookUp;
+        public ORFFinder(String transl_tables_file, String transl_table) {
+            // Initiate lookup tables
+            codonLookUp = new Hashtable<String,Character>();
+            alternateCodonLookUp = new Hashtable<String, Character>();
 
-			//Four fold degenerate codons , note these have to be checked correctly !!
-			codonLookUp.put("TC", 'S'); // Serine
-			codonLookUp.put("CT", 'L'); // Leucine
-			codonLookUp.put("CC", 'P'); // Proline
-			codonLookUp.put("CG", 'R'); // Arginine
-			codonLookUp.put("AC", 'T'); // Threonine
-			codonLookUp.put("GT", 'V'); // Valine
-			codonLookUp.put("GC", 'A'); // Alanine
-			codonLookUp.put("GG", 'G'); // Glycine
-			//Stop codons
-			codonLookUp.put("TAA", '*'); // Stop
-			codonLookUp.put("TAG", '*'); // Stop
-			codonLookUp.put("TAR", '*'); // Stop
-			codonLookUp.put("TGA", '*'); // Stop
-			//Phenylalanine
-			codonLookUp.put("TTT", 'F'); // Phenylalanine
-			codonLookUp.put("TTC", 'F'); // Phenylalanine
-			codonLookUp.put("TTY", 'F'); // Phenylalanine
-			//Leucine
-			codonLookUp.put("TTA", 'L'); // Leucine
-			codonLookUp.put("TTG", 'L'); // Leucine
-			codonLookUp.put("TTR", 'L'); // Leucine
-			//Tyrosine
-			codonLookUp.put("TAT", 'Y'); // Tyrosine
-			codonLookUp.put("TAC", 'Y'); // Tyrosine
-			codonLookUp.put("TAY", 'Y'); // Tyrosine
-			//Cysteine
-			codonLookUp.put("TGT", 'C'); // Cysteine
-			codonLookUp.put("TGC", 'C'); // Cysteine
-			codonLookUp.put("TGY", 'C'); // Cysteine
-			//Tryptophan
-			codonLookUp.put("TGG", 'W'); // Tryptophan
-			//Histidine
-			codonLookUp.put("CAT", 'H'); // Histidine
-			codonLookUp.put("CAC", 'H'); // Histidine
-			codonLookUp.put("CAY", 'H'); // Histidine
-			//Glutamine
-			codonLookUp.put("CAA", 'Q'); // Glutamine
-			codonLookUp.put("CAG", 'Q'); // Glutamine
-			codonLookUp.put("CAR", 'Q'); // Glutamine
-			//Isoleucine
-			codonLookUp.put("ATT", 'I'); // Isoleucine
-			codonLookUp.put("ATC", 'I'); // Isoleucine
-			codonLookUp.put("ATA", 'I'); // Isoleucine
-			codonLookUp.put("ATH", 'I'); // Isoleucine
-			codonLookUp.put("ATY", 'I'); // Isoleucine
-			codonLookUp.put("ATW", 'I'); // Isoleucine
-			codonLookUp.put("ATM", 'I'); // Isoleucine
-			//Methionine
-			codonLookUp.put("ATG", 'M'); // Methionine
-			//Asparagine
-			codonLookUp.put("AAT", 'N'); // Asparagine
-			codonLookUp.put("AAC", 'N'); // Asparagine
-			codonLookUp.put("AAY", 'N'); // Asparagine
-			//Lysine
-			codonLookUp.put("AAA", 'K'); // Lysine
-			codonLookUp.put("AAG", 'K'); // Lysine
-			codonLookUp.put("AAR", 'K'); // Lysine
-			//Serine
-			codonLookUp.put("AGT", 'S'); // Serine
-			codonLookUp.put("AGC", 'S'); // Serine
-			codonLookUp.put("AGY", 'S'); // Serine
-			//Arginine
-			codonLookUp.put("AGA", 'R'); // Arginine
-			codonLookUp.put("AGG", 'R'); // Arginine
-			codonLookUp.put("AGR", 'R'); // Arginine
-			//Aspartic Acid
-			codonLookUp.put("GAT", 'D'); // Aspartic Acid
-			codonLookUp.put("GAC", 'D'); // Aspartic Acid
-			codonLookUp.put("GAY", 'D'); // Aspartic Acid
-			//Glutamic Acid
-			codonLookUp.put("GAA", 'E'); // Glutamic Acid
-			codonLookUp.put("GAG", 'E'); // Glutamic Acid
-			codonLookUp.put("GAR", 'E'); // Glutamic Acid
-		}
+            // Default translation table -- overridden if valid translation table JSON file / translation table index
+            //Four fold degenerate codons , note these have to be checked correctly !!
+            codonLookUp.put("TC", 'S'); // Serine
+            codonLookUp.put("CT", 'L'); // Leucine
+            codonLookUp.put("CC", 'P'); // Proline
+            codonLookUp.put("CG", 'R'); // Arginine
+            codonLookUp.put("AC", 'T'); // Threonine
+            codonLookUp.put("GT", 'V'); // Valine
+            codonLookUp.put("GC", 'A'); // Alanine
+            codonLookUp.put("GG", 'G'); // Glycine
+            //Stop codons
+            codonLookUp.put("TAA", '*'); // Stop
+            codonLookUp.put("TAG", '*'); // Stop
+            codonLookUp.put("TAR", '*'); // Stop
+            codonLookUp.put("TGA", '*'); // Stop
+            //Phenylalanine
+            codonLookUp.put("TTT", 'F'); // Phenylalanine
+            codonLookUp.put("TTC", 'F'); // Phenylalanine
+            codonLookUp.put("TTY", 'F'); // Phenylalanine
+            //Leucine
+            codonLookUp.put("TTA", 'L'); // Leucine
+            codonLookUp.put("TTG", 'L'); // Leucine
+            codonLookUp.put("TTR", 'L'); // Leucine
+            //Tyrosine
+            codonLookUp.put("TAT", 'Y'); // Tyrosine
+            codonLookUp.put("TAC", 'Y'); // Tyrosine
+            codonLookUp.put("TAY", 'Y'); // Tyrosine
+            //Cysteine
+            codonLookUp.put("TGT", 'C'); // Cysteine
+            codonLookUp.put("TGC", 'C'); // Cysteine
+            codonLookUp.put("TGY", 'C'); // Cysteine
+            //Tryptophan
+            codonLookUp.put("TGG", 'W'); // Tryptophan
+            //Histidine
+            codonLookUp.put("CAT", 'H'); // Histidine
+            codonLookUp.put("CAC", 'H'); // Histidine
+            codonLookUp.put("CAY", 'H'); // Histidine
+            //Glutamine
+            codonLookUp.put("CAA", 'Q'); // Glutamine
+            codonLookUp.put("CAG", 'Q'); // Glutamine
+            codonLookUp.put("CAR", 'Q'); // Glutamine
+            //Isoleucine
+            codonLookUp.put("ATT", 'I'); // Isoleucine
+            codonLookUp.put("ATC", 'I'); // Isoleucine
+            codonLookUp.put("ATA", 'I'); // Isoleucine
+            codonLookUp.put("ATH", 'I'); // Isoleucine
+            codonLookUp.put("ATY", 'I'); // Isoleucine
+            codonLookUp.put("ATW", 'I'); // Isoleucine
+            codonLookUp.put("ATM", 'I'); // Isoleucine
+            //Methionine
+            codonLookUp.put("ATG", 'M'); // Methionine
+            //Asparagine
+            codonLookUp.put("AAT", 'N'); // Asparagine
+            codonLookUp.put("AAC", 'N'); // Asparagine
+            codonLookUp.put("AAY", 'N'); // Asparagine
+            //Lysine
+            codonLookUp.put("AAA", 'K'); // Lysine
+            codonLookUp.put("AAG", 'K'); // Lysine
+            codonLookUp.put("AAR", 'K'); // Lysine
+            //Serine
+            codonLookUp.put("AGT", 'S'); // Serine
+            codonLookUp.put("AGC", 'S'); // Serine
+            codonLookUp.put("AGY", 'S'); // Serine
+            //Arginine
+            codonLookUp.put("AGA", 'R'); // Arginine
+            codonLookUp.put("AGG", 'R'); // Arginine
+            codonLookUp.put("AGR", 'R'); // Arginine
+            //Aspartic Acid
+            codonLookUp.put("GAT", 'D'); // Aspartic Acid
+            codonLookUp.put("GAC", 'D'); // Aspartic Acid
+            codonLookUp.put("GAY", 'D'); // Aspartic Acid
+            //Glutamic Acid
+            codonLookUp.put("GAA", 'E'); // Glutamic Acid
+            codonLookUp.put("GAG", 'E'); // Glutamic Acid
+            codonLookUp.put("GAR", 'E'); // Glutamic Acid
+
+            try {
+                // Read JSON data as string
+                String transl_tables_str = "";
+                BufferedReader buf = new BufferedReader(new FileReader(transl_tables_file));
+                String lineJustFetched = null;
+                String[] wordsArray;
+                while (true) {
+                    lineJustFetched = buf.readLine();
+                    if (lineJustFetched == null) {
+                        break;
+                    } else {
+                        transl_tables_str = transl_tables_str + lineJustFetched;
+                    }
+                }
+                buf.close();
+                // Parse translation table data JSON string
+                JSONObject all_transl_tables = new JSONObject(transl_tables_str);
+                JSONObject transl_table_data = all_transl_tables.getJSONObject(transl_table).getJSONObject("table");
+                // Store translation table data as regular hashmap (useless?)
+                for(String codon:transl_table_data.keySet()){
+                    alternateCodonLookUp.put(codon, transl_table_data.getString(codon).charAt(0));
+                }
+                codonLookUp = alternateCodonLookUp;
+                System.err.println("[Message] Translation table " + transl_table + " loaded from file " + transl_tables_file);
+            } catch (Exception e) {
+                System.err.println("[Message] No translation table file provided or invalid translation table index, will use the harcoded (standard) one. Stack trace: ");
+                e.printStackTrace();
+            }
+            System.err.println(Arrays.asList(codonLookUp)); // Debug: print hashmap
+        }
 
 		private String reverseComplement(String input){
 			StringBuffer buffer = new StringBuffer(input.toUpperCase()).reverse();
