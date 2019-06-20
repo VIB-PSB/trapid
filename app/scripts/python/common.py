@@ -4,8 +4,14 @@ This module contains a collection of variables/functions used in other modules
 
 import MySQLdb as MS
 import time
+import smtplib
 import sys
 from ConfigParser import ConfigParser
+from email.MIMEMultipart import MIMEMultipart
+from email.MIMEText import MIMEText
+
+
+TRAPID_BASE_URL = "http://bioinformatics.psb.ugent.be/trapid_dev_migration"
 
 
 def load_config(ini_file_initial, needed_sections):
@@ -51,3 +57,31 @@ def update_experiment_log(experiment_id, action, params, depth, db_conn):
     except Exception as e:
         print e
         sys.stderr.write("[Error] Unable to update experiment log!\n")
+
+
+def send_mail(to, subject, text, fro="TRAPID <no-reply@psb.vib-ugent.be>", server="smtp.psb.ugent.be"):
+    """
+    Send an email to recipients `to`, from `fro` with message subject `subject` and content `text`, sent from `server`.
+    Inspired by this example: http://masnun.com/2010/01/01/sending-mail-via-postfix-a-perfect-python-example.html
+    """
+    assert type(to)==list
+
+    msg = MIMEMultipart()
+    msg['From'] = fro
+    msg['To'] = ', '.join(to)
+    msg['Subject'] = subject
+    msg.attach( MIMEText(text) )
+
+    smtp = smtplib.SMTP(server)
+    smtp.sendmail(fro, to, msg.as_string() )
+    smtp.close()
+
+
+def ResultIter(db_cursor, arraysize=1000):
+    """An iterator that uses `fetchmany` (keep memory usage down, faster than `fetchall`). """
+    while True:
+        results = db_cursor.fetchmany(arraysize)
+        if not results:
+            break
+        for result in results:
+            yield result

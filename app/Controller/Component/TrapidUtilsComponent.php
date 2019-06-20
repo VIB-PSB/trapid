@@ -57,6 +57,7 @@ class TrapidUtilsComponent extends Component{
     return $result;
   }
 
+/*
   function getSubsetColorsATVConfig($config_file_path){
     $result	= array();
     if(file_exists($config_file_path)){
@@ -78,6 +79,7 @@ class TrapidUtilsComponent extends Component{
     }
     return $result;
   }
+*/
 
 
 
@@ -610,12 +612,14 @@ class TrapidUtilsComponent extends Component{
   }
 
 
-  function create_shell_script_tree($exp_id,$plaza_db,$gf_id,$editing_mode,$bootstrap_mode,$tree_program,$include_subsets,$include_meta){
+  // Create shell script to create GF phylogenetic tree, return file name
+  function create_shell_script_tree($exp_id,$gf_id,$msa_program,$editing_mode,$tree_program,$include_subsets,$include_meta){
     $inc_sub = 0; if($include_subsets){$inc_sub=1;}
     $inc_met = 0; if($include_meta){$inc_met=1;}
     $base_scripts_location	= APP."scripts/";
     $tmp_dir			= TMP."experiment_data/".$exp_id."/";
-    $necessary_modules		= array("perl","muscle","python/x86_64/2.7.14");
+    $necessary_modules		= array("perl", "python/x86_64/2.7.14");
+    $necessary_modules[]	= $msa_program;
     $necessary_modules[]	= $tree_program;
 
     //create actual shell script file
@@ -626,17 +630,10 @@ class TrapidUtilsComponent extends Component{
 	  fwrite($fh,"module load ".$nm." \n");
     }
 
-    $parameters_msa		= array(
-                    // PLAZA_DB_SERVER,$plaza_db,PLAZA_DB_PORT,PLAZA_DB_USER,PLAZA_DB_PASSWORD,
-                    TRAPID_DB_SERVER, $plaza_db, TRAPID_DB_PORT, TRAPID_DB_USER, TRAPID_DB_PASSWORD,
-					TRAPID_DB_SERVER,TRAPID_DB_NAME,TRAPID_DB_PORT,TRAPID_DB_USER,TRAPID_DB_PASSWORD,
-					$tmp_dir,$exp_id,$gf_id,
-					$base_scripts_location."perl/blosum62.txt",
-					$editing_mode
-					);
 
-    $parameters_tree		= array(TRAPID_DB_SERVER,TRAPID_DB_NAME,TRAPID_DB_PORT,TRAPID_DB_USER,TRAPID_DB_PASSWORD,
-					$tmp_dir,$exp_id,$gf_id,$bootstrap_mode,$tree_program);
+    $parameters_msa_tree = array($exp_id, $gf_id, $tmp_dir, $base_scripts_location, TRAPID_DB_NAME, TRAPID_DB_SERVER,
+        TRAPID_DB_USER, TRAPID_DB_PASSWORD, "--tree_program", $tree_program, "--msa_program", $msa_program,
+        "--msa_editing", $editing_mode, "--verbose");
 
     $parameters_phyloxml = array($exp_id, $gf_id, TRAPID_DB_NAME, TRAPID_DB_SERVER, TRAPID_DB_USER, TRAPID_DB_PASSWORD, $tmp_dir);
     if($inc_sub) {
@@ -647,16 +644,13 @@ class TrapidUtilsComponent extends Component{
     }
 
 
-    fwrite($fh,"\n#Launching perl script for creating necessary files, then MSA \n");
-    $program_location_msa	= $base_scripts_location."perl/create_msa.pl";
-    $command_line_msa		= "perl ".$program_location_msa." ".implode(" ",$parameters_msa);
-    $program_location_tree	= $base_scripts_location."perl/create_tree.pl";
-    $command_line_tree		= "perl ".$program_location_tree." ".implode(" ",$parameters_tree);
+    fwrite($fh,"\n#Launching wrapper script for creating necessary files, then MSA/tree \n");
+    $program_location_msa_tree = $base_scripts_location . "python/run_msa_tree.py";
+    $command_line_msa_tree = "python ".$program_location_msa_tree." ".implode(" ",$parameters_msa_tree);
     $program_location_phyloxml		= $base_scripts_location . "python/create_phyloxml.py";
     $command_line_phyloxml	= "python " . $program_location_phyloxml . " " . implode(" ",$parameters_phyloxml) . "\n";
 
-    fwrite($fh,$command_line_msa."\n");
-    fwrite($fh,$command_line_tree."\n");
+    fwrite($fh,$command_line_msa_tree."\n");
     fwrite($fh,$command_line_phyloxml."\n");
     fclose($fh);
     shell_exec("chmod a+x ".$shell_file);
@@ -664,30 +658,28 @@ class TrapidUtilsComponent extends Component{
   }
 
 
-  function create_shell_script_msa($exp_id,$plaza_db,$gf_id,$editing_mode=null){
-    $base_scripts_location	= APP."scripts/";
-    $tmp_dir			= TMP."experiment_data/".$exp_id."/";
-    $necessary_modules		= array("perl","muscle");
-    //create actual shell script file
-    $shell_file			= $tmp_dir."create_msa_".$gf_id.".sh";
+  // Create shell script to create GF MSA, return file name
+  function create_shell_script_msa($exp_id,$gf_id,$msa_program){
+    $base_scripts_location = APP . "scripts/";
+    $tmp_dir = TMP . "experiment_data/" . $exp_id . "/";
+    $necessary_modules = array("perl", "python/x86_64/2.7.14");
+    $necessary_modules[]	= $msa_program;
+
+    // Create actual shell script file
+    $shell_file = $tmp_dir."create_msa_" . $gf_id . ".sh";
     $fh				= fopen($shell_file,"w");
     fwrite($fh,"#Loading necessary modules\n");
     foreach($necessary_modules as $nm){
-	  fwrite($fh,"module load ".$nm." \n");
+        fwrite($fh,"module load ".$nm." \n");
     }
-    $parameters			= array(
-//        PLAZA_DB_SERVER, $plaza_db, PLAZA_DB_PORT, PLAZA_DB_USER, PLAZA_DB_PASSWORD,
-        TRAPID_DB_SERVER, $plaza_db, PLAZA_DB_PORT, TRAPID_DB_USER, TRAPID_DB_PASSWORD,
-		TRAPID_DB_SERVER, TRAPID_DB_NAME, TRAPID_DB_PORT, TRAPID_DB_USER, TRAPID_DB_PASSWORD,
-		$tmp_dir,$exp_id,$gf_id,
-		$base_scripts_location."perl/blosum62.txt"
-					);
-
-    fwrite($fh,"\n#Launching perl script for creating necessary files, then MSA \n");
-    $program_location		= $base_scripts_location."perl/create_msa.pl";
-    $command_line		= "perl ".$program_location." ".implode(" ",$parameters);
-    fwrite($fh,$command_line."\n");
+    $parameters_msa_tree = array($exp_id, $gf_id, $tmp_dir, $base_scripts_location, TRAPID_DB_NAME, TRAPID_DB_SERVER,
+        TRAPID_DB_USER, TRAPID_DB_PASSWORD, "--msa_program", $msa_program, "--msa_only", "--verbose");
+    fwrite($fh,"\n#Launching wrapper script for files + MSA creation \n");
+    $program_location_msa_tree = $base_scripts_location . "python/run_msa_tree.py";
+    $command_line_msa_tree = "python ".$program_location_msa_tree." ".implode(" ",$parameters_msa_tree);
+    fwrite($fh,$command_line_msa_tree."\n");
     fclose($fh);
+    // Chmod and return
     shell_exec("chmod a+x ".$shell_file);
     return $shell_file;
   }

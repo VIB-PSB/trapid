@@ -290,7 +290,7 @@ class ToolsController extends AppController{
     $this->set("available_species_common",$available_species_common);
     $this->set("full_tree",$full_tree);
 
-    $MAX_GENES_MSA_TREE		= 200;
+    $MAX_GENES_MSA_TREE		= 250; // 200;
     $this->set("MAX_GENES",$MAX_GENES_MSA_TREE);
 
     $editing_modes	= array("0.10"=>"Stringent editing","0.25"=>"Relaxed editing");
@@ -452,10 +452,10 @@ class ToolsController extends AppController{
     $this->set("hashed_user_id",parent::get_hashed_user_id());
 
     $this->ExperimentLog->addAction($exp_id,"create_tree_stop",$gf_id,1);
-    $atv_config_file	= TMP_WEB."experiment_data/".$exp_id."/atv_config.cfg";
-    $this->set("atv_config_file",$atv_config_file);
-    $subset_colors	= $this->TrapidUtils->getSubsetColorsATVConfig(TMP."experiment_data/".$exp_id."/atv_config.cfg");
-    $this->set("subset_colors",$subset_colors);
+    // $atv_config_file	= TMP_WEB."experiment_data/".$exp_id."/atv_config.cfg";
+    // $this->set("atv_config_file",$atv_config_file);
+    // $subset_colors	= $this->TrapidUtils->getSubsetColorsATVConfig(TMP."experiment_data/".$exp_id."/atv_config.cfg");
+    // $this->set("subset_colors",$subset_colors);
   }
 
 
@@ -523,24 +523,39 @@ class ToolsController extends AppController{
 
   function create_tree($exp_id=null, $gf_id=null){
     if(!$exp_id || !$gf_id){$this->redirect(array("controller"=>"trapid","action"=>"experiments"));}
-    // $exp_id	= mysql_real_escape_string($exp_id);
     parent::check_user_exp($exp_id);
     $exp_info	= $this->Experiments->getDefaultInformation($exp_id);
     $this->set("exp_info",$exp_info);
     $this->set("exp_id",$exp_id);
-    $this -> set('title_for_layout', "Create phylogenetic tree");
+    $this -> set('title_for_layout', "MSA & phylogenetic tree");
 
-    //check gf_id
+    // Get tooltip content
+    $tooltips = $this->TrapidUtils->indexArraySimple(
+        $this->HelpTooltips->find("all", array("conditions"=>array("tooltip_id LIKE 'msatree_%'"))),
+        "HelpTooltips","tooltip_id","tooltip_text"
+    );
+    $this->set("tooltips", $tooltips);
+
+    /* TODO: fix species/gene selection tree generation! The current `plotTree` function relies on creating big ints...
+    By default, PHP displays up to 14 significant digits (`precision` variable, see this link for more information
+    https://www.php.net/manual/en/ini.core.php#ini.precision). This made it impossible to generate the species/gene
+    selection tree when dealing when having to deal with lineages that are 'too deep' in the taxonomy.
+    Setting a higher value to fixes the issue (i.e. users can select species/genes for their MSA and trees) but is not
+    a solution.
+    */
+    ini_set('precision', 25);
+
+    // Check gf_id
     $gf_info	= $this->GeneFamilies->find("first",array("conditions"=>array("experiment_id"=>$exp_id,"gf_id"=>$gf_id)));
     if(!$gf_info){$this->redirect(array("controller"=>"trapid","action"=>"experiment",$exp_id));}
     $this->set("gf_id",$gf_id);
     $this->set("gf_info",$gf_info);
 
-    //check whether the number of jobs in the queue for this experiment has not been reached.
+    // Check whether the number of jobs in the queue for this experiment has not been reached.
     $current_job_number = $this->ExperimentJobs->getNumJobs($exp_id);
     if($current_job_number>=MAX_CLUSTER_JOBS){$this->redirect(array("controller"=>"gene_family","action"=>"gene_family",$exp_id,$gf_id));}
 
-    //get phylogenetic profile, depending on type of GF assignment (HOM/IORTHO)
+    // Get phylogenetic profile, depending on type of GF assignment (HOM/IORTHO)
     $phylo_profile	= array();
     if($exp_info['genefamily_type']=="HOM"){
       $gf_content	= $this->GfData->find("all",array("conditions"=>array("gf_id"=>$gf_info['GeneFamilies']['plaza_gf_id']),"fields"=>"gene_id"));
@@ -553,16 +568,16 @@ class ToolsController extends AppController{
     }
     $this->set("phylo_profile",$phylo_profile);
 
-    //get number of transcripts which are partial
+    // Get number of transcripts which are partial
     $num_partial_transcripts = $this->Transcripts->find("count",array("conditions"=>array("experiment_id"=>$exp_id,"gf_id"=>$gf_id,"meta_annotation"=>"Partial")));
     $this->set("num_partial_transcripts",$num_partial_transcripts);
 
-    //get all transcripts, together with their meta annotation
+    // Get all transcripts, together with their meta annotation
     $gf_transcripts	= $this->Transcripts->find("all",array("conditions"=>array("experiment_id"=>$exp_id,"gf_id"=>$gf_id),"fields"=>array("transcript_id","meta_annotation")));
     $gf_transcripts	= $this->TrapidUtils->indexArraySimple($gf_transcripts,"Transcripts","transcript_id","meta_annotation");
     $this->set("gf_transcripts",$gf_transcripts);
 
-    //retrieve the species from the associated reference database
+    // Retrieve the species from the associated reference database
     $available_species		= $this->AnnotSources->find("all");
     $available_species_tax	= $this->TrapidUtils->indexArrayMulti($available_species,"AnnotSources","tax_id",array("species","common_name"));
     $available_species_common	= $this->TrapidUtils->indexArrayMulti($available_species,"AnnotSources","common_name",array("species","tax_id"));
@@ -581,42 +596,51 @@ class ToolsController extends AppController{
     $this->set("full_tree",$full_tree);
 
 
-    $MAX_GENES_MSA_TREE		= 200;
+    $MAX_GENES_MSA_TREE		= 250;  // 200;
     $this->set("MAX_GENES",$MAX_GENES_MSA_TREE);
 
+    // List valid options
     $tree_programs	= array("fasttree"=>"FastTree", "iqtree"=>"IQ-TREE", "phyml"=>"PhyML");
     $this->set("tree_programs",$tree_programs);
     $tree_program	= "fasttree";
     $this->set("tree_program",$tree_program);
 
-    $editing_modes	= array("0.10"=>"Stringent editing","0.25"=>"Relaxed editing");
+    $msa_programs	= array("muscle"=>"MUSCLE", "mafft"=>"MAFFT");
+    $this->set("msa_programs",$msa_programs);
+    $msa_program = "muscle";
+    $this->set("msa_program", $msa_program);
+
+    $editing_modes	= ["none", "column", "row", "column_row"];
     $this->set("editing_modes",$editing_modes);
-    $editing_mode	= "0.25";
+    $editing_mode = "column";
     $this->set("editing_mode",$editing_mode);
 
-    $bootstrap_modes	= array("1"=>"1","100"=>"100","500"=>"500");
-    $this->set("bootstrap_modes",$bootstrap_modes);
-    $bootstrap_mode	= "100";
-    $this->set("bootstrap_mode",$bootstrap_mode);
-    //$optimization_modes	= array("n"=>"No optimization (fast)","tl"=>"Tree topology and branch lengths optimized (slow)");
-    //$optimization_modes	= array("n"=>"No optimization (fast)");
-    //$this->set("optimization_modes",$optimization_modes);
-    //$optimization_mode	= "n";
-    //$this->set("optimization_mode",$optimization_mode);
     $include_subsets	= false;
     $include_meta	= false;
     $this->set("include_subsets",$include_subsets);
+    $this->set("include_meta", $include_meta);
 
-    //ok, check whether there is already a multiple sequence alignment present in the database.
-    //if so, get the used-species, and the msa, and display it!
-    if($gf_info['GeneFamilies']['tree']){
-      $this->set("previous_result",true);
+    // Check whether there already are any MSA / stripped MSA / tree present in the database.
+      $previous_results = array("msa"=>false, "msa_stripped"=>false, "tree"=>false);
+      if($gf_info['GeneFamilies']['msa']){
+          $previous_results['msa'] = true;
+          $this->set("full_msa_length",$this->TrapidUtils->getMsaLength($gf_info["GeneFamilies"]["msa"]));
+      }
+      if($gf_info['GeneFamilies']['msa_stripped']){
+          $previous_results['msa_stripped'] = true;
+          $this->set("stripped_msa_length",$this->TrapidUtils->getMsaLength($gf_info["GeneFamilies"]["msa_stripped"]));
+      }
+      if($gf_info['GeneFamilies']['tree']){ $previous_results['tree'] = true; }
+      $this->set("previous_results", $previous_results);
+
+    // Get the used species for current MSA
+    if($previous_results['msa']){
       $tax2clades	= array();
       foreach($available_clades["clade_species_tax"] as $clade=>$tax_list){
-	foreach($tax_list as $tax){
-	  if(!array_key_exists($tax,$tax2clades)){$tax2clades[$tax]=array();}
-	  $tax2clades[$tax][$clade] = $clade;
-	}
+        foreach($tax_list as $tax){
+          if(!array_key_exists($tax,$tax2clades)){$tax2clades[$tax]=array();}
+	      $tax2clades[$tax][$clade] = $clade;
+	    }
       }
       $selected_species	= array();
       $selected_clades	= array();
@@ -629,24 +653,21 @@ class ToolsController extends AppController{
       $this->set("selected_clades",$selected_clades);
       $this->set("hashed_user_id",parent::get_hashed_user_id());
 
-      $subset_colors	= $this->TrapidUtils->getSubsetColorsATVConfig(TMP."experiment_data/".$exp_id."/atv_config.cfg");
-      $this->set("subset_colors",$subset_colors);
-
-      //$meta_colors	= array("Full Length"=>"","Quasi Full Length"=>"","Partial"=>"","No Information"=>"");
-      //$this->set("meta_colors",$meta_colors);
-
-      //Configure::write("debug",1);
-      $this->set("full_msa_length",$this->TrapidUtils->getMsaLength($gf_info["GeneFamilies"]["msa"]));
-      $this->set("stripped_msa_length",$this->TrapidUtils->getMsaLength($gf_info["GeneFamilies"]["msa_stripped"]));
     }
 
+    // Handle tree annotation (if there is already a tree) -- legacy code to remove?
+    // if($previous_results['tree']) {
+        // $subset_colors	= $this->TrapidUtils->getSubsetColorsATVConfig(TMP."experiment_data/".$exp_id."/atv_config.cfg");
+        // $this->set("subset_colors",$subset_colors);
+        // $meta_colors	= array("Full Length"=>"","Quasi Full Length"=>"","Partial"=>"","No Information"=>"");
+        // $this->set("meta_colors",$meta_colors);
+    // }
 
+
+    // New MSA/tree creation
     if($_POST){
-      //Configure::write("debug",2);
-      //pr($_POST);
-
       $tmp_dir	= TMP."experiment_data/".$exp_id."/";
-      $this->set("previous_result",false);
+      $this->set("previous_results", array("msa"=>false, "msa_stripped"=>false, "tree"=>false));
       $selected_species	= array();
       $selected_clades	= array();
       $exclude_transcripts = array();
@@ -668,29 +689,41 @@ class ToolsController extends AppController{
       //pr($selected_clades);
       //return;
 
-
-      if(!array_key_exists("tree_program",$_POST)){$this->set("error","No tree algorithm defined");return;}
-      if(array_key_exists($_POST['tree_program'],$tree_programs)){$tree_program = $_POST['tree_program'];}
-      $this->set("tree_program",$tree_program);
-
-      //select editing mode for MSA
-      if(!array_key_exists("editing_mode",$_POST)){$this->set("error","No editing mode defined");return;}
-      if(array_key_exists($_POST["editing_mode"],$editing_modes)){$editing_mode = $_POST['editing_mode'];}
-      $this->set("editing_mode",$editing_mode);
-
-      //select bootstrapping for treebuilding
-      if(!array_key_exists("bootstrap_mode",$_POST)){$this->set("error","No bootstrap mode defined");return;}
-      if(array_key_exists($_POST["bootstrap_mode"],$bootstrap_modes)){$bootstrap_mode = $_POST['bootstrap_mode'];}
-      $this->set("bootstrap_mode",$bootstrap_mode);
-
-      //select subset presence
-      if(array_key_exists('include_subsets', $_POST) && $_POST['include_subsets'] == "y") {
-          $include_subsets=true;
+      // First check if user chose to generate MSA only!
+      $msa_only = false;
+      if(array_key_exists('msa_only',$_POST) && $_POST['msa_only']=='y') {
+          $msa_only = $_POST['msa_only'];
       }
-	  if(array_key_exists('include_meta_annotation', $_POST) && $_POST['include_meta_annotation'] == "y") {
-          $include_meta=true;
+
+      // Check MSA program
+      if(!array_key_exists("msa_program",$_POST)){$this->set("error","No MSA algorithm defined");return;}
+      if(array_key_exists($_POST['msa_program'],$msa_programs)){$msa_program = $_POST['msa_program'];}
+      $this->set("msa_program",$msa_program);
+
+      // If user chose to generate tree, some extra checks are performed: MSA editing, tree program/annotation
+      if(!$msa_only) {
+          // Check tree program
+          if(!array_key_exists("tree_program",$_POST)){$this->set("error","No tree algorithm defined");return;}
+          if(array_key_exists($_POST['tree_program'],$tree_programs)){$tree_program = $_POST['tree_program'];}
+          $this->set("tree_program",$tree_program);
+
+          // Select editing mode for MSA
+          if(!array_key_exists("editing_mode",$_POST)){$this->set("error","No editing mode defined");return;}
+          if(in_array($_POST["editing_mode"], $editing_modes)){$editing_mode = $_POST["editing_mode"];}
+          $this->set("editing_mode", $editing_mode);
+
+          // Select subset presence / meta-annotation presence
+          if(array_key_exists('include_subsets', $_POST) && $_POST['include_subsets'] == "y") {
+              $include_subsets=true;
+          }
+          if(array_key_exists('include_meta_annotation', $_POST) && $_POST['include_meta_annotation'] == "y") {
+              $include_meta=true;
+          }
+          $this->set("include_subsets",$include_subsets);
+          $this->set("include_meta",$include_meta);
+
       }
-      $this->set("include_subsets",$include_subsets);
+
 
       if(count($selected_species)==0){$this->set("error","No genes/species selected");return;}
       //do count of genes here, don't trust user input
@@ -701,7 +734,7 @@ class ToolsController extends AppController{
       //check for double gene ids/transcript ids in the input! Important, as this will otherwise crash the strip_msa procedure
       $contains_double_entries	= $this->has_double_entries($exp_id,$gf_info['GeneFamilies'],$selected_species,$exp_info['genefamily_type']);
       if($contains_double_entries){
-	$this->set("error","Some transcripts have the same name as genes in the selected species.");return;
+	    $this->set("error","Some transcripts have the same name as genes in the selected species.");return;
       }
 
       //ok, now write this species information to the database.
@@ -710,16 +743,18 @@ class ToolsController extends AppController{
       //create launch scripts, and put them on the web cluster. The view should show an ajax page which checks every X seconds
       //whether the job has finished yet.
       $qsub_file		= $this->TrapidUtils->create_qsub_script($exp_id);
-      /* $shell_file      		= $this->TrapidUtils->create_shell_script_tree($exp_id,$exp_info['used_plaza_database'],$gf_id,
-									       $editing_mode,$bootstrap_mode,$optimization_mode,
-									       $include_subsets);*/
-      $shell_file      		= $this->TrapidUtils->create_shell_script_tree($exp_id,$exp_info['used_plaza_database'],$gf_id,
-									       $editing_mode,$bootstrap_mode,$tree_program,
-									       $include_subsets,$include_meta);
 
-      if($shell_file == null || $qsub_file == null ){$this->set("error","problem creating program files");return;}
-      $qsub_out	= $tmp_dir."tree_".$exp_id."_".$gf_id.".out";
-      $qsub_err	= $tmp_dir."tree_".$exp_id."_".$gf_id.".err";
+      if(!$msa_only) {
+          $shell_file = $this->TrapidUtils->create_shell_script_tree($exp_id,$gf_id, $msa_program, $editing_mode, $tree_program, $include_subsets, $include_meta);
+          $job_type = "tree";
+      }
+      else {
+          $shell_file = $this->TrapidUtils->create_shell_script_msa($exp_id,$gf_id, $msa_program);
+          $job_type = "msa";
+      }
+      if($shell_file == null || $qsub_file == null ){$this->set("error","Problem creating program files");return;}
+      $qsub_out = $tmp_dir . $job_type . "_" . $exp_id . "_" . $gf_id . ".out";
+      $qsub_err = $tmp_dir . $job_type . "_" . $exp_id . "_" . $gf_id . ".err";
       if(file_exists($qsub_out)){unlink($qsub_out);}
       if(file_exists($qsub_err)){unlink($qsub_err);}
       $command  	= "sh $qsub_file -q medium -o $qsub_out -e $qsub_err $shell_file";
@@ -731,21 +766,22 @@ class ToolsController extends AppController{
       //add job to the cluster queue, and then redirect the entire program.
       //the user will receive an email to notify him when the job is done, together with a link to this page.
       //the result will then automatically be opened.
-      $this->ExperimentJobs->addJob($exp_id,$cluster_job,"medium","create_tree ".$gf_id);
+      $this->ExperimentJobs->addJob($exp_id,$cluster_job,"medium","create_".$job_type." ".$gf_id);
 
-      $this->ExperimentLog->addAction($exp_id,"create_tree",$gf_id);
+      $this->ExperimentLog->addAction($exp_id,"create_".$job_type, $gf_id);
       //declare options in the log
-      $this->ExperimentLog->addAction($exp_id,"create_tree","options",1);
-      $this->ExperimentLog->addAction($exp_id,"create_tree","gene_family=".$gf_id,2);
-      $this->ExperimentLog->addAction($exp_id,"create_tree","selected_species",2);
-      foreach($selected_species as $ss){$this->ExperimentLog->addAction($exp_id,"create_tree",$ss,3);}
-      $this->ExperimentLog->addAction($exp_id,"create_tree","algorithm=".$tree_program,2);
-      $this->ExperimentLog->addAction($exp_id,"create_tree","editing=".$editing_mode,2);
-      $this->ExperimentLog->addAction($exp_id,"create_tree","bootstrap=".$bootstrap_mode,2);
-      //$this->ExperimentLog->addAction($exp_id,"create_tree","parameter_opt=".$optimization_mode,2);
-      $this->ExperimentLog->addAction($exp_id,"create_tree","incl_meta=".(int)$include_meta,2);
-      $this->ExperimentLog->addAction($exp_id,"create_tree","incl_subsets=".(int)$include_subsets,2);
-      $this->ExperimentLog->addAction($exp_id,"create_tree_start",$gf_id,1);
+      $this->ExperimentLog->addAction($exp_id,"create_".$job_type, "options",1);
+      $this->ExperimentLog->addAction($exp_id,"create_".$job_type, "gene_family=".$gf_id,2);
+      $this->ExperimentLog->addAction($exp_id,"create_".$job_type, "selected_species",2);
+      foreach($selected_species as $ss){$this->ExperimentLog->addAction($exp_id,"create_".$job_type, $ss,3);}
+      $this->ExperimentLog->addAction($exp_id,"create_".$job_type,"msa_algorithm=".$msa_program,2);
+      if(!$msa_only) {
+          $this->ExperimentLog->addAction($exp_id,"create_tree","tree_algorithm=".$tree_program,2);
+          $this->ExperimentLog->addAction($exp_id,"create_tree","msa_editing=".$editing_mode,2);
+          $this->ExperimentLog->addAction($exp_id,"create_tree","incl_meta=".(int)$include_meta,2);
+          $this->ExperimentLog->addAction($exp_id,"create_tree","incl_subsets=".(int)$include_subsets,2);
+      }
+      $this->ExperimentLog->addAction($exp_id,"create_" . $job_type . "_start",$gf_id,1);
       $this->set("run_pipeline",true);
       return;
 

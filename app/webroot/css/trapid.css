@@ -1359,7 +1359,8 @@ body {
 	z-index:1000;
 }
 
-#reset-tax-list {
+/* Also used on MSA/tree page */
+#reset-tax-list, a.tree-results-link {
 	cursor:pointer;
 }
 
@@ -1783,6 +1784,46 @@ nav .navbar-nav .navbar-form {
 	font-family:monospace;
 	font-size:88%;
 }
+
+
+/* Meta-annotation legend squares + colors (for phylogenetic tree legend) */
+.meta-square::before {
+	content: '\25A0';
+}
+
+.meta-ni {
+	color: #cccccc;
+}
+
+.meta-p {
+	color: #33638d
+}
+
+.meta-qfl {
+	color: #1f968b;
+}
+
+.meta-fl {
+	color: #73d055;
+}
+
+.subsets-circle-in::before {
+	color: #2196f3;
+	content: '\25CF';
+}
+
+.subsets-circle-out::before {
+	color: #2196f3;
+	content: '\25CB';
+}
+
+.msa-wrapper {
+	background-color: white;
+	border: lightgrey solid 1px;
+	padding:10px;
+	margin-top: 15px;
+}
+
 /* Lots of ugly borders: useful for debugging when things are not displayed as expected */
 /*
 

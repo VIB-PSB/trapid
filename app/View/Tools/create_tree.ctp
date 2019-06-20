@@ -1,40 +1,58 @@
 <?php
 	// Load the necessary javascript libraries
-    echo $this->Html->script(array('ftiens4.js', 'ua.js', 'd3-3.5.6.min.js', 'phyd3.min.js'));
+    echo $this->Html->script(array('ftiens4.js', 'ua.js', 'd3-3.5.6.min.js', 'phyd3.min.js', 'msa.min.js'));
     // Load PhyD3 style
     echo $this->Html->css('phyd3.min.css');
 ?>
 
-<div>
-    <div class="page-header">
-        <h1 class="text-primary">Create phylogenetic tree</h1>
-    </div>
-<div class="subdiv">
+<div class="page-header">
+    <h1 class="text-primary">MSA & phylogenetic tree</h1>
+</div>
 
-    <p class="text-justify">
-        <strong>Gene family: </strong> <?php echo $this->Html->link($gf_id,array("controller"=>"gene_family","action"=>"gene_family", $exp_id, $gf_id));?>
-        (<?php echo $gf_info['GeneFamilies']['num_transcripts'];?> transcripts). </p>
+<section class="page-section-sm">
+<p class="text-justify">
+    <strong>Gene family: </strong> <?php echo $this->Html->link($gf_id,array("controller"=>"gene_family","action"=>"gene_family", $exp_id, $gf_id));?>
+    (<?php echo $gf_info['GeneFamilies']['num_transcripts'];?> transcripts). </p>
+<?php
+if((isset($previous_result) && $previous_result==false) || !isset($previous_result)) {
+    if (isset($run_pipeline)) {
+        echo "<p class='lead'>\n";
+        echo "A job for creating the MSA / phylogenetic tree has been added to the queue. ";
+        echo "An email will be sent when the job has finished.\n";
+        echo "</p>\n";
+    }
+}
+?>
 
-    <!--
-  	<h3>Gene family</h3>
-	<div class="subdiv">
-		<dl class='standard dl-horizontal'>
-		<dt>Gene family</dt>
-		<dd><?php echo $this->Html->link($gf_id,array("controller"=>"gene_family","action"=>"gene_family",$exp_id,$gf_id));?></dd>
-		<dt>#Transcripts</dt>
-		<dd><?php echo $gf_info['GeneFamilies']['num_transcripts'];?></dd>
-		</dl>
-	</div>
-	-->
 
-	<?php
-	$hide_options	= false;
-	if(isset($previous_result) && $previous_result==true){
-		echo "<h3>Phylogenetic tree</h3>\n";
-		?>
+<?php if(isset($previous_results) && $previous_results['msa']==true): ?>
+<p class="text-justify">
+    <a id="new-tree-link" class="tree-results-link"><span class="glyphicon glyphicon-chevron-right"></span> Create MSA / phylogenetic tree with different species or settings</a>
+    <a id="current-tree-link" class="tree-results-link hidden"><span class="glyphicon glyphicon-eye-open"></span> View current MSA / phylogenetic tree</a>
+</p>
+<?php endif; ?>
+</section>
 
-        <?php if(!$stripped_msa_length==0): ?>
-            <!-- First trial with PhyD3! Controls copied from the example given in the doc then adapted. -->
+<?php
+//$hide_options	= false;
+if(isset($previous_results) && $previous_results['msa']==true): ?>
+
+    <section class="page-section-sm" id="tree-results">
+        <ul class="nav nav-tabs nav-justified" id="msa-tree-tabs" data-tabs="tabs">
+            <?php if ($previous_results['tree'] == true): ?>
+                <li class="active"><a href="#tree-tab" data-toggle="tab">Phylogenetic tree</a></li>
+                <li id="msa-tab-li"><a href="#msa-tab" data-toggle="tab">Multiple sequence alignment(s)</a></li>
+            <?php else: ?>
+                <li class="disabled"><a>Phylogenetic tree</a></li>
+                <li class="active"><a href="#msa-tab" data-toggle="tab">Multiple sequence alignment(s)</a></li>
+            <?php endif; ?>
+            <li><a href="#files-extra-tab" data-toggle="tab">Files & extra</a></li>
+        </ul>
+
+<div class="tab-content">
+    <?php if ($previous_results['tree'] == true): ?>
+    <div id="tree-tab" class="tab-pane active"><br>
+    <!-- PhyD3 controls copied from the example given in the doc, then adapted. -->
             <div id="phyd3-row" class="row phyd3-controls" style="margin-top: 10px;">
                 <!-- PhyD3 settings -->
                 <div id="phyd3-settings" class="col-sm-3">
@@ -285,19 +303,61 @@
                             <strong>Export as:</strong>
                             <button class="btn btn-sm btn-primary" id="linkSVG">SVG</button>
                             <button class="btn btn-sm btn-primary" id="linkPNG">PNG</button>
-                            <a class="btn btn-sm btn-primary" href="<?php echo $this->Html->url(array("controller"=>"tools","action"=>"view_tree",$hashed_user_id,$exp_id,$gf_id,"newick")); ?>">Newick</a>
-                            <a class="btn btn-sm btn-primary" href="<?php echo $this->Html->url(array("controller"=>"tools","action"=>"view_tree",$hashed_user_id,$exp_id,$gf_id)); ?>">XML</a>
                         </div>
                     </div> <!--  end .panel -->
-                    <p class="text-justify">Use your mouse to drag, zoom and modify the tree. <strong>Actions:</strong><br />
-                        <kbd><kbd>ctrl</kbd> + <kbd>wheel</kbd></kbd> scale Y <br>
-                        <kbd><kbd>alt</kbd> + <kbd>wheel</kbd></kbd> scale X <br>
-                        <kbd><kbd>mouse click</kbd></kbd> show node info
-                    </p>
                 </div> <!--  end column -->
                 <!-- PhyD3 viewer -->
                 <div id="phyd3-viewer" class="col-sm-9"></div>
             </div>
+        <div class="row" id='legend-row' style="font-size:95%;">
+            <div class="col-md-6">
+                Use the mouse to drag, zoom and modify the tree. <strong>Actions:</strong>
+                    <ul class="list-inline text-justify">
+                    <li>
+                        <kbd><kbd>ctrl</kbd> + <kbd>wheel</kbd></kbd> scale Y
+                    </li>
+                    <li>
+                        <kbd><kbd>alt</kbd> + <kbd>wheel</kbd></kbd> scale X
+                    </li>
+                    <li>
+                        <kbd><kbd>mouse click</kbd></kbd> show node info
+                    </li>
+                </ul>
+            </div>
+            <div class="col-md-6">
+                <div class="pull-right">
+                    <!-- Hide when no meta-annotation / subset information? -->
+                    <ul class="list-inline text-right">
+                        <li>
+                            <strong>Meta-annotation:</strong>
+                        </li>
+                        <li>
+                            <span class="meta-square meta-ni"></span> No Information
+                        </li>
+                        <li>
+                            <span class="meta-square meta-p"></span> Partial
+                        </li>
+                        <li>
+                            <span class="meta-square meta-qfl"></span> Quasi Full Length
+                        </li>
+                        <li>
+                            <span class="meta-square meta-fl"></span> Full Length
+                        </li>
+                    </ul>
+                    <ul class="list-inline text-right">
+                        <li>
+                            <strong>Subsets:</strong>
+                        </li>
+                        <li>
+                            <span class="subsets-circle-in"></span> Comprised in subset
+                        </li>
+                        <li>
+                            <span class="subsets-circle-out"></span> Not in subset
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
             <!-- Taxonomy colors modal, opened when user clicks on the 'show colors' link  -->
             <div class="modal fade" id="taxonomyColorsModal" tabindex="-1" role="dialog" aria-labelledby="taxonomyColorsModalLabel">
                 <div class="modal-dialog modal-lg" role="document">
@@ -317,87 +377,323 @@
                     </div>
                 </div>
             </div>
+    </div> <!-- End phylogenetic tree tab content -->
+    <?php endif; ?>
+
+    <div id="msa-tab" class="tab-pane <?php if($previous_results['tree'] == false){ echo "active";}?>"><br>
+        <div class="row" style="margin-bottom:6px;">
+            <ul class="nav nav-pills small-nav pull-right" id="nav-pills-msas" data-tabs="pills">
+                <li><strong>MSA type: &nbsp;</strong></li>
+                <li class="active"><a data-toggle="pill" href="#full-msa-view-tab">Unedited (<?php echo $full_msa_length; ?>)</a></li>
+                <?php if($previous_results['msa_stripped'] == true): ?>
+                <li><a data-toggle="pill" href="#stripped-msa-view-tab">Edited (<?php echo $stripped_msa_length; ?>)</a></li>
+                <?php else: ?>
+                <li class="disabled"><a>Edited</a></li>
+                <?php endif; ?>
+            </ul>
+        </div>
+
+        <div class="tab-content" id="msa-view-tab-content">
+            <div id="full-msa-view-tab" class="tab-pane active">
+                <div id="full-msa-wrapper" class="row msa-wrapper">
+                     <div id="full-msa-view">
+                        <p class="text-center text-muted">
+                            <br>
+                            <?php echo $this->Html->image('ajax-loader.gif'); ?>
+                            <br>
+                            Loading MSA viewer...
+                        </p>
+                    </div>
+                </div>
+            </div>
+            <?php if($previous_results['msa_stripped'] == true): ?>
+            <div id="stripped-msa-view-tab" class="tab-pane">
+                <div id="stripped-msa-wrapper" class="row msa-wrapper">
+                    <div id="stripped-msa-view">
+                        <p class="text-center text-muted">
+                            <br>
+                            <?php echo $this->Html->image('ajax-loader.gif'); ?>
+                            <br>
+                            Loading MSA viewer...
+                        </p>
+                    </div>
+                </div>
+            </div>
+            <?php endif; ?>
+        </div>
+
+<script type="text/javascript">
+    var msaDiv = document.getElementById("full-msa-view");
+    var strippedMsaDiv = document.getElementById("stripped-msa-view");
+    var msaUrl = "<?php echo $this->Html->url(array("controller"=>"tools","action"=>"get_msa",$exp_id, $gf_id)); ?>";
+    var strippedMsaUrl = "<?php echo $this->Html->url(array("controller"=>"tools","action"=>"get_msa",$exp_id, $gf_id,"stripped")); ?>";
+    var msaOpts = {
+        el: msaDiv,
+        // colorscheme: {"scheme": "hydro"},
+        importURL: msaUrl,
+        vis: {
+            labelId: false,
+            conserv:true
+            // overviewbox:false,
+            // seqlogo:true
+        },
+        zoomer: {
+            menuFontsize:"12px",
+            autoResize:true,
+            alignmentHeight:300,
+            labelNameLength: 150,
+            labelFontsize: 12
+            // labelLineHeight: "12px"
+        },
+        menu:"small",
+        bootstrapMenu:true,
+    };
+    var strippedMsaOpts = {
+        el: strippedMsaDiv,
+        // colorscheme: {"scheme": "hydro"},
+        importURL: strippedMsaUrl,
+        vis: {
+            labelId: false,
+            conserv:true
+            // overviewbox:false,
+            // seqlogo:true
+        },
+        zoomer: {
+            menuFontsize:"12px",
+            autoResize:true,
+            alignmentHeight:300,
+            labelNameLength: 150,
+            labelFontsize: 12
+            // labelLineHeight: "12px"
+        },
+        menu:"small",
+        bootstrapMenu:true,
+    };
+    var m = msa(msaOpts);
+    var sm = msa(strippedMsaOpts);
+
+
+    function redraw_msa(msa_viewer_div, msa_wrapper_div, msa_options) {
+        // If the wrapper div is currently visible ...
+        if(document.getElementById(msa_wrapper_div).offsetParent !== null) {
+            // Get width of wrapper element
+            var wrapper_width = document.getElementById(msa_wrapper_div).offsetWidth;
+            // Get width of msa viewer
+            var msa_seqblock_width = document.getElementById(msa_viewer_div).getElementsByClassName('biojs_msa_seqblock')[0].offsetWidth;
+            var msa_labelblock_width = document.getElementById(msa_viewer_div).getElementsByClassName('biojs_msa_labelblock')[0].offsetWidth;
+            var msa_width = msa_seqblock_width + msa_labelblock_width;
+            // If its width is larger than the wrapper's, redraw the MSA (otherwise there is no need to do anything)
+            if(msa_width > wrapper_width) {
+                $('#' + msa_viewer_div).unwrap();  // Replace by vanilla JS?
+                document.getElementById(msa_viewer_div).innerHTML = "";
+                // Remove all MSA menu bars
+                var msa_menu_bars = document.getElementById(msa_wrapper_div).getElementsByClassName("smenubar");
+                for(var i=0;i < msa_menu_bars.length; i++) {
+                    msa_menu_bars[i].remove();
+                }
+                // Reload MSA
+                msa(msa_options);
+            }
+        }
+    }
+
+
+
+    // Redraw MSA on various events: when MSA tab is shown, and when any 'MSA type' item is clicked.
+    $('#msa-tree-tabs a').on('shown.bs.tab', function(){
+        redraw_msa('full-msa-view', 'full-msa-wrapper', msaOpts);
+        <?php if($previous_results['msa_stripped'] == true): ?>
+        redraw_msa('stripped-msa-view', 'stripped-msa-wrapper', strippedMsaOpts);
         <?php endif; ?>
-
-        <?php
-		echo "<div class='subdiv'>\n";
-		$data_url_tree	= $this->Html->url(array("controller"=>"tools","action"=>"view_tree",$hashed_user_id,$exp_id,$gf_id),false);
-		$data_url_tree_newick = $this->Html->url(array("controller"=>"tools","action"=>"view_tree",$hashed_user_id,$exp_id,$gf_id,"newick"),false);
-
-		$jar_file_location = $this->Html->url("/files/forester/",true);
-		$config_url	   = TMP_WEB."experiment_data/".$exp_id."/atv_config.cfg";
-
-
-		if($stripped_msa_length==0){
-		    echo "<br/><br/><span class='error'>The computed stripped multiple sequence alignment has a length of zero. As such, no phylogenetic tree is constructed.</span></div>\n";
-		}
-		else{
-//		    echo "<span>Download phylogenetic tree:</span>";
-//		    echo "<ul style='margin-left:30px;'>";
-//		    echo "<li>".$this->Html->link("PhyloXML",$data_url_tree)."</li>";
-//		    echo "<li>".$this->Html->link("Newick",$data_url_tree_newick)."</li>";
-//		    echo "</ul>";
-		    echo "<h3>Multiple sequence alignment</h3>";
-		    echo "<ul style='margin-left:30px;'>";
-		    echo "<li>".$this->Html->link("Full MSA", array("controller"=>"tools","action"=>"create_msa",$exp_id,$gf_id)) . " (Length: ".$full_msa_length." amino acids)</li>";
-            echo "<li>" . $this->Html->link("Stripped MSA", array("controller"=>"tools","action"=>"create_msa",$exp_id,$gf_id,"stripped")) . " (Length: ". $stripped_msa_length . " amino acids)</li>";
-		    echo "</ul>";
-		    echo "<br/>\n";
-
-		    echo "<div style='margin-left:5px;margin-top:-10px;'>\n";
-//		    echo "<p><br/><br/>\n";
-//		    echo "<applet archive='forester.jar' code='org.forester.atv.ATVe.class' codebase='$jar_file_location' width='950' height='750' alt='Archeopteryx is not working on your system (requires at least Java 1.5)'>\n";
-//		    echo "<param name='url_of_tree_to_load' value='$data_url_tree'>\n";
-//		    echo "<param name='config_file' value='$config_url' >\n";
-//		    echo "<param name='base_linkout_url' value='".$this->Html->url("/",true)."trapid/transcript/".$exp_id."/'  >\n";
-//		    echo "</applet>\n";
-//		    echo "</p>";
-            echo "</div>\n";
-	            if($include_subsets){
-		    	echo $this->element("subset_colors");
-		    }
-		    else{
-			//echo $this->element("meta_colors");
-		    }
-		    echo "</div>\n";
-	        }
-		$hide_options	= true;
-	}
-	else if((isset($previous_result) && $previous_result==false) || !isset($previous_result)){
-	    if(isset($run_pipeline)){
-		    echo "<h3>Phylogenetic tree</h3>\n";
-		    echo "<div class='subdiv'>";
-		    echo "A job for creating the phylogenetic tree has been added to the queue. <br/>";
-		    echo "An email will be sent when the job has finished.</br>";
-		    echo "</div>\n";
-	    }
-	}
-	?>
-
-	<?php
-	$options_div_style		= null;
-	if($hide_options){
-		$options_div_style	= " style='display:none;' ";
-		echo "<div id='rerun_div'>";
-		// echo "<br/><br/><a href=\"javascript:void(0);\" onclick=\"javascript:toggleElementsNewMsa();\" >Create phylogenetic tree with different species</a><span style='margin-left:20px;'>(You may have to clear the Java cache to see the new result)</span>\n";
-		echo "<br><a href=\"javascript:void(0);\" onclick=\"javascript:toggleElementsNewMsa();\" >Create phylogenetic tree with different species or settings</a>\n";
-		echo "</div>";
-		echo "<br>\n";
-	}
-	?>
-
-	<div id="options_div" <?php echo $options_div_style;?> >
-	<br/>
-	<?php
-		echo $this->Form->create(false, array("url"=>array("controller"=>"tools", "action"=>"create_tree", $exp_id, $gf_id), "type"=>"post"));;
-	?>
+    });
+    $('#nav-pills-msas a').on('shown.bs.tab', function(){
+        redraw_msa('full-msa-view', 'full-msa-wrapper', msaOpts);
+        <?php if($previous_results['msa_stripped'] == true): ?>
+        redraw_msa('stripped-msa-view', 'stripped-msa-wrapper', strippedMsaOpts);
+        <?php endif; ?>
+    });
+</script>
 
 
-	<?php if(!isset($run_pipeline)):?>
+</div> <!-- End MSA tab content -->
 
-	<h3>Species/clade selection</h3>
+    <div id="files-extra-tab" class="tab-pane"><br>
+    <section class="page-section">
+    <h4>Download</h4>
+    <?php if($previous_results['tree'] == true): ?>
+    <section class="page-section-sm">
+        <h5>Phylogenetic tree</h5>
+        <ul>
+            <li><a href="<?php echo $this->Html->url(array("controller"=>"tools","action"=>"view_tree",$hashed_user_id,$exp_id,$gf_id,"newick")); ?>">Download Newick tree</a></li>
+            <li><a href="<?php echo $this->Html->url(array("controller"=>"tools","action"=>"view_tree",$hashed_user_id,$exp_id,$gf_id)); ?>">Download PhyloXML tree</a></li>
+        </ul>
+    </section>
+    <?php endif;?>
+
+    <section class="page-section-sm">
+        <h5>Multiple Sequence Alignment(s)</h5>
+        <ul>
+            <li><strong>Unedited MSA</strong> (<?php echo $full_msa_length; ?> amino acids):
+                <a href="<?php echo $this->Html->url(array("controller"=>"tools","action"=>"view_msa",$hashed_user_id,$exp_id,$gf_id,"normal")); ?>">download MSA (.faln)</a>
+            </li>
+            <?php if($previous_results['msa_stripped'] == true): ?>
+            <li>
+                <strong>Edited MSA</strong> (<?php echo $stripped_msa_length; ?> amino acids):
+                <a href="<?php echo $this->Html->url(array("controller"=>"tools","action"=>"view_msa",$hashed_user_id,$exp_id,$gf_id,"stripped")); ?>">download MSA (.faln)</a>
+            </li>
+            <?php endif; ?>
+        </ul>
+    </section>
+    </section>
+        <section class="page-section">
+            <h4>Used software</h4>
+            <ul>
+                <?php if($previous_results['tree'] == true): ?>
+                <li><strong>Phylogenetic tree: </strong>
+                    <?php echo "<code>" . $tree_programs[$gf_info['GeneFamilies']['tree_params']] . "</code>"; ?>
+                </li>
+                <?php endif; ?>
+                <li><strong>Multiple Sequence Alignment: </strong>
+                    <?php echo "<code>" . $msa_programs[$gf_info['GeneFamilies']['msa_params']] . "</code>"; ?>
+                </li>
+                <?php if($previous_results['msa_stripped'] == true): ?>
+                <li><strong>Alignment editing: </strong>
+                    <?php echo "<code>" . $gf_info['GeneFamilies']['msa_stripped_params'] . "</code>"; ?>
+                </li>
+                <?php endif; ?>
+            </ul>
+            <p class="text-justify">More information regarding used software versions, command-lines, and parameters can be found in the
+                <?php echo $this->Html->link("documentation", array("controller"=>"documentation","action"=>"tools_parameters", "#"=>"msa-phylogeny"), array("class"=>"linkout", "target"=>"_blank")); ?>
+            </p>
+        </section>
+    </div> <!-- End files/extra tab content -->
+</div>
+</section> <!-- End current results section -->
+<?php endif;?>
+
+<?php
+$new_msa_tree_div_style		= null;
+if(isset($previous_results) && $previous_results['msa']==true) {
+    $new_msa_tree_div_style = " class='hidden'";
+}
+?>
+
+<div id="new_msa_tree_div" <?php echo $new_msa_tree_div_style;?>>
+<?php echo $this->Form->create(false, array("url"=>array("controller"=>"tools", "action"=>"create_tree", $exp_id, $gf_id), "type"=>"post")); ?>
+<?php if(!isset($run_pipeline)):?>
+<div class="row" id="tree-creation-row">
+<?php
+	$no_sub	= false;
+    if(isset($error)){
+        $no_sub	= true;
+        echo "<div class=\"alert alert-warning alert-dismissible\" role=\"alert\">\n";
+        echo "<button type=\"button\" class=\"close\" data-dismiss=\"alert\" aria-label=\"Close\"><span aria-hidden=\"true\">&times;</span></button>\n";
+        echo "<strong>Error:</strong> " . $error . "\n";
+        echo "</div>\n";
+    }
+?>
+    <?php if($exp_info['hit_results']):?>
+    <div class="col-md-9">
+    <?php else: ?>
+    <div class="col-md-12">
+    <?php endif; ?>
+        <div class="panel panel-default">
+        <div class="panel-heading">
+            <h3 class="panel-title">MSA / tree creation settings</h3>
+        </div>
+        <div class="panel-body">
+            <div class="row">
+                <div class="col-md-6">
+                      <h5>Multiple sequence alignment</h5>
+                      <div class="form-group">
+                           <label for="msa_program"><strong>MSA algorithm</strong></label>
+                           &nbsp;<?php echo $this->element("help_tooltips/create_tooltip", array("tooltip_text"=>$tooltips['msatree_msa_program'], "tooltip_placement"=>"top")); ?>
+                    <br>
+                    <label class="radio-inline">
+                      <input type="radio" name="msa_program" id="msa_program_muscle" value="muscle" checked> MUSCLE
+                    </label>&nbsp;&nbsp;
+                    <label class="radio-inline">
+                      <input type="radio" name="msa_program" id="msa_program_mafft" value="mafft"> MAFFT
+                    </label>
+                      </div>
+                      <div class="form-group">
+                           <label for="posThreshold"><strong>MSA editing</strong></label>
+                           &nbsp;<?php echo $this->element("help_tooltips/create_tooltip", array("tooltip_text"=>$tooltips['msatree_msa_editing'], "tooltip_placement"=>"top")); ?>
+                    <select class="form-control" id="editing_mode" name="editing_mode">
+                        <option value="column" selected>Positions only</option>
+                        <option value="row">Genes only</option>
+                        <option value="column_row">Position and genes</option>
+                        <option value="none">No editing</option>
+                    </select>
+                      </div>
+                    </div>
+              <div class="col-md-6">
+              <h5>Phylogenetic tree</h5>
+                <div class="form-group">
+                     <label for="tree_program"><strong>Tree construction algorithm</strong></label>
+                     &nbsp;<?php echo $this->element("help_tooltips/create_tooltip", array("tooltip_text"=>$tooltips['msatree_tree_program'], "tooltip_placement"=>"top")); ?>
+                     <br>
+                    <label class="radio-inline">
+                      <input type="radio" name="tree_program" id="tree_program_fasttree" value="fasttree" checked> FastTree
+                    </label>&nbsp;&nbsp;
+                    <label class="radio-inline">
+                      <input type="radio" name="tree_program" id="tree_program_iqtree" value="iqtree"> IQ-TREE
+                    </label>&nbsp;&nbsp;
+                    <label class="radio-inline">
+                      <input type="radio" name="tree_program" id="tree_program_raxml" value="raxml"> RaxML
+                    </label>&nbsp;&nbsp;
+                    <label class="radio-inline">
+                      <input type="radio" name="tree_program" id="tree_program_phyml" value="phyml"> PhyML
+                    </label>
+                </div>
+                <div class="form-group">
+                    <label for="nbIteration"><strong>Tree annotation</strong></label>
+                    &nbsp;<?php echo $this->element("help_tooltips/create_tooltip", array("tooltip_text"=>$tooltips['msatree_tree_annotation'], "tooltip_placement"=>"top")); ?>
+                    <br>
+                    <?php
+			$checked	= null;
+			if(isset($include_subsets) && $include_subsets){$checked = " checked='checked' ";}
+			echo "<label class=\"checkbox-inline\">\n";
+			echo "<input name='include_subsets' id='include_subsets' $checked type='checkbox' value='y'>Include subsets </label>&nbsp;&nbsp;\n";
+			$checked2	= " checked='checked' ";
+			if($checked){$checked2 = null;}
+            echo "<label class=\"checkbox-inline\">\n";
+			echo "<input name='include_meta_annotation' id='include_meta_annotation' $checked2 type='checkbox' value='y'>\n";
+			echo "Include meta-annotation\n";
+			echo "</label>\n";
+			?>
+            </div>
+        </div>
+</div> <!-- end row -->
+<div class="row">
+<div class="col-md-6">
+<div class="checkbox">
+    <label for="msa_only">
+    <input id="msa_only" name="msa_only" value="y" type="checkbox">
+    <strong>Generate MSA only</strong> &nbsp;
+    </label>
+    <?php echo $this->element("help_tooltips/create_tooltip", array("tooltip_text"=>$tooltips['msatree_only_msa'], "tooltip_placement"=>"top")); ?>
+</div>
+</div>
+</div>
+        </div>
+        </div>
+
+        <div class="panel panel-default">
+        <div class="panel-heading">
+            <h3 class="panel-title">Input data</h3>
+        </div>
+        <div class="panel-body">
+
+    <ul class="nav nav-tabs nav-justified" id="tabs" data-tabs="tabs">
+        <li class="active"><a href="#species-tree-tab" data-toggle="tab">Species / clade selection</a></li>
+        <li><a href="#transcripts-tab" data-toggle="tab">Transcript exclusion</a></li>
+    </ul>
+    <div class="tab-content">
+            <div id="species-tree-tab" class="tab-pane active"><br>
+            <p class="text-justify">Please select the species for which you want to include its associated genes.</p>
 	<div class="subdiv">
-	     <div style="float:left;width:650px;">
+	     <div style="float:left;width:100%; max-height: 500px;overflow-y: auto;">
 		<script type="text/javascript">
 		//<![CDATA[
 		var USEFRAMES 		= 0;
@@ -519,7 +815,7 @@
 
 		<table style="background-color:transparent;border:0px;">
 	   		<tr style="border:0px;"><td style="border:0px;">
-				<a style="font-size:7pt;text-decoration:none;color:black;font-weight:normal;" href="http://www.treemenu.net/" target=_blank>Please select the species for which you want to include its associated genes.</a>
+				<a style="font-size:7pt;text-decoration:none;color:black;font-weight:normal;" href="http://www.treemenu.net/" target="_blank"></a>
 	   		</td></tr>
 		</table>
 
@@ -533,49 +829,13 @@
 	 		<noscript>Please enable Javascript in your browser</noscript>
  		</div>
 	    </div> <!-- End float -->
-	    <div style='float:left;width:330px;'>
-		<?php if($exp_info['hit_results']):?>
-            <span style="margin-left:10px;"><strong>Species similarity hits</strong></span>
-		<div style="margin-top:5px;" id="species_simsearch_selection_div">
-			<table class="table table-condensed table-bordered table-striped table-hover" cellpadding="0" cellspacing="0" style="width:330px; font-size: 85%;">
-				<thead>
-                <tr>
-					<th style="width:60%">Species</th>
-					<th style="width:40%">Hit count (global)</th>
-                </tr>
-				</thead>
-                <tbody>
-				<?php
-					$hit_results	= explode(";",$exp_info['hit_results']);
-					$tmp		= array();
-					$sum		= 0;
-					foreach($hit_results as $s){$k = explode("=",$s); $tmp[$k[0]]=$k[1]; $sum+=$k[1];}
-					arsort($tmp);
-					foreach($tmp as $k=>$v){
-						echo "<tr>";
-						echo "<td>".$available_species_species[$k]['common_name']."</td>";
-						$perc	= round(100*$v/$sum,0);
-						$perc2	= $perc;
-$css1	= "background: linear-gradient(left,rgb(180,180,180) ".$perc."%,rgb(245,245,245) ".$perc2."%); ";
-$css2	= "background: -o-linear-gradient(left,rgb(180,180,180) ".$perc."%,rgb(245,245,245) ".$perc2."%); ";
-$css3	= "background: -moz-linear-gradient(left,rgb(180,180,180) ".$perc."%,rgb(245,245,245) ".$perc2."%); ";
-$css4	= "background: -webkit-linear-gradient(left,rgb(180,180,180) ".$perc."%,rgb(245,245,245) ".$perc2."%); ";
-$css5	= "background: -ms-linear-gradient(left,rgb(180,180,180) ".$perc."%,rgb(245,245,245) ".$perc2."%); ";
-$css6	= "background: -webkit-gradient(linear,left top,right top,color-stop(".($perc/100).", rgb(180,180,180)),color-stop(".($perc2/100).", rgb(245,245,245)));";
-						$css	= $css1.$css2.$css3.$css4.$css5.$css6;
-						echo "<td><div style='".$css."'>".$v." hits</div></td>";
-						echo "</tr>\n";
-					}
-				?>
-                </tbody>
-			</table>
-		</div>
-		<?php endif;?>
-	    </div>  <!-- End float -->
-	    <div style='clear:both;width:800px;'>&nbsp;</div>
+<!--	    <div style='clear:both;width:800px;'>&nbsp;</div>-->
 	</div>
 
-	<script type="text/javascript">
+
+            </div> <!-- end species/clade selection tab content -->
+            <div id="transcripts-tab" class="tab-pane"><br>
+        	<script type="text/javascript">
 	    //<![CDATA[
 	    <?php
 		$total_selected_species	= 0;
@@ -679,56 +939,59 @@ $css6	= "background: -webkit-gradient(linear,left top,right top,color-stop(".($p
             document.getElementById("num_species").innerHTML = total_selected_species;
             document.getElementById("num_genes").innerHTML = total_selected_genes;
 			if(total_selected_genes > MAX_GENES) {
-                document.getElementById("status").innerHTML	= "<span class='error'>Error: too many genes selected (max: "+MAX_GENES+"). Deselect species to continue.</span>";
+                document.getElementById("status").innerHTML	= "<span class='text-danger'>Error<span class='hidden-sm'>: too many genes selected (max: "+MAX_GENES+"). Please deselect species.</span></span>";
+                document.getElementById("submit_button").disabled = "disabled";
+			}
+			else if(total_selected_genes <= 0){
+                document.getElementById("status").innerHTML	= "<span class='text-danger'>Error<span class='hidden-sm'>: No species/genes selected. Please select at least one.</span></span>";
                 document.getElementById("submit_button").disabled = "disabled";
 			}
 			else {
-                document.getElementById("status").innerHTML	= "OK";
+                document.getElementById("status").innerHTML	= "<span class='text-success'>OK</span>";
                 document.getElementById("submit_button").disabled = false;
 			}
 		}
 
 	//]]>
 	</script>
-
-
-	<h3>Transcript selection</h3>
+    <p class="text-justify">Selected transcript will be <strong>excluded</strong> from the tree. </p>
 	<div class="subdiv">
 		<?php
+		$met_dict = array("Full Length"=>"FL", "Quasi Full Length"=>"QFL", "Partial"=>"P", "No Information"=>"NI");
 		$disabled	= null;
 		if($num_partial_transcripts==0){$disabled=" disabled='disabled' ";}
 		echo "<input type='checkbox' name='no_partial_transcripts' id='no_partial_transcripts' $disabled />\n";
-		echo "<span style='margin-left:10px;'>Do not include partial transcripts (".$num_partial_transcripts." partial transcripts detected in this gene family)</span>\n";
-		echo "<br/>\n";
-		echo "<input type='checkbox' name='single_transcript_selection' id='single_transcript_selection'/>\n";
-		echo "<span style='margin-left:10px;'>Single transcript <u><b>exclusion</b></u></span>\n";
+		echo "<span style='margin-left:10px;'>Exclude partial transcripts (".$num_partial_transcripts." partial transcripts detected in this gene family)</span>\n";
+		echo "<br>\n";
+
 		?>
-		<div style="margin-top:10px;display:none;" id="transcript_select_div">
-			<table class="table-bordered table table-condensed table-striped table-hover" cellpadding="0" cellspacing="0" style="width:400px;">
-				<thead>
-                <tr>
-					<th style="width:15%">Exclude</th>
-					<th style="width:45%">Transcript</th>
-					<th style="width:40%">Meta annotation</th>
-				</tr>
-                </thead>
-                <tbody>
+		<div style="margin-top:5px;font-size: 85%; max-height: 500px;overflow-y: auto;" id="transcript_select_div">
 				<?php
+				$k = 0;
 				foreach($gf_transcripts as $tr=>$met){
-					echo "<tr>";
-					echo "<td class='text-center'><input type='checkbox' name='exclude_".$tr."' id='exclude_".$tr."' /></td>";
-					echo "<td>".$this->Html->link($tr,array("controller"=>"trapid","action"=>"transcript",$exp_id,urlencode($tr)))."</td>";
-					echo "<td>".$met."</td>";
-					echo "</tr>";
+				    // Shorten transcript name if it longer than 25 `max_len` characters!
+				    $max_len = 26;
+                    $tr_text = $tr;
+                    if(strlen($tr_text) > $max_len) {
+                        $tr_text = substr($tr, 0,10) . "..." . substr($tr, -10);
+                    }
+					echo "<div class='col-lg-3 col-md-6 col-sm-6 col-xs-12'>";
+					echo "<input type='checkbox' name='exclude_".$tr."' id='exclude_".$tr."' />";
+					echo $this->Html->link($tr_text, array("controller"=>"trapid","action"=>"transcript",$exp_id,urlencode($tr)), array("title"=>$tr));
+					// echo "<span class=\"pull-right\">(<abbr title=\"" . $met . "\">" . $met_dict[$met] . "</abbr>)</span>";
+					echo " (<abbr title=\"" . $met . "\">" . $met_dict[$met] . "</abbr>)";
+					// echo " (" . $met . ")";
+					echo "</div>";
+//					$k++;
+//					if(($k % 3) == 0) {
+//					}
 				}
 				?>
-                </tbody>
-			</table>
 		</div>
 		<script type="text/javascript">
 			//<![CDATA[
 			var transcript_meta	= <?php echo json_encode($gf_transcripts);?>;
-			$("#single_transcript_selection").change(function(){
+			/*$("#single_transcript_selection").change(function(){
 				if(document.getElementById("single_transcript_selection").checked){
                     document.getElementById("transcript_select_div").style.display="block";
 				}
@@ -739,11 +1002,11 @@ $css6	= "background: -webkit-gradient(linear,left top,right top,color-stop(".($p
 					});
                     document.getElementById("transcript_select_div").style.display="none";
 				}
-			});
+			});*/
 			$("#no_partial_transcripts").change(function(){
 				if(document.getElementById("no_partial_transcripts").checked){
-                    document.getElementById("single_transcript_selection").checked = "checked";
-                    document.getElementById("transcript_select_div").style.display="block";
+//                    document.getElementById("single_transcript_selection").checked = "checked";
+//                    document.getElementById("transcript_select_div").style.display="block";
 					Object.keys(transcript_meta).forEach(function(tr){
 						var meta = transcript_meta[tr];
 						if(meta === "Partial") {
@@ -769,122 +1032,157 @@ $css6	= "background: -webkit-gradient(linear,left top,right top,color-stop(".($p
 
             // Toggle visibility of HTML elements if the user chooses to build a new tree.
             function toggleElementsNewMsa() {
-                document.getElementById('options_div').style.display = 'block';
-                document.getElementById('rerun_div').style.display = 'none';
+                // Toggle visibility of current results / submission form
+                document.getElementById('new_msa_tree_div').classList.toggle("hidden");
+//                document.getElementById('rerun_div').classList.toggle("hidden");
+                document.getElementById('tree-results').classList.toggle("hidden");
+                // Toggle visibility of links
+                document.getElementById('new-tree-link').classList.toggle("hidden");
+                document.getElementById('current-tree-link').classList.toggle("hidden");
+            }
+            // Call function on click of tree results links
+            var tree_results_links = document.getElementsByClassName("tree-results-link");
+            for(var i=0;i < tree_results_links.length; i++) {
+                tree_results_links[i].onclick = function() {
+                    toggleElementsNewMsa();
+                }
             }
 			//]]>
 		</script>
 	</div>
 
 
-	<h3>Overview and Options</h3>
-	<div class="subdiv">
-		<dl class="standard dl-horizontal">
-		<dt>#Selected species</dt>
-		<dd><span id='num_species'><?php echo $total_selected_species;?></span></dd>
-		<dt>#Selected genes</dt>
-		<dd><span id='num_genes'><?php echo $total_selected_genes; ?></span></dd>
-		<dt>Status</dt>
-		<dd>
+
+            </div> <!-- end transcripts selection tab content -->
+    </div><!-- end tab content wrapper -->
+        </div>
+        <div class="panel-footer">
+		<strong># Species: </strong><span id='num_species'><?php echo $total_selected_species;?></span> -
+		<strong># Genes: </strong><span id='num_genes'><?php echo $total_selected_genes; ?></span>
+        <span class="pull-right"><strong>Status: </strong>
 			<span id='status'>
 			<?php
-			$no_sub	= false;
-			if(isset($error)){
-				echo "<span class='error'>".$error."</span>";
+			if($total_selected_genes>$MAX_GENES){
+				echo "<span class='text-danger'>Error<span class='hidden-sm'>: too many genes selected (max: " . $MAX_GENES . "). Please deselect species.</span></span>";
 				$no_sub	= true;
 			}
-			else if($total_selected_genes>$MAX_GENES){
-				echo "<span class='error'>Error: too many genes selected (max: ".$MAX_GENES."). Deselect species to continue.</span>";
+			elseif ($total_selected_genes <= 0) {
+				echo "<span class='text-danger'>Error<span class='hidden-sm'>: No species/genes selected. Please select at least one.</span></span>";
 				$no_sub	= true;
 			}
 			else{
-				echo "OK";
+				echo "<span class='text-success'>OK</span>";
 			}
 			?>
 			</span>
-		</dd>
-		<dt>Algorithm</dt>
-		<dd>
-			<select name="tree_program" style="width:150px;">
-			<?php
-			foreach($tree_programs as $k=>$v){
-				$selected	= null;
-				if(isset($tree_program) && $tree_program==$k){$selected = " selected='selected' ";}
-				echo "<option value='$k' $selected>$v</option>\n";
-			}
-			?>
-			</select>
-		</dd>
-		<dt>Editing</dt>
-		<dd>
-			<select name="editing_mode" style="width:150px;">
-			<?php
-			foreach($editing_modes as $k=>$v){
-				$selected	= null;
-				if(isset($editing_mode) && $editing_mode == $k){$selected = " selected='selected' ";}
-				echo "<option value='$k' $selected>$v</option>\n";
-			}
-			?>
-			</select>
-		</dd>
-		<dt>Bootstrapping</dt>
-		<dd>
-			<select name="bootstrap_mode" style="width:150px;">
-			<?php
-			foreach($bootstrap_modes as $k=>$v){
-				$selected	= null;
-				if(isset($bootstrap_mode) && $bootstrap_mode == $k){$selected = " selected='selected' ";}
-				echo "<option value='$k' $selected>$v</option>\n";
-			}
-			?>
-			</select>
-		</dd>
-		<!--<dt>Parameter optimization</dt>
-		<dd>
-			<select name="optimization_mode" style="width:150px;">
-			<?php
-			foreach($optimization_modes as $k=>$v){
-				$selected	= null;
-				if(isset($optimization_mode) && $optimization_mode == $k){$selected = " selected='selected' ";}
-				echo "<option value='$k' $selected>$v</option>\n";
-			}
-			?>
-			</select>
-		</dd>
-		-->
-		<dt>Extra</dt>
-		<dd>
-			<div>
-			<?php
-			$checked	= null;
-			if(isset($include_subsets) && $include_subsets){$checked = " checked='checked' ";}
-			echo "<input name='include_subsets' $checked type='checkbox' value='y'/>\n";
-			echo "<span style='margin-left:20px;'>Include subsets in tree</span>\n";
-			echo "<br/>\n";
-			$checked2	= " checked='checked' ";
-			if($checked){$checked2 = null;}
-			echo "<input name='include_meta_annotation' $checked2 type='checkbox' value='y'/>\n";
-			echo "<span style='margin-left:20px;'>Include meta-annotation in tree</span>\n";
-			?>
-			</div>
-		</dd>
-		</dl>
-	</div>
+        </span>
+        </div>
+        </div>
 
-	<div class="subdiv">
-		<br/>
-		<input type="submit" value="Create phylogenetic tree" id="submit_button" <?php if($no_sub){echo "disabled='disabled'";}?> class="btn btn-primary"/>
-	</div>
-<br>
-	<?php endif;?>
+<p class="text-center">
+    <input type="submit" value="Create MSA / Tree" id="submit_button" <?php if($no_sub){echo "disabled='disabled'";}?> class="btn btn-primary"/>
+</p>
 
-	</form>
+    </div> <!-- end col -->
+
+    <?php if($exp_info['hit_results']):?>
+    <div class="col-md-3 hidden-sm">
+
+
+            <div class="panel panel-default">
+                <div class="panel-heading">
+                    <h3 class="panel-title">Species similarity hits</h3>
+                </div>
+                <div class="panel-body" style="font-size: 85%;">
+<!--                <p class="text-justify">Best similarity search hit for transcripts of the experiment.</p>-->
+                    <div id="species_simsearch_selection_div">
+                            <?php
+                            $hit_results	= explode(";",$exp_info['hit_results']);
+                            $max_species = 20;  // Max. number of species to show by default.
+                            $extra_div = false;
+                            $tmp		= array();
+                            $sum		= 0;
+                            foreach($hit_results as $s){$k = explode("=",$s); $tmp[$k[0]]=$k[1]; $sum+=$k[1];}
+                            arsort($tmp);
+                            $species_keys = array_keys($tmp);
+                            $last_species = end($species_keys);
+                            foreach($tmp as $k=>$v){
+                                if(array_search($k, $species_keys) == $max_species) {
+                                    $extra_div = true;
+                                    echo "<a id=\"toggle-extra-hits\" onclick=\"toggleExtraHits()\">";
+                                    echo "<span id=\"toggle-extra-hits-icon\" class=\"glyphicon small-icon glyphicon-menu-right\"></span> ";
+                                    echo "Show all...";
+                                    echo "</a>\n";
+                                    echo "<div id='extra-hits' class='hidden'>\n";
+                                }
+                                echo "<div class='row'>";
+                                echo "<div class=\"col-md-9 stats-metric\">" . $available_species_species[$k]['common_name'] . "</div>";
+                                $perc	= round(100*$v/$sum,0);
+                                $perc2	= $perc;
+                                $css1	= "background: linear-gradient(left,rgb(202, 230, 252) ".$perc."%,rgb(255, 255, 255) ".$perc2."%); ";
+                                $css2	= "background: -o-linear-gradient(left,rgb(202, 230, 252) ".$perc."%,rgb(255, 255, 255) ".$perc2."%); ";
+                                $css3	= "background: -moz-linear-gradient(left,rgb(202, 230, 252) ".$perc."%,rgb(255, 255, 255) ".$perc2."%); ";
+                                $css4	= "background: -webkit-linear-gradient(left,rgb(202, 230, 252) ".$perc."%,rgb(255, 255, 255) ".$perc2."%); ";
+                                $css5	= "background: -ms-linear-gradient(left,rgb(202, 230, 252) ".$perc."%,rgb(255, 255, 255) ".$perc2."%); ";
+                                $css6	= "background: -webkit-gradient(linear,left top,right top,color-stop(".($perc/100).", rgb(202, 230, 252)),color-stop(".($perc2/100).", rgb(255, 255, 255)));";
+                                $css	= $css1.$css2.$css3.$css4.$css5.$css6;
+                                echo "<div class=\"col-md-3\" style=\"" . $css . "\">" . $v . "</div>";
+                                echo "</div>\n";
+                                if($extra_div && $k == $last_species) {
+                                    echo "</div>";
+                                }
+                            }
+                            ?>
+                            <!-- TODO: move JS block once the page is refactored!! -->
+                            <script>
+                                        // Toggle extra similarity search hits. Called on click of 'toggle-extra-hits' link.
+                                        function toggleExtraHits() {
+                                            var extraHitsDiv = "extra-hits";
+                                            var extraHitsIcon = "toggle-extra-hits-icon";
+                                            var ehIconElmt = document.getElementById(extraHitsIcon);
+                                            document.getElementById(extraHitsDiv).classList.toggle("hidden");
+                                            if(ehIconElmt.classList.contains("glyphicon-menu-right")) {
+                                                ehIconElmt.classList.replace("glyphicon-menu-right", "glyphicon-menu-down");
+                                            }
+                                            else {
+                                                ehIconElmt.classList.replace("glyphicon-menu-down", "glyphicon-menu-right");
+                                            }
+                                        }
+
+                                        // Disable / enable tree-related form elements.
+                                        function toggleTreeOptions() {
+                                            var msa_only_checked = document.getElementById("msa_only").checked;
+                                            // Disable MSA editing select element
+                                            document.getElementById("editing_mode").disabled = msa_only_checked;
+                                            // Disable tree program radio buttons
+                                            var tree_radios = document.getElementsByName("tree_program");
+                                            for (var i = 0; i < tree_radios.length; i++) {
+                                                tree_radios[i].disabled = msa_only_checked;
+                                            }
+                                            // Disable tree annotation checkboxes
+                                            document.getElementById("include_subsets").disabled = msa_only_checked;
+                                            document.getElementById("include_meta_annotation").disabled = msa_only_checked;
+                                        }
+
+                                        // Toggle tree form elements on checkbox change
+                                        document.getElementById("msa_only").onchange = function(){ toggleTreeOptions() };
+
+                            </script>
+                    </div>
+                </div>
+            </div><!-- end panel -->
+    </div><!-- end col -->
+    <?php endif;?>
+</div>
+<?php echo $this->Form->end();?>
+<?php echo $this->element("help_tooltips/enable_tooltips",  array("container"=>"#tree-creation-row")); ?>
+<?php endif;?>
 
 	</div>
 
 </div>
 </div>
-<?php if(isset($previous_result) && $previous_result==true && $stripped_msa_length!=0): ?>
+<?php if(isset($previous_results) && $previous_results['tree']==true): ?>
     <script type="text/javascript">
         var treeUrl = "<?php echo $this->Html->url(array("controller"=>"tools","action"=>"get_tree",$exp_id, $gf_id, "xml_tree")); ?>";
         console.log(treeUrl);

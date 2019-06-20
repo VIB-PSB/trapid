@@ -73,10 +73,10 @@
 		//foreach($transcripts as $tran){if($tran['Transcripts']['putative_frameshift']==1){$num_putative_fs_transcripts++;}}
 
 		
-		$msa_string	= "Create multiple sequence alignment";
-		$tree_string	= "Create phylogenetic tree";
-		if($gf_info['msa']){$msa_string = "View current alignment / ". $msa_string;}
-		if($gf_info['tree']){$tree_string = "View current tree / ". $tree_string;}
+		$msa_tree_string	= "Create multiple sequence alignment / phylogenetic tree";
+		if($gf_info['tree'] || $gf_info['msa']) {
+		    $msa_tree_string = "View or create multiple sequence alignment / phylogenetic tree";
+		}
 
 
 		$toolbox= array("Structural data"=>array(
@@ -88,14 +88,8 @@
 				    ),				   
 				),
 				"Comparative genomics"=>array(
-				    array(	
-					$msa_string,
-					$this->Html->url(array("controller"=>"tools","action"=>"create_msa",$exp_id,$gf_info['gf_id'])),
-					"other_image.png",
-					$disable_cluster_tools
-				    ),
 				    array(
-					$tree_string,
+					$msa_tree_string,
 					$this->Html->url(array("controller"=>"tools","action"=>"create_tree",$exp_id,$gf_info['gf_id'])),
 					"other_image.png",
 					$disable_cluster_tools
