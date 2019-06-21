@@ -34,11 +34,11 @@
             </div>
             <br>
         </div>
-        <div id="represented-gfs" class="tab-pane"><br>
+        <div id="represented-gfs" class="tab-pane" style="margin-bottom: 50px;"><br>
 
             <?php
             if($n_represented > 0) {
-                echo "<table class=\"table table-compact table-striped table-hover table-bordered table-responsive gf-table\">
+                echo "<table id=\"represented-gfs-table\" class=\"table table-compact table-striped table-hover table-bordered table-responsive gf-table\">
                 <thead>
                     <th>GF identifier</th>
                     <th># genes</th>
@@ -80,10 +80,10 @@
             ?>
         </div>
 
-        <div id="missing-gfs" class="tab-pane"><br>
+        <div id="missing-gfs" class="tab-pane" style="margin-bottom: 50px;"><br>
             <?php
             if($n_missing > 0) {
-                echo "<table class=\"table table-compact table-striped table-hover table-bordered gf-table\">
+                echo "<table id=\"missing-gfs-table\" class=\"table table-compact table-striped table-hover table-bordered table-responsive gf-table\">
                 <thead>
                     <th>GF identifier</th>
                     <th># genes</th>
@@ -92,7 +92,6 @@
                 </thead>
                 <tbody>";
                 foreach ($missing_gfs_array as $missing_gf) {
-                    echo "<tr>";
                     echo "<tr>";
                     if($linkout_prefix) {
                         echo "<td><a>" .$missing_gf["gf_id"] . "</a></td>";
@@ -132,11 +131,44 @@
         }
         // On click of a gf in a `.gf-table`, trigger the redirect function
         $(function() {
-            $(".gf-table tr td:first-child").click(function(e){
+            $(".gf-table tbody").on('click', 'tr td:first-child a:first-child', function(e){
                 var gf_txt = $(e.target).text();
                 redirectToPage(gf_txt);
             });
-        });
 
+            $(".gf-table tbody").on('mouseenter', 'tr td:first-child',function(e){
+                // Create a tooltip only if there was none yet (i.e. no span element within the table cell)
+                if($(this).find("span").length === 0) {
+                var gf_txt = $(e.target).text();
+                var tooltip_id = "tooltip-" + gf_txt;
+                console.log("Create tooltip! " + gf_txt);
+                var tooltip_html_str = "<span class='gf-tooltip' id='" + tooltip_id + "'>Fetching GF functional data...</span>";
+                $(this).append(tooltip_html_str);
+                // Ok now populate the tooltip!
+                jQuery.ajax({
+                    url:"<?php echo $this->Html->url(array("controller" => "gene_family", "action" => "top_go_tooltip", $exp_id)); ?>/" + gf_txt,
+                    type:'GET',
+                    dataType:'html',
+                    success:function(data){
+                        jQuery("#" + tooltip_id).html(data);
+                    }
+                });
+                }
+            });
+
+            /* $(".gf-table tbody").on('mouseout', 'tr td:first-child', function(e){
+                console.log("Delete tooltip?");
+            }); */
+
+        });
     </script>
 <?php endif; ?>
+<script>
+<?php if($n_missing > 0): ?>
+$('#missing-gfs-table').dataTable( { dom: 'lBfrtip', buttons: [{ extend: 'csvHtml5', text: '<span class="glyphicon glyphicon-download-alt"></span>  Export to CSV', className: 'pull-right btn btn-sm btn-default', title: "missing_core_gfs_" + "<?php echo $tax_name; ?>"}] } );
+<?php endif; ?>
+<?php if($n_represented > 0): ?>
+$('#represented-gfs-table').dataTable( { dom: 'lBfrtip', buttons: [{ extend: 'csvHtml5', text: '<span class="glyphicon glyphicon-download-alt"></span>  Export to CSV', className: 'pull-right btn btn-sm btn-default', title: "represented_core_gfs_" + "<?php echo $tax_name; ?>"}] } );
+<?php endif; ?>
+</script>
+

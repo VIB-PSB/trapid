@@ -11,7 +11,7 @@ class GeneFamilyController extends AppController{
 
 				"GfData","AnnotSources","Annotation","ExtendedGo","KoTerms","ProteinMotifs");
 
-  var $components	= array("Cookie","TrapidUtils");
+  var $components	= array("Cookie","TrapidUtils", "DataTable");
 
   var $paginate		= array(
 				"Transcripts"=>
@@ -28,8 +28,6 @@ class GeneFamilyController extends AppController{
                         )
 				)
 			  );
-
-
 
 
 
@@ -389,30 +387,47 @@ class GeneFamilyController extends AppController{
   }
 
 
-
-
-  function normalizeGfInfo($exp_id,$gf_id,$new_count=null){
-    if($new_count==null){
-      $new_count = count($this->Transcripts->find("all",array("conditions"=>array("experiment_id"=>$exp_id,"gf_id"=>$gf_id))));
-    }
-    if($new_count==0){	//remove the gene family! No transcripts remaining for this gene family, so should be removed!
-      $this->GeneFamilies->deleteAll(array("experiment_id"=>$exp_id,"gf_id"=>$gf_id));
-      $this->redirect(array("controller"=>"trapid","action"=>"experiment",$exp_id));
-    }
-    else{
-      $this->GeneFamilies->updateAll(array("num_transcripts"=>"'".$new_count."'"),array("experiment_id"=>$exp_id,"gf_id"=>$gf_id));
-      return;
-    }
+  // Get top GF GO terms to display GF tooltip (used in cor GF completeness core GF tables).
+  function top_go_tooltip($exp_id=null, $ref_gf_id=null){
+      $this->layout = "";
+      $n_max = 3;
+      if(!$exp_id || !$ref_gf_id){return;}
+      parent::check_user_exp($exp_id);
+      $exp_info	= $this->Experiments->getDefaultInformation($exp_id);
+      // $this->set("exp_info",$exp_info);
+      // $this->set("exp_id",$exp_id);
+      // Check if GF exists in reference database
+      $gf_exists = $this->GfData->gfExists($ref_gf_id);
+      if($gf_exists) {
+        $this->set("ref_gf_id", $ref_gf_id);
+        $ref_gf_top_gos = $this->GfData->getTopGoTerms($ref_gf_id, $n_max);
+        $this->set("top_gos", $ref_gf_top_gos);
+      }
   }
 
- /*
-   * Cookie setup:
-   * The entire TRAPID websit is based on user-defined data sets, and as such a method for
-   * account handling and user identification is required.
-   *
-   * The 'beforeFilter' method is executed BEFORE each method, and as such ensures that the necessary
-   * identification through cookies is done.
-   */
+
+    function normalizeGfInfo($exp_id,$gf_id,$new_count=null){
+      if($new_count==null){
+        $new_count = count($this->Transcripts->find("all",array("conditions"=>array("experiment_id"=>$exp_id,"gf_id"=>$gf_id))));
+      }
+      if($new_count==0){	//remove the gene family! No transcripts remaining for this gene family, so should be removed!
+        $this->GeneFamilies->deleteAll(array("experiment_id"=>$exp_id,"gf_id"=>$gf_id));
+        $this->redirect(array("controller"=>"trapid","action"=>"experiment",$exp_id));
+      }
+      else{
+        $this->GeneFamilies->updateAll(array("num_transcripts"=>"'".$new_count."'"),array("experiment_id"=>$exp_id,"gf_id"=>$gf_id));
+        return;
+      }
+    }
+
+   /*
+     * Cookie setup:
+     * The entire TRAPID websit is based on user-defined data sets, and as such a method for
+     * account handling and user identification is required.
+     *
+     * The 'beforeFilter' method is executed BEFORE each method, and as such ensures that the necessary
+     * identification through cookies is done.
+     */
   function beforeFilter(){
     parent::beforeFilter();
   }

@@ -3,9 +3,12 @@
 // Highcharts
 echo $this->Html->script('https://code.highcharts.com/highcharts.js');
 echo $this->Html->script('https://code.highcharts.com/modules/exporting.js');
-// Choices JS (https://github.com/jshjohnson/Choices)
+// Choices JS (https://github.com/jshjohnson/Choices) + CSS
 echo $this->Html->script('https://cdn.rawgit.com/jshjohnson/Choices/3e889633/assets/scripts/dist/choices.min.js');
 echo $this->Html->css('https://cdn.rawgit.com/jshjohnson/Choices/3e889633/assets/styles/css/choices.min.css');
+// jQuery dataTable buttons
+echo $this->Html->script('https://cdn.datatables.net/buttons/1.5.6/js/dataTables.buttons.min.js');
+echo $this->Html->script('https://cdn.datatables.net/buttons/1.5.6/js/buttons.html5.min.js');
 ?>
 
 <style>
@@ -27,6 +30,26 @@ echo $this->Html->css('https://cdn.rawgit.com/jshjohnson/Choices/3e889633/assets
     }
     #core-gf-settings {
         min-height: 158px;
+    }
+    .dt-button {
+        margin-left: 15px;
+    }
+
+    .gf-table tr td:first-child:hover .gf-tooltip {
+        display: block;
+    }
+
+    .gf-tooltip {
+        font-size: 82%;
+        display: none;
+        background: rgb(255,255,255,0.9);
+        border: 1px #cccccc solid;
+        margin-left: 28px;
+        padding: 8px;
+        position: absolute;
+        z-index: 1000;
+        max-width:400px;
+        /*height:200px;*/
     }
 </style>
 

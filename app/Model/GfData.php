@@ -94,5 +94,35 @@ class GfData extends AppModel{
     return $result;
   }
 
+
+  // Check if GF exists -- use `gene_families` instead?
+    function gfExists($ref_gf_id){
+        $gf_data = $this->find("first", array('conditions'=>array('gf_id'=>$ref_gf_id)));
+        if($gf_data) {
+          return true;
+        }
+        else {
+          return false;
+        }
+    }
+
+
+    function getTopGoTerms($ref_gf_id, $n_max) {
+        $top_gos = [];
+        $query		= "SELECT gf_fd.`name`, fd.`desc`, fd.`info` FROM  `gf_functional_data` gf_fd, `functional_data` fd WHERE gf_fd.`gf_id`='" . $ref_gf_id . "' AND gf_fd.`type`='go' AND gf_fd.`is_hidden`='0' AND fd.`name`=gf_fd.`name` ORDER BY gf_fd.`f_score` DESC";
+        $res		= $this->query($query);
+        foreach($res as $r) {
+            $go_aspect = $r['fd']['info'];
+            $go_name = $r['gf_fd']['name'];
+            $go_desc = $r['fd']['desc'];
+            if(!array_key_exists($go_aspect, $top_gos)){
+                $top_gos[$go_aspect] = [];
+            }
+            if(count($top_gos[$go_aspect]) < $n_max){
+                $top_gos[$go_aspect][] =  array("name"=>$go_name, "desc"=>$go_desc);
+            }
+        }
+        return $top_gos;
+    }
 }
 ?>

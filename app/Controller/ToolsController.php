@@ -2484,6 +2484,7 @@ function label_go_intersection($exp_id=null,$label=null){
             $db_type = "eggnog";
         }
         // Finally, set all variables used in the view
+        $this->set("exp_id", $exp_id);
         $this->set("label", $label);
         $this->set("tax_name", $tax_name);
         $this->set("n_missing", $n_missing);
