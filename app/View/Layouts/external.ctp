@@ -35,7 +35,6 @@
 	// echo $this->Html->css(array('trapid'))."\n";
     ?>
   <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
-  <link href="http://allfont.net/allfont.css?fonts=redensek" rel="stylesheet" type="text/css" />
   <link rel="stylesheet" href="https://cdn.datatables.net/1.10.13/css/jquery.dataTables.min.css">
   <!-- Favicon (if we do not want to keep the PSB bioinformatics one) -->
   <link rel="icon" href="<?php echo $this->webroot.'favicon.ico';?>" type="image/x-icon" />
@@ -70,28 +69,16 @@
 <!--	    <br/>-->
 <!--	</p>-->
     </div>
-    <!-- Google Analytics code for TRAPID -->
-    <script type="text/javascript">
-  	var _gaq = _gaq || [];
-  	_gaq.push(['_setAccount', 'UA-38245034-1']);
-  	_gaq.push(['_trackPageview']);
-  	(function() {
-    		var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
-    		ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
-    		var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
-  	})();
-    </script>
-   <!-- Google Analytics code for bioinformatics (BEG)  -->
-    <script type="text/javascript">
-  	var _gaq = _gaq || [];
-  	_gaq.push(['_setAccount', 'UA-3992537-1']);
-  	_gaq.push(['_trackPageview']);
-  	(function() {
-    		var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
-    		ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
-    		var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
-  	})();
-    </script>
+
+<!-- Global site tag (gtag.js) - Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=UA-38245034-1"></script>
+<script type="text/javascript">
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+
+    gtag('config', 'UA-38245034-1');
+</script>
 <script type="text/javascript">
     // A small utility function that enable to add the 'active' class on navigation bar items if they contain a string
     // TODO: find something cool to add 'active' class to navbar <li> elements. Maybe from CakePHP instead?
@@ -100,6 +87,53 @@
         $('.navbar-nav li').filter(function() { return $.text([this]).indexOf(itemText) > -1; }).addClass('active');
     }
     activeItem();
+
+    // Cookie acceptance JS
+    (function(){
+        var msg = "We use cookies to provide anonymous statistics that help us improve our website. By continuing to use the site without changing settings, you are agreeing to our use of cookies.";
+        var closeBtnMsg = "OK";
+
+        // Check cookies
+        if(document.cookie){
+            var cookieString = document.cookie;
+            var cookieList = cookieString.split(";");
+            // if cookie named OKCookie is found, return
+            for(x = 0; x < cookieList.length; x++){
+                if (cookieList[x].indexOf("Trapid2OKCookie") != -1){return};
+            }
+        }
+
+        // Create cookie acceptance message element
+        var docRoot = document.body;
+        var okC = document.createElement("div");
+        okC.setAttribute("id", "okCookie");
+        var okCp = document.createElement("p");
+        okCp.setAttribute("class", "text-justify");
+        var okcText = document.createTextNode(msg);
+
+        // Close button
+        var okCclose = document.createElement("a");
+        var okcCloseText = document.createTextNode(closeBtnMsg);
+        okCclose.setAttribute("href", "#");
+        okCclose.setAttribute("id", "okClose");
+        okCclose.appendChild(okcCloseText);
+        okCclose.addEventListener("click", closeCookie, false);
+
+        // Add to DOM
+        okCp.appendChild(okcText);
+        okC.appendChild(okCp);
+        okC.appendChild(okCclose);
+        docRoot.appendChild(okC);
+
+        okC.classList.add("okcBeginAnimate");
+
+        function closeCookie(){
+            var cookieExpire = new Date();
+            cookieExpire.setFullYear(cookieExpire.getFullYear() +2);
+            document.cookie="Trapid2OKCookie=1; expires=" + cookieExpire.toGMTString() + ";";
+            docRoot.removeChild(okC);
+        }
+    })();
 </script>
 </body>
 </html>

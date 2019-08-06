@@ -2067,6 +2067,92 @@ nav .navbar-nav .navbar-form {
 }
 
 
+/* Cookie consent message style */
+/* Adapted from http://codepen.io/Octavector/pen/ldFnr */
+#okCookie {
+	background-color:#F2F2F2;
+	color:#555555;
+	position:fixed;
+	bottom:0;
+	left:0;
+	width:100%;
+	padding:10px;
+	/*  font-family:sans-serif; */
+	-moz-box-sizing: border-box;
+	-webkit-box-sizing: border-box;
+	box-sizing: border-box;
+	border-top:1px solid #ccc;
+	z-index:10;
+}
+
+#okCookie p {
+	margin:0 0 0 0;
+	float:left; padding:0px 0px;
+}
+
+#okCookie #okClose {
+	padding:2px 15px;
+	float:right;
+	margin-left:10px;
+	text-decoration:none;
+	border-radius:3px;
+	color:white;
+}
+
+#okCookie #okClose {
+	background-color:#1abc9c;
+	/*  text-shadow:0px 1px 1px #507F2B;
+      box-shadow:inset 0px -1px 1px #507F2B; */
+}
+
+#okCookie #okClose:hover {
+	background-color: #1acbaa
+}
+
+
+.okcBeginAnimate {
+	-webkit-animation: okcAnimate 2s;
+	animation: okcAnimate 2s;
+}
+
+/* Chrome, Safari, Opera */
+@-webkit-keyframes okcAnimate {
+	from {opacity: 0;}
+	to {opacity: 1;}
+}
+
+/* Standard syntax */
+@keyframes okcAnimate {
+	from {opacity: 0;}
+	to {opacity: 1;}
+}
+
+/* Medium Devices, Desktops (`-sm` and below) */
+@media only screen and (max-width : 1200px) {
+	#okCookie p {
+		font-size: 80%;
+	}
+
+	#okCookie #okClose {
+		padding:0px 11px;
+		font-size: 90%;
+	}
+
+}
+/* Medium Devices, Desktops (`-sm` and below) */
+@media only screen and (max-width : 992px) {
+	#okCookie p {
+		font-size: 70%;
+	}
+
+	#okCookie #okClose {
+		padding:0px 11px;
+		font-size: 80%;
+	}
+
+}
+
+
 /* Lots of ugly borders: useful for debugging when things are not displayed as expected */
 /*
 
