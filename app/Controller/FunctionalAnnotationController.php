@@ -72,9 +72,9 @@ class FunctionalAnnotationController extends AppController{
     // $go_descriptions	= $this->ExtendedGo->find("all",array("conditions"=>array("go"=>$child_gos)));
     // $go_descriptions	= $this->TrapidUtils->indexArraySimple($go_descriptions,"ExtendedGo","go","desc");
     $go_descriptions	= $this->ExtendedGo->find("all",array("conditions"=>array("type"=>"go", "name"=>$child_gos)));
-    $go_descriptions	= $this->TrapidUtils->indexArraySimple($go_descriptions,"ExtendedGo", "name", "desc");
+    $go_descriptions = $this->TrapidUtils->indexArrayMulti($go_descriptions,"ExtendedGo","name", array("desc","info"));
 
-    //get transcript counts for child GO terms
+      //get transcript counts for child GO terms
     $go_counts		= $this->TranscriptsGo->findTranscriptsFromGo($exp_id,$go_descriptions);
     $this->set("num_child_gos",count($go_counts));
     $this->set("child_go_counts",$go_counts);
@@ -119,8 +119,7 @@ class FunctionalAnnotationController extends AppController{
       }*/
     //get descriptions for child GO terms
     $go_descriptions	= $this->ExtendedGo->find("all",array("conditions"=>array("name"=>$parental_gos, "type"=>"go")));
-    $go_descriptions	= $this->TrapidUtils->indexArraySimple($go_descriptions,"ExtendedGo","name","desc");
-
+    $go_descriptions = $this->TrapidUtils->indexArrayMulti($go_descriptions,"ExtendedGo","name", array("desc","info"));
     //get transcript counts for child GO terms
     $go_counts		= $this->TranscriptsGo->findTranscriptsFromGo($exp_id,$go_descriptions);
     $this->set("num_parent_gos",count($go_counts));

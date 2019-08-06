@@ -127,7 +127,7 @@ $link_text = array(
 <!-- Overlay (if fixed sidebar) -->
 <div class="sidebar-overlay"></div>
 <!-- Experiment navbar (sidebar) -->
-<aside id="sidebar" class="sidebar sidebar-colored open sidebar-stacked sidebar-shadow" role="navigation">
+<aside id="sidebar" class="sidebar sidebar-colored open sidebar-stacked sidebar-shadow preload" role="navigation">
 
     <!-- Sidebar header -->
     <div class="sidebar-header">

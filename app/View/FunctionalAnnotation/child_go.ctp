@@ -57,7 +57,7 @@
 			foreach($child_go_counts as $child_go=>$child_go_info){
 				$alt	= null; if($counter++%2==0){$alt=" class='altrow2' ";}
 				echo "<tr $alt>";
-				echo "<td>".$this->Html->link($child_go,array("controller"=>"functional_annotation","action"=>"go",$exp_id,str_replace(":","-",$child_go)))."</td>";
+				echo "<td>".$this->Html->link($child_go,array("controller"=>"functional_annotation","action"=>"go",$exp_id,str_replace(":","-",$child_go)))." " . $this->element("go_category_badge", array("go_category"=>$child_go_info['info'], "small_badge"=>false, "no_color"=>false)) . "</td>";
 				echo "<td>".$child_go_info['count']."</td>";
 				echo "<td>".$child_go_info['desc']."</td>";
 				echo "</tr>\n";

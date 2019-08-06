@@ -499,6 +499,8 @@ body {
 	/*-moz-osx-font-smoothing: grayscale;*/
 	/*text-rendering: optimizeLegibility;*/
 }
+
+
 .sidebar-overlay {
 	visibility: hidden;
 	position: fixed;
@@ -539,6 +541,14 @@ body {
 	-o-transition: all 0.5s cubic-bezier(0.55, 0, 0.1, 1);
 	transition: all 0.5s cubic-bezier(0.55, 0, 0.1, 1);
 }
+
+.preload {
+	-webkit-transition: none !important;
+	-moz-transition: none !important;
+	-ms-transition: none !important;
+	-o-transition: none !important;
+}
+
 .sidebar,
 .content-wrapper {
 	/*display: table-cell; !* To comment if used layout is 'fixed'! *!*/
@@ -1303,7 +1313,68 @@ body {
 	.sidebar-stacked.open + .content-wrapper .header-bar {
 		margin-left: 210px;
 	}
+	/* Overriding collapse behaviour of bootstrap for header bar elements... */
+	.header-bar .navbar-nav {
+		margin: 0;
+	 }
+
+	.header-bar .navbar-collapse.collapse {
+		display: block;
+	}
+
+	.header-bar .navbar-nav>li, .navbar-nav {
+		float: left;
+	}
+
+	.header-bar .navbar-nav.navbar-right:last-child {
+		margin-right: -15px;
+	}
+
+	.header-bar .navbar-right {
+		float: right;
+	}
+
+	.header-bar .navbar-nav .dropdown-menu {
+		position: absolute;
+		float: right;
+		background-color: #ffffff;
+		border: 1px solid #cccccc;
+		border-radius: 3px;
+		-webkit-box-shadow: 0 6px 12px rgba(0, 0, 0, 0.175);
+		box-shadow: 0 6px 12px rgba(0, 0, 0, 0.175);
+		-webkit-background-clip: padding-box;
+		background-clip: padding-box;
+	}
+
+	.header-bar .navbar-nav .open .dropdown-menu .divider {
+		height: 1px;
+		margin: 10.5px 0;
+		overflow: hidden;
+		background-color: #e5e5e5;
+	}
+
+	.header-bar .navbar-nav .open .dropdown-menu > li > a {
+		color: #666666;
+	}
+	.header-bar .navbar-nav .open .dropdown-menu > li > a:hover,
+	.header-bar .navbar-nav .open .dropdown-menu > li > a:focus {
+		color: #212121;
+		background-color: #eeeeee;
+	}
+	.header-bar .navbar-nav .open .dropdown-menu  > .active > a,
+	.header-bar .navbar-nav .open .dropdown-menu > .active > a:hover,
+	.header-bar .navbar-nav .open .dropdown-menu > .active > a:focus {
+		color: #212121;
+		background-color: #eeeeee;
+	}
+	.header-bar .navbar-nav .open .dropdown-menu > .disabled > a,
+	.header-bar .navbar-nav .open .dropdown-menu > .disabled > a:hover,
+	.header-bar .navbar-nav .open .dropdown-menu > .disabled > a:focus {
+		color: #cccccc;
+		background-color: #eeeeee;
+	}
 }
+
 .header-bar .sidebar-toggle {
 	cursor: pointer;
 	display: inherit;
@@ -1328,9 +1399,14 @@ body {
 	/*background:red;*/
 }
 .header-bar select {
-	margin-right:10px;
-	color:#e8e8e8;
-	background-color:#2196f3;
+	/*margin-right:10px;*/
+	/*color:#e8e8e8;*/
+	/*background-color:#2196f3;*/
+}
+
+.header-bar a.sidebar-toggle {
+	border-right: 1px #29B6F6 solid;
+	/*border-right: 1px #ffffff solid;*/
 }
 
 
@@ -1605,7 +1681,6 @@ span.badge-go-sm {
 }
 
 
-
 /* Clipboard copy link */
 .clipboard-copy {
 	color: #777777;
@@ -1823,6 +1898,174 @@ nav .navbar-nav .navbar-form {
 	padding:10px;
 	margin-top: 15px;
 }
+
+
+/*
+ * Experiment header bar search
+ */
+
+/* Container with search bar, that takes all remaining space in the header (between left and right menu items) */
+#header-search-container{
+	/* background: rebeccapurple; */
+	display:flex;
+	height: inherit;
+}
+
+/* Wrapper around the search element */
+#search-wrap{
+	width: 49%;
+	height: 30px;  /* Replace? */
+	position: relative;
+	top: 50%;
+	left: 72%;
+	transform: translate(-50%, -50%);
+}
+
+
+/* Large Devices, Wide Screens (`-md` and below) */
+@media only screen and (max-width : 1200px) {
+	#search-wrap {
+		width: 85%;
+		left:50%;
+	}
+}
+
+
+/* Medium Devices, Desktops (`-sm` and below) */
+@media only screen and (max-width : 992px) {
+	#search-wrap {
+		width: 80%;
+		left:50%;
+	}
+
+}
+
+
+/* Search element itself */
+#search {
+	width: 100%;
+	position: relative;
+	display: inline-flex;
+	-webkit-transition: box-shadow 80ms;
+	transition: box-shadow 80ms;
+	background: #ffffff;
+}
+
+#search:focus-within {
+	-webkit-box-shadow: 1px 1px 4px rgba(0, 0, 0, 0.4);
+	box-shadow: 1px 1px 4px rgba(0, 0, 0, 0.4);
+}
+
+#search-term {
+	width: 66%;
+	border-left: 1px solid #d5d5d5;
+	padding-left: 10px;
+	height: 30px;
+	border-radius: 0px 0 0 0px;
+	outline: none;
+	color: #bbbbbb;
+	background-color: #ffffff;
+	-webkit-box-shadow: none;
+	box-shadow: none;
+	transition: color 80ms;
+}
+
+
+#search-button {
+	width: 32px;
+	height: 30px;
+	color: #666666;
+	background: #ffffff;
+	border: none;
+	border-left: 1px solid #d5d5d5;
+	text-align: center;
+	border-radius: 0 0px 0px 0;
+	cursor: pointer;
+	font-size: 14px;
+}
+
+
+
+#search-type {
+	width:34%;
+	height: 30px;
+	position:relative;
+	display:inline-flex;
+	text-overflow: ellipsis;
+	color: #666666;
+	background-color: #ffffff;
+	border-radius: 0px 0 0 0px;
+	-webkit-box-shadow: none;
+	box-shadow: none;
+}
+
+/* Override bootstrap-paper shadow on focus */
+#search-type:focus, #search-term:focus {
+	-webkit-box-shadow: none;
+	box-shadow: none;
+
+}
+
+#search-term:focus{
+	color: #666666;
+}
+
+#search-suggestions {
+	color: black;
+	background-color: white;
+	position: absolute;
+	font-size: 88%;
+	/*
+            border-left: 1px solid #d5d5d5;
+            border-right: 1px solid #d5d5d5;
+            border-bottom: 1px solid #d5d5d5;
+    */
+	border-top: none;
+	z-index: 99;
+	top: 100%;
+	left: 0;
+	right: 0;
+	max-height: 400px;
+	overflow-x: hidden;
+	overflow-y: auto;
+	-webkit-transition: box-shadow 80ms;
+	transition: box-shadow 80ms;
+}
+
+#search-suggestions  .row-suggestion {
+	padding-left:7px;
+	color: #666666;
+	text-overflow: ellipsis;
+	cursor: pointer;
+}
+
+#search-suggestions  .row-suggestion:hover {
+	background-color: #e9e9e9;
+}
+
+#search-suggestions  .row-suggestion.active {
+	background-color: #b1b1b1;
+}
+
+
+#search-clear {
+	right: 5px;
+	position: relative;
+	z-index: 10;
+	/* top: 10px;*/
+	height: 14px;
+	margin: auto;
+	font-size: 14px;
+	cursor: pointer;
+	color: #ccc;
+	-webkit-transition: color 80ms;
+	transition: color 80ms;
+}
+
+#search-clear:hover {
+	color: #aaa;
+}
+
 
 /* Lots of ugly borders: useful for debugging when things are not displayed as expected */
 /*

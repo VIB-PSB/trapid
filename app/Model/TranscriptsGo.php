@@ -59,13 +59,13 @@ class TranscriptsGo extends AppModel{
     $query		= "SELECT `name`,count(`transcript_id`) as count FROM `transcripts_annotation` WHERE `experiment_id`='".$exp_id."' AND `type`='go'";
     if($go_ids!=null){
 	$gos_string	= "('".implode("','",$go_ids)."')";
-	$query		= $query." AND `go` IN ".$gos_string." ";
+	$query		= $query." AND `name` IN ".$gos_string." ";
     }
     if($transcript_ids!=null){
 	$transcripts_string	= "('".implode("','",$transcript_ids)."')";
 	$query		= $query." AND `transcript_id` IN ".$transcripts_string." ";
     }
-    $query	= $query." GROUP BY `go` ORDER BY `count` DESC";
+    $query	= $query." GROUP BY `name` ORDER BY `count` DESC";
     $res	= $this->query($query);
     foreach($res as $r){
       $go		= $r['transcripts_annotation']['name'];
@@ -84,7 +84,7 @@ class TranscriptsGo extends AppModel{
     $query	= "SELECT `name`, count(`transcript_id`) as count FROM `transcripts_annotation` WHERE `experiment_id`='".$exp_id."' AND `type`='go' AND `name` IN ".$go_terms_string." GROUP BY `name` ";
     $res	= $this->query($query);
     foreach($res as $r){
-      $result[$r['transcripts_annotation']['name']] = array("count"=>$r[0]['count'],"desc"=>$go_terms[$r['transcripts_annotation']['name']]);
+      $result[$r['transcripts_annotation']['name']] = array("count"=>$r[0]['count'],"desc"=>$go_terms[$r['transcripts_annotation']['name']]['desc'], "info"=>$go_terms[$r['transcripts_annotation']['name']]['info']);
     }
     return $result;
   }

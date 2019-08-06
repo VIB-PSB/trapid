@@ -6,7 +6,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="description" content="TRAPID: Rapid analysis of transcriptomics data">
-    <meta name="author" content="Michiel Van Bel">
+    <meta name="author" content="Comparative Network Biology group">
     <meta name="viewport" content="width=device-width, user-scalable=no">
     <meta http-equiv="Content-Style-Type" content="text/css">
     <?php
@@ -34,11 +34,11 @@
     // echo $this->Html->css(array('trapid'))."\n";
     ?>
     <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
-<!--    <link href="http://allfont.net/allfont.css?fonts=redensek" rel="stylesheet" type="text/css"/>-->
-<!--    <link rel="stylesheet" href="https://cdn.datatables.net/1.10.13/css/jquery.dataTables.min.css">-->
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.10.13/css/jquery.dataTables.min.css">
     <!-- Favicon (if we do not want to keep the PSB bioinformatics one) -->
     <link rel="icon" href="<?php echo $this->webroot . 'favicon.ico'; ?>" type="image/x-icon"/>
-<!--    <script src="https://cdn.datatables.net/1.10.13/js/jquery.dataTables.min.js"></script>-->
+    <script src="https://cdn.datatables.net/1.10.13/js/jquery.dataTables.min.js"></script>
+<!--    <script src="https://cdn.datatables.net/buttons/1.5.6/js/dataTables.buttons.min.js"></script>-->
 </head>
 <!--<body style="margin-top:50px;">-->
 <body>
@@ -49,7 +49,7 @@
     echo $this->element('header_experiment',
         array("exp_id" => $exp_id, "exp_title" => $exp_info['title'], "job_count"=>$exp_info["job_count"])); //, "active_navbar_item" => "")
     ?>
-    <div class="side-content">
+    <div class="side-content preload">
         <div class="container-fluid">
             <?php echo $this->fetch('content'); ?>
             <!--<br/>
@@ -131,6 +131,22 @@
     if(sidebar_item_text!=='') {
         activeSidebarItem(sidebar_item_text);
     }
+
+    // Alter sidebar classes depending on screen size, on page load... To improve
+    var $sidebar = $('#sidebar');
+    $(window).on("load", function() {
+        $sidebar.toggleClass('sidebar-fixed-left', $(window).width() < 768);
+        $sidebar.toggleClass('open', $(window).width() >= 768);
+        $sidebar.toggleClass('sidebar-stacked', $(window).width() >= 768);
+        // Remove '.preload' class to enable transitions
+        $sidebar.removeClass("preload");
+        $(".side-content").removeClass("preload");
+        $("#header-exp").removeClass("preload");
+    });
+    $(window).on("load resize", function() {
+        $sidebar.toggleClass('sidebar-fixed-left', $(window).width() < 768);
+        $sidebar.toggleClass('sidebar-stacked', $(window).width() >= 768);
+    });
 </script>
 
 </body>
