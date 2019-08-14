@@ -1773,7 +1773,12 @@ class TrapidController extends AppController{
 
       $this->set("tax_scope_data", $tax_scope_data);
 
-    if($_POST){
+      // Get default clade for current reference database
+      $default_sim_search_clade = $this->Configuration->find("first", array("fields"=>"value", "conditions"=>array("method"=>"initial_processing_settings", "key"=>$data_sources['DataSources']['db_name'], "attr"=>"default_sim_search_clade")));
+      $default_sim_search_clade = $default_sim_search_clade['Configuration']['value'];
+      $this->set("default_sim_search_clade", $default_sim_search_clade);
+
+      if($_POST){
         pr($_POST);
 //        return;
 

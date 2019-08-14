@@ -1,3 +1,8 @@
+<?php
+// Selectize JS + CSS
+echo $this->Html->script('https://gitcdn.xyz/repo/selectize/selectize.js/master/dist/js/standalone/selectize.min.js');
+echo $this->Html->css('https://gitcdn.xyz/repo/selectize/selectize.js/master/dist/css/selectize.default.css');
+?>
     <div class="page-header">
         <h1 class="text-primary">Process transcripts</h1>
     </div>
@@ -19,8 +24,8 @@
     ?>
 
     <div class="row">
-        <!-- Similarity search -->
-        <div class="col-md-4">
+        <div class="col-md-6">
+            <!-- Similarity search -->
             <div class="panel panel-default">
                 <div class="panel-heading">
                     <h3 class="panel-title">Similarity search options</h3>
@@ -47,17 +52,41 @@
                                     <option disabled>Loading list...</option>
                                 </select>
                             </div>
-                    <p class="text-justify" style="font-size: 88%; margin-top: 10px;"><strong>Nb:</strong> Use <a href='http://www.ncbi.nlm.nih.gov/taxonomy' target='_blank' class="linkout">NCBI Taxonomy</a> to find the closest relative species or best clade.            </p>
+                    <p class="text-justify help-block" style="font-size: 88%; margin-top: 10px;"><strong>Nb:</strong> Use <a href='http://www.ncbi.nlm.nih.gov/taxonomy' target='_blank' class="linkout">NCBI Taxonomy</a> to find the closest relative species or best clade.            </p>
                     <div class="form-group">
                                 <label for=""><strong>Maximum E-value threshold</strong> (-log<sub>10</sub>)</label>
                                 <?php echo $this->element("help_tooltips/create_tooltip", array("tooltip_text"=>$tooltips['initial_processing_evalue'], "tooltip_placement"=>"top", "use_html"=>"true")); ?>
                                 <input class="form-control" id="blast_evalue" max="10" min="2" name="blast_evalue" step="1" value="5" type="number" required></div>
                 </div>
             </div>
+
+            <!-- RNA annotation / Infernal / RFAM options -->
+            <div class="panel panel-default">
+                <div class="panel-heading">
+                    <h3 class="panel-title">RNA annotation options</h3>
+                </div>
+                <div class="panel-body">
+                    <div class="form-group">
+                        <label for="rfam-clans"><strong>RFAM clans</strong> (max. 10)</label>
+                        <?php echo $this->element("help_tooltips/create_tooltip", array("tooltip_text"=>$tooltips['initial_processing_rfam_clans'], "tooltip_placement"=>"top")); ?>
+                        <label style="margin-right:5px;" class="label label-info pull-right">test</label>
+                        <br>
+                        <select id="rfam-clans" name="rfam-clans[]" multiple size="10">
+                            <?php foreach($rfam_clans as $clan_acc=>$clan_data) {
+                                $selected_str = in_array($clan_acc, $rfam_clans_default) ? 'selected' : '';
+                                echo "<option value='" . $clan_acc . "' " . $selected_str . ">" . $clan_data["clan_id"] . " (" . $clan_data["clan_desc"]. ")</option>";
+                            }
+                            ?>
+                        </select>
+                        <p class="help-block" style="font-size: 88%;"><strong>Nb:</strong> More information about RFAM clans can be found on the <a href="http://rfam.xfam.org/browse" class="linkout" target="_blank">RFAM website</a>.</p>
+                    </div>
+                </div>
+            </div>
+
         </div>
 
-        <!-- GF + annotation -->
-        <div class="col-md-4">
+        <div class="col-md-6">
+            <!-- GF + annotation -->
             <div class="panel panel-default">
                 <div class="panel-heading">
                     <h3 class="panel-title">Gene families and annotation options</h3>
@@ -77,18 +106,18 @@
                         <?php endif; ?>
                         <br>
                     </div>
-                    <div class="form-group">
+                    <div class="form-group<?php if($tax_scope_data){echo " hidden";};?>">
                         <label for=""><strong>Functional annotation</strong></label>
                         <?php echo $this->element("help_tooltips/create_tooltip", array("tooltip_text"=>$tooltips['initial_processing_annotation'], "tooltip_placement"=>"top")); ?>
                         <br>
                         <label class="radio-inline">
-                            <input checked="checked" id="functional_annotation_besthit" name="functional_annotation" type="radio" value="besthit"> Best similarity hit  &nbsp;
+                            <input id="functional_annotation_besthit" name="functional_annotation" type="radio" value="besthit"> Best similarity hit  &nbsp;
                         </label>
                         <label class="radio-inline">
                             <input id="functional_annotation_gf" name="functional_annotation" type="radio" value="gf"> Gene families &nbsp;
                         </label>
                         <label class="radio-inline">
-                            <input id="functional_annotation_gf_besthit" name="functional_annotation" type="radio" value="gf_besthit"> Both
+                            <input checked="checked" id="functional_annotation_gf_besthit" name="functional_annotation" type="radio" value="gf_besthit"> Both
                         </label>
                         <br>
                     </div>
@@ -111,10 +140,8 @@
 
                 </div>
             </div>
-        </div>
 
-        <!-- Extra: tax. binning, sequence tpye, RNA genes annotation -->
-        <div class="col-md-4">
+            <!-- Extra: tax. binning, sequence tpye, RNA genes annotation -->
             <div class="panel panel-default">
                 <div class="panel-heading">
                     <h3 class="panel-title">Extra options</h3>
@@ -130,44 +157,17 @@
                         <span class="pull-right" style="margin-right:12%;"><input id="use-cds" name="use-cds" value="y" type="checkbox"></span>
                     </div>
 
-                    <div class="form-group">
-                        <label for="tax-binning" class="text-muted"><strong>Stop after taxonomic binning</strong></label> &nbsp;<?php echo $this->element("help_tooltips/create_tooltip", array("tooltip_text"=>$tooltips['initial_processing_stop_tax_binning'], "tooltip_placement"=>"top")); ?>
+<!--                    <div class="form-group">
+                        <label for="tax-binning" class="text-muted"><strong>Stop after taxonomic binning</strong></label> &nbsp;<?php /*echo $this->element("help_tooltips/create_tooltip", array("tooltip_text"=>$tooltips['initial_processing_stop_tax_binning'], "tooltip_placement"=>"top")); */?>
                         <span class="pull-right" style="margin-right:12%;"><input id="not-yet" name="not-yet" value="y" type="checkbox" disabled></span>
                     </div>
-
-                </div>
-            </div>
-        </div>
-    </div>
-    <div class="row">
-        <div class="col-md-6">
-            <div style="border:1px gray dotted;">
-                    <label style="margin-left:5px;" class="label label-primary pull-right">work in progress</label>
-                <h6>RNA annotation</h6>
-                <div class="form-group">
-                    <label for="rfam-clans"><strong>RFAM clans</strong></label>
-                    <?php echo $this->element("help_tooltips/create_tooltip", array("tooltip_text"=>$tooltips['initial_processing_rfam_clans'], "tooltip_placement"=>"top")); ?>
-                    <br>
-                    <select id="rfam-clans" name="rfam-clans[]" multiple size="8">
-                        <!--                <option value="rrrrrr">dddddd</option>-->
-                        <?php foreach($rfam_clans as $clan_acc=>$clan_data) {
-                            $selected_str = in_array($clan_acc, $rfam_clans_default) ? 'selected' : '';
-                            echo "<option value='" . $clan_acc . "' " . $selected_str . ">" . $clan_data["clan_id"] . " (" . $clan_data["clan_desc"]. ")</option>";
-                        }
-                        ?>
-                    </select>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-6">
-            <div style="border:1px gray dotted;">
-
-                    <label style="margin-left:5px;" class="label label-primary pull-right">work in progress</label>
-                    <h6>Translation tables</h6>
+-->
+                    <!-- Genetic code choice -->
                     <div class="form-group">
-                        <label for="transl_table"><strong>Genetic code to use: </strong></label>
+                        <label for="transl_table"><strong>Genetic code</strong> (ORF prediction)</label>
                         <?php echo $this->element("help_tooltips/create_tooltip", array("tooltip_text"=>$tooltips['initial_processing_transl_table'], "tooltip_placement"=>"top")); ?>
-                        <select class="form-control" name="transl_table">
+                        <label style="margin-right:10px;" class="label label-info pull-right">test</label>
+                        <select class="form-control" id='transl-table' name="transl_table">
                             <?php
                             foreach($transl_table_descs as $idx=>$desc){
                                 echo "<option value='" . $idx . "'>" . $idx . " - " . $desc . "</option>\n";
@@ -176,8 +176,21 @@
                         </select>
                         <p class="help-block" style="font-size: 88%;"><strong>Nb:</strong> More information about genetic codes can be found on the <a href="https://www.ncbi.nlm.nih.gov/Taxonomy/taxonomyhome.html/index.cgi?chapter=cgencodes" class="linkout" target="_blank">NCBI Taxonomy</a>.</p>
                     </div>
+
+                </div>
             </div>
+
         </div>
+
+        <div class="col-md-4">
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-6">
+        </div>
+            <div class="col-md-6">
+
+            </div>
     </div>
 
     <?php
@@ -346,6 +359,8 @@
             foreach ($clades_species as $clade => $species) {
                 echo "$('#blast_db').append(createOption('" . $clade . "','" . $clade . "'));\n";
             }
+            // If the clade is the default one for the current reference database, select it!
+            echo "$('#blast_db').val(\"$default_sim_search_clade\");";
             // Make only HOM GF type available (only if not using EggNOG as ref. db)
             // echo "$('#gf_type').append(createOption('HOM','" . $possible_gf_types['HOM'] . "'));\n";
             if(!$tax_scope_data) {
@@ -399,7 +414,9 @@
         // On page load, populate input similarity search database list
         $( document ).ready(function() {
             var blast_db_type =  $("input[name='blast_db_type']:checked").val(); // $("#blast_db_type").val();
-            setBlastDbChoices(blast_db_type)
+            setBlastDbChoices(blast_db_type);
+            $("#rfam-clans").selectize({maxItems: 10, sortField: 'text'});
+            // $("#transl-table").selectize();
         });
         //]]>
     </script>
