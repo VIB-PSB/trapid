@@ -10,8 +10,14 @@ class Transcripts extends AppModel{
   var $useTable = 'transcripts';
 
 
+    public $virtualFields = array(
+        'transcript_sequence' => 'UNCOMPRESS(Transcripts.transcript_sequence)',
+        'transcript_sequence_corrected' => 'UNCOMPRESS(Transcripts.transcript_sequence_corrected)',
+        'orf_sequence' => 'UNCOMPRESS(Transcripts.orf_sequence)'
+    );
 
-  function getBasicInformationTranscripts($exp_id,$transcript_ids){
+
+    function getBasicInformationTranscripts($exp_id,$transcript_ids){
     $result		= array();
     $transcripts_string	= "('".implode("','",$transcript_ids)."')";
     $query		= "SELECT `transcript_id`,`gf_id`,`meta_annotation` FROM `transcripts` WHERE `experiment_id`='".$exp_id."' AND `transcript_id` IN ".$transcripts_string." ";

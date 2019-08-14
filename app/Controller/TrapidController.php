@@ -796,150 +796,150 @@ class TrapidController extends AppController{
 
     //check whether transcript is valid
     // $transcript_id 	= mysql_real_escape_string($transcript_id);
-    $transcript_info    = $this->Transcripts->find("first",array("conditions"=>array("experiment_id"=>$exp_id,"transcript_id"=>$transcript_id)));
+    $transcript_info = $this->Transcripts->find("first",array("conditions"=>array("experiment_id"=>$exp_id,"transcript_id"=>$transcript_id)));
     if(!$transcript_info){$this->redirect(array("controller"=>"trapid","action"=>"experiment",$exp_id));}
   }
 
 
   function transcript($exp_id=null,$transcript_id=null){
-
     if(!$exp_id || !$transcript_id){$this->redirect(array("controller"=>"trapid","action"=>"experiments"));}
-    // $exp_id	= mysql_real_escape_string($exp_id);
     parent::check_user_exp($exp_id);
-    $exp_info	= $this->Experiments->getDefaultInformation($exp_id);
+    $exp_info = $this->Experiments->getDefaultInformation($exp_id);
     $this->set("exp_info",$exp_info);
     $this->set("exp_id",$exp_id);
-    $this->TrapidUtils->checkPageAccess($exp_info['title'],$exp_info["process_state"],$this->process_states["default"]);
+    $this->TrapidUtils->checkPageAccess($exp_info['title'], $exp_info["process_state"], $this->process_states["default"]);
 
-    //check whether transcript is valid
+    // Check whether transcript is valid
     $transcript_id = urldecode($transcript_id);
-    // $transcript_id 	= mysql_real_escape_string($transcript_id);
-    $transcript_info    = $this->Transcripts->find("first",array("conditions"=>array("experiment_id"=>$exp_id,"transcript_id"=>$transcript_id)));
-    // pr($transcript_info);
+    $transcript_info = $this->Transcripts->find("first",array("conditions"=>array("experiment_id"=>$exp_id,"transcript_id"=>$transcript_id)));
     // If no `$transcript_info` (i.e. `$transcript_id` is invalid), redirect to experiment page.
-    if(!$transcript_info){$this->redirect(array("controller"=>"trapid","action"=>"experiment",$exp_id));}
-
-      // TODO: don't retrieve the binary sequences in the first place, instead of overwriting them like now!
-      // Get sequence data associated to this transcript (need to `uncompress` from the database)
-      $transcript_sqces = $this->Transcripts->getAllSqces($exp_id, $transcript_id);
-      foreach($transcript_sqces as $sqce_type=>$sqce_str) {
-          $transcript_info['Transcripts'][$sqce_type] = $sqce_str;
-      }
-      if($transcript_info['Transcripts']['orf_sequence'] !=""){
-      $transcript_info['Transcripts']['aa_sequence'] = $this->Sequence->translate_cds_php($transcript_info['Transcripts']['orf_sequence'], $transcript_info['Transcripts']['transl_table']);
+    if(!$transcript_info){
+        $this->redirect(array("controller"=>"trapid","action"=>"experiment",$exp_id));
     }
 
-    //check whether the number of jobs in the queue for this experiment has not been reached.
-    $current_job_number = $this->ExperimentJobs->getNumJobs($exp_id);
-    if($current_job_number>=MAX_CLUSTER_JOBS){$this->set("max_number_jobs_reached",true);}
-
-
-    //CHANGES TO THE INITIAL DATA. SOME OTHER POST_PROCESSING STEPS MIGHT BE NECESSARY!
-    //put it here, as it might influence the later results. Also reload the transcript info
+    // Handle POST requests: user made changes to the initial data!
+    // Depending on what the user chose to change, some other post processing steps might be necessary
+    // Put it here, as it might influence the later results. Reload the transcript info after the update!
     if($_POST){
-      if(array_key_exists("orf_sequence",$_POST)){
-	$this->Transcripts->updateAll(array("orf_sequence"=>"COMPRESS(" . $this->Transcripts->getDataSource()->value($_POST['orf_sequence'], 'string') . ")"),array("experiment_id"=>$exp_id,"transcript_id"=>$transcript_id));
-	$this->Transcripts->updateCodonStats($exp_id,$transcript_id,$_POST['orf_sequence']);
-	$this->ExperimentLog->addAction($exp_id,"change_orf_sequence",$transcript_id);
-      }
-      if(array_key_exists("transcript_sequence",$_POST)){
-	$this->Transcripts->updateAll(array("transcript_sequence"=>"COMPRESS(".$this->Transcripts->getDataSource()->value($_POST['transcript_sequence'], 'string').")"),array("experiment_id"=>$exp_id,"transcript_id"=>$transcript_id));
-	$this->ExperimentLog->addAction($exp_id,"change_transcript_sequence",$transcript_id);
-      }
-      if(array_key_exists("corrected_sequence",$_POST)){
-	$this->Transcripts->updateAll(array("transcript_sequence_corrected"=>"COMPRESS(".$this->Transcripts->getDataSource()->value($_POST['corrected_sequence'], 'string').")"),array("experiment_id"=>$exp_id,"transcript_id"=>$transcript_id));
-	$this->ExperimentLog->addAction($exp_id,"change_corrected_sequence",$transcript_id);
-      }
-      if(array_key_exists("meta_annotation",$_POST)){
-	$this->Transcripts->updateAll(array("meta_annotation"=>$this->Transcripts->getDataSource()->value($_POST['meta_annotation'], 'string')),array("experiment_id"=>$exp_id,"transcript_id"=>$transcript_id));
-	$this->ExperimentLog->addAction($exp_id,"change_meta_annotation",$transcript_id);
-      }
-      if(array_key_exists("subsets",$_POST) && $_POST["subsets"]=="subsets"){
-	$available_subsets	= $this->TranscriptsLabels->getLabels($exp_id);
-	$transcript_subsets	= $this->TranscriptsLabels->find("all",array("conditions"=>array("experiment_id"=>$exp_id,"transcript_id"=>$transcript_id)));
-    	$transcript_subsets	= $this->TrapidUtils->reduceArray($transcript_subsets,"TranscriptsLabels","label");
-	//check for new subset
-	if(array_key_exists("new_subset",$_POST) && $_POST['new_subset']=="on" && array_key_exists("new_subset_name",$_POST)){
-	  $new_subset		= filter_var($_POST['new_subset_name'], FILTER_SANITIZE_STRING);  // No check needed since only used in `saveAll()`?
-	  $save_data		= array(array("experiment_id"=>$exp_id,"transcript_id"=>$transcript_id,"label"=>$new_subset));
-	  $this->TranscriptsLabels->saveAll($save_data);
-	}
-	//check for addition of transcript to existing subsets
-	$save_data		= array();
-	foreach($_POST as $k=>$v){
-	  if($v=="on" && array_key_exists($k,$available_subsets) && !in_array($k,$transcript_subsets)){
-	    $save_data[]	= array("experiment_id"=>$exp_id,"transcript_id"=>$transcript_id,"label"=>$k);
-	  }
-	}
-	if(count($save_data)>0){$this->TranscriptsLabels->saveAll($save_data);}
+        // Edit ORF sequence
+        if(array_key_exists("orf_sequence",$_POST)){
+            $this->Transcripts->updateAll(array("orf_sequence"=>"COMPRESS(" . $this->Transcripts->getDataSource()->value($_POST['orf_sequence'], 'string') . ")"),array("experiment_id"=>$exp_id,"transcript_id"=>$transcript_id));
+            $this->Transcripts->updateCodonStats($exp_id,$transcript_id,$_POST['orf_sequence']);
+            $this->ExperimentLog->addAction($exp_id,"change_orf_sequence",$transcript_id);
+        }
+        // Edit transcript sequence (disabled at the moment)
+        if(array_key_exists("transcript_sequence",$_POST)){
+            $this->Transcripts->updateAll(array("transcript_sequence"=>"COMPRESS(".$this->Transcripts->getDataSource()->value($_POST['transcript_sequence'], 'string').")"),array("experiment_id"=>$exp_id,"transcript_id"=>$transcript_id));
+            $this->ExperimentLog->addAction($exp_id,"change_transcript_sequence",$transcript_id);
+        }
+        // Edit frameshift corrected sequence
+        if(array_key_exists("corrected_sequence",$_POST)) {
+            $this->Transcripts->updateAll(array("transcript_sequence_corrected" => "COMPRESS(" . $this->Transcripts->getDataSource()->value($_POST['corrected_sequence'], 'string') . ")"), array("experiment_id" => $exp_id, "transcript_id" => $transcript_id));
+            $this->ExperimentLog->addAction($exp_id, "change_corrected_sequence", $transcript_id);
+        }
+        // Edit meta-annotation
+        if(array_key_exists("meta_annotation",$_POST)){
+            $this->Transcripts->updateAll(array("meta_annotation"=>$this->Transcripts->getDataSource()->value($_POST['meta_annotation'], 'string')),array("experiment_id"=>$exp_id,"transcript_id"=>$transcript_id));
+            $this->ExperimentLog->addAction($exp_id,"change_meta_annotation",$transcript_id);
+        }
+        // Edit subset information
+        if(array_key_exists("subsets",$_POST) && $_POST["subsets"]=="subsets"){
+            $available_subsets	= $this->TranscriptsLabels->getLabels($exp_id);
+            $transcript_subsets	= $this->TranscriptsLabels->find("all",array("conditions"=>array("experiment_id"=>$exp_id,"transcript_id"=>$transcript_id)));
+            $transcript_subsets	= $this->TrapidUtils->reduceArray($transcript_subsets,"TranscriptsLabels","label");
 
-	//check for deletion of transcript from existing subsets
-	foreach($transcript_subsets as $subset){
-	  if(!array_key_exists($subset,$_POST)){	//deletion of subset
-		$this->TranscriptsLabels->query("DELETE FROM `transcripts_labels` WHERE `experiment_id`='".$exp_id."' AND `transcript_id`='".$transcript_id."' AND `label`='".$subset."' ");
-	  }
-	}
-	//$available_subsets	= $this->TranscriptsLabels->getLabels($exp_id);
-	//$this->set("available_subsets",$available_subsets);
-      }
-      //update edit data of the experiment!
-      $this->Experiments->updateAll(array("last_edit_date"=>"'".date("Y-m-d H:i:s")."'"),array("experiment_id"=>$exp_id));
-      //$this->redirect(array("controller"=>"trapid","action"=>"transcript",$exp_id,$transcript_id));
-      $transcript_info = $this->Transcripts->find("first",array("conditions"=>array("experiment_id"=>$exp_id,"transcript_id"=>$transcript_id)));
+            // Check if a new subset was created
+            if(array_key_exists("new_subset",$_POST) && $_POST['new_subset']=="on" && array_key_exists("new_subset_name",$_POST)){
+                $new_subset = filter_var($_POST['new_subset_name'], FILTER_SANITIZE_STRING);  // No check needed since only used in `saveAll()`?
+                $new_subset = preg_replace('/\s/u', '', $new_subset); // Also remove whitespace from subset name
+                $save_data = array(array("experiment_id"=>$exp_id,"transcript_id"=>$transcript_id,"label"=>$new_subset));
+                $this->TranscriptsLabels->saveAll($save_data);
+            }
+            // Check if transcript was added to an existing subset
+            $save_data = array();
+            foreach($_POST as $k=>$v) {
+                if($v=="on" && array_key_exists($k,$available_subsets) && !in_array($k,$transcript_subsets)){
+                    $save_data[] = array("experiment_id"=>$exp_id,"transcript_id"=>$transcript_id,"label"=>$k);
+                }
+            }
+            if(count($save_data)>0){
+                $this->TranscriptsLabels->saveAll($save_data);
+            }
+            // Check if transcript was removed from an existing subset
+            foreach($transcript_subsets as $subset){
+                if(!array_key_exists($subset,$_POST)){	 // Deletion of subset
+                    $this->TranscriptsLabels->query("DELETE FROM `transcripts_labels` WHERE `experiment_id`='".$exp_id."' AND `transcript_id`='".$transcript_id."' AND `label`='".$subset."' ");
+                }
+            }
+            //$available_subsets	= $this->TranscriptsLabels->getLabels($exp_id);
+            //$this->set("available_subsets",$available_subsets);
+        }
+        // Finally, update the edit date of the experiment and get `$transcript_info`
+       $this->Experiments->updateAll(array("last_edit_date"=>"'".date("Y-m-d H:i:s")."'"),array("experiment_id"=>$exp_id));
+       $transcript_info    = $this->Transcripts->find("first",array("conditions"=>array("experiment_id"=>$exp_id,"transcript_id"=>$transcript_id)));
+       // $this->redirect(array("controller"=>"trapid","action"=>"transcript",$exp_id,$transcript_id));
     }
-    // TODO: don't retrieve the binary sequences in the first place, instead of overwriting them like now!
-    // Get sequence data associated to this transcript (need to `uncompress` from the database)
-    // $transcript_sqces = $this->Transcripts->getAllSqces($exp_id, $transcript_id);
-    // Add retrieved sequence data to `transcript_info`.
-//    foreach($transcript_sqces as $sqce_type=>$sqce_str) {
-//      $transcript_info['Transcripts'][$sqce_type] = $sqce_str;
-//    }
+
+    // Get ORF translated sequence
+    if($transcript_info['Transcripts']['orf_sequence'] !=""){
+       $transcript_info['Transcripts']['aa_sequence'] = $this->Sequence->translate_cds_php($transcript_info['Transcripts']['orf_sequence'], $transcript_info['Transcripts']['transl_table']);
+    }
     $this->set("transcript_info",$transcript_info['Transcripts']);
-    //pr($transcript_info['Transcripts']);
-    // Get GO, InterPro and KO information
+
+    // Get transcript functional annotation
+    // 1. GO
     $associated_go	= $this->TranscriptsGo->find("all",array("conditions"=>array("experiment_id"=>$exp_id,"transcript_id"=>$transcript_id, "type"=>"go")));
     $go_ids		= $this->TrapidUtils->reduceArray($associated_go,"TranscriptsGo","name");
     //TODO!!
     $go_information	= $this->ExtendedGo->retrieveGoInformation($go_ids);
     $this->set("associated_go",$associated_go);
     $this->set("go_info",$go_information);
-
+    // 2. InterPro
     $associated_interpro	= $this->TranscriptsInterpro->find("all",array("conditions"=>array("experiment_id"=>$exp_id,"transcript_id"=>$transcript_id, "type"=>"ipr")));
     $interpros	= $this->TrapidUtils->reduceArray($associated_interpro,"TranscriptsInterpro","name");
     $interpro_information = $this->ProteinMotifs->retrieveInterproInformation($interpros);
     $this->set("associated_interpro",$associated_interpro);
     $this->set("interpro_info",$interpro_information);
-
+    // 3. KO
     $associated_ko	= $this->TranscriptsKo->find("all", array("conditions"=>array("experiment_id"=>$exp_id, "transcript_id"=>$transcript_id, "type"=>"ko")));
     $ko_terms	= $this->TrapidUtils->reduceArray($associated_ko, "TranscriptsKo", "name");
     $ko_information = $this->KoTerms->retrieveKoInformation($ko_terms);
     $this->set("associated_ko", $associated_ko);
     $this->set("ko_info" ,$ko_information);
 
-
-    // Subset information
-    $available_subsets	= $this->TranscriptsLabels->getLabels($exp_id);
+    // Get transcript subset information
+    $available_subsets = $this->TranscriptsLabels->getLabels($exp_id);
     $transcript_subsets	= $this->TranscriptsLabels->find("all",array("conditions"=>array("experiment_id"=>$exp_id,"transcript_id"=>$transcript_id)));
     $transcript_subsets	= $this->TrapidUtils->reduceArray($transcript_subsets,"TranscriptsLabels","label");
     $this->set("available_subsets",$available_subsets);
     $this->set("transcript_subsets",$transcript_subsets);
 
-    // Taxonomic classification information (if this step was performed during initial processing)
+    // Get taxonomic classification information (only if this step was performed during initial processing)
     if($exp_info['perform_tax_binning'] == 1) {
         $unclassified_str = "Unclassified";
         $transcript_txid = $this->TranscriptsTax->find("first", array("conditions"=>array("experiment_id"=>$exp_id, "transcript_id"=>$transcript_id), "fields"=>"txid"));
         $transcript_txid = $transcript_txid['TranscriptsTax']['txid'];
+        $transcript_lineage = [];
         // If the transcript was unclassified, set name of clade to 'Unclassified'
         if($transcript_txid == 0) {
             $transcript_txname = $unclassified_str;
         }
         // Otherwise retrieve taxonomy data from `full_taxonomy`
         else {
-            $transcript_txname = $this->FullTaxonomy->find("first", array("fields"=>array("scname"), "conditions"=>array("txid"=>$transcript_txid)));
-            $transcript_txname = $transcript_txname["FullTaxonomy"]["scname"];
+            $txdata = $this->FullTaxonomy->find("first", array("fields"=>array("scname", "tax"), "conditions"=>array("txid"=>$transcript_txid)));
+            $transcript_txname = $txdata["FullTaxonomy"]["scname"];
+            $transcript_lineage = array_reverse(explode("; ", $txdata["FullTaxonomy"]["tax"]));
+            array_pop($transcript_lineage);
         }
         $this->set("transcript_txid", $transcript_txid);
         $this->set("transcript_txname", $transcript_txname);
+        $this->set("transcript_lineage", $transcript_lineage);
+    }
+
+    // Check whether the number of jobs in the queue for this experiment has not been reached.
+    $current_job_number = $this->ExperimentJobs->getNumJobs($exp_id);
+    if($current_job_number>=MAX_CLUSTER_JOBS){
+        $this->set("max_number_jobs_reached",true);
     }
 
     // Help tooltips
@@ -947,12 +947,10 @@ class TrapidController extends AppController{
           $this->HelpTooltips->find("all", array("conditions"=>array("tooltip_id LIKE 'transcript%'"))),
           "HelpTooltips","tooltip_id","tooltip_text"
       );
+
     $this->set("tooltips", $tooltips);
-
     $this -> set('title_for_layout', $transcript_id . ' &middot; Transcript');
-
   }
-
 
 
 
