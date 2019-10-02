@@ -77,7 +77,7 @@ def get_go_data(ref_db_conn):
         if record['is_obsolete'] == 1:
             is_obsolete = True
             replace_by = record['replacement']
-        if record['alt_ids'] != '':
+        if record['alt_ids'] and record['alt_ids'] != '':
             alt_ids = set(record['alt_ids'].split(','))
         go_dict[record['name']] = {'desc': record['desc'], 'aspect': record['info'], 'parents': set([]), 'children': set([]),
                                    'is_obsolete': is_obsolete, 'alt_ids': alt_ids, 'replace_by': replace_by}
@@ -236,14 +236,21 @@ def create_enrichment_rows(enricher_results, exp_id, subset, fa_type, max_pval, 
             # GO should be hidden if any of its parents or children has more significant enrichment results.
             # 'more significant' => larger log2 enrichment fold and lower p-value
             # Check parents + children to see if there are better terms
-            if (go_data[fa]['parents'] | go_data[fa]['children']) & all_gos:
-                rel_gos = (go_data[fa]['parents'] | go_data[fa]['children']) & all_gos
+            rel_gos = (go_data[fa]['parents'] | go_data[fa]['children']) & all_gos
+            if rel_gos:
                 rel_p_val = [enricher_results[go]['q-val'] for go in rel_gos]
                 rel_enr = [math.log(max(enricher_results[go]['enr_fold'], sys.float_info.min), 2) for go in rel_gos]
-                lower_p_val = any([p < p_val for p in rel_p_val])
-                higher_enr = any([abs(f) > abs(log2_enr) for f in rel_enr])
+                higher_enr = any([abs(f) > abs(log2_enr) for f in rel_enr])  # `True` if any related GO term has a larger log2 fold change
+                lower_p_val = any([p < p_val for p in rel_p_val])            # `True` if any related GO term has a smaller enrichment p-value
+                same_enr = any([abs(f) == abs(log2_enr) for f in rel_enr])   # `True` if any related GO term has an identical log2 fold change
+                same_p_val = any([p == p_val for p in rel_p_val])            # `True` if any related GO term has an identical enrichment p-value
                 if higher_enr and lower_p_val:
                     is_hidden = 1  # There is a better GO term to use! Set value to 1
+                # Some related GO terms can have the same enrichment and p-value:
+                # if the current GO term is not the most specific one, set `is_hidden` to 1
+                if same_enr and same_p_val:
+                    if go_data[fa]['children'] & all_gos:
+                        is_hidden = 1
             values = (exp_id, subset, fa_type, max_pval, fa, is_hidden, p_val, log2_enr, sub_ratio)
             enrichment_rows.append(values)
     else:
