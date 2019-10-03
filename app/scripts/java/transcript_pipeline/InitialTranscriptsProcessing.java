@@ -2204,7 +2204,8 @@ public class InitialTranscriptsProcessing {
 		// System.out.println(db_name);
 		String query				= "SELECT `gene_id`,CHAR_LENGTH(`seq`) FROM `annotation` WHERE `type`='coding' ";
 		if(!db_name.contains("plaza")) {
-			query = "SELECT `gene_id`, `seq_length` FROM `annotation` USE INDEX(PRIMARY) WHERE `type`='coding' ";
+		    // EggNOG ref. db contains protein sequences: Multiply sequence length by 3!
+			query = "SELECT `gene_id`, `seq_length`*3 FROM `annotation` USE INDEX(PRIMARY) WHERE `type`='coding' ";
 		}
 		Statement stmt				= plaza_conn.createStatement();
 		stmt.setFetchSize(1000);
