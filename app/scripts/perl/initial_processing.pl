@@ -185,7 +185,7 @@ if($par{plaza_db_name} eq "db_trapid_ref_eggnog_test_02") {
 my $java_program	= "transcript_pipeline.InitialTranscriptsProcessing";
 my $java_location	= $par{"base_script_location"}."java/";
 
-my $java_command        = "java -cp .:..:".$java_location.":".$java_location."ini4j-0.5.4.jar".":".$java_location."mysql.jar ".$java_program;
+my $java_command        = "java -cp .:..:".$java_location.":".$java_location."lib/* ".$java_program;
 my @java_options        = ($initial_processing_ini_file, $similarity_output, 0.50);
 
 my $java_exec           = $java_command." ".join(" ",@java_options);
@@ -260,7 +260,7 @@ sub send_email($ $ $ $ $ $){
 	my $content		= "Dear,\nYour TRAPID experiment titled '".$experiment_title."' has finished its processing phase.\n";
 	$content		= $content."You can now log in into TRAPID, and begin the analysis of your transcriptome dataset.\n";
 	# $content		= $content."You can access TRAPID at http://bioinformatics.psb.ugent.be/webtools/trapid/ \n";
-	$content		= $content."You can access TRAPID at https://bioinformatics.psb.ugent.be/webtools/trapid_dev/ \n";
+	$content		= $content."You can access TRAPID at https://bioinformatics.psb.ugent.be/trapid_02/ \n";
 	$content		= $content."\n\nThank you for your interest in TRAPID\n";
 	my $send_to		= "To: ".$user_email."\n";
 	open(SENDMAIL, "|$sendmail") or die "Cannot open $sendmail: $!";
@@ -386,7 +386,7 @@ sub perform_similarity_search($ $ $ $ $){
 	print STDOUT "Used DIAMOND database : ".$blast_dir."\n";
 
 	# my $exec_command	= $DIAMOND_EXECUTABLE." --query ".$multi_fasta_file." --db ".$blast_dir." --evalue 1e".$DIAMOND_EVALUE." --out ".$output_file.".m8 -p 2 -k 100 --more-sensitive --log";
-	my $exec_command	= $DIAMOND_EXECUTABLE." --query ".$multi_fasta_file." --db ".$blast_dir." --evalue 1e".$DIAMOND_EVALUE." --out ".$output_file.".m8 -p 2 --more-sensitive -k 100 --log";
+	my $exec_command	= $DIAMOND_EXECUTABLE." --query ".$multi_fasta_file." --db ".$blast_dir." --evalue 1e".$DIAMOND_EVALUE." --out ".$output_file.".m8 -p 5 --more-sensitive -k 100 --log";
 	print STDOUT $exec_command."\n";
 
 	#perform similarity search

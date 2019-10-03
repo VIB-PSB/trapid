@@ -81,7 +81,7 @@ sub send_email($ $ $){
 	my $subject		= "Subject: TRAPID FrameDP finished for ".$gf_id."\n";
 	my $content		= "Dear user,\nThe frameshift correction using FrameDP for gene family '".$gf_id."' in experiment '".$experiment_title."' has finished.\n";
 	$content		= $content."You can now view the result at this URL:\n";
-	$content		= $content."http://bioinformatics.psb.ugent.be/webtools/trapid/tools/framedp/".$experiment_id."/".$gf_id." \n";
+	$content		= $content."http://bioinformatics.psb.ugent.be/trapid_02/tools/framedp/".$experiment_id."/".$gf_id." \n";
 	$content		= $content."\n\nThank you for your interest in TRAPID\n";
 	my $send_to		= "To: ".$user_email."\n";
 	open(SENDMAIL, "|$sendmail") or die "Cannot open $sendmail: $!";

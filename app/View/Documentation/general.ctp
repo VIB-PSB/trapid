@@ -50,6 +50,7 @@ function create_export_example($elmt_id, $example_data){
                 <li><a href="#msa">Multiple sequence alignments</a></li>
                 <li><a href="#tree">Phylogenetic trees</a></li>
                 <li><a href="#orthology">Orthology</a></li>
+                <li class="sidebar-nav-to-top"><a href="#top">Back to top</a></li>
             </ul>
         </div>
         <div class="col-md-9" id="tutorial-col">
@@ -58,13 +59,13 @@ function create_export_example($elmt_id, $example_data){
                 <p class="text-justify">TRAPID is an online tool for the fast and efficient processing of assembled
                     RNA-Seq transcriptome data. TRAPID offers high-throughput ORF detection, frameshift correction and
                     includes a functional, comparative and phylogenetic toolbox, making use of 175 reference proteomes.
-                    The TRAPID platform Is available at <a href="http://bioinformatics.psb.ugent.be/webtools/trapid"
-                                                           alt="PLAZA link">http://bioinformatics.psb.ugent.be/webtools/trapid</a>
+                    The TRAPID platform Is available at <a href="http://bioinformatics.psb.ugent.be/trapid_02"
+                                                           alt="PLAZA link">http://bioinformatics.psb.ugent.be/trapid_02</a>
                 </p>
                 <p class="text-justify">
                     Detailed information about the platform and the tools are provided in the different sections. In
                     addition, we provide a detailed step-by-step tutorial
-                    <a href="http://bioinformatics.psb.ugent.be/webtools/trapid/documentation/tutorial"
+                    <a href="http://bioinformatics.psb.ugent.be/trapid_02/documentation/tutorial"
                        alt="Tutorial link">here</a>, to guide non-experts through the different steps of processing a
                     complete transcriptome using TRAPID. Sample data including Panicum transcrips (from Meyer et al.,
                     2012; see [1]) and subset labels can be found at <a href="ftp://ftp.psb.ugent.be/pub/trapid/"
@@ -643,7 +644,7 @@ function create_export_example($elmt_id, $example_data){
     </div>
 
 <script>
-    $(document).ready(function () {
+//    $(document).ready(function () {
         // Affix navigation (bootstrap)
         $('body').attr('data-spy', 'scroll');
         $('body').attr('data-target', '.scrollspy');
@@ -657,8 +658,8 @@ function create_export_example($elmt_id, $example_data){
             var the_id = $(this).attr("href");
             $('html, body').animate({
                 scrollTop: $(the_id).offset().top
-            }, 'slow');
+            }, 250, 'swing');
             return false;
         });
-    });
+//    });
 </script>

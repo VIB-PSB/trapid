@@ -19,7 +19,7 @@
 		<a id="intro"><h3>INTRODUCTION </h3></a>
 	
 		<div class="subdiv">
-			<p>TRAPID is an online tool for the fast and efficient processing of assembled RNA-Seq transcriptome data. TRAPID offers high-throughput ORF detection, frameshift correction and includes a functional, comparative and phylogenetic toolbox. Sequences can be ESTs, full-length cDNAs or RNA-Seq transcriptome sequences. Additionally, coding sequence derived from an annotated genome can also be used. We offer two reference databases: for plants and green algae  <a href="http://bioinformatics.psb.ugent.be/plaza/" alt="PLAZA link" target="_blank">PLAZA 2.5</a>, for Alveolata, Amoebozoa, Euglenozoa, Fungi, Metazoa and prokaryotes (Bacteria and Archaea) <a href="http://www.orthomcl.org/cgi-bin/OrthoMclWeb.cgi" alt="OrthoMCL DB link" target="_blank">OrthoMCL-DB version 5</a> is available. </p>
+			<p>TRAPID is an online tool for the fast and efficient processing of assembled RNA-Seq transcriptome data. TRAPID offers high-throughput ORF detection, frameshift correction and includes a functional, comparative and phylogenetic toolbox. Sequences can be ESTs, full-length cDNAs or RNA-Seq transcriptome sequences. Additionally, coding sequence derived from an annotated genome can also be used. We offer two reference databases: for plants and green algae  <a href="http://bioinformatics.psb.ugent.be/plaza/" alt="PLAZA link" target="_blank">PLAZA</a>, for Alveolata, Amoebozoa, Euglenozoa, Fungi, Metazoa and prokaryotes (Bacteria and Archaea) <a href="http://www.orthomcl.org/cgi-bin/OrthoMclWeb.cgi" alt="OrthoMCL DB link" target="_blank">OrthoMCL-DB version 5</a> is available. </p>
 
 			<p>Once the initial processing has assigned functional annotations and gene families to the user-defined transcripts, evolutionary studies on gene families including the uploaded transcripts can be performed. Through a few simple operations, multiple sequence alignments and phylogenetic trees can be generated. </p>
 			<p>Although TRAPID hosts several prokaryotic reference genomes, it was not developed to process data from large-scale metagenomic studies. </p>
@@ -28,13 +28,13 @@
 		<h3 class="clear">SETTING UP AN ACCOUNT</h3>
 		<div class="subdiv">
 							<div class="picture right" style="width:278px;"> <a href="/webtools/trapid/img/tutorial/001_registration.png"><img src="/webtools/trapid/img/tutorial/001_registration.png" width="276" alt="Registration Image" /></a> <br /><strong>FIGURE 1 REGISTRATION FORM.</strong> Fill in your information and click register. An e-mail with login credentials will be send.</div>
-			<p>Before you can use TRAPID, you need to register for an account. For academics this is free of charge. First click on the <em>"Register"</em> link (or click <a href="http://bioinformatics.psb.ugent.be/webtools/trapid/trapid/authentication/registration" alt="Register link" target="_blank">here</a>) on the bottom of the page, on the next page fill in the required information and click on the <em>"Register"</em> button. Make sure to provide a valid e-mail address as your login credential will be send immediately by e-mail.</p>
+			<p>Before you can use TRAPID, you need to register for an account. For academics this is free of charge. First click on the <em>"Register"</em> link (or click <a href="http://bioinformatics.psb.ugent.be/trapid_02/trapid/authentication/registration" alt="Register link" target="_blank">here</a>) on the bottom of the page, on the next page fill in the required information and click on the <em>"Register"</em> button. Make sure to provide a valid e-mail address as your login credential will be send immediately by e-mail.</p>
 
 		</div>
 		<h3 class="clear">LOGIN TO YOUR ACCOUNT</h3>	<div class="picture right" style="width:278px;"> <a href="/webtools/trapid/img/tutorial/002_login_2.png"><img src="/webtools/trapid/img/tutorial/002_login_2.png" width="276" alt="Login Image" /></a> <br /><strong>FIGURE 2 LOGIN FORM.</strong> Login using your e-mail address and the provided password.</div>
 		<div class="subdiv">
 
-			<p>On the main page, click <em>"Login"</em> (or click <a href="http://bioinformatics.psb.ugent.be/webtools/trapid/trapid/authentication" alt="Login link" target="_blank">here</a>) at the bottom of the page, this will take you to a login form. Here use the <strong>e-mail address</strong> used to register and the <strong>password</strong> sent by mail to login.</p>
+			<p>On the main page, click <em>"Login"</em> (or click <a href="http://bioinformatics.psb.ugent.be/trapid_02/trapid/authentication" alt="Login link" target="_blank">here</a>) at the bottom of the page, this will take you to a login form. Here use the <strong>e-mail address</strong> used to register and the <strong>password</strong> sent by mail to login.</p>
 
 		</div>
 		

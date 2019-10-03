@@ -6,7 +6,7 @@
 <div class='subdiv' style='width:900px;'>
 	This quick start section will give, through a limited set of steps to follow, a basic insight in how to process your transcriptome datasets with the TRAPID platform. For more detailed documentation, please refer to the “General Documentation” section.
 	<br/><br/>
-	The TRAPID platform is available at <a href='http://bioinformatics.psb.ugent.be/webtools/trapid'>http://bioinformatics.psb.ugent.be/webtools/trapid</a> <br/><br/>
+	The TRAPID platform is available at <a href='http://bioinformatics.psb.ugent.be/trapid_02'>http://bioinformatics.psb.ugent.be/webtools/trapid</a> <br/><br/>
 	A PDF-version of the documentation can be found <?php echo $this->Html->link("here",$this->Html->url("/files/TRAPID_quickstart.pdf",true)); ?> 
 	<br/>
 	

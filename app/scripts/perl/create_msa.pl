@@ -625,7 +625,7 @@ sub send_email($ $ $){
 	$content		= $content."You can now view the MSA (after authentication) at this URL:\n";
 	# $content		= $content."http://bioinformatics.psb.ugent.be/webtools/trapid/tools/create_msa/".$experiment_id."/".$gf_id." \n";
     # Change URL to the dev. version of TRAPID for now.
-	$content		= $content."https://bioinformatics.psb.ugent.be/webtools/trapid_dev/tools/create_msa/".$experiment_id."/".$gf_id." \n";
+	$content		= $content."https://bioinformatics.psb.ugent.be/trapid_02/tools/create_msa/".$experiment_id."/".$gf_id." \n";
 	$content		= $content."\n\nThank you for your interest in TRAPID\n";
 	my $send_to		= "To: ".$user_email."\n";
 	open(SENDMAIL, "|$sendmail") or die "Cannot open $sendmail: $!";

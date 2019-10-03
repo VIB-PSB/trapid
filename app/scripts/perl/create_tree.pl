@@ -451,7 +451,7 @@ sub send_email($ $ $){
 	my $content		= "Dear user,\nThe phylogenetic tree for gene family '".$gf_id."' in experiment '".$experiment_title."' has been created.\n";
 	$content		= $content."You can now view the phylogenetic tree at this URL:\n";
 	# $content		= $content."http://bioinformatics.psb.ugent.be/webtools/trapid/tools/create_tree/".$experiment_id."/".$gf_id." \n";
-	$content		= $content."https://bioinformatics.psb.ugent.be/webtools/trapid_dev/tools/create_tree/".$experiment_id."/".$gf_id." \n";
+	$content		= $content."https://bioinformatics.psb.ugent.be/trapid_02/tools/create_tree/".$experiment_id."/".$gf_id." \n";
 	$content		= $content."\n\nThank you for your interest in TRAPID\n";
 	my $send_to		= "To: ".$user_email."\n";
 	open(SENDMAIL, "|$sendmail") or die "Cannot open $sendmail: $!";

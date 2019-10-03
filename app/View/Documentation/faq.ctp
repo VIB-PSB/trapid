@@ -14,10 +14,10 @@
 			<div class="faq_answer"> - Each user-account has the ability to create up to 10 different TRAPID experiments.</div>
 
 			<div class="faq_question"> - I've lost my password. What to do next?</div>
-			<div class="faq_answer"> - <a href='http://bioinformatics.psb.ugent.be/webtools/trapid/documentation/about'>Contact us</a> and we will send you a news password for your user-account. </div>
+			<div class="faq_answer"> - <a href='http://bioinformatics.psb.ugent.be/trapid_02/documentation/contact'>Contact us</a> and we will send you a news password for your user-account. </div>
 
 			<div class="faq_question"> - I think I found a bug. Can I report it?</div>
-			<div class="faq_answer"> - Sure. Just <a href='http://bioinformatics.psb.ugent.be/webtools/trapid/documentation/about'>send us an email</a>, and we will investigate the issue.</div>
+			<div class="faq_answer"> - Sure. Just <a href='http://bioinformatics.psb.ugent.be/trapid_02/documentation/contact'>send us an email</a>, and we will investigate the issue.</div>
 	
 			<div class="faq_question"> - I want to share my experiment with my colleagues. Do I have to share my account information with them?</div>
 			<div class="faq_answer"> - This is not necessary! If your colleagues also create a TRAPID account, you can easily share only a select number of experiments with them. This is done by following the 'Experiment access' link available on the top section of an experiment page.</div>
