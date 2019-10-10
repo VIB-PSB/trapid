@@ -197,14 +197,29 @@ class DATABASE_CONFIG {
 
 
 
-    public $db_trapid_ref_eggnog_test  = array(
+    public $db_trapid_ref_eggnog_test_02  = array(
         'datasource' => 'Database/Mysql',
         'persistent' 	=> false,
         'host' 		=> TRAPID_DB_SERVER,
         'port' 		=> TRAPID_DB_PORT,
         'login' 	=> TRAPID_DB_USER,
         'password' 	=> TRAPID_DB_PASSWORD,
-        'database' 	=> 'db_trapid_ref_eggnog_test',
+        'database' 	=> 'db_trapid_ref_eggnog_test_02',
+        'schema' 	=> '',
+        'prefix' 	=> '',
+        'encoding' 	=> ''
+    );
+
+
+
+    public $db_trapid_ref_plaza_singek_02_test  = array(
+        'datasource' => 'Database/Mysql',
+        'persistent' 	=> false,
+        'host' 		=> TRAPID_DB_SERVER,
+        'port' 		=> TRAPID_DB_PORT,
+        'login' 	=> TRAPID_DB_USER,
+        'password' 	=> TRAPID_DB_PASSWORD,
+        'database' 	=> 'db_trapid_ref_plaza_singek_02_test',
         'schema' 	=> '',
         'prefix' 	=> '',
         'encoding' 	=> ''
