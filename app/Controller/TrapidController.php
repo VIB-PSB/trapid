@@ -253,7 +253,22 @@ class TrapidController extends AppController{
     $this->set("user_email",$user_email);
 
     //retrieve possible available PLAZA databases from the configuration table
-    $available_sources	= $this->DataSources->find("all");
+    $all_available_sources = $this->DataSources->find("all");
+    $available_sources = array();
+    // Filter visible data sources based on the user's group
+    $user_group = $this->Authentication->find("first",array("fields"=>array("group"),"conditions"=>array("user_id"=>$user_id)));
+    foreach($all_available_sources as $data_source) {
+        if(!empty($data_source['DataSources']['restrict_to'])) {
+            $allowed_groups = explode(",", $data_source['DataSources']['restrict_to']);
+            if(in_array($user_group['Authentication']['group'], $allowed_groups)) {
+                $available_sources[] = $data_source;
+            }
+        }
+        else {
+            $available_sources[] = $data_source;
+        }
+    }
+    
     $this->set("available_sources",$available_sources);
 
     //retrieve current user experiments.
