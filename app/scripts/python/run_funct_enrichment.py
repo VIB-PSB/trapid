@@ -62,7 +62,7 @@ def main(ini_file_enrichment, fa_type, subset, max_pval, keep_tmp, verbose=False
     delete_previous_results(db_conn, exp_id, fa_type, subset, max_pval, verbose)
     db_conn.close()
     # Run enricher
-    enricher_results = run_enricher(trapid_db_data, exp_id, fa_type, subset, max_pval, enricher_bin, tmp_dir, keep_tmp, verbose)
+    enricher_results = run_enricher(trapid_db_data, exp_id, fa_type, subset, max_pval, go_data, enricher_bin, tmp_dir, keep_tmp, verbose)
     # Create result records and upload them to TRAPID DB
     enrichment_rows = create_enrichment_rows(enricher_results, exp_id, subset, fa_type, max_pval, go_data)
     db_conn = common.db_connect(*trapid_db_data)

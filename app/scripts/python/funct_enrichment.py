@@ -12,18 +12,7 @@ import sys
 import time
 from ConfigParser import ConfigParser
 
-
-# TODO: move this to `common`?
-def ResultIter(db_cursor, arraysize=1000):
-    """
-    An iterator that uses `fetchmany` (keep memory usage down, faster than `fetchall`).
-    """
-    while True:
-        results = db_cursor.fetchmany(arraysize)
-        if not results:
-            break
-        for result in results:
-            yield result
+GO_FILTER = {"GO:0005575", "GO:0003674", "GO:0008150"}  # Default list of GO to filter (top GO terms)
 
 
 def check_enricher_bin(enricher_bin, verbose=False):
@@ -108,6 +97,18 @@ def get_go_data(ref_db_conn):
     return go_dict
 
 
+def get_alt_gos(go_dict):
+    """
+    Return an alt_id:go mapping dictionary from information retrieved from `go_dict`.
+    """
+    alt_gos = {}
+    for go in go_dict:
+        if go_dict[go]['alt_ids']:
+            for alt_go in go_dict[go]['alt_ids']:
+                alt_gos[alt_go] = go
+    return alt_gos
+
+
 def create_enricher_input_set(trapid_db_conn, exp_id, subset, fa_type, tmp_dir, verbose=False):
     """
     Create input set file for Dries' enricher. Set file created based on transcript ids from subset `subset` retrieved
@@ -123,7 +124,7 @@ def create_enricher_input_set(trapid_db_conn, exp_id, subset, fa_type, tmp_dir, 
         sys.stderr.write("[Message] Query to execute: %s\n" % formatted_set_query)
     cursor.execute(formatted_set_query)
     with open(set_file, 'w') as out_file:
-        for record in ResultIter(db_cursor=cursor):
+        for record in common.ResultIter(db_cursor=cursor):
             out_file.write("%s\n" % record[0])
     return set_file
 
@@ -144,10 +145,87 @@ def create_enricher_input_feature(trapid_db_conn, exp_id, fa_type, tmp_dir, verb
         sys.stderr.write("[Message] Query to execute: %s\n" % formatted_feature_query)
     cursor.execute(formatted_feature_query)
     with open(feature_file, 'w') as out_file:
-        for record in ResultIter(db_cursor=cursor):
+        for record in common.ResultIter(db_cursor=cursor):
             # Create string to write to `feature_file` and write it
             out_file.write("{annot}\t{tr}\n".format(annot=record[1], tr=record[0]))
     return feature_file
+
+
+# Note: this fix should not be necessary if potentially invalid GO terms are taken care of during initial processing.
+def clean_enricher_input_feature_go(feature_file, go_data, verbose=False, go_filter=GO_FILTER):
+    """
+    Clean input GO feature file `feature_file`: replace obsolete/alternative GO terms when possible, and remove missing
+    GO terms, based on ontology data from `go_data`.
+    """
+    sys.stderr.write("[Message] Clean enricher input feature file (GO check)...\n")
+    go_trs = {}
+    alt_gos = get_alt_gos(go_data)  # Alt. GO term to regular GO term mapping dictionary
+    # Get GO->transcripts mapping
+    with open(feature_file, 'r') as in_file:
+        for line in in_file:
+            go_id, trs_id = line.strip().split('\t')
+            if go_id not in go_trs:
+                go_trs[go_id] = set([trs_id])
+            else:
+                go_trs[go_id].add(trs_id)
+    # Handle invalid GO terms: a term is valid only if it is in `go_data`, or it is alternative/obsolete and can be replaced.
+    invalid_gos = flag_invalid_gos(go_trs.keys(), go_data, alt_gos, verbose)
+    # Remove unfound GO terms
+    for go in invalid_gos['unfound']:
+        del go_trs[go]
+    # Replace alternative/obsolete GO terms and add parental terms
+    for go in invalid_gos['alternative'] | invalid_gos['obsolete']:
+        transcripts = go_trs[go]
+        go_replacement = (alt_gos[go] if go in alt_gos else go_data[go]['replace_by'])
+        del go_trs[go]
+        go_trs[go_replacement] = transcripts
+        # Update parental terms
+        parents = go_data[go_replacement]['parents'] - go_filter
+        for parent in parents:
+            if parent in go_trs:
+                go_trs[parent].update(transcripts)
+            else:
+                if verbose:
+                    sys.stderr.write("[Warning] Added '%s' as parental GO term when replacing '%s' by '%s'\n" % (parent, go, go_replacement))
+                go_trs[parent] = transcripts
+    # Write cleaned feature file
+    with open(feature_file, 'w') as out_file:
+        for go, transcripts in go_trs.items():
+            go_lines = "\n".join(["{go}\t{tr}".format(go=go, tr=tr) for tr in transcripts])
+            out_file.write("%s\n" % go_lines)
+
+
+def flag_invalid_gos(go_terms, go_data, alt_gos, verbose=False):
+    """
+    Using reference database GO data `go_data` and alternive GO data `alt_gos`, examine GO term set/list `go_terms` to
+    flag invalid GO terms (obsolete, alternative, or not found in the data). Return the results as a dictionary of
+    invalid GO sets per category.
+    """
+    invalid_gos = {'obsolete': set([]), 'alternative':set([]), 'unfound': set([])}
+    for go in go_terms:
+        go_term = go
+        # Check if GO term is alternative, replace it
+        if go_term in alt_gos:
+            if go_term not in invalid_gos['alternative']:
+                invalid_gos['alternative'].add(go_term)
+                if verbose:
+                    sys.stderr.write("[Warning] GO term '%s' is alternative & can be replaced by '%s' \n" % (go_term, alt_gos[go_term]))
+            go_term = alt_gos[go_term]
+        # Check if GO term is obsolete and replace it by the term in `replace_by`.
+        if go_term in go_data and go_data[go_term]['is_obsolete']:
+            if go_term not in invalid_gos['obsolete']:
+                invalid_gos['obsolete'].add(go_term)
+                if verbose:
+                    sys.stderr.write("[Warning] GO term '%s' is obsolete & can be replaced by '%s' \n" % (go_term, go_data[go_term]['replace_by']))
+            go_term = go_data[go_term]['replace_by']
+        # If there is no possible replacement, the GO term is invalid and ignored
+        if go_term not in go_data:
+            if go_term not in invalid_gos['unfound']:
+                invalid_gos['unfound'].add(go_term)
+                if verbose:
+                    sys.stderr.write("[Warning] GO term '%s' not found in GO data and will be ignored.\n" % go_term)
+    return invalid_gos
+
 
 
 def create_enricher_input(trapid_db_conn, exp_id, fa_type, subset, tmp_dir, verbose=False):
@@ -194,7 +272,7 @@ def read_enricher_output(enricher_output, verbose=False):
     return enricher_results
 
 
-def run_enricher(trapid_db_data, exp_id, fa_type, subset, max_pval, enricher_bin, tmp_dir, keep_tmp=False, verbose=False):
+def run_enricher(trapid_db_data, exp_id, fa_type, subset, max_pval, go_data, enricher_bin, tmp_dir, keep_tmp=False, verbose=False):
     """
     A wrapper function to create enricher input, run it, store output as a variable, and delete temporary files.
     """
@@ -205,6 +283,8 @@ def run_enricher(trapid_db_data, exp_id, fa_type, subset, max_pval, enricher_bin
     db_conn = common.db_connect(*trapid_db_data)
     enricher_files = create_enricher_input(db_conn, exp_id, fa_type, subset, tmp_dir, verbose)
     db_conn.close()
+    if fa_type == 'go':
+        clean_enricher_input_feature_go(enricher_files[0], go_data, verbose)
     # Perform functional enrichment
     enricher_output = call_enricher(enricher_files[0], enricher_files[1], max_pval, exp_id, subset, fa_type, enricher_bin, tmp_dir)
     enricher_results = read_enricher_output(enricher_output, verbose)

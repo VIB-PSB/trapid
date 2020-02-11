@@ -69,11 +69,13 @@ def main(ini_file_enrichment, fa_type, subsets, max_pvals, keep_tmp, verbose=Fal
     db_conn = common.db_connect(*trapid_db_data)
     feature_file = create_enricher_input_feature(db_conn, exp_id, fa_type, tmp_dir, verbose)
     db_conn.close()
+    if fa_type == 'go':
+        clean_enricher_input_feature_go(feature_file, go_data, verbose)
     # Create all set files (one per subset)
     set_files = {}
     for subset in subsets:
         db_conn = common.db_connect(*trapid_db_data)
-        set_file = create_enricher_input_set(db_conn, exp_id, subset, fa_type, tmp_dir, verbose=False)
+        set_file = create_enricher_input_set(db_conn, exp_id, subset, fa_type, tmp_dir, verbose)
         set_files[subset] = set_file
         db_conn.close()
     # Run/post-process enricher for every possible case
