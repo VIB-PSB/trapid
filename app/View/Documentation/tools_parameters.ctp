@@ -16,6 +16,7 @@
                 <li><a href="#ref-dbs">Reference databases</a></li>
                 <li><a href="#init-processing">Initial processing</a></li>
                 <li><a href="#msa-phylogeny">MSA and pylogeny</a></li>
+                <li class="sidebar-nav-to-top"><a href="#top">Back to top</a></li>
             </ul>
         </div>
 
@@ -56,7 +57,7 @@
 </div>
 </div>
 <script type="text/javascript">
-    $(document).ready(function () {
+//    $(document).ready(function () {
         // Affix navigation (bootstrap)
         $('body').attr('data-spy', 'scroll');
         $('body').attr('data-target', '.scrollspy');
@@ -70,8 +71,8 @@
             var the_id = $(this).attr("href");
             $('html, body').animate({
                 scrollTop: $(the_id).offset().top
-            }, 'slow');
+            }, 250, 'swing');
             return false;
         });
-    });
+//    });
 </script>

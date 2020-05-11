@@ -2,17 +2,6 @@
     <div class="page-header">
         <h1 class="text-primary">About</h1>
     </div>
-<!--<div class='subdiv'>-->
-<!--	<h3>Contact</h3>-->
-<!--	<div class='subdiv'>-->
-<!--		For more information, questions and remarks, please contact either:-->
-<!--		<dl class='standard extra'>-->
-<!--			<dt><a href='mailto:mibel@psb.vib-ugent.be'>Dr. Michiel Van Bel</a></dt>-->
-<!--			<dd>Project Leader</dd>-->
-<!--			<dt><a href='mailto:klpoe@psb.vib-ugent.be'>Prof. Dr. Klaas Vandepoele</a></dt>-->
-<!--			<dd>Principal Investigator</dd>-->
-<!--		</dl>-->
-<!--	</div>-->
     <section class="page-section">
         <h2>Licensing</h2>
         <p class="text-justify">The TRAPID platform is currently only freely accessible for academic use.
@@ -37,17 +26,16 @@
 
     <section class="page-section">
         <h2>Authors</h2>
-        <p class="text-justify">This tool is being developed by a lot of nice people.</p>
+        <p class="text-justify">This tool is being developed by François Bucchini, Michiel Van Bel, and Klaas Vandepoele.</p>
     </section>
 
     <section class="page-section">
-        <h2>The CIG research group</h2>
-        <p class="text-justify">The <strong>Comparative and Integrative Genomics (CIG) group </strong> (led by Klaas
+        <h2>The CNB research group</h2>
+        <p class="text-justify">The <strong>Comparative Network Biology (CNB) group </strong> (led by Klaas
             Vandepoele and located at VIB-Ghent) is interested in extracting biological knowledge from large-scale experimental data sets
             using data integration, comparative sequence & expression analysis, and network biology, in plants, green algae and diatoms.
         </p>
         <p class="text-justify">If you wish to learn more, you may be interested by taking a look at the <a
-                    href="http://bioinformatics.psb.ugent.be/cig/" target="about:blank"><span
-                        class="glyphicon glyphicon-new-window small-icon"></span> group's website</a>.</p>
+                    href="http://bioinformatics.psb.ugent.be/cig/" class='linkout' target="about:blank">group's website</a>.</p>
     </section>
 </div>
