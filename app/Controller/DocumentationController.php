@@ -28,7 +28,7 @@ class DocumentationController extends AppController{
 
 
   function faq(){
-      $this -> set('title_for_layout', 'Frequently asked questions');
+      $this -> set('title_for_layout', 'Frequently Asked Questions');
   }
 
 
@@ -55,7 +55,11 @@ class DocumentationController extends AppController{
 
   function tools_parameters() {
       // Get reference db data
-      $ref_db_data = $this->DataSources->find("all");
+      $ref_db_data_raw = $this->DataSources->find("all", array('conditions'=>array("restrict_to"=>NULL)));
+      $ref_db_data = array();
+      foreach ($ref_db_data_raw as $ref_db) {
+          $ref_db_data[$ref_db['DataSources']['db_name']] = array("url"=>$ref_db['DataSources']['URL'], "name"=>$ref_db['DataSources']['name']);
+      }
       // Get tools' data
       $tools_parameters_data = $this->Configuration->getDocToolsParameters();
       $this -> set('title_for_layout', 'Tools & parameters');
