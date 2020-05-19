@@ -1,106 +1,369 @@
-<!--<html>
 
-<head>
-	<link rel="stylesheet" type="text/css" href="../trapid.css">
-	<title>TRAPID -- Tutorial</title>
-</head>
-<body>
--->
 <div class="container">
-<!--	<div style='float:right;width:100px;text-align:right;margin-right:100px;'>-->
-<!--		<a class="mainref" href="/webtools/trapid/documentation/">Documentation</a>-->
-<!--	</div>-->
-<!--	<div style='clear:both;width:700px;font-size:8px;'>&nbsp;</div>-->
     <div class="page-header">
 		<h1 class="text-primary">TRAPID Tutorials</h1>
     </div>
-	<div id="tutorial">
 
-		<a id="intro"><h3>INTRODUCTION </h3></a>
-	
-		<div class="subdiv">
-			<p>TRAPID is an online tool for the fast and efficient processing of assembled RNA-Seq transcriptome data. TRAPID offers high-throughput ORF detection, frameshift correction and includes a functional, comparative and phylogenetic toolbox. Sequences can be ESTs, full-length cDNAs or RNA-Seq transcriptome sequences. Additionally, coding sequence derived from an annotated genome can also be used. We offer two reference databases: for plants and green algae  <a href="http://bioinformatics.psb.ugent.be/plaza/" alt="PLAZA link" target="_blank">PLAZA</a>, for Alveolata, Amoebozoa, Euglenozoa, Fungi, Metazoa and prokaryotes (Bacteria and Archaea) <a href="http://www.orthomcl.org/cgi-bin/OrthoMclWeb.cgi" alt="OrthoMCL DB link" target="_blank">OrthoMCL-DB version 5</a> is available. </p>
+    <div class="row">
 
-			<p>Once the initial processing has assigned functional annotations and gene families to the user-defined transcripts, evolutionary studies on gene families including the uploaded transcripts can be performed. Through a few simple operations, multiple sequence alignments and phylogenetic trees can be generated. </p>
-			<p>Although TRAPID hosts several prokaryotic reference genomes, it was not developed to process data from large-scale metagenomic studies. </p>
-		</div>
-		
-		<h3 class="clear">SETTING UP AN ACCOUNT</h3>
-		<div class="subdiv">
-							<div class="picture right" style="width:278px;"> <a href="/webtools/trapid/img/tutorial/001_registration.png"><img src="/webtools/trapid/img/tutorial/001_registration.png" width="276" alt="Registration Image" /></a> <br /><strong>FIGURE 1 REGISTRATION FORM.</strong> Fill in your information and click register. An e-mail with login credentials will be send.</div>
-			<p>Before you can use TRAPID, you need to register for an account. For academics this is free of charge. First click on the <em>"Register"</em> link (or click <a href="http://bioinformatics.psb.ugent.be/trapid_02/trapid/authentication/registration" alt="Register link" target="_blank">here</a>) on the bottom of the page, on the next page fill in the required information and click on the <em>"Register"</em> button. Make sure to provide a valid e-mail address as your login credential will be send immediately by e-mail.</p>
+        <div class="col-md-9" id="tutorial-col">
+            <section class="page-section" id="introduction">
+                <h3>Introduction</h3>
+                    <p class="text-justify">
+                        TRAPID is an online tool for the fast and efficient processing of assembled RNA-Seq transcriptome data.
+                        TRAPID offers high-throughput ORF detection, frameshift correction and includes a functional, comparative and phylogenetic toolbox.
+                        Input sequences can be ESTs, full-length cDNAs or RNA-Seq transcriptome sequences. Additionally, coding sequence derived from an annotated genome can also be used.
+                        We offer four reference databases: for plants and green algae, the latest <a href="http://bioinformatics.psb.ugent.be/plaza/" alt="PLAZA link" target="_blank" class="linkout">PLAZA</a> databases (PLAZA dicots and monocots 4.5, pico-PLAZA 3), and for other eukaryotes (e.g. Alveolata, Amoebozoa, Euglenozoa, Fungi, Metazoa) or prokaryotes (Bacteria and Archaea) <a href="http://eggnog45.embl.de" alt="EggNOG 4.5 link" target="_blank" class="linkout">EggNOG version 4.5</a> is available.
+                    </p>
+                    <p class="text-justify">Once the initial processing has assigned functional annotations and gene families to the user-defined transcripts, evolutionary studies on gene families including the uploaded transcripts can be performed. Through a few simple operations, multiple sequence alignments and phylogenetic trees can be generated. </p>
+                    <p class="text-justify">Although TRAPID hosts a wide range of reference genomes, it was not developed to process data from massive-scale meta -omic studies, as it can process 200,000 sequences maximum per experiment. Adding more transcripts is possible, but correct processing or website performance is not guaranteed in this case. </p>
+            </section>
 
-		</div>
-		<h3 class="clear">LOGIN TO YOUR ACCOUNT</h3>	<div class="picture right" style="width:278px;"> <a href="/webtools/trapid/img/tutorial/002_login_2.png"><img src="/webtools/trapid/img/tutorial/002_login_2.png" width="276" alt="Login Image" /></a> <br /><strong>FIGURE 2 LOGIN FORM.</strong> Login using your e-mail address and the provided password.</div>
-		<div class="subdiv">
+            <section class="page-section" id="account-setup">
+                <h3>Account registration and login</h3>
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="doc-figure">
+                            <?php echo $this->Html->image('tutorial/authentication_register.png', array('alt' => 'TRAPID login page', 'class'=>'img-responsive img-centered')); ?>
+                            <p class="text-justify doc-figure-legend small">
+                            <strong>Figure 1: registration form.</strong> Fill in your information and click the 'register' button: an e-mail with login credentials will be sent.
+                            </p>
+                        </div>
+                    </div>
+                    <div class="col-md-8">
+                        <p class="text-justify">Before you can use TRAPID, you need to register for an account. For academics this is free of charge.
+                            First, click on <code>Register</code> in the header (or click <a href="<?php echo $this->Html->Url(array("controller" => "trapid", "action" => "authentication", "register")); ?>" alt="Register link" target="_blank" class="linkout">here</a>).
+                            On the next page, fill in the required information and click on the <code>Register</code> button (Figure 1). Make sure to provide a valid e-mail address as your login credentials will be sent immediately at this address.
+                        </p>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="doc-figure">
+                            <?php echo $this->Html->image('tutorial/authentication_login.png', array('alt' => 'TRAPID login page', 'class'=>'img-responsive img-centered')); ?>
+                            <p class="text-justify doc-figure-legend small">
+                                <strong>Figure 2: login form.</strong> Login using your e-mail address and the provided password.
+                            </p>
+                        </div>
+                    </div>
+                    <div class="col-md-8">
+                        <p class="text-justify">On the main page, click <code>Login</code> in the header (or click <a href="<?php echo $this->Html->Url(array("controller" => "trapid", "action" => "authentication", "login")); ?>" alt="Login link" target="_blank" class="linkout">here</a>).
+                            This will take you to a login form (Figure 2). Here, use the <strong>e-mail address</strong> used to register and the <strong>password</strong> sent by mail to login.
+                        </p>
+                    </div>
+                </div>
 
-			<p>On the main page, click <em>"Login"</em> (or click <a href="http://bioinformatics.psb.ugent.be/trapid_02/trapid/authentication" alt="Login link" target="_blank">here</a>) at the bottom of the page, this will take you to a login form. Here use the <strong>e-mail address</strong> used to register and the <strong>password</strong> sent by mail to login.</p>
+            </section>
+            <hr>
+            <section class="page-section" id="tutorial-1">
+                <h3>Tutorial 1:  <em>Panicum</em> transcriptome functional annotation</h3>
+                <p class="text-justify">In this tutorial you'll learn how to functionally annotate and analyze the transcriptome of <a href="https://www.ncbi.nlm.nih.gov/Taxonomy/Browser/wwwtax.cgi?id=206008" title="View in NCBI taxonomy" target="_blank" class="linkout"><em>Panicum hallii</em></a> (Meyer <i>et al</i>. 2012, Transcriptome analysis and gene expression atlas for <i>Panicum hallii</i> var. filipes, a diploid model for biofuel research.).
+                    The dataset can be obtained from the <a target="_blank" class="linkout" href="ftp://ftp.psb.ugent.be/pub/trapid/datasets/panicum/">TRAPID FTP</a>. </p><br>
+                <section class="page-section-sm" id="tutorial-1-upload">
+                    <h4>Part 1: uploading and processing the data</h4>
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="doc-figure">
+                                <?php echo $this->Html->image('tutorial/experiments_empty.png', array('alt' => 'Experiments overview (empty)', 'class'=>'img-responsive img-centered')); ?>
+                                <p class="text-justify doc-figure-legend small">
+                                <strong>Figure 3: empty experiments overview.</strong> At the bottom of the page, click <strong>'add new experiment'</strong> to create a new experiment.
+                                </p>
+                            </div>
+                        </div>
+                        <div class="col-md-8">
+                            <p class="text-justify">After logging in, you will be redirected to the <strong>experiments overview</strong>. If you are a new user, this page will be empty (Figure 3).
+                                Please note this page can list two types of experiments:
+                            <ul>
+                                <li>Current experiments (experiments you uploaded and own), </li>
+                                <li>Shared experiments (experiments uploaded by others you are allowed to view) </li>
+                            </ul>
+                            </p>
+                        </div>
+                    </div>
+                        <div class="row">
+                            <div class="col-md-4">
+                            <div class="doc-figure">
+                            <?php echo $this->Html->image('tutorial/experiments_creation.png', array('alt' => 'Experiment creation', 'class'=>'img-responsive img-centered')); ?>
+                            <p class="text-justify doc-figure-legend small">
+                             <strong>Figure 4: experiment creation.</strong> A name, a description, and  reference database need to be chosen for the new experiment. Finalize the creation by clicking <code>Create experiment</code>.
+                            </p>
+                            </div>
+                            </div>
+                            <div class="col-md-8">
+                                <p class="text-justify">Clicking on the <code>add new experiment</code> button (<span class="glyphicon glyphicon-plus"></span> icon) opens the experiment creation window (Figure 4). </p>
+                                <p class="text-justify">To start, like shown in Figure 4, enter a name and a description for the experiment. For instance, <code>Tutorial 1</code> as a name and <code>Documentation tutorial 1 (Panicum)</code> as description.
+                                    Select <code>PLAZA 4.5 monocots</code> as reference database, as PLAZA is the recommended database for plants and algae, and the 'monocots' version contains genomes from closely related species.
+                                    In case data from other lineages is analyzed, we recommend selecting EggNOG 4.5. Add the experiment by clicking <code>create experiment</code>. </p>
+                            </div>
+                        </div>
+                        <div class="row">
+                        <div class="col-md-4">
+                            <div class="doc-figure">
+                                <?php echo $this->Html->image('tutorial/experiments_created.png', array('alt' => 'Experiments overview', 'class'=>'img-responsive img-centered')); ?>
+                                <p class="text-justify doc-figure-legend small">
+                                 <strong>Figure 5: experiments overview.</strong> The newly created experiment appeared in the current experiments table. To add sequences, first click on the name of the experiment.
+                                </p>
+                            </div>
+                        </div>
+                        <div class="col-md-8">
+                            <p class="text-justify">The new experiment will now appear in the current experiments table (Figure 5). Note that each user can create a <strong>maximum of 20 experiments</strong>.</p>
+                        </div>
+                    </div>
 
-		</div>
-		
-		<a id="tutorial1"><h3 class="clear">TUTORIAL 1: FUNCTIONAL ANNOTATION OF PANICUM TRANSCRIPTS</h3></a>
-		<a id="t1p1"><h4>PART 1: UPLOADING AND PROCESSING THE DATA</h4></a>
-		<div class="subdiv">
-			<p>After login the main page will be replaced by the <em>Experiments overview</em>. If you are new this overview will be empty. Please note the sections <em>Current experiments</em> (experiments you uploaded and own), <em>Shared experiments</em> (experiments uploaded by others you are allowed to view) and <em>Add new experiment</em> where a new experiment can be started.</p>
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="doc-figure">
+                                <?php echo $this->Html->image('tutorial/experiment_page.png', array('alt' => 'Experiment page', 'class'=>'img-responsive img-centered')); ?>
+                                <p class="text-justify doc-figure-legend small">
+                                    <strong>Figure 6: empty experiment overview page. </strong> The newly created experiment overview page. Click on <code>Import data</code> in the side menu to import sequences.
+                                </p>
+                            </div>
+                        </div>
+                        <div class="col-md-8">
+                            <p class="text-justify">
+                                To continue, click on the experiment's name (e.g. <code>Tutorial 1</code>) in the current experiments table. This will take you to your newly created TRAPID experiment and display the <strong>experiment overview page</strong> (Figure 6). After transcripts sequences are processed, this page will contain general experiment statistics (in the <code>Experiment information</code> panel) and a detailed overview of the transcripts. </p>
+                            <p class="text-justify">
+                                Two main elements may be used for navigating a TRAPID experiment: the <strong>experiment header</strong> (top) and the <strong>side menu</strong> (left). The experiment header contains links to experiment controls (jobs, log, and settings) and a search box to find specific sequences, gene/RNA families, or functional data. The side menu lists the main data import/export, exploration, and analysis options available within TRAPID. Note that in figure 6, all the items except <code>Import data</code> are disabled, since the experiment is empty. </p>
+                           <p class="text-justify">To continue and upload input sequences, click on the <code>Import data</code> item of the side menu. </p>
+                        </div>
+                    </div>
 
-			<p>In this tutorial you'll learn how to functionally annotate the transcriptome of <i>Panicum hallii</i> (Meyer <i>et al</i>. 2012, Transcriptome analysis and gene expression atlas for <i>Panicum hallii</i> var. filipes, a diploid model for biofuel research.). The dataset can be obtained from : <a href="ftp://ftp.psb.ugent.be/pub/trapid/">ftp://ftp.psb.ugent.be/pub/trapid/</a>. </p>
-			<div class="picture right" style="width:278px;"> <a href="/webtools/trapid/img/tutorial/003_new_experiment.png"><img src="/webtools/trapid/img/tutorial/003_new_experiment.png" width="276" alt="Experiment Overview Image" /></a> <br /><strong>FIGURE 3 EXPERIMENT OVERVIEW.</strong> At the bottom a name and description for the new experiment needs to be filled in for the new experiment. Create the experiment by clicking <em>Create experiment</em>.</div>
-			<p>To start, like shown in Figure 3, enter <em>Tutorial 1</em> as a name and <em>Panicum transcripts</em> as description. Leave the Reference DB at its default setting <em>PLAZA 2.5</em>, this is the recommended database for plants and algae. In case data from other organisms is analyzed, select OrthoMCL-DB 5.0. Add the experiment by clicking <em>Create experiment</em>. The new experiment will now appear in the <em>Current experiments</em> list. Note that each user can have a <strong>maximum of 10 experiments</strong>.</p>
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="doc-figure">
+                                <?php echo $this->Html->image('tutorial/import_transcripts.png', array('alt' => 'Import data page', 'class'=>'img-responsive img-centered')); ?>
+                                <p class="text-justify doc-figure-legend small">
+                                    <strong>Figure 7: uploading transcript sequences.</strong> From this page, a dataset can be uploaded from a file or a URL. After adding files or URLs, please click <code>Load data into database</code> to upload the data.
+                                </p>
+                            </div>
+                        </div>
+                        <div class="col-md-8">
+                           <p class="text-justify">
+                               Input sequences must be provided in <a href='https://en.wikipedia.org/wiki/FASTA_format' title='FASTA format (Wikipedia)' target='_blank' class='linkout'>FASTA format</a>. Make sure each sequence has a unique identifier (max. 100 characters) and no empty sequences are present. Please note that <strong>individual files cannot be larger than 32Mb</strong>. For large datasets, we therefore recommend to supply compressed data (zipped or gzipped) and/or to split the data in multiple files.
+                           </p>
+                           <p class="text-justify">
+                               In case you downloaded the tutorial dataset, you can upload the file (click <code>Browse...</code> and locate it on your system). Otherwise, you can directly supply the URL (<code>ftp://ftp.psb.ugent.be/pub/trapid/datasets/panicum/panicum_transcripts.zip</code>). After selecting a file or URL, click <code>Add file/URL</code> to confirm your choice and add the dataset. Afterwards, click <code>Load data into database</code> to load all sequences into our database. <strong>Both steps are essential before the data can be processed. </strong>
+                           </p>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="doc-figure">
+                                <?php echo $this->Html->image('tutorial/process_transcripts.png', array('alt' => 'Initial processing page', 'class'=>'img-responsive img-centered')); ?>
+                                <p class="text-justify doc-figure-legend small">
+                                 <strong>Figure 8: process transcripts.</strong> Select the desired settings for the various processing steps and click <code>Run initial processing</code>.
+                                </p>
+                            </div>
+                        </div>
+                        <div class="col-md-8">
+                            <p class="text-justify">After the sequences have been loaded into the TRAPID database, the next step is to perform the initial processing. This step will add them to gene or RNA families, add annotations and a taxonomic label (if this step was enabled). To start the initial processing, go to your TRAPID experiment. Note how the page now contains a table with transcripts at the bottom, and how some options of the side menu have become enabled (although they only become useful after the processing). Click <code>Process transcripts</code>.  </p>
+                            <p class="text-justify">On the next page, you have to specify how transcripts should be processed by TRAPID. For this tutorial, select the settings as shown in Figure 8 (default settings except for the taxonomic classification that was disabled). More details on these settings can be found in the
+                            <?php echo $this->Html->link("general documentation", array("controller" => "documentation", "action" => "general", "#"=>"initial-processing")); ?>.
 
-			<p class="clear">To continue, click on the experiment's name (<em>"Tutorial 1"</em>) in the <em>Current experiments</em> overview.  This will take you to the <em>Experiment page</em>, here general statistics are shown (<em>Experiment information</em>), sequences can be imported and exported (<em>Import/Export</em>) and a search function is available to find specific sequences (<em>Search</em>).  Further down are options to start the processing (<em>Initial processing</em>) and once data is added a toolbox will appear and a detailed overview of the transcripts.</p>						<div class="picture right" style="width:278px;"> <a href="/webtools/trapid/img/tutorial/004_experiment_added.png"><img src="/webtools/trapid/img/tutorial/004_experiment_added.png" width="276" alt="Experiment Overview Image" /></a> <br /><strong>FIGURE 4 EXPERIMENT OVERVIEW.</strong> The new experiment appeared in the <em>"Current experiments"</em> list. To add sequences, first click on the name of the experiment.</div>
-			<p class="clear">Next click <em>Import data</em> to go to a page where the data can be uploaded (Transcript file management). All data needs to be provided as a fasta file. Make sure each sequence has a <strong>unique identifier</strong> (max. 50 characters) and no empty sequences are present. <strong>Single files cannot be bigger than 32Mb</strong>. For large datasets it is possible to offer the files as a (g)zipped file. Two options are available, in case you downloaded the tutorial dataset you can upload the file (use <em>Browse</em> to locate the file on your system), alternatively you can enter the URL <a href="ftp://ftp.psb.ugent.be/pub/trapid/datasets/panicum/panicum_transcripts.zip">ftp://ftp.psb.ugent.be/pub/trapid/datasets/panicum/panicum_transcripts.zip</a>. To upload/get the dataset click <em>Import transcript sequences</em>. Once the data is available on our server, click <em>Load data from files into database</em> to get the sequences into our database. <strong>Both steps are essential before the data can be processed.</strong></p>									
-			<div class="picture left" style="width:278px;"> <a href="/webtools/trapid/img/tutorial/005_experiment_page.png"><img src="/webtools/trapid/img/tutorial/005_experiment_page.png" width="276" alt="Experiment Overview Image" /></a> <br /><strong>FIGURE 5 EXPERIMENT PAGE.</strong> The, currently still empty, experiment page. Click on <em>"Import data"</em> to import sequences.</div>
-			<div class="picture right" style="width:278px;"> <a href="/webtools/trapid/img/tutorial/006_experiment_upload.png"><img src="/webtools/trapid/img/tutorial/006_experiment_upload.png" width="276" alt="Experiment Overview Image" /></a> <br /><strong>FIGURE 6 TRANSCRIPT FILE MANAGEMENT PAGE.</strong> From this page a dataset can be uploaded or directly grabbed from a URL. After the data is successfully transferred to our system please click <em>"Load data from files into database"</em>.</div>
-						
-			<p class="clear">After the sequences have been loaded to the TRAPID database, the first thing that is required is to perform the initial processing. This step will add them to gene families and add functional annotation.  Go to the experiment page (note how the <em>Toolbox</em> and <em>Transcripts</em> have become available, though they only become useful after the processing) and click <em>Perform transcript processing</em>.  On the next page you have to specify how transcripts should be assigned to gene families. For this tutorial select the settings as shown in Figure 7. Finish by clicking <em>Start transcriptome pipeline</em>. Depending on the size of the dataset and the load on our servers this can take several hours. In the meanwhile the experiment will be in processing state and cannot be analyzed. <strong>An e-mail will be send as soon as the dataset has been processed.</strong></p>
-			<p>Once the initial processing is done, all sequences will be included in gene families and will be functionally annotated (if possible). Additionally, as transcript data often included truncated sequences or sequences with indels, problematic sequences are flagged. </p>
+                                Finish by clicking <code>Run initial processing</code>. Depending on the size of the dataset, the selected settings, and the load on our servers, this can take up to several hours. For this tutorial, it should take around one hour after starting. In the meantime the experiment will be in <code>processing</code> state and cannot be accessed, except for the experiment's job management and log pages. <strong>An e-mail will be sent upon completion</strong>. </p>
+                        <p class="text-justify">Once the initial processing has finished, all sequences will be included in gene/RNA families and be  annotated (when possible). Additionally, as transcript data often includes truncated sequences or sequences with indels, potentially problematic sequences are flagged. </p>
+                        </div>
+                   </div>
+                </section>
 
-			<div class="picture right" style="width:278px;"> <a href="/webtools/trapid/img/tutorial/007_process_transcripts.png"><img src="/webtools/trapid/img/tutorial/007_process_transcripts.png" width="276" alt="Experiment Overview Image" /></a> <br /><strong>FIGURE 7 PROCESS TRANSCRIPTS.</strong> Select the desired settings how the sequences should be added to gene families and which funtional annotation should be transferred.</div>
-		</div>
-		<a id="t1p2"><h4 class="clear">PART 2: EXPLORING TRAPID OUTPUT</h4></a>
-		<div class="subdiv">
-		<div class="picture right" style="width:278px;"> <a href="/webtools/trapid/img/tutorial/008_stats.png"><img src="/webtools/trapid/img/tutorial/008_stats.png" width="276" alt="Experiment Overview Image" /></a> <br /><strong> FIGURE 8 THE STATISTICS PAGE.</strong> Here general information is shown that can be used to assess the quality of the transcripts, how many were assigned to gene families and how many recieved funtional annotation. Also notice the <em>"pdf export"</em> button on the bottom of the page, this will generate a PDF with all shown information.</div>
-			<p>Once the initial processing is completed, go back to the <em>"experiment overview"</em> page, options in the <em>"Toolbox"</em> are now available and at the bottom of the page a list of your sequences is shown with their gene family and predicted functional annotation. In the <em>Toolbox</em> click on <em>General statistics</em>. The following page will show a broad range of statistics that reveal the quality of the input dataset, how many sequences were assigned to gene families and how many were functionally annotated (Figure 8). Other statistics available from the <em>Toolbox</em> are length distribution of the transcripts and the open reading frames.</p>
-																					
-			
-			<p>Gene families (which group genes derived from a common ancestor) are available from the <em>Toolbox</em> under <em>Gene families</em>.</p>
-			<p>Relevant families can be found using the search function on the experiment page. E.g. by selecting <em>GO description</em> relevant GO labels can be found and the associated sequences can be found.</p>
+                <section class="page-section-sm" id="tutorial-1-explore">
+                    <h4>Part 2: exploring TRAPID output</h4>
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="doc-figure">
+                                <?php echo $this->Html->image('tutorial/general_statistics.png', array('alt' => 'General statistics page', 'class'=>'img-responsive img-centered')); ?>
+                                <p class="text-justify doc-figure-legend small">
+                                    <strong>Figure 9: the general statistics page.</strong> This page displays general information that can be used to assess the quality of the transcripts, their taxonomic classification (if performed), how many were assigned to gene or RNA families, and how many received functional annotation. This report can be exported to PDF by clicking the <code>Export to PDF</code> button in the top right.
+                                </p>
+                        </div>
+                        </div>
+                        <div class="col-md-8">
+                            <p class="text-justify">Once the initial processing has finished, go to the experiment overview page. More options are now accessible from the side menu, and the table at the bottom of the page lists your sequences with their assigned gene family, predicted functional annotation, and meta-annotation. Click the <code>Statistics</code> > <code>General statistics</code> item in the side menu.</p>
+                            <p class="text-justify">The following page will show a broad range of statistics that reveal the quality of the input dataset, how many sequences were assigned to gene for RNA families and how many were functionally annotated (Figure 9). The other page available under <code>Statistics</code>, <code>Sequence length distribution</code>, displays the length distribution of the experiment's transcript and predicted ORF sequences. </p>
+                            <p class="text-justify">Gene families (which group protein-coding genes derived from a common ancestor) and RNA families (which group homologues of known non-coding RNAs) are available from the side menu, under <code>Browse gene families</code> and <code>Browse RNA families</code>, respectively.</p>
+                            <p class="text-justify">Relevant families can be found using the search function of the experiment header. For instance, by selecting <code>GO term</code>, relevant GO identifiers or descriptions labels can be searched, and the associated sequences retrieved.</p>
 
-		</div>
-		<a id="t1p3"><h4 class="clear">PART 3 PHYLOGENETIC  ANALYSIS OF A SPECIFIC GENE FAMILY</h4></a>
-		<div class="subdiv">
-			<div class="picture right" style="width:278px;"> <a href="/webtools/trapid/img/tutorial/009_search_results.png"><img src="/webtools/trapid/img/tutorial/009_search_results.png" width="276" alt="Experiment Overview Image" /></a> <br /><strong>  FIGURE 9 SEARCH RESULTS FOR TERM <em>"CELL WALL"</em></strong> After searching on a GO description a list of corresponding go labels. from here quickly the associated sequences can be found.</div>
-			<p>First look for the GO term <em>leaf senescence</em> and look at the genes assigned this label in the dataset. Look at <strong>contig04501</strong>, this transcript is annotated as quasi full length. Now click the gene family ID next to the transcript identifier, this will take you to a gene family page. Build the multiple sequence alignment for this gene family by clicking <em>Create multiple sequence alignment</em> in the Toolbox. After the alignment is generated, a link will appear to start JalView to view the sequence alignment, or download the alignment. For this tutorial click <em>View full multiple sequence alignment</em> to start JalView. From this alignment can be seen the transcript has indeed a good alignment with most of the other members in the family, though at the N-terminal end there likely is a portion missing (and hence is indeed quasi full length). The other transcript (<strong>contig20276</strong>) is the opposite, here the C-terminal end appears to be missing, potentially both contigs represent a single, split transcript.</p>
-			<p>Go back and find <strong>contig01069</strong>, find the gene family page of this transcript and in the toolbox select <em>Create phylogenetic tree</em>. On the next page, settings for the tree need to be set. Switch the Editing from <em>Stringent editing</em> to <em>Relaxed editing</em> (optionally fewer species can be selected). Next click <em>Create phylogenetic tree</em>.  The job will be started and an e-mail will be send upon completion (usually within a few minutes). To view the tree, go back to the gene family page and click <em>Create phylogenetic tree</em> again. Now an ATV applet will be included on the page which shows the tree.</p>
-						<div class="picture right" style="width:278px;"> <a href="/webtools/trapid/img/tutorial/010_phylo_tree.png"><img src="/webtools/trapid/img/tutorial/010_phylo_tree.png" width="276" alt="Phylogenetic tree" /></a> <br /><strong>  FIGURE 10 PHYLOGENETIC TREE</strong> ATV applet displaying the phylogenetic tree of contig01069 and its orthologs.</div>
-			<p>In case you don't see a tree or get an error message very often the number of sequences is to large and should be lowered by excluding some species or the editing is too stringent and the relaxed editing should be selected. On the next page an ATV applet will show the phylogenetic tree. Please note that before generating a new tree with different settings the Java Cache needs to be cleared (for detailed instructions please check <a href="http://www.java.com/en/download/help/plugin_cache.xml">http://www.java.com/en/download/help/plugin_cache.xml</a>).</p>
-			<p>From the phylogenetic tree page, the tree can be <strong>downloaded in PhyloXML and Newick formats</strong>. </p>
-			<p>Read more about <a href="../documentation/general#msa">multiple sequence alignments</a> and <a href="../documentation/general#tree">phylogenetic trees</a> in the general documentation</p>
-		</div>
-		<a id="t1p4"><h4 class="clear">PART 4 ADD TRANSCRIPT LABELS AND ANALYZE EXPERIMENT SUBSETS (WITHIN-TRANSCRIPTOME FUNCTIONAL ANALYSIS)</h4></a>
-		<div class="subdiv">
-			<div class="picture right" style="width:278px;"> <a href="/webtools/trapid/img/tutorial/011_interpro_enrichment.png"><img src="/webtools/trapid/img/tutorial/011_interpro_enrichment.png" width="276" alt="InterPro enrichment" /></a> <br /><strong>  FIGURE 11 ENRICHED INTERPRO DOMAINS</strong> Overview of InterPro domain enrichted within the "Cell Cycle" subset</div>
-			<p>If the data set is comprised of transcriptome data from different sources (with sources indicating different tissues, developmental types or stress conditions), then the user has the ability to assign labels to the subsets. This is done through the <em>import transcript labels</em> link on the experiment page. By doing so, several new analyses become available, such as comparison of functional annotation between different subsets, or by computing the enrichment factor compared to the overall transcriptome.</p>
-			<p>In the example here a set of Cell Cycle genes (list can be downloaded from <a href="ftp://ftp.psb.ugent.be/pub/trapid/datasets/panicum/panicum_cell_cycle.lst">ftp://ftp.psb.ugent.be/pub/trapid/datasets/panicum/panicum_cell_cycle.lst</a> ). Add the labels to the dataset from the previous tutorial by clicking <em>Import data</em> next to <em>Import transcript labels</em>. On the next page, hit browse to select the file, enter a label (e.g. <em>Cell_cycle</em>) and click <em>Import labels</em>.</p>
-			<p>Go back to the experiment overview page, in the <em>Toolbox</em> a number of new options are enabled. To check if this set is enriched for specific GO terms or Protein domains, click <em>GO enrichment from a subset compared to background</em> or <em>Protein domain enrichment from a set compared to background</em>.  For both GO and Protein domains, select the subset (here <em>Cell_cycle</em>) and the desired p-value and click <em>Compute enrichment</em>.</p>
-			<p>Figure 10 shows the resulting page with for each of the enriched InterPro domains the fold enrichment, significance and a short description. Note that the InterPro domain codes  are hyperlinks to pages with more detailed information.</p>
-			<p>Read more about <a href="../documentation/general#labels">labels</a> and <a href="../documentation/general#enrichment">functional enrichment</a> in the general documentation</p>
-		</div>
-		
-		<a id="tutorial2"><h3 class="clear">TUTORIAL 2: CORRECTING FRAMESHIFTS USING FRAMEDP</h3></a>
-		<div class="subdiv">
-			<p>In this second tutorial we'll use a single <em>Panicum</em> transcript which containing one indel (small insertion or deletion causing a frameshift, in this case a deletion), create a new experiment called <em>"Tutorial 2"</em> using the same data as tutorial 1. Next, start the transcript processing as shown in the previous tutorial using <em>"Eudicots"</em> as the phylogenetic clade. Once the processing is finished, go to the "Experiment overview" page and select a transcript (e.g. <em>contig17160</em>. The transcript page will show the line <strong>"A putative frameshift was detected in this sequence"</strong>. To attempt to correct this frameshift, select <em>"Correct framseshifts with FrameDP"</em> in the <em>"Toolbox"</em>. The next page will ask if you want to correct additional genes from the same family. This is not necessary here, so continue by clicking <em>"Perform frameshift correction"</em>. A new job is started and after a while you'll receive a notification via e-mail. After completion, TRAPID will indicate if a frameshift was corrected or not (Figure 12) and on the transcript page the corrected ORF can be obtained (Figure 13). </p>
-			<p>Read more about <a href="../documentation/general#frameshift">frameshift correction</a> in the general documentation</p>
-			<div class="picture left" style="width:278px;"> <a href="/webtools/trapid/img/tutorial/012_frameshift_correction.png"><img src="/webtools/trapid/img/tutorial/012_frameshift_correction.png" width="276" alt="Frameshift correction" /></a> <br /><strong>FIGURE 12 FRAMESHIFT CORRECTION.</strong> After FrameDP finishes the website will indicate a frameshift has succesfully been corrected.</div>
-			<div class="picture right" style="width:278px;"> <a href="/webtools/trapid/img/tutorial/013_corrected_sequence.png"><img src="/webtools/trapid/img/tutorial/013_corrected_sequence.png" width="276" alt="corrected sequence" /></a> <br /><strong>FIGURE 13 CORRECTED ORF SEQUENCE.</strong> In case a frameshift could be corrected the corrected sequence is available from the transcript page</div>
-			<p class="clear"> </p>
-		
-		</div>
-	</div>
+                        </div>
+                    </div>
+
+                </section>
+                <section class="page-section-sm" id="tutorial-1-phylogeny">
+                    <h4>Part 3: phylogenetic analysis of a specific gene family</h4>
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="doc-figure">
+                                <?php echo $this->Html->image('tutorial/go_term_search.png', array('alt' => 'GO term search results', 'class'=>'img-responsive img-centered')); ?>
+                                <p class="text-justify doc-figure-legend small"><strong> Figure 10: GO term search results for <code>leaf senescence</code>.</strong> The GO terms having matching descriptions were retrieved. From here, the associated sequences can rapidly be found. </p>
+                            </div>
+                        </div>
+                        <div class="col-md-8">
+                            <p class="text-justify">First, search for <code>leaf senescence</code> GO terms, and look at the transcripts annotated with the <code>leaf senescence (GO:0010150)</code> term by clicking on the GO identifier (Figure 10). </p>
+                            <p class="text-justify">Look at <code>contig04501</code>: this transcript is annotated as 'quasi full length'. Click on its identifier to get to the transcript page. Once there, click the associated gene family identifier, which will take you to its associated gene family page. </p>
+                            <p class="text-justify">From the gene family page, build the multiple sequence alignment (MSA) for this gene family by clicking <code>Create multiple sequence alignment / phylogenetic tree</code> in the toolbox. On the next page, check <code>Generate MSA only</code> to ensure no phylogenetic tree is generated. While it's possible to use MUSCLE instead of MAFFT and to modify the set of input sequences, we will not do so in the tutorial. Click <code>Create MSA/tree</code> to launch the creation of the MSA. Note that if <strong>more than 250 genes</strong> are selected, it will not be possible to submit the MSA creation job.</p>
+                            <p class="text-justify">After completion, the page will contain a tab with a viewer for the MSA. From the alignment, it can be seen the transcript has indeed a good alignment with most of the other members in the family, although at the N-terminal end there likely is a portion missing (and hence is indeed quasi full length). The other transcript assigned to the family, <code>contig20276</code>, is the opposite: the C-terminal end appears to be missing. Both contigs may therefore represent a single, split transcript.</p>
+                            <p class="text-justify">The <code>Files & extra</code> tab provides a link to download the MSA in <code>.faln</code> format and lists the parameters used to generate it.</p>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="doc-figure">
+                                <?php echo $this->Html->image('tutorial/phylogenetic_tree.png', array('alt' => 'Gene family phylogenetic tree', 'class'=>'img-responsive img-centered')); ?>
+                                <p class="text-justify doc-figure-legend small"><strong>Figure 11: phylogenetic tree.</strong> Interactive tree viewer (PhyD3) showing the phylogenetic tree of <code>contig01069</code> and its homologues. Transcript meta-annotation and subset information  are also displayed, depicted next to the transcript identifiers as colored squares and circles, respectively.
+                                </p>
+                            </div>
+                        </div>
+                        <div class="col-md-8">
+                            <p class="text-justify">Now, search for another transcript: <code>contig01069</code>. Find the gene family page of this transcript and click <code>Create multiple sequence alignment / phylogenetic tree</code>. This time, we will create a phylogenetic tree. In addition to the settings mentioned in the previous part, various phylogenetic tree creation settings can be adjusted: the MSA editing mode, the tree construction algorithm, and tree annotations (extra information about the transcripts displayed next to tree leaves). Feel free to do so (for instance, selecting fewer species from the reference gene family). </p>
+                                <p class="text-justify">Next, click <code>Create MSA / tree</code>. The tree creation job will be launched and an e-mail will be sent upon completion. Once the job has finished, go back to the gene family page and click <code>View or create multiple sequence alignment / phylogenetic tree</code> to view the tree. The page will now contain a tab with an interactive viewer for the generated phylogenetic tree (Figure 11).</p>
+                            <p class="text-justify">In case no tree is displayed or get an error message, very often the selected MSA editing setting is too stringent and should be modified. To check if this is the case, go to the multiple sequence alignment tab, and check the length of the edited alignment: if it is zero amino acids, then the editing was too stringent.</p>
+                            <p class="text-justify">The Files & extra tab provides links to download the tree in PhyloXML and Newick formats and lists the parameters used to generate the phylogenetic tree. In case you want to create a new MSA or tree for the gene family with different settings, simply click the <code>Create MSA / phylogenetic tree […]</code> link on top of the page.</p>
+                            <p class="text-justify">Read more about
+                                <?php echo $this->Html->link("multiple sequence alignments", array("controller" => "documentation", "action" => "general", "#"=>"msa")); ?>
+                               and <?php echo $this->Html->link("phylogenetic trees", array("controller" => "documentation", "action" => "general", "#"=>"tree")); ?> in the general documentation</p>
+                        </div>
+                    </div>
+                </section>
+                <section class="page-section-sm" id="tutorial-1-subsets">
+                    <h4>Part 4: defining and analyzing subsets (within-transcriptome functional analysis)</h4>
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="doc-figure">
+                                <?php echo $this->Html->image('tutorial/cell_cycle_ipr_enrichment.png', array('alt' => 'InterPro domain enrichment results', 'class'=>'img-responsive img-centered')); ?>
+                                <p class="text-justify doc-figure-legend small"><strong>Figure 12: enriched InterPro domains. </strong> Overview of InterPro domain enriched within the <code>Cell_cycle</code> subset (maximum corrected p-value 0.005).
+                                </p>
+                            </div>
+                        </div>
+                        <div class="col-md-8">
+                            <p class="text-justify">Within a TRAPID experiment,  transcript subsets can be defined from any arbitrary list of transcript identifiers, for instance transcripts expressed in a specific condition or tissue, and used to perform subsequent within-transcriptome functional analyses. Subsets may either be uploaded as file or created interactively from the web application. By creating transcript subsets, several new analyses become available, such as comparison of functional annotation between different subsets, or functional enrichment analysis.</p>
+                            <p class="text-justify">In this tutorial, we provide an example set of 33 Cell Cycle transcripts. The list can be downloaded from <a href='ftp://ftp.psb.ugent.be/pub/trapid/datasets/panicum/panicum_cell_cycle.lst'  download>TRAPID’s FTP</a>. To create a new transcript subset, click <code>Import data</code> (side menu). In the <code>Transcript subset</code> tab, click <code>Browse...</code> to select the downloaded file and enter a name for the susbset (e.g. <code>Cell_cycle</code>). Click <code>Import subset</code> to finish.</p>
+                            <p class="text-justify">Transcripts subsets can be inspected and deleted from the <code>Explore subsets</code> page (side menu).  To check if the cell cycle set is enriched for specific GO terms or Protein domains, click the <code>Subset enrichment</code> item in the side menu. On the next page, select a type of functional annotation for which to perform the analysis, a transcript subset, and a maximum corrected p-value threshold. For this tutorial, we selected <code>InterPro domains</code>, <code>Cell_cycle</code> and <code>0.005</code>. Click <code>Compute enrichment</code> to launch the analysis.</p>
+                            <p class="text-justify">Figure 12 shows the resulting page displaying for each of the enriched InterPro domains the enrichment fold, significance and a short description. Note that the InterPro domain identifiers are hyperlinks to pages containing more detailed information, and that results may also be explored as a table or downloaded.
+                            </p>
+                            <p class="text-justify">It is optionally possible to precompute functional enrichments for all available types of functional annotation, subsets, and p-value thresholds, by clicking the <code>Run functional enrichment</code> button on the experiment overview page.</p>
+                            <p class="text-justify">Read more about
+                                <?php echo $this->Html->link("subsets/labels", array("controller" => "documentation", "action" => "general", "#"=>"labels")); ?>
+                                and <?php echo $this->Html->link("functional enrichment", array("controller" => "documentation", "action" => "general", "#"=>"enrichment")); ?>
+                                in the general documentation</p>
+                        </div>
+                    </div>
+                </section>
+            </section>
+            <hr>
+            <section class="page-section" id="tutorial-2">
+                <h3>Tutorial 2: examining gene space completeness</h3>
+                <section class="page-section-sm">
+                    <p class='text-justify'>
+                        <strong>For this second tutorial we'll continue using the TRAPID experiment created previously. Please make sure that the initial processing has been perfomed before following this tutorial. </strong></p>
+
+                    <p class='text-justify'>
+                        TRAPID enables users to assess and examine the gene space completeness of transcriptomes by checking the presence of core gene families (‘core GFs’), leveraging the GF assignment step of the initial processing.
+                    <ul>
+                        <li>Core GFs consist of a set of gene families that are highly conserved in a majority of species within a defined evolutionary lineage. </li>
+                        <li>Core GF sets can be defined on-the-fly for any clade represented in the selected reference database, making it possible to rapidly examine gene space completeness along an evolutionary gradient. </li>
+                    </ul>
+                    </p>
+                    <p class='text-justify'>
+                        Read more about the <?php echo $this->Html->link("core GF completeness analysis", array("controller" => "documentation", "action" => "general", "#"=>"completeness")); ?> in the general documentation.
+                    </p>
+                </section>
+
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="doc-figure">
+                            <?php echo $this->Html->image('tutorial/completeness_job.png', array('alt' => 'Core GF completeness analysis', 'class'=>'img-responsive img-centered')); ?>
+                            <p class="text-justify doc-figure-legend small"><strong>Figure 13: core GF completeness analysis submission form. </strong> Any phylogenetic clade represented in the selected reference database may be used for the analysis.
+                            </p>
+                        </div>
+                    </div>
+                    <div class="col-md-8">
+                        <p class='text-justify'>First, click the <code>core GF completeness</code> item of the side menu. The next page, shown in Figure 13, enables submission of core GF completeness jobs (<code>New analysis</code> tab) and exploration of previous analysis results (<code>Previous analysis</code> tab, disabled when no prior analysis was performed). Select a clade for the analysis, and click <code>Run analysis</code> to launch the job. The analysis can take up to a few minutes.
+                        </p>
+                        <p class='text-justify'>The default value of the conservation threshold parameter is <code>0.9</code>, meaning that a gene family is considered to be 'core' if it is represented in at least 90% of the species of the selected clade. This threshold does not require complete conservation across all species of the clade and can be adjusted in case more stringent or relaxed conservation requirements are needed.
+                        </p>
+                    </div>
+                </div>
+                    <div class="row">
+                    <div class="col-md-4">
+                        <div class="doc-figure">
+                            <?php echo $this->Html->image('tutorial/completeness_results.png', array('alt' => 'Core GF completeness results', 'class'=>'img-responsive img-centered')); ?>
+                            <p class="text-justify doc-figure-legend small"><strong>Figure 14: list of previous analyses and core GF completeness result panel. </strong> The result panel is organized in three tabs: a summary, the represented GFs table, and the missing GFs table.
+                            </p>
+                        </div>
+                    </div>
+                    <div class="col-md-8">
+
+                        <p class='text-justify'>After completion of the job, you should now be able to see the result panel (or an error message), composed of three tabs: summary, represented GFs table, and missing GFs table. The summary consists of a bar chart depicting the number of represented and missing core gene families, the completeness score and additional analysis metrics. The represented and missing core gene families, and their associated functional data, can be further investigated using the dedicated tables. It is also possible to export the tables to flat files. </p>
+                        <p class='text-justify'>Finally, you can select different clades or setting and re-run the analysis for the same dataset. If you reload the core GF completeness page, the 'previous analyses' tab will be active and list all previous core GF completeness results (Figure 14). </p>
+
+                    </div>
+                </div>
+            </section>
+        </div>
+
+
+        <div class="col-md-3 scrollspy" id="navigation-col">
+            <ul class="nav hidden-xs hidden-sm" id="sidebar-nav" data-spy="affix">
+                <h5 class="doc-sidebar-header"><i class="material-icons md-24">toc</i> Sections</h5>
+                <li><a href="#introduction">Introduction</a></li>
+                <li><a href="#account-setup">Registration & login</a></li>
+                <li><a href="#tutorial-1">Functional annotation tutorial</a>
+                        <ul class="nav">
+                            <li><a href="#tutorial-1-upload">Data uploading and processing</a></li>
+                            <li><a href="#tutorial-1-explore">Exploring TRAPID output</a></li>
+                            <li><a href="#tutorial-1-phylogeny">Phylogenetic analysis</a></li>
+                            <li><a href="#tutorial-1-subsets">Defining and analyzing subsets</a></li>
+                        </ul>
+                </li>
+                <li><a href="#tutorial-2">Gene space completeness</a></li>
+                <li class="sidebar-nav-to-top"><a href="#top">Back to top</a></li>
+            </ul>
+        </div>
+    </div>
 </div>
 
+<!-- Figure full size modal -->
+<div class="modal" id="figure-modal" tabindex="-1" role="dialog" aria-labelledby="figure-full-size" aria-hidden="true">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-body">
+                <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button><br>
+                <img src="" class="imagepreview img-centered" style="max-width: 100%;" ><br>
+                <p id="modal-legend" class="text-justify"></p>
+            </div>
+        </div>
+    </div>
+</div>
 
-<!--
-</body>
-</html>
--->
+<script type="text/javascript">
+    //    $(document).ready(function () {
+    // Affix navigation (bootstrap)
+    $('body').attr('data-spy', 'scroll');
+    $('body').attr('data-target', '.scrollspy');
+    $('#sidebar-nav').affix({
+        offset: {
+            top: $('#sidebar-nav').offset().top - 15
+        }
+    });
+    // Scroll to anchors smoothly
+    $('a[href^="#"]').click(function () {
+        var the_id = $(this).attr("href");
+        $('html, body').animate({
+            scrollTop: $(the_id).offset().top
+        }, 250, 'swing');
+        return false;
+    });
+    //    });
+
+    $('.doc-figure img').on('click', function() {
+        $('.imagepreview').attr('src', $(this).attr('src'));
+        var figureLegend = $(this).parent().find('p.doc-figure-legend').html();
+        if(figureLegend == null) {
+            $('#modal-legend').empty();
+        }
+        else {
+            $('#modal-legend').html(figureLegend);
+        }
+        $('#figure-modal').modal('show');
+    });
+
+</script>
