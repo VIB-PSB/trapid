@@ -9,4 +9,5 @@
     <li><a href='mailto:mibel@psb.vib-ugent.be'>Dr. Michiel Van Bel</a>, Project Leader</li>
     <li><a href='mailto:klpoe@psb.vib-ugent.be'>Prof. Dr. Klaas Vandepoele</a>, Principal Investigator</li>
     </ul>
+    <p class="text-justify">Follow us on Twitter: <a href="https://twitter.com/trapid_genomics" target="_blank" class="linkout">@trapid_genomics</a>. </p>
 </div>
