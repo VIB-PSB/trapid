@@ -346,6 +346,7 @@
                 <section class="page-section-sm">
                     <a class="fixed-header-anchor" id="functional-data"></a>
                     <h3>Functional annotation</h3>
+                    <?php if(in_array("go", $exp_info['function_types'])): ?>
                         <section class="page-section-xs">
                             <a class="fixed-header-anchor" id="funct-go"></a>
                             <h4>Gene Ontology</h4>
@@ -465,8 +466,10 @@
                                 echo "<span class='disabled'>Unavailable</span>";
                             }
                             ?>
-                        </section>
+                        </section><!-- End GO -->
+                    <?php endif; ?>
 
+                    <?php if(in_array("interpro", $exp_info['function_types'])): ?>
                         <section class="page-section-sm">
                             <a class="fixed-header-anchor" id="funct-ipr"></a>
                             <h4>InterPro domains</h4>
@@ -491,9 +494,11 @@
                                     echo "<span class='disabled'>Unavailable</span>";
                                 }
                                 ?>
-                        </section>
+                        </section><!-- End InterPro -->
+                    <?php endif; ?>
 
-                        <section class="page-section-sm">
+                    <?php if(in_array("ko", $exp_info['function_types'])): ?>
+                    <section class="page-section-sm">
                             <a class="fixed-header-anchor" id="funct-ko"></a>
                             <h4>KEGG Orthology</h4>
                             <dd>
@@ -517,7 +522,8 @@
                                     echo "<span class='disabled'>Unavailable</span>";
                                 }
                                 ?>
-                        </section>
+                        </section><!-- End KO -->
+                    <?php endif; ?>
                 <hr>
                 </section> <!-- end 'functional-data' section -->
 
@@ -604,9 +610,7 @@
             <div class="col-md-3 col-lg-2 hidden-sm hidden-xs">
                 <nav class="scrollspy">
                     <ul class="nav transcript-nav" id="sidebar-nav" data-spy="affix">
-                        <h4 style="padding-top: 15px;">
-<!--                            <span class="glyphicon glyphicon-list-alt"></span>-->
-                            Jump to...</h4><br>
+                        <h5 class="doc-sidebar-header">Contents</h5>
                         <li><a href="#gf-rf-data">Gene / RNA family</a></li>
                         <li><a href="#tax-data">Tax. classification</a></li>
                         <li><a href="#sqce-data">Sequences</a>
@@ -620,9 +624,15 @@
                         <li><a href="#meta-data">Meta-annotation</a></li>
                         <li><a href="#functional-data">Functional annotation</a>
                             <ul class="nav">
+                                <?php if(in_array("go", $exp_info['function_types'])): ?>
                                 <li><a href="#funct-go">Gene Ontology</a></li>
+                                <?php endif; ?>
+                                <?php if(in_array("interpro", $exp_info['function_types'])): ?>
                                 <li><a href="#funct-ipr">InterPro</a></li>
+                                <?php endif; ?>
+                                <?php if(in_array("ko", $exp_info['function_types'])): ?>
                                 <li><a href="#funct-ko">KEGG Orthology</a></li>
+                                <?php endif; ?>
                             </ul>
                         </li>
                         <li><a href="#subset-data">Subset information</a></li>

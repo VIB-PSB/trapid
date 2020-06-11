@@ -192,19 +192,24 @@ class GeneFamilyController extends AppController{
 
     $go_data		= $this->TranscriptsGo->find("all",array("conditions"=>array("experiment_id"=>$exp_id,"transcript_id"=>$transcripts, "type"=>"go")));
     $interpro_data	= $this->TranscriptsInterpro->find("all",array("conditions"=>array("experiment_id"=>$exp_id,"transcript_id"=>$transcripts, "type"=>"ipr")));
+    $ko_data	= $this->TranscriptsKo->find("all",array("conditions"=>array("experiment_id"=>$exp_id,"transcript_id"=>$transcripts, "type"=>"ko")));
 
     $go_ids		= $this->TrapidUtils->reduceArray($go_data,"TranscriptsGo","name");
     $interpro_ids	= $this->TrapidUtils->reduceArray($interpro_data,"TranscriptsInterpro","name");
+    $ko_ids	= $this->TrapidUtils->reduceArray($ko_data,"TranscriptsKo","name");
 
     $go_ids		= array_unique($go_ids);
     $interpro_ids	= array_unique($interpro_ids);
+    $ko_ids	= array_unique($ko_ids);
 
     //now get the descriptions, and the gene counts in the different species
     $go_descriptions		= $this->ExtendedGo->retrieveGoInformation($go_ids);
     $interpro_descriptions	= $this->ProteinMotifs->retrieveInterproInformation($interpro_ids);
+    $ko_descriptions	= $this->KoTerms->retrieveKoInformation($ko_ids);
 
     $this->set("go_descriptions",$go_descriptions);
     $this->set("interpro_descriptions",$interpro_descriptions);
+    $this->set("ko_descriptions", $ko_descriptions);
 
     // $go_profile		= $this->ExtendedGo->getPhyloProfile($go_ids);
     //$interpro_profile	= $this->ProteinMotifs->getPhyloProfile($interpro_ids);

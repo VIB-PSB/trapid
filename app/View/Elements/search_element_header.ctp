@@ -1,6 +1,6 @@
 <?php
 
-/* A rewrite of TRAPID's original search function. This element should is included in the experiment header's bar.
+/* A rewrite of TRAPID's original search function. This element should be included in the experiment header bar.
 Difference with the previous search element: no more support for multiple search values, new layout/style, autocomplete,
 and support for more data types.
 */
@@ -19,6 +19,20 @@ $search_types = array(
     if (isset($search_value)) {
         $sv = $search_value;
     }
+
+// Functional annotation types that are displayed in the table: by default, all types are shown.
+// If `$exp_info` is set, use the list of functional annotation types defined there and filter out types not present from
+// search types.
+$function_types = ['go', 'interpro', 'ko'];
+if(isset($exp_info)){
+    $exp_function_types = $exp_info['function_types'];
+    foreach ($function_types as $function_type) {
+        if(!in_array($function_type, $exp_function_types)) {
+            unset($search_types[$function_type]);
+        }
+    }
+}
+
 ?>
 
 <div id="search-wrap">

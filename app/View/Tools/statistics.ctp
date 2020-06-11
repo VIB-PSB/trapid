@@ -193,15 +193,21 @@
             <h3 class="panel-title">Functional annotation information</h3>
         </div>
         <div class="panel-body">
+            <?php if(in_array("go", $exp_info['function_types'])): ?>
             <h5>Gene Ontology</h5>
             <?php create_stats_row("#GO terms", $num_go, null); ?>
             <?php create_stats_row("#Transcripts with GO", $num_transcript_go, perc($num_transcript_go, $num_transcripts,1, false)); ?>
+            <?php endif; ?>
+            <?php if(in_array("interpro", $exp_info['function_types'])): ?>
             <h5>InterPro</h5>
             <?php create_stats_row("#InterPro domains", $num_interpro, null); ?>
             <?php create_stats_row("#Transcripts with Protein Domain", $num_transcript_interpro,  perc($num_transcript_interpro, $num_transcripts,1, false)); ?>
+            <?php endif; ?>
+            <?php if(in_array("ko", $exp_info['function_types'])): ?>
             <h5>KEGG Orthology</h5>
             <?php create_stats_row("#KO terms", $num_ko, null); ?>
             <?php create_stats_row("#Transcripts with KO", $num_transcript_ko,  perc($num_transcript_ko, $num_transcripts,1, false)); ?>
+            <?php endif; ?>
         </div>
     </div>
 

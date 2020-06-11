@@ -33,7 +33,6 @@
 
         <div id="structural-data" class="tab-pane active"><br>
             <h4>Export structural data</h4>
-            <div class="subdiv bottom">
                 <span style="font-weight:bold;">Select columns for output data:</span><br/>
                 <?php echo $this->Form->create(false, array("url" => array("controller" => "trapid", "action" => "export_data", $exp_id), "type" => "post")); ?>
                 <input type="hidden" name="export_type" value="structural"/>
@@ -60,7 +59,6 @@
                     echo "<br/><a href='" . $file_path . "'>Download file</a>\n";
                 }
                 ?>
-            </div>
         </div>
 
         <div id="tax-data" class="tab-pane"><br>
@@ -79,7 +77,6 @@
 
         <div id="gf-data" class="tab-pane"><br>
             <h4>Export gene family data</h4>
-            <div class="subdiv">
                 <ul>
                     <li>
                         <strong>Transcripts with GF</strong> contains all transcripts with their associated gene family (if existing).
@@ -126,12 +123,10 @@
                     }
                     ?>
                 </div>
-            </div>
         </div>
 
         <div id="rf-data" class="tab-pane"><br>
             <h4>Export RNA family data</h4>
-            <div class="subdiv">
                 <ul>
                     <li>
                         <strong>Transcripts with RF</strong> contains all transcripts with their associated RNA family (if existing).
@@ -168,7 +163,6 @@
                     }
                     ?>
                 </div>
-            </div>
         </div>
 
         <div id="sqces-data" class="tab-pane"><br>
@@ -204,8 +198,6 @@
                 <button <?php echo $unfinished; ?> type="submit" class="btn btn-default" style="margin-left:20px;"><span class="glyphicon glyphicon-download-alt"></span> Export sequences</button>
             <?php echo $this->Form->end(); ?>
 
-            <div class="subdiv">
-
                 <div style="clear:both;width:800px;">
                     <?php
                     if (isset($export_type) && $export_type == "sequence" && isset($file_path)) {
@@ -215,12 +207,13 @@
                     }
                     ?>
                 </div>
-            </div>
         </div>
 
         <div id="functional-data" class="tab-pane"><br>
             <h4>Export functional data</h4>
             <div class="page-section-sm">
+
+                <?php if(in_array("go", $exp_info['function_types'])): ?>
                 <section class="page-section-sm">
                 <h5>Gene Ontology data</h5>
                 <ul>
@@ -260,7 +253,9 @@
                     ?>
                 </div>
                 </section>
+                <?php endif; ?>
 
+                <?php if(in_array("interpro", $exp_info['function_types'])): ?>
                 <section class="page-section-sm">
                 <h5>Protein domain data</h5>
                 <ul>
@@ -299,7 +294,10 @@
                     ?>
                 </div>
                 </section>
+                <?php endif; ?>
 
+
+                <?php if(in_array("ko", $exp_info['function_types'])): ?>
                 <section class="page-section-sm">
                 <h5>KEGG Orthology data</h5>
                 <ul>
@@ -338,12 +336,12 @@
                     ?>
                 </div>
                 </section>
+                <?php endif; ?>
             </div>
         </div>
 
         <div id="subset-data" class="tab-pane"><br>
             <h4>Export subsets</h4>
-            <div class="subdiv">
                 <?php
                 echo $this->Form->create(false, array("url" => array("controller" => "trapid", "action" => "export_data", $exp_id), "type" => "post"));
                 echo "<input type='hidden' name='export_type' value='subsets' />\n";
@@ -374,7 +372,6 @@
                 echo "</div>\n";
                 echo "</form>\n";
                 ?>
-            </div>
         </div>
     </div>
 </div>
