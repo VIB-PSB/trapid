@@ -7,22 +7,30 @@ if(isset($file_name)){
 	}
 	else{		
 		if($type=="go"){
-			echo "#Type\tGO\tEnrichment\tp-value\tsubset-ratio\tdescription\n";
+			echo "#Aspect\tGO\tEnrichment_log2\tp-value\tsubset_ratio\tdescription\n";
 			foreach($go_types as $go_type=>$go_ids){
 				foreach($go_ids as $go_id){
 					$res	= $result[$go_id];
 					$desc	= $go_descriptions[$go_id][0];
-					echo $go_type."\t".$go_id."\t".$res['enrichment']."\t".$res['p-value']."\t".$res['subset_ratio']."\t".$desc."\n";
+					echo implode("\t", [$go_type, $go_id, $res['enrichment'], $res['p-value'], $res['subset_ratio'], $desc]) . "\n";
 				}
 			}		
 		}
 		else if($type=="ipr"){
-			echo "#ProteinDomain\tEnrichment\tp-value\tsubset-ratio\tdescription\n";
+			echo "#Type\tProteinDomain\tEnrichment_log2\tp-value\tsubset_ratio\tdescription\n";
 			foreach($result as $res){
 				$desc	= $ipr_descriptions[$res["ipr"]][0];
-				echo $res["ipr"]."\t".$res["enrichment"]."\t".$res["p-value"]."\t".$res["subset_ratio"]."\t".$desc."\n";
+				$ipr_type = $ipr_types[$res["ipr"]][0];
+				echo implode("\t", [$ipr_type, $res['ipr'], $res['enrichment'], $res['p-value'], $res['subset_ratio'], $desc]) . "\n";
 			}
-		}	
+		}
+		else if($type=="ko"){
+			echo "#KO\tEnrichment_log2\tp-value\tsubset_ratio\tdescription\n";
+			foreach($result as $res){
+				$desc	= $ko_descriptions[$res["ko"]][0];
+				echo implode("\t", [$res['ko'], $res['enrichment'], $res['p-value'], $res['subset_ratio'], $desc]) . "\n";
+			}
+		}
 	}
 }
 else{

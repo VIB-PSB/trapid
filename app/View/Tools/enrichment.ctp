@@ -6,20 +6,18 @@
     echo $this->Html->script('https://code.highcharts.com/modules/exporting.js');
     echo $this->Html->script("swfobject");
 ?>
-
-<div>
     <div class="page-header">
         <h1 class="text-primary">Subset functional enrichment</h1>
     </div>
     <section class="page-section">
         <p class="text-justify">
-            Gene set enrichment analysis (or functional enrichment analysis) determines the over-representation of
-            a certain functional annotation term in a gene set compared to the background frequency, here genome-wide.
+            Functional enrichment analysis determines the over-representation of a certain functional annotation term in
+            an input set of objects (here transcripts) compared to the background frequency (here transcriptome-wide).
         </p>
         <p class="text-justify">
-            This procedure will compare the occurrence of a certain functional annotation term  in a subset with the
-            occurrence in the complete dataset. The significance of over-representation is determined using the
-            hypergeometric distribution and the Bonferroni method is applied to correct for multiple testing.
+            This procedure will compare the occurrence of a certain functional annotation term  in a transcript subset
+            with the occurrence in the complete dataset. The significance of over-representation is determined using the
+            hypergeometric distribution, and the Benjamini & Hochberg method is applied to correct for multiple testing.
         </p>
         <p class="text-justify">
             Note that enrichment folds, which indicate the ratio of the frequency in the subset
@@ -27,66 +25,12 @@
             (e.g. <samp>value = 1</samp> is two-fold enriched).
         </p>
     </section>
-    <div class="subdiv">
-<!--        <div class="row">-->
-<!--            <div class="col-sm-8" style="border: 1px red solid;">-->
-<!--                --><?php //echo $this->element("trapid_experiment"); ?>
-<!--                <div class="panel panel-default">-->
-<!--                    <div class="panel-heading">-->
-<!--                        <h3 class="panel-title">Subset selection and enrichment parameters</h3>-->
-<!--                    </div>-->
-<!--                    <div class="panel-body">-->
-<!--                        --><?php
-//                        if (isset($error)) {
-//                            echo "<span class='error'>" . $error . "</span>\n";
-//                        }
-//                        echo $this->Form->create(false, array("action" => "enrichment/" . $exp_id . "/" . $type, "type" => "post", "id" => "toto", "class" => "form-horizontal"));
-//                        echo "<div class=\"form-group\">";
-//                        echo "<dl class='standard dl-horizontal'>";
-//                        echo "<dt>Subset</dt>";
-//                        echo "<dd>";
-//                        echo "<select name='subset' style='width:300px;'>";
-//                        foreach ($subsets as $subset => $count) {
-//                            if (isset($selected_subset) && $selected_subset == $subset) {
-//                                echo "<option value='" . $subset . "' selected='selected'>" . $subset . " (" . $count . " transcripts)</option>\n";
-//                            } else {
-//                                echo "<option value='" . $subset . "'>" . $subset . " (" . $count . " transcripts)</option>\n";
-//                            }
-//                        }
-//                        echo "</select>\n";
-//                        echo "</dd>\n";
-//                        echo "<dt>P-value</dt>";
-//                        echo "<dd>";
-//                        echo "<select name='pvalue' style='width:80px;'>";
-//                        foreach ($possible_pvalues as $ppv) {
-//                            if ($ppv == $selected_pvalue) {
-//                                echo "<option value='" . $ppv . "' selected='selected'>" . $ppv . "</option>";
-//                            } else {
-//                                echo "<option value='" . $ppv . "'>" . $ppv . "</option>";
-//                            }
-//                        }
-//                        echo "</select>\n";
-//                        echo "</dd>";
-//                        echo "</dl><br/>";
-//                        //		echo "<input type='submit' style='width:200px;' value='Compute enrichment' />\n";
-//                        echo "<input type='checkbox' style='margin-left:20px;' name='use_cache' checked='checked' />\n";
-//                        echo "<span style='margin-left:5px;'>Used cached results</span>\n";
-//                        ?>
-<!--                    </div>-->
-<!--                </div>-->
-<!--            </div>-->
-<!--        </div>-->
-<!--        <div class="col-sm-4" style="border: 1px yellow solid;">-->
-<!--            --><?php //echo "<input type='submit' class='btn btn-primary btn-lg' value='Compute enrichment' id='toto-sub'/>\n";
-//            ?><!--</div>-->
-<!--    </div>-->
-<!--    --><?php //echo "</form>\n"; ?>
 
     <h3>Subset selection</h3>
-    <div class="subdiv page-section-sm">
+    <section class="page-section-sm">
         <?php
         if (isset($error)) {
-            echo "<span class='error text-danger'><strong>Error: " . $error . "</strong></span><br>\n";
+            echo "<p class='text-justify text-danger'><strong>Error: " . $error . "</strong></p>\n";
         }
         echo $this->Form->create(false, array("url"=>array("controller"=>"tools", "action" => "enrichment", $exp_id), "type" => "post", "id"=>"enrichment-form"));
         echo "<dl class='standard dl-horizontal' style='max-width:530px;'>";
@@ -95,7 +39,7 @@
         echo $this->element("help_tooltips/create_tooltip", array("tooltip_text"=>$tooltips['enrichment_type'], "tooltip_placement"=>"right"));
         $i = 0;
         foreach($available_types as $type_id=>$type_str) {
-            if($i == 0) {
+            if($i == 0 || (isset($type) && $type == $type_id)) {
                 $checked = "checked";
             } else {
                 $checked = '';
@@ -138,19 +82,17 @@
         echo "<label style='margin-left:5px;' for='use_cache'><strong>Use cached results</strong></label>\n";
         echo $this->Form->end();
         ?>
-    </div>
+    </section>
     <?php if (isset($load_results)) : ?>
         <hr>
         <h3>Enrichment - <?php echo "<code>" . $selected_subset . "</code>"; ?></h3>
         <br/>
-        <div class="subdiv">
-            <div class="subdiv">
                 <div id="enrichment_div">
-                    <div style="width:200px; margin:0 auto;">
-                        <center>
-                            <?php echo $this->Html->image('ajax-loader.gif'); ?><br/>
-                            Loading... Please wait. <br/>
-                        </center>
+                    <div id="loading">
+                        <div class="text-center">
+                            <div class="ajax-spinner text-center"></div><br>
+                            Loading... Please wait.
+                        </div>
                     </div>
                 </div>
                 <script type="text/javascript">
@@ -174,12 +116,9 @@
                     }
                 });
                 </script>
-            </div>
-        </div>
     <?php endif; ?>
     </div>
-</div>
-<script>
+<script type="text/javascript">
     // Resize bar chart on toggling of the side menu
     // TODO: implement that everywhere where we have highcharts?
     function resize_charts() {
@@ -187,7 +126,7 @@
             jQuery( ".hc" ).each(function() { // target each element with the .hc class
                 var chart = jQuery(this).highcharts(); // target the chart itself
                 console.log(chart);
-                chart.reflow()  // reflow that chart
+                chart.reflow();  // reflow that chart
             });
         }, 410);
     }

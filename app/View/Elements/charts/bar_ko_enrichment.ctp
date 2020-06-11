@@ -10,27 +10,27 @@
     });
 
 // Set go term -> description dictionary
-var ipr_descriptions = {
+var ko_descriptions = {
     <?php
     // Get array keys and fetch last key
-    $all_ipr = array();
-    foreach ($enrichment_results as $ipr=>$result) {
-        if ($enrichment_results[$ipr]['is_hidden'] == 0) {
-            array_push($all_ipr, $ipr);
+    $all_ko = array();
+    foreach ($enrichment_results as $ko=>$result) {
+        if ($enrichment_results[$ko]['is_hidden'] == 0) {
+            array_push($all_ko, $ko);
         }
     }
-    $all_ipr_keys = array_keys($all_ipr);
-    $last_index = array_pop($all_ipr_keys);
-    foreach ($all_ipr as $ipr) {
-        echo "\"" . $ipr . "\": \"" . $descriptions[$ipr][0] . "\"";
-        if($ipr != $last_index) {
+    $all_ko_keys = array_keys($all_ko);
+    $last_index = array_pop($all_ko_keys);
+    foreach ($all_ko as $ko) {
+        echo "\"" . $ko . "\": \"" . $descriptions[$ko][0] . "\"";
+        if($ko != $last_index) {
             echo ", ";
         }
     }
 
     ?>
 };
-//console.log(ipr_descriptions);
+//console.log(ko_descriptions);
 
 
     var myChart = Highcharts.chart('<?php echo $chart_div_id; ?>', {
@@ -52,9 +52,9 @@ var ipr_descriptions = {
                 <?php
                 // Get array keys and fetch last key
                 $enrichment_data = array();
-                foreach ($enrichment_results as $ipr=>$result) {
-                    if ($enrichment_results[$ipr]['is_hidden'] == 0) {
-                        array_push($enrichment_data, $enrichment_results[$ipr]['ipr']);
+                foreach ($enrichment_results as $ko=>$result) {
+                    if ($enrichment_results[$ko]['is_hidden'] == 0) {
+                        array_push($enrichment_data, $enrichment_results[$ko]['ko']);
                     }
                 }
                 $enrichment_keys = array_keys($enrichment_data);
@@ -98,12 +98,11 @@ var ipr_descriptions = {
                 useHTML: true
             },
             labels: {
-                format: '{value}'
+                format: '{value}',
                 /*                   style: {
                  color: Highcharts.getOptions().colors[0]
                  }
-                 */
-                },
+                 */               },
             opposite: true,
             gridLineWidth: 0
         }],
@@ -111,7 +110,7 @@ var ipr_descriptions = {
             shared: true,
             // crosshairs: [true, true],
             formatter: function () {
-                var s = '<strong>' + ipr_descriptions[this.x] + '</strong>';
+                var s = '<strong>' + ko_descriptions[this.x] + '</strong>';
                 s+=  '<br>ID: ' + this.x;
                 s += '<br>' + this.points[0].series.name + ' (log<sub>2</sub>): ' + Highcharts.numberFormat(this.points[0].y, 3);
                 s += '<br>' + this.points[1].series.name + ' (-log<sub>10</sub>): ' + Highcharts.numberFormat(this.points[1].y, 3);
@@ -139,9 +138,9 @@ var ipr_descriptions = {
                 <?php
                 // Get array keys and fetch last key
                 $enrichment_data = array();
-                foreach ($enrichment_results as $ipr=>$result) {
-                    if ($enrichment_results[$ipr]['is_hidden'] == 0) {
-                        array_push($enrichment_data, $enrichment_results[$ipr]['enrichment']);
+                foreach ($enrichment_results as $ko=>$result) {
+                    if ($enrichment_results[$ko]['is_hidden'] == 0) {
+                        array_push($enrichment_data, $enrichment_results[$ko]['enrichment']);
                     }
                 }
                 $enrichment_keys = array_keys($enrichment_data);
@@ -163,9 +162,9 @@ var ipr_descriptions = {
                 <?php
                 // Get array keys and fetch last key
                 $enrichment_data = array();
-                foreach ($enrichment_results as $ipr=>$result) {
-                    if ($enrichment_results[$ipr]['is_hidden'] == 0) {
-                        array_push($enrichment_data, -log10($enrichment_results[$ipr]['p-value']));
+                foreach ($enrichment_results as $ko=>$result) {
+                    if ($enrichment_results[$ko]['is_hidden'] == 0) {
+                        array_push($enrichment_data, -log10($enrichment_results[$ko]['p-value']));
                     }
                 }
                 $enrichment_keys = array_keys($enrichment_data);

@@ -1126,25 +1126,25 @@ class ToolsController extends AppController{
       // Check DB type (quick and dirty)
       if(strpos($exp_info["used_plaza_database"], "eggnog") !== false){
           // Modify available types for EggNOG database
-          $possible_types = array("go"=>"GO");
+          $possible_types = array("go"=>"GO", "ko"=>"KO");
       }
 
     //check type
     // $type		= mysql_real_escape_string($type); // Not needed since checked just below?
 //    if(!array_key_exists($type,$possible_types)){$this->redirect("/");}
-    $this->set("available_types",$possible_types);
+    $this->set("available_types", $possible_types);
 
     //check whether the number of jobs in the queue for this experiment has not been reached.
     $current_job_number = $this->ExperimentJobs->getNumJobs($exp_id);
     if($current_job_number>=MAX_CLUSTER_JOBS){$this->redirect(array("controller"=>"trapid","action"=>"experiment",$exp_id));}
 
-    //get subsets for this experiment.
+    // Get subsets for the experiment
     $subsets	= $this->TranscriptsLabels->getLabels($exp_id);
     if(count($subsets)==0){$this->set("error","No subsets defined");return;}
     $this->set("subsets",$subsets);
 
     //possible p-values
-    $possible_pvalues	= array("0.1","0.05","0.01","0.005","0.001","0.0001","0.00001");
+    $possible_pvalues	= array("0.05", "0.01", "0.005", "0.001", "0.0001", "0.00001");
     $selected_pvalue	= 0.05;
     $this->set("possible_pvalues",$possible_pvalues);
     $this->set("selected_pvalue",$selected_pvalue);
@@ -1154,10 +1154,10 @@ class ToolsController extends AppController{
         // Check functional annotation type
         $type = "";
         if(!array_key_exists("annotation_type",$_POST)) {
-            $this->set("error","No functional annotation type indicated in form");return;
+            $this->set("error","no functional annotation type indicated in form");return;
         }
         if(!in_array($_POST['annotation_type'], array_keys($possible_types))) {
-            $this->set("error","Invalid functional annotation type");return;
+            $this->set("error","invalid functional annotation type");return;
         }
         else {
             $type = filter_var($_POST['annotation_type'], FILTER_SANITIZE_STRING);  // Useless filtering?
@@ -1165,9 +1165,9 @@ class ToolsController extends AppController{
         $this->set("type", $type);
 
       //check for present subset
-      if(!array_key_exists("subset",$_POST)){$this->set("error","No subset indicated in form");return;}
+      if(!array_key_exists("subset",$_POST)){$this->set("error","no subset indicated in form");return;}
       $subset		= filter_var($_POST['subset'], FILTER_SANITIZE_STRING);
-      if(!array_key_exists($subset,$subsets)){$this->set("error","Illegal subset");return;}
+      if(!array_key_exists($subset,$subsets)){$this->set("error","illegal subset");return;}
       $this->set("selected_subset",$subset);
 
       if(array_key_exists("pvalue",$_POST)){
@@ -1179,9 +1179,9 @@ class ToolsController extends AppController{
       $enrichment_results = $this->FunctionalEnrichments->find("all", array("conditions"=>array("experiment_id"=>$exp_id, "label"=>$subset, "max_p_value"=>$pvalue, "data_type"=>$type)));
 
       // File locations
-      $tmp_dir		= TMP."experiment_data/".$exp_id."/";
+      $tmp_dir = TMP."experiment_data/".$exp_id."/";
 
-      // If force computation or result does not exist: perform go enrichment computation
+      // If force computation or result does not exist: perform functional enrichment computation
       if(empty($enrichment_results) || !array_key_exists("use_cache",$_POST)){
         // Create shell script to `qsub` jobs on the web cluster
     	$qsub_file  = $this->TrapidUtils->create_qsub_script($exp_id);
@@ -1198,7 +1198,7 @@ class ToolsController extends AppController{
 	$output		= array();
         exec($command,$output);
 	$cluster_job	= $this->TrapidUtils->getClusterJobId($output);
-	if($cluster_job==null){$this->set("error","Problem with retrieving job identifier from web cluster");return;}
+	if($cluster_job==null){$this->set("error","problem with retrieving job identifier from web cluster");return;}
 	$this->set("job_id",$cluster_job);
 	$this->set("load_results", true);
 	return;
@@ -1345,7 +1345,7 @@ class ToolsController extends AppController{
     $type		= filter_var($type, FILTER_SANITIZE_STRING);
     $selected_subset	= filter_var($selected_subset, FILTER_SANITIZE_STRING);
     $pvalue		= filter_var($pvalue, FILTER_SANITIZE_STRING);
-    $this->set("file_name",$type."_enrichment_".$exp_id."_".$selected_subset."_".$pvalue.".txt");
+    $this->set("file_name",$type."_enrichment_".$exp_id."_".$selected_subset."_".$pvalue.".tsv");
     $this->set("type", $type);
 
     // Retrieve enrichment results from db
@@ -1369,6 +1369,9 @@ class ToolsController extends AppController{
               else if($type=="ipr"){
                   $result[$res['identifier']] = array("ipr"=>$res['identifier'],"is_hidden"=>$res['is_hidden'],"p-value"=>$res['p_value'], "enrichment"=>$res['log_enrichment'], "subset_ratio"=>$res['subset_ratio']);
               }
+              else if($type=="ko"){
+                  $result[$res['identifier']] = array("ko"=>$res['identifier'],"is_hidden"=>$res['is_hidden'],"p-value"=>$res['p_value'], "enrichment"=>$res['log_enrichment'], "subset_ratio"=>$res['subset_ratio']);
+              }
           }
       }
 
@@ -1378,7 +1381,7 @@ class ToolsController extends AppController{
     if($type=="go"){
     	$go_data		= $this->ExtendedGo->find("all",array("conditions"=>array("name"=>array_keys($result), "type"=>"go")));
     	$go_descriptions	= $this->TrapidUtils->indexArray($go_data,"ExtendedGo","name","desc");
-    	$go_types		= array("MF"=>array(),"BP"=>array(),"CC"=>array());
+    	$go_types		= array("BP"=>array(), "MF"=>array(), "CC"=>array());
     	foreach($go_data as $gd){
       		$go_type	= $gd['ExtendedGo']['info'];
       		$go_types[$go_type][] = $gd['ExtendedGo']['name'];
@@ -1388,8 +1391,15 @@ class ToolsController extends AppController{
     }
     else if($type=="ipr"){
       $ipr_data			= $this->ProteinMotifs->find("all",array("conditions"=>array("name"=>array_keys($result), "type"=>"interpro")));
-      $ipr_descriptions		= $this->TrapidUtils->indexArray($ipr_data,"ProteinMotifs","name","desc");
+      $ipr_descriptions		= $this->TrapidUtils->indexArray($ipr_data,"ProteinMotifs", "name", "desc");
+      $ipr_types		= $this->TrapidUtils->indexArray($ipr_data,"ProteinMotifs", "name", "info");
       $this->set("ipr_descriptions",$ipr_descriptions);
+      $this->set("ipr_types",$ipr_types);
+    }
+    else if($type=="ko"){
+      $ko_data			= $this->KoTerms->find("all",array("conditions"=>array("name"=>array_keys($result), "type"=>"ko")));
+      $ko_descriptions		= $this->TrapidUtils->indexArray($ko_data,"KoTerms", "name", "desc");
+      $this->set("ko_descriptions",$ko_descriptions);
     }
   }
 
@@ -1402,9 +1412,9 @@ class ToolsController extends AppController{
     $this->TrapidUtils->checkPageAccess($exp_info['title'],$exp_info["process_state"],$this->process_states["finished"]);
     $this->set("exp_id",$exp_id);
     $this->layout = "";
-    $this->helpers[] = 'FlashChart';
+//    $this->helpers[] = 'FlashChart';
 
-    $possible_types	= array("go"=>"GO","ipr"=>"Protein domain");
+    $possible_types	= array("go"=>"GO","ipr"=>"Protein domain", "ko"=>"KO");
     //check type
     // $type		= mysql_real_escape_string($type); // Checked below already against possible types
     if(!array_key_exists($type,$possible_types)){$this->redirect("/");}
@@ -1413,13 +1423,13 @@ class ToolsController extends AppController{
 
 
     if($subset_title==null){
-      $this->set("error","No subset defined");
+      $this->set("error", "no subset defined");
       return;
     }
     $this->set("subset",urldecode($subset_title));
 
     if($pvalue==null){
-      $this->set("error","No P-value defined");
+      $this->set("error","no P-value defined");
       return;
     }
     $this->set("selected_pvalue",$pvalue);
@@ -1451,6 +1461,9 @@ class ToolsController extends AppController{
 	    else if($type=="ipr"){
           $result[$res['identifier']] = array("ipr"=>$res['identifier'],"is_hidden"=>$res['is_hidden'],"p-value"=>$res['p_value'], "enrichment"=>$res['log_enrichment'], "subset_ratio"=>$res['subset_ratio']);
 	    }
+	    else if($type=="ko"){
+          $result[$res['identifier']] = array("ko"=>$res['identifier'], "is_hidden"=>$res['is_hidden'], "p-value"=>$res['p_value'], "enrichment"=>$res['log_enrichment'], "subset_ratio"=>$res['subset_ratio']);
+	    }
 	  }
     }
 
@@ -1463,7 +1476,7 @@ class ToolsController extends AppController{
     	$go_data		= $this->ExtendedGo->find("all",array("conditions"=>array("name"=>array_keys($result))));
     	$go_descriptions	= $this->TrapidUtils->indexArray($go_data,"ExtendedGo","name","desc");
 //    	pr($go_descriptions);
-    	$go_types		= array("MF"=>array(),"BP"=>array(),"CC"=>array());
+    	$go_types		= array("BP"=>array(), "MF"=>array(), "CC"=>array());
     	foreach($go_data as $gd){
 //      		$go_type	= $gd['ExtendedGo']['type'];
 //      		$go_types[$go_type][] = $gd['ExtendedGo']['go'];
@@ -1476,8 +1489,15 @@ class ToolsController extends AppController{
     }
     else if($type=="ipr"){
       $ipr_data			= $this->ProteinMotifs->find("all",array("conditions"=>array("name"=>array_keys($result))));
-      $ipr_descriptions		= $this->TrapidUtils->indexArray($ipr_data,"ProteinMotifs","name","desc");
-      $this->set("ipr_descriptions",$ipr_descriptions);
+      $ipr_descriptions	= $this->TrapidUtils->indexArray($ipr_data,"ProteinMotifs", "name", "desc");
+      $ipr_types	= $this->TrapidUtils->indexArray($ipr_data,"ProteinMotifs", "name", "info");
+      $this->set("ipr_descriptions", $ipr_descriptions);
+      $this->set("ipr_types", $ipr_types);
+    }
+    else if($type=="ko"){
+      $ko_data			= $this->KoTerms->find("all",array("conditions"=>array("name"=>array_keys($result))));
+      $ko_descriptions	= $this->TrapidUtils->indexArray($ko_data, "KoTerms", "name", "desc");
+      $this->set("ko_descriptions", $ko_descriptions);
     }
   }
 

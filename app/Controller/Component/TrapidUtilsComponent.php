@@ -728,6 +728,7 @@ class TrapidUtilsComponent extends Component{
    * @param float|array $pvalue The p-value(s) which is/are used. Can be either a float or an array of floats.
    * @param array $all_subsets Array containing all subsets present in the experiment
    * @param string $selected_subset Optional, when we need to reprocess only for a given subset.
+   * @return string shell file path
    */
   function create_shell_file_enrichment_preprocessing($exp_id,$ini_file,$data_type,$pvalue,$all_subsets,$selected_subset=null){
 	$base_scripts_location	= APP."scripts/";
@@ -754,34 +755,23 @@ class TrapidUtilsComponent extends Component{
 	}
 
         //create the shell file
-	$shell_file		= $tmp_dir.$data_type."_enrichmentpreprocessing_".$exp_id.".sh";
+	$shell_file		= $tmp_dir.$data_type."_enrichment_preprocessing_".$exp_id.".sh";
 	if($selected_subset){
-	  $shell_file		= $tmp_dir.$data_type."_enrichmentpreprocessing_".$exp_id."_".$selected_subset.".sh";
+	  $shell_file		= $tmp_dir.$data_type."_enrichment_preprocessing_".$exp_id."_".$selected_subset.".sh";
 	}
       	$fh 			= fopen($shell_file,"w");
-      $necessary_modules = array("perl", "python/x86_64/2.7.2", "gcc/x86_64/6.3");
+      $necessary_modules = array("perl/x86_64/5.14.1", "python/x86_64/2.7.2", "gcc/x86_64/6.3");
 	fwrite($fh,"#Loading necessary modules\n");
 	foreach($necessary_modules as $nm){
 	  fwrite($fh,"module load ".$nm." \n");
 	}
-	$perl_params		= array(TRAPID_DB_SERVER,TRAPID_DB_NAME,TRAPID_DB_PORT,TRAPID_DB_USER,TRAPID_DB_PASSWORD,$exp_id,$data_type);
-	$perl_location		= $base_scripts_location . "perl/";
-	$perl_program_utils	= "enrichment_preprocessing_utils.pl";
 
     $py_location = $base_scripts_location . "python/";
     $py_program = "run_funct_enrichment_preprocess.py";
-    $py_params = [$ini_file, $data_type, "--subsets", implode(" ", array_keys($all_subsets)), "--max_pvals", implode(" ", $pvalue), "--verbose"];
+    $py_params = [$ini_file, $data_type, "--subsets", implode(" ", array_keys($all_subsets)), "--max_pvals", implode(" ", $pvalue), "--verbose", "--keep_tmp"];
     fwrite($fh,"\n#Launching python wrapper for deletion of previous results, enricher file creation, enrichment analysis, and DB upload\n");
     fwrite($fh,"python " . $py_location . $py_program . " ".implode(" ",$py_params)."\n");
 
-      //clean up:
-	// - indicate in the database (logging purposes) that the job is finished
-	// - send email
-	// - delete job from table experiment_jobs
-	// - update experiment enrichment state.
-	fwrite($fh,"\n#Launching perl script for cleaning up the job\n");
-	#fwrite($fh,"perl ".$perl_location."/".$perl_program_utils." cleanup ".$exp_id."\n");
-	fwrite($fh,"perl ".$perl_location."/".$perl_program_utils." cleanup ".implode(" ",$perl_params)."\n");
 	fclose($fh);
 	shell_exec("chmod a+x ".$shell_file);
 	return $shell_file;
@@ -803,7 +793,7 @@ class TrapidUtilsComponent extends Component{
 	}
 	$py_location = $base_scripts_location . "python/";
 	$py_program = "run_funct_enrichment.py";
-	$py_params = [$ini_file, $type, $subset, $pvalue, "--verbose"];
+	$py_params = [$ini_file, $type, $subset, $pvalue, "--verbose", "--keep_tmp"];
 	fwrite($fh,"python " . $py_location . $py_program . " ".implode(" ",$py_params)."\n");
 	fclose($fh);
 	shell_exec("chmod a+x ".$shell_file);

@@ -3,14 +3,16 @@ A collection of functions used to perform subset functional enrichment analysis 
 """
 
 import argparse
-import common
 import math
 import MySQLdb as MS
 import os
 import subprocess
 import sys
 import time
+
 from ConfigParser import ConfigParser
+
+import common
 
 GO_FILTER = {"GO:0005575", "GO:0003674", "GO:0008150"}  # Default list of GO to filter (top GO terms)
 
@@ -32,18 +34,22 @@ def del_files(files):
         os.remove(file)
 
 
-def delete_previous_results(trapid_db_conn, exp_id, fa_type, subset, max_pval, verbose):
+def delete_previous_results(trapid_db_conn, exp_id, fa_type, subset, max_pval, verbose=False):
     """
-    Delete functional enrichment results from the `functional_enrichments` table of TRAPID db (accessed with `trapid_db_conn`),
-    for experiment `exp_id`, subset `subset`, functional annotation type `fa_type` and maximum p-value `max_pval`.
+    Delete functional enrichment results from the `functional_enrichments` and `functional_enrichments_sankey` tables of
+    TRAPID db (accessed with `trapid_db_conn`), for experiment `exp_id`, subset `subset`, functional annotation type
+    `fa_type` and maximum p-value `max_pval`.
     """
     sys.stderr.write("[Message] Delete previous enrichment results from TRAPID db...\n")
-    sql_query = "DELETE FROM `functional_enrichments` WHERE `experiment_id`='{exp_id}' AND `label`='{subset}' AND `data_type`='{fa_type}' AND `max_p_value`={max_pval}"
-    formatted_query = sql_query.format(exp_id=exp_id, subset=subset, fa_type=fa_type, max_pval=max_pval)
-    if verbose:
-        sys.stderr.write("[Message] Query to execute: %s\n" % formatted_query)
-    cursor = trapid_db_conn.cursor()
-    cursor.execute(formatted_query)
+    # result_tables = ["functional_enrichments", "functional_enrichments_sankey"]  # Tables to delete records from
+    result_tables = ["functional_enrichments"]  # Tables to delete records from
+    sql_query = "DELETE FROM `{table}` WHERE `experiment_id`='{exp_id}' AND `label`='{subset}' AND `data_type`='{fa_type}' AND `max_p_value`={max_pval}"
+    for table in result_tables:
+        formatted_query = sql_query.format(table=table, exp_id=exp_id, subset=subset, fa_type=fa_type, max_pval=max_pval)
+        if verbose:
+            sys.stderr.write("[Message] Query to execute: %s\n" % formatted_query)
+        cursor = trapid_db_conn.cursor()
+        cursor.execute(formatted_query)
     trapid_db_conn.commit()
 
 
@@ -86,6 +92,7 @@ def get_go_data(ref_db_conn):
         else:
             go_children[parent].add(child)
     # Now populate `go_dict` with parents and children
+    # TODO: check `is_obsolete` in parents as well????
     for go in go_dict:
         if not go_dict[go]['is_obsolete']:
             if go in go_parents:
@@ -227,7 +234,6 @@ def flag_invalid_gos(go_terms, go_data, alt_gos, verbose=False):
     return invalid_gos
 
 
-
 def create_enricher_input(trapid_db_conn, exp_id, fa_type, subset, tmp_dir, verbose=False):
     """
     Create input files for Dries' enricher. Feature file created from all transcript/functional annotation from the
@@ -282,21 +288,23 @@ def run_enricher(trapid_db_data, exp_id, fa_type, subset, max_pval, go_data, enr
     # Fetch needed functional annotation data for enrichment script and create input files
     db_conn = common.db_connect(*trapid_db_data)
     enricher_files = create_enricher_input(db_conn, exp_id, fa_type, subset, tmp_dir, verbose)
-    db_conn.close()
     if fa_type == 'go':
         clean_enricher_input_feature_go(enricher_files[0], go_data, verbose)
     # Perform functional enrichment
     enricher_output = call_enricher(enricher_files[0], enricher_files[1], max_pval, exp_id, subset, fa_type, enricher_bin, tmp_dir)
-    enricher_results = read_enricher_output(enricher_output, verbose)
+    enrichment_results = read_enricher_output(enricher_output, verbose)
+    # Get GF data for enrichment results
+    enrichment_gf_data = get_enrichment_gf_data(db_conn, exp_id, subset, enrichment_results, enricher_files[0], enricher_files[1], verbose)
+    db_conn.close()
     # Delete temporary files (if the `--keep_tmp` flag wasn't provided)
     if not keep_tmp:
         to_delete = [enricher_output]
         to_delete.extend(enricher_files)
         del_files(to_delete)
-    return enricher_results
+    return { "results": enrichment_results, "gf_data": enrichment_gf_data }
 
 
-def create_enrichment_rows(enricher_results, exp_id, subset, fa_type, max_pval, go_data):
+def create_enrichment_rows(enricher_results, enrichment_gf_data, exp_id, subset, fa_type, max_pval, go_data):
     """
     Process raw enrichment results `enricher_results` to create records that can be inserted into TRAPID's DB
     'functional_enrichments' table. Also set `is_hidden` value for parental GO terms in enrichment results based on GO hierarchy
@@ -312,6 +320,7 @@ def create_enrichment_rows(enricher_results, exp_id, subset, fa_type, max_pval, 
             # Compute subset ratio
             sub_ratio = enricher_results[fa]['n_hits'] / enricher_results[fa]['set_size'] * 100
             p_val = enricher_results[fa]['q-val']  # p-val stored in DB is the corrected one
+            sub_hits =  enricher_results[fa]['n_hits']  # This is used for the enrichment Sankey diagrams
             is_hidden = 0
             # GO should be hidden if any of its parents or children has more significant enrichment results.
             # 'more significant' => larger log2 enrichment fold and lower p-value
@@ -331,7 +340,7 @@ def create_enrichment_rows(enricher_results, exp_id, subset, fa_type, max_pval, 
                 if same_enr and same_p_val:
                     if go_data[fa]['children'] & all_gos:
                         is_hidden = 1
-            values = (exp_id, subset, fa_type, max_pval, fa, is_hidden, p_val, log2_enr, sub_ratio)
+            values = (exp_id, subset, fa_type, max_pval, fa, is_hidden, p_val, log2_enr, sub_ratio, sub_hits, enrichment_gf_data[fa])
             enrichment_rows.append(values)
     else:
         for fa in sorted(enricher_results):
@@ -340,8 +349,9 @@ def create_enrichment_rows(enricher_results, exp_id, subset, fa_type, max_pval, 
             # Compute subset ratio
             sub_ratio = enricher_results[fa]['n_hits'] / enricher_results[fa]['set_size'] * 100
             p_val = enricher_results[fa]['q-val']  # p-val stored in DB is the corrected one
+            sub_hits =  enricher_results[fa]['n_hits']  # This is used for the enrichment Sankey diagrams
             is_hidden = 0
-            values = (exp_id, subset, fa_type, max_pval, fa, is_hidden, p_val, log2_enr, sub_ratio)
+            values = (exp_id, subset, fa_type, max_pval, fa, is_hidden, p_val, log2_enr, sub_ratio, sub_hits,  enrichment_gf_data[fa])
             enrichment_rows.append(values)
     return enrichment_rows
 
@@ -351,7 +361,7 @@ def upload_results_to_db(trapid_db_conn, enrichment_rows, verbose=False, chunk_s
     Insert formatted enrichment results `enrichment_rows` into TRAPID DB (accessed with `trapid_db_conn`).
     """
     sys.stderr.write("[Message] Upload enrichment results...\n")
-    funct_enrichment_query = "INSERT INTO `functional_enrichments` (`id`, `experiment_id`, `label`, `data_type`, `max_p_value`, `identifier`, `is_hidden`, `p_value`, `log_enrichment`, `subset_ratio`) VALUES (0, %s, %s, %s, %s, %s, %s, %s, %s, %s)"
+    funct_enrichment_query = "INSERT INTO `functional_enrichments` (`id`, `experiment_id`, `label`, `data_type`, `max_p_value`, `identifier`, `is_hidden`, `p_value`, `log_enrichment`, `subset_ratio`, `subset_hits`, `subset_hits_gf_data`) VALUES (0, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"
     trapid_db_conn.autocommit = False
     cursor = trapid_db_conn.cursor()
     if verbose:
@@ -361,3 +371,126 @@ def upload_results_to_db(trapid_db_conn, enrichment_rows, verbose=False, chunk_s
         if verbose:
             sys.stderr.write("[Message] %s: Inserted %d rows...\n" % (time.strftime('%H:%M:%S'), chunk_size))
     trapid_db_conn.commit()
+
+
+def update_enrichment_state(trapid_db_conn, exp_id):
+    """
+    Update functional enrichment state in the `experiments` table of TRAPID db (accessed with `trapid_db_conn`), for
+    experiment `exp_id`.
+    """
+    sql_query = "UPDATE `experiments` SET `enrichment_state`='finished' WHERE `experiment_id`='{exp_id}'"
+    formatted_query = sql_query.format(exp_id=exp_id)
+    cursor = trapid_db_conn.cursor()
+    cursor.execute(formatted_query)
+    trapid_db_conn.commit()
+
+
+def send_end_email_preprocessing(trapid_db_conn, exp_id, fa_type):
+    """Send an email to the owner of experiment `exp_id` to warn them of job completion.  """
+    # Functional annotation type labels used in the email
+    fa_labels = {"go": "GO", "ipr": "protein domain", "ko": "KO"}
+    # Get title & email address associated to the experiment
+    query_str = "SELECT a.`title`, b.`email` FROM `experiments` a,`authentication` b WHERE a.`experiment_id`='{exp_id}' AND b.`user_id`=a.`user_id`;"
+    page_url = '/'.join([common.TRAPID_BASE_URL, 'trapid', 'experiment', str(exp_id)])
+    cursor = trapid_db_conn.cursor()
+    cursor.execute(query_str.format(exp_id=exp_id))
+    exp_data = cursor.fetchone()
+    # Send email!
+    if not exp_data:
+        sys.stderr.write("[Error] Impossible to retrieve experiment title/email address (experiment '%d')!\n" % (exp_id))
+        sys.exit(1)
+    email_subject = "TRAPID experiment has finished functional enrichment preprocessing\n"
+    email_content = "Dear user,\n\nThe functional enrichment preprocessing ({fa_label}) in your TRAPID experiment '{exp_title}' has finished. \n\nYou can access your experiment at this URL: {page_url}\n\nThank you for using TRAPID. \n".format(fa_label=fa_labels[fa_type], exp_title=exp_data[0], page_url=page_url)
+    common.send_mail(to=[exp_data[1]], subject=email_subject, text=email_content)
+
+
+def get_transcript_gfs(trapid_db_conn, exp_id, transcripts, verbose=False):
+    """
+    Get GF for a set or list of transcripts `transcripts` from experiment `exp_id`. Return a transcript:gf dictionary.
+    """
+    trs_gf = {}
+    trs_gf_query = "SELECT `transcript_id`, `gf_id` from `transcripts` WHERE `experiment_id`='{exp_id}' AND `transcript_id` IN ({trs_str})"
+    if transcripts:
+        # Create string for SQL `IN` clause (quoted, separated by commas)
+        trs_str = ", ".join(["'%s'" % trs for trs in sorted(list(transcripts))])
+        # Get associated GFs
+        cursor = trapid_db_conn.cursor()
+        formatted_trs_gf_query = trs_gf_query.format(exp_id=exp_id, trs_str=trs_str)
+        if verbose:
+            sys.stderr.write("[Message] Query to execute: %s\n" % formatted_trs_gf_query)
+        cursor.execute(formatted_trs_gf_query)
+        for record in common.ResultIter(db_cursor=cursor):
+            if record[1]:
+                trs_gf[record[0]] = record[1]
+            else:
+                trs_gf[record[0]] = "NULL"  # Change `NULL` to a more readable value?
+    return trs_gf
+
+
+def cleanup_enrichment_preprocessing(trapid_db_conn, exp_id, fa_type, verbose):
+    """
+    Perform cleanup tasks at the end of functional enrichment preprocessing, for experiment `exp_id` and functional
+    annotation type `fa_type`:
+        * Update `experiment_log`
+        * Delete cluster job from `experiment_jobs`
+        * Update `enrichment_state` for the experiment
+        * Send an email to the user
+    """
+    sys.stderr.write("[Message] Cleanup at the end of enrichment preprocessing...\n")
+    if verbose:
+        sys.stderr.write("[Message] Update experiment log...\n")
+    common.update_experiment_log(experiment_id=exp_id, action='enrichment_preprocessing', params='stop', depth=1, db_conn=trapid_db_conn)
+    if verbose:
+        sys.stderr.write("[Message] Delete enrichment preprocessing job from TRAPID database...\n")
+    common.delete_experiment_job(experiment_id=exp_id, job_name='enrichment_preprocessing', db_conn=trapid_db_conn)
+    if verbose:
+        sys.stderr.write("[Message] Update enrichment state...\n")
+    update_enrichment_state(trapid_db_conn=trapid_db_conn, exp_id=exp_id)
+    if verbose:
+        sys.stderr.write("[Message] Send an email to the experiment's user... \n")
+    send_end_email_preprocessing(trapid_db_conn=trapid_db_conn, exp_id=exp_id, fa_type=fa_type)
+
+
+def get_enrichment_gf_data(trapid_db_conn, exp_id, subset, enricher_results, feature_file, set_file, verbose=False):
+    """
+    Get GF data for enrichment results (i.e. GFs of subset transcripts having enriched functional annotations).
+    This data is used to display the enrichment Sankey diagrams within TRAPID.
+    Return GF data as fa:gf_string dictionary, with `gf_string` formatted as semi-colon separated `GF=n_hits` pairs.
+    """
+    sys.stderr.write("[Message] Generate enrichment GF data strings...\n")
+    enriched_fa_gf_data = {}
+
+    # Read feature file to get transcripts for each functional annotation
+    fa_trs = {}
+    with open(feature_file, 'r') as in_file:
+        for line in in_file:
+            fa_id, trs_id = line.strip().split('\t')
+            if fa_id in enricher_results:
+                if fa_id not in fa_trs:
+                    fa_trs[fa_id] = set([trs_id])
+                else:
+                    fa_trs[fa_id].add(trs_id)
+    # Get subset transcripts
+    subset_trs = set()
+    with open(set_file, 'r') as in_file:
+        for line in in_file:
+            subset_trs.add(line.strip())
+
+    # Filter feature file data to retain only enriched functional annotations and subset transcripts
+    enriched_fa_trs = {}
+    for enriched_fa in enricher_results:
+        enriched_fa_trs[enriched_fa] = fa_trs[enriched_fa] & subset_trs
+
+    # Get transcripts from subset associated to enriched functional annotation and their GF data
+    enriched_subset_trs = set()
+    for fa_trs in enriched_fa_trs.values():
+        enriched_subset_trs.update(fa_trs)
+    trs_gf = get_transcript_gfs(trapid_db_conn, exp_id, enriched_subset_trs, verbose)
+    gf_prefix = "%s_" % str(exp_id)
+    # Create GF data strings
+    for fa, trs in enriched_fa_trs.items():
+        gfs = [trs_gf[t] for t in trs]
+        gf_data = ";".join(["%s=%d" % (gf.replace(gf_prefix, ''), gfs.count(gf)) for gf in set(gfs) ])
+        enriched_fa_gf_data[fa] = gf_data
+
+    return enriched_fa_gf_data

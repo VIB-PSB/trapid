@@ -6,14 +6,16 @@ functional annotation using multiple subsets/p-values thresholds).
 # Usage: python run_funct_enrichment_preprocess.py <funct_enrichment.ini> <fa_type> --subsets [subsets] --max_pvals [max_p_values]
 
 import argparse
-import common
 import math
 import MySQLdb as MS
 import os
 import subprocess
 import sys
 import time
+
 from ConfigParser import ConfigParser
+
+import common
 from funct_enrichment import *
 
 
@@ -23,7 +25,7 @@ def parse_arguments():
         formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     cmd_parser.add_argument('ini_file_enrichment', type=str,
                             help='Functional enrichment configuration file (generated upon enrichment job submission)')
-    cmd_parser.add_argument('fa_type', type=str, choices=['go', 'ipr'],
+    cmd_parser.add_argument('fa_type', type=str, choices=['go', 'ko', 'ipr'],
                             help='Type of functional annotation for which enrichment analysis will be performed. ')
     cmd_parser.add_argument('--subsets', type=str, nargs='+',
                             help='Transcript subset(s) for which enrichment analysis will be performed. ')
@@ -49,7 +51,7 @@ def main(ini_file_enrichment, fa_type, subsets, max_pvals, keep_tmp, verbose=Fal
     exp_id = config['experiment']['exp_id']
     tmp_dir = config['experiment']['tmp_exp_dir']
     enricher_bin = config['enrichment']['enricher_bin']
-    # Check existence of enrichmer bin
+    # Check existence of enricher bin
     check_enricher_bin(enricher_bin, verbose)
     # Get GO data from reference database if `fa_type` is GO
     go_data = {}
@@ -84,12 +86,21 @@ def main(ini_file_enrichment, fa_type, subsets, max_pvals, keep_tmp, verbose=Fal
         for pval in max_pvals:
                 enricher_output = call_enricher(feature_file, set_files[subset], pval, exp_id, subset, fa_type, enricher_bin, tmp_dir)
                 out_files.append(enricher_output)
-                enricher_results = read_enricher_output(enricher_output, verbose)
+                enrichment_results = read_enricher_output(enricher_output, verbose)
+                db_conn = common.db_connect(*trapid_db_data)
+                enrichment_gf_data = get_enrichment_gf_data(db_conn, exp_id, subset, enrichment_results, feature_file, set_files[subset], verbose)
+                db_conn.close()
                 # Create result records and upload them to TRAPID DB
-                enrichment_rows = create_enrichment_rows(enricher_results, exp_id, subset, fa_type, pval, go_data)
+                enrichment_rows = create_enrichment_rows(enrichment_results, enrichment_gf_data, exp_id, subset, fa_type, pval, go_data)
                 db_conn = common.db_connect(*trapid_db_data)
                 upload_results_to_db(db_conn, enrichment_rows, verbose)
+                # upload_results_to_db(db_conn, enrichment_rows, sankey_rows, verbose)
                 db_conn.close()
+
+    # Cleaning up
+    db_conn = common.db_connect(*trapid_db_data)
+    cleanup_enrichment_preprocessing(db_conn, exp_id, fa_type, verbose)
+    db_conn.close()
 
     # Delete temporary files (depending on `--keep_tmp` flag)
     if not keep_tmp:

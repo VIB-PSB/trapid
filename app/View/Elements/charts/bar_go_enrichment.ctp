@@ -1,5 +1,5 @@
 <!-- Barchart div -->
-<div class="hc" id="<?php echo $chart_div_id; ?>" style="width:100%; height:410px;"></div>
+<div class="hc hc-enrichment" id="<?php echo $chart_div_id; ?>"></div>
 
 <!-- Barchart JS -->
 <script type='text/javascript' defer="defer">
@@ -87,19 +87,21 @@ var go_descriptions_<?php echo $go_type ?> = {
                     }
                 },
                 title: {
-                    text: '-log10(p-value)',
-                    style: {
-                        color: Highcharts.getOptions().colors[1]
-                    }
+                    text: '-log<sub>10</sub>(p-value)',
+//                    style: {
+//                        color: Highcharts.getOptions().colors[1]
+//                    },
+                    useHTML: true
                 },
                 gridLineColor: "white",
                 gridLineWidth: 1
             }, { // Secondary yAxis
                 title: {
-                    text: 'Enrichment score',
-                  /*  style: {
-                        color: "#F8766D"// Highcharts.getOptions().colors[0]
-                    }*/
+                    text: 'log<sub>2</sub>(enrichment)',
+//                    style: {
+//                        color: "#F8766D"// Highcharts.getOptions().colors[0]
+//                    },
+                    useHTML: true
                 },
                 labels: {
                     format: '{value}',
@@ -118,7 +120,7 @@ var go_descriptions_<?php echo $go_type ?> = {
                     // console.log(go_descriptions_<?php echo $go_type ?>[this.x]);
                     // console.log(this.x);
                     s+=  '<br>ID: ' + this.x;
-                    s += '<br>' + this.points[0].series.name + ': ' + Highcharts.numberFormat(this.points[0].y, 3);
+                    s += '<br>' + this.points[0].series.name + ' (log<sub>2</sub>): ' + Highcharts.numberFormat(this.points[0].y, 3);
                     s += '<br>' + this.points[1].series.name + ' (-log<sub>10</sub>): ' + Highcharts.numberFormat(this.points[1].y, 3);
                     return s;
                     }
@@ -170,7 +172,7 @@ var go_descriptions_<?php echo $go_type ?> = {
                     $enrichment_data = array();
                     foreach ($go_terms as $go_term) {
                         if ($enrichment_results[$go_term]['is_hidden'] == 0) {
-                            array_push($enrichment_data, -log10($enrichment_results[$go_term]['p-value']));
+                            array_push($enrichment_data, -log10(max($enrichment_results[$go_term]['p-value'], PHP_FLOAT_MIN )));
                         }
                     }
                     $enrichment_keys = array_keys($enrichment_data);

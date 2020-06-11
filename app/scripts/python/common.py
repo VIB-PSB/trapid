@@ -11,7 +11,7 @@ from email.MIMEMultipart import MIMEMultipart
 from email.MIMEText import MIMEText
 
 
-TRAPID_BASE_URL = "http://bioinformatics.psb.ugent.be/trapid_dev_migration"
+TRAPID_BASE_URL = "http://bioinformatics.psb.ugent.be/trapid_02"
 
 
 def load_config(ini_file_initial, needed_sections):
@@ -53,10 +53,22 @@ def update_experiment_log(experiment_id, action, params, depth, db_conn):
     try:
         cursor = db_conn.cursor()
         cursor.execute(sql_str.format(values_str=current_values))
-        db_conn.commit()  # Necessary?
+        db_conn.commit()
     except Exception as e:
         print e
         sys.stderr.write("[Error] Unable to update experiment log!\n")
+
+
+def delete_experiment_job(experiment_id, job_name, db_conn):
+    """Delete an experiment job `job_name` (i.e. delete a record from `experiment_jobs`). """
+    sql_str = "DELETE FROM `experiment_jobs` WHERE `experiment_id`='{exp_id}' AND `comment`='{job_name}'"
+    try:
+        cursor = db_conn.cursor()
+        cursor.execute(sql_str.format(exp_id=experiment_id, job_name=job_name))
+        db_conn.commit()
+    except Exception as e:
+        print e
+        sys.stderr.write("[Error] Unable to delete job!\n")
 
 
 def send_mail(to, subject, text, fro="TRAPID <no-reply@psb.vib-ugent.be>", server="smtp.psb.ugent.be"):
@@ -72,9 +84,13 @@ def send_mail(to, subject, text, fro="TRAPID <no-reply@psb.vib-ugent.be>", serve
     msg['Subject'] = subject
     msg.attach( MIMEText(text) )
 
-    smtp = smtplib.SMTP(server)
-    smtp.sendmail(fro, to, msg.as_string() )
-    smtp.close()
+    try:
+        smtp = smtplib.SMTP(server)
+        smtp.sendmail(fro, to, msg.as_string() )
+        smtp.close()
+    except Exception as e:
+        print e
+        sys.stderr.write("[Error] Unable to send email!\n")
 
 
 def ResultIter(db_cursor, arraysize=1000):

@@ -23,7 +23,7 @@ def parse_arguments():
         formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     cmd_parser.add_argument('ini_file_enrichment', type=str,
                             help='Functional enrichment configuration file (generated upon enrichment job submission)')
-    cmd_parser.add_argument('fa_type', type=str, choices=['go', 'ipr'],
+    cmd_parser.add_argument('fa_type', type=str, choices=['go', 'ko', 'ipr'],
                             help='Type of functional annotation for which enrichment analysis will be performed. ')
     cmd_parser.add_argument('subset', type=str,
                             help='Transcript subset for which enrichment analysis will be performed. ')
@@ -62,9 +62,9 @@ def main(ini_file_enrichment, fa_type, subset, max_pval, keep_tmp, verbose=False
     delete_previous_results(db_conn, exp_id, fa_type, subset, max_pval, verbose)
     db_conn.close()
     # Run enricher
-    enricher_results = run_enricher(trapid_db_data, exp_id, fa_type, subset, max_pval, go_data, enricher_bin, tmp_dir, keep_tmp, verbose)
+    enrichment_data = run_enricher(trapid_db_data, exp_id, fa_type, subset, max_pval, go_data, enricher_bin, tmp_dir, keep_tmp, verbose)
     # Create result records and upload them to TRAPID DB
-    enrichment_rows = create_enrichment_rows(enricher_results, exp_id, subset, fa_type, max_pval, go_data)
+    enrichment_rows = create_enrichment_rows(enrichment_data['results'], enrichment_data['gf_data'], exp_id, subset, fa_type, max_pval, go_data)
     db_conn = common.db_connect(*trapid_db_data)
     upload_results_to_db(db_conn, enrichment_rows, verbose)
     db_conn.close()

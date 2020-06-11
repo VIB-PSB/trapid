@@ -1625,7 +1625,7 @@ class TrapidController extends AppController{
 
     //ok, there are no actual settings: the p-value cutoff is set at the lowest, and these results are stored
     //if other p-values are needed, they can be extracted with filtering.
-    $possible_pvalues	= array(0.1,0.05,0.01,0.005,0.001,1e-5);
+    $possible_pvalues	= array(0.05,0.01,0.005,0.001,1e-4,1e-5);
 
     // Depending on the type of reference database, different type of functional annotation are available
     // For PLAZA databases
@@ -1633,7 +1633,7 @@ class TrapidController extends AppController{
     // Check DB type (quick and dirty)
     if(strpos($exp_info["used_plaza_database"], "eggnog") !== false){
         // Modify available types for EggNOG database
-        $possible_types = array("go"=>"GO");
+        $possible_types = array("go"=>"GO", "ko"=>"KO");
     }
     // Users don't need to select an annotation type anymore. Instead, enrichments are computed for all possible types.
     // $this->set("possible_types",$possible_types);
@@ -1668,7 +1668,7 @@ class TrapidController extends AppController{
             $job_id	= $this->TrapidUtils->getClusterJobId($output);
 
             //indicate int the database the new job-id
-            $this->ExperimentJobs->addJob($exp_id,$job_id,"long","enrichment_preprocessing");
+            $this->ExperimentJobs->addJob($exp_id,$job_id,"long", "enrichment_preprocessing_" . $type);
 
             //indicate in the database that the current experiments enrichment_state is "processing"
             $this->Experiments->updateAll(array("enrichment_state"=>"'processing'"),array("experiment_id"=>$exp_id));
