@@ -71,7 +71,7 @@
 
 <section class="section-page-sm">
 <!-- Sankey graph -->
-<div id="sankey" class="subdiv">
+<div id="sankey">
 
 <?php
 echo '<script type="text/javascript">';
@@ -87,14 +87,17 @@ echo "\nvar exp_id = '" . $exp_id ."';";
 echo "\nvar GO = '" . $GO ."';";
 echo '</script>';
 
-echo $this->Html->css('multi_sankey_intersection');
-echo $this->Html->script(array('d3-3.5.6.min','sankey','sankey_intersection'));
+echo $this->Html->css('sankey');
+echo $this->Html->script(array('d3-3.5.6.min', 'd3-tip', 'sankey','sankey_intersection'));
 echo $this->Html->script(array('https://cdn.rawgit.com/eligrey/canvas-toBlob.js/f1a01896135ab378aa5c0118eadd81da55e698d8/canvas-toBlob.js',
     'https://cdn.rawgit.com/eligrey/FileSaver.js/e9d941381475b5df8b7d7691013401e171014e89/FileSaver.min.js'));
 
 ?>
+<script type="text/javascript" src="https://cdn.rawgit.com/Caged/d3-tip/896d387c653b4d73cea9cdd0740aa8794754417a/index.js"></script>
+
 </div> <!-- end Sankey graph -->
 </section>
+
 
 <script type="text/javascript">
 

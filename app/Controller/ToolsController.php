@@ -1921,14 +1921,15 @@ class ToolsController extends AppController{
 
       $this -> set('title_for_layout', "KO term - Gene family");
       $this->render('sankey_single');
+
   }
 
 
 
   function label_enrichedgo_gf2($exp_id=null){
-     ini_set('memory_limit', '512M');  // Hack-ish?
+//     ini_set('memory_limit', '512M');  // Hack-ish?
     $this->general_set_up($exp_id);
-    $this -> set('title_for_layout', "Labels - Enriched GO terms - GF intersection");
+    $this -> set('title_for_layout', "Subsets - Enriched GO terms - GF intersection");
 
     $this->set("col_names", array('Label','Go','Gene family'));
     $this->set('dropdown_names',array('Domains', 'Gene families'));
@@ -1936,13 +1937,16 @@ class ToolsController extends AppController{
     $this->set("place_holder", $place_holder);
 
     $enriched_gos = $this->FunctionalEnrichments->getEnrichedGO($exp_id);
-    $transcriptLabelGF = $this->FunctionalEnrichments->getTranscriptToLabelAndGF($exp_id);
-    $transcriptGO = $this->FunctionalEnrichments->getTranscriptGOMapping($exp_id);
+    $transcriptLabelGF = []; // $this->FunctionalEnrichments->getTranscriptToLabelAndGF($exp_id);
+    $transcriptGO = [];  //$this->FunctionalEnrichments->getTranscriptGOMapping($exp_id);
     $counts = $this->TranscriptsLabels->getLabels($exp_id);// not necessary anymore, still used though
+//    $sankey_link_data = $this->FunctionalEnrichments->getSankeyLinkData($exp_id, 'go');
+    $sankey_enrichment_data = $this->FunctionalEnrichments->getSankeyEnrichmentResults($exp_id, 'go');
+
     $go_ids = array();
     foreach($enriched_gos as $label){
-        if(array_key_exists('0.1',$label)){
-            foreach ($label['0.1'] as $key => $val){
+        if(array_key_exists('0.05',$label)){
+            foreach ($label['0.05'] as $key => $val){
                 $go_ids[] = $key;
             }
         }
@@ -1951,14 +1955,17 @@ class ToolsController extends AppController{
 
     $this->set('counts',$counts);
 
+    $gf_prefix = $exp_id . "_";
     $urls = array(urldecode(Router::url(array("controller"=>"labels","action"=>"view",$exp_id,$place_holder))),
         urldecode(Router::url(array("controller"=>"functional_annotation","action"=>"go",$exp_id,$place_holder))),
-        urldecode(Router::url(array("controller"=>"gene_family","action"=>"gene_family",$exp_id,$place_holder)))
+        urldecode(Router::url(array("controller"=>"gene_family","action"=>"gene_family",$exp_id, $gf_prefix . $place_holder)))
     );
     $this->set('descriptions', $go_info);
     $this->set('enriched_gos',$enriched_gos);
     $this->set('transcriptGO', $transcriptGO);
     $this->set('transcriptLabelGF', $transcriptLabelGF);
+    $this->set('sankey_enrichment_data', $sankey_enrichment_data['enrichment']);
+    $this->set('sankey_gf_data', $sankey_enrichment_data['n_hits_gf']);
     $this->set('urls', $urls);
     $this->set('GO', true);
     $this->render('sankey_enriched2');
@@ -1968,20 +1975,24 @@ class ToolsController extends AppController{
 
   function label_enrichedinterpro_gf2($exp_id=null){
     $this->general_set_up($exp_id);
-    $this->set("col_names", array('Label','Interpro','Gene family'));
-    $this->set('dropdown_names',array('Domains', 'Gene families'));
+    $this -> set('title_for_layout', 'Sankey diagram');
+    $this->set("col_names", array('Label','InterPro','Gene family'));
+    $this->set('dropdown_names',array('Domains', 'gene families'));
     $place_holder = '###';
     $this->set("place_holder", $place_holder);
 
     $enriched_interpros = $this->FunctionalEnrichments->getEnrichedInterpro($exp_id);
-    $transcriptLabelGF = $this->FunctionalEnrichments->getTranscriptToLabelAndGF($exp_id);
-    $transcriptInterpro = $this->FunctionalEnrichments->getTranscriptInterproMapping($exp_id);
+    $transcriptLabelGF = []; // $this->FunctionalEnrichments->getTranscriptToLabelAndGF($exp_id);
+    $transcriptInterpro = []; // $this->FunctionalEnrichments->getTranscriptInterproMapping($exp_id);
     $counts = $this->TranscriptsLabels->getLabels($exp_id);// not necessary anymore
+    // $sankey_link_data = $this->FunctionalEnrichments->getSankeyLinkData($exp_id, 'ipr');
+    $sankey_enrichment_data = $this->FunctionalEnrichments->getSankeyEnrichmentResults($exp_id, 'ipr');
 
-    $interpros = array();
+
+      $interpros = array();
     foreach($enriched_interpros as $label){
-        if(array_key_exists('0.1',$label)){
-            foreach ($label['0.1'] as $key => $val){
+        if(array_key_exists('0.05',$label)){
+            foreach ($label['0.05'] as $key => $val){
                 $interpros[] = $key;
             }
         }
@@ -1989,14 +2000,18 @@ class ToolsController extends AppController{
     $interpro_info	= $this->ProteinMotifs->retrieveInterproInformation($interpros);
     $this->set('counts', $counts);
 
+    $gf_prefix = $exp_id . "_";
+
     $urls = array(urldecode(Router::url(array("controller"=>"labels","action"=>"view",$exp_id,$place_holder))),
         urldecode(Router::url(array("controller"=>"functional_annotation","action"=>"interpro",$exp_id,$place_holder))),
-        urldecode(Router::url(array("controller"=>"gene_family","action"=>"gene_family",$exp_id,$place_holder)))
+        urldecode(Router::url(array("controller"=>"gene_family","action"=>"gene_family",$exp_id, $gf_prefix . $place_holder)))
     );
     $this->set('enriched_gos',$enriched_interpros);
     $this->set('transcriptGO', $transcriptInterpro);
     $this->set('transcriptLabelGF', $transcriptLabelGF);
     $this->set('descriptions', $interpro_info);
+    $this->set('sankey_enrichment_data', $sankey_enrichment_data['enrichment']);
+    $this->set('sankey_gf_data', $sankey_enrichment_data['n_hits_gf']);
     $this->set('urls', $urls);
     $this->set('GO', false);
     $this->render('sankey_enriched2');

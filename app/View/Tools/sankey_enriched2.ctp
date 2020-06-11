@@ -31,10 +31,9 @@
                     ///////////////// Middle refinement /////////////////
 
                     echo $this->Form->create(false, array('id'=> 'middle_refine_form','class'=> 'refine_box'));
-                    echo $this->Form->input('type: ', array('options' => array('All','MF','BP','CC'), 'id' =>'type','onchange' => 'middle_filter()'));
+                    echo $this->Form->input('type: ', array('options' => array('All', 'BP', 'MF', 'CC'), 'id' =>'type','onchange' => 'middle_filter()'));
                     echo $this->Form->input('p value: ', array('options' => array(), 'id' => 'pvalue','onchange' => 'middle_filter()'));
                     echo $this->Form->input('Enrichment: ', array('options' => array('positive', 'negative'), 'id' => 'enrichment','onchange' => 'middle_filter()'));
-
                     echo $this->Form->input(' show hidden', array('type' => 'checkbox', 'id' => 'hidden','onchange' => 'middle_filter()'));
                     echo $this->Form->input(' normalize links', array('type' => 'checkbox', 'id' => 'normalize'));
 
@@ -82,6 +81,8 @@
     echo "\nvar transcriptLabelGF = " . json_encode($transcriptLabelGF) .";";
     echo "\nvar descriptions = " . json_encode($descriptions) .";";
     echo "\nvar label_counts = " . json_encode($counts) .";";
+    echo "\nvar sankeyEnrichmentData = " . json_encode($sankey_enrichment_data) .";";
+    echo "\nvar sankeyGfData = " . json_encode($sankey_gf_data) .";";
     echo "\nvar total_count = " .   $exp_info['transcript_count'] .";";
     echo "\nvar dropdown_filter_name = " . json_encode($dropdown_names) .';';
     echo "\nvar urls = " . json_encode($urls) .";";
@@ -90,8 +91,8 @@
     echo "\nvar exp_id = '" . $exp_id ."';";
     echo '</script>';
 
-	echo $this->Html->css('multi_sankey_intersection');
-	echo $this->Html->script(array('d3-3.5.6.min','sankey','sankey_enriched2'));
+	echo $this->Html->css('sankey');
+	echo $this->Html->script(array('d3-3.5.6.min', 'd3-tip', 'sankey', 'sankey_enriched2'));
     echo $this->Html->script(array('https://cdn.rawgit.com/eligrey/canvas-toBlob.js/f1a01896135ab378aa5c0118eadd81da55e698d8/canvas-toBlob.js',
         'https://cdn.rawgit.com/eligrey/FileSaver.js/e9d941381475b5df8b7d7691013401e171014e89/FileSaver.min.js'));
 
@@ -222,4 +223,7 @@
 
         image.src = imgsrc;
     }
+
 </script>
+
+<?php // echo $this->element('sql_dump');  // Dump all MySQL queries (debug) ?>

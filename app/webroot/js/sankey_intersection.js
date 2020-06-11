@@ -383,6 +383,7 @@ function normalize_links(links){
         case 1:
             // First we calculate the current divisor
             divisors = Object.create(null);
+            var name;
             for(name in names){
                 divisors[name] = 0;
             }
@@ -445,15 +446,49 @@ var svg = d3.select("#sankey").append("svg")
 	    .attr("height", height + margin.top + margin.bottom);
 
 
+
 /////////////// (Re)draw the sankey diagram /////////////////
 function draw_sankey() {
 
     // Remove the old svg if it exists
     d3.select("svg").text('');
 
+    // Remove old tooltips
+    $('.d3-tip').remove();
+
     var svg = d3.select("svg")
 	    .append("g")
 	    .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+
+    // Tooltip based on this snippet: http://bl.ocks.org/FabricioRHS/80ef58d4390b06305c91fdc831844009
+    // Position offset
+    var linkTooltipOffsetX = 90;
+    var linkTooltipOffsetY = 100;
+    var nodeTooltipOffsetX = 30;
+    var nodeTooltipOffsetY = 33;
+
+    // Initialize tooltips
+    var tipLink = d3.tip()
+        .attr('class', 'd3-tip d3-tip-link');
+    var tipNode = d3.tip()
+        .attr('class', 'd3-tip d3-tip-node');
+
+    svg = d3.select('svg').call(tipLink).call(tipNode);
+
+    // TODO: return content as array and deal with formatting in this function?
+    tipLink.html(function(d) {
+        var tooltipContent = d3.select(this).select("hovertext").text();
+        return tooltipContent;
+    });
+
+    tipNode.html(function(d) {
+        var tooltipContent = d3.select(this).select("hovertext").text();
+        var html = tooltipContent;
+        html += "<br><span class='text-justify d3-tip-footer'>Drag to move and click to view.</span>";
+        return html;
+    });
+
 
     // Based on http://www.d3noob.org/2013/02/formatting-data-for-sankey-diagrams-in.html
     var graph = {"nodes" : [], "links" : []};
@@ -484,8 +519,9 @@ function draw_sankey() {
      // rather than an array of strings
      graph.nodes.forEach(function (d, i) {
        var col = column[d];
-       graph.nodes[i] = { name: d.replace(/^\d+_/g,''),
-                          href: urls[col].replace(place_holder,d).replace('GO:','GO-')}//,
+       graph.nodes[i] = {name: d.replace(/^\d+_/g,''),
+                          href: urls[col].replace(place_holder,d).replace('GO:','GO-'),
+                          nodeId: "node_" + i.toString()}//,
                           //original_flow:flow[col][d]};
      });
 
@@ -505,10 +541,22 @@ function draw_sankey() {
         .attr("class", "link")
         .attr("d", path)
         .style("stroke-width", function(d) { return Math.max(1, d.dy); })
-        .sort(function(a, b) { return b.dy - a.dy; });
+        .sort(function(a, b) { return b.dy - a.dy; })
 
-   link.append("title")
+   link.append("hovertext")
 	    .text(function(d) { return create_link_hovertext(d)});
+
+   // Add link tooltips
+    link.on('mousemove', function(event) {
+        tipLink.style("left", function () {
+            var left = (Math.max(d3.event.pageX - linkTooltipOffsetX, 10));
+            left = Math.min(left, window.innerWidth - $('.d3-tip').width() - 20);
+            return left + "px";
+        })
+            .style("top", function() { return (d3.event.pageY - linkTooltipOffsetY) + "px" })
+        })
+        .on('mouseover', tipLink.show)
+        .on('mouseout', tipLink.hide);
 
     // Work around to make something dragable also clickable
     // From http://jsfiddle.net/2EqA3/3/
@@ -520,11 +568,79 @@ function draw_sankey() {
 	    .attr("transform", function(d) { return "translate(" + d.x + "," + d.y + ")"; })
 	    .call(d3.behavior.drag()
 	    .origin(function(d) { return d; })
-	    .on("dragstart", function() {
-                            d3.event.sourceEvent.stopPropagation();
-                            this.parentNode.appendChild(this); })
-	    .on("drag", dragmove))
-        .on('click', click);
+	    .on("dragstart", function(dragged) {
+            d3.event.sourceEvent.stopPropagation();
+            /* The line below displayed the dragged element on top of the others, by appending to the parent node.
+             * However, doing so caused problems with the click event in Chrome, so we replaced it.
+             * Instead, we assigned a unique identifier to the nodes ('nodeId') and sort them using a custom function
+             * that puts the dragged element in front of the others.
+             */
+            // this.parentNode.appendChild(this);
+            svg.selectAll(".node").sort(function(a, b) {
+                var toFront = dragged.nodeId;
+                return (a.nodeId === toFront) - (b.nodeId === toFront);
+            });
+            d3.select(this).classed("dragged", true);
+        })
+	    .on("drag", dragmove)
+        .on('dragend', function(){
+            d3.select(this).classed("dragged", false);
+        }))
+        .on("click", highlightCurrentNode)
+        .on("dblclick", click)
+        .on('mousemove', function(event) {
+            var nodeStrokeColor = d3.select(this).select("rect").style("stroke");
+            tipNode
+                .style("left", function () {
+                    var left = (Math.max(d3.event.pageX - $('.d3-tip-node').width() - nodeTooltipOffsetX, 10));
+                    left = Math.min(left, window.innerWidth - $('.d3-tip-node').width() - 20);
+                    return left + "px"; })
+                .style("top", (d3.event.pageY - $('.d3-tip-node').height() - nodeTooltipOffsetY) + "px")
+                .style("border", function() { return nodeStrokeColor + ' solid 1px'; })
+
+        })
+        .on('mouseover.tooltip', tipNode.show)
+        .on('mouseout.tooltip', tipNode.hide)
+        .on("mouseover.links", highlightConnectedLinks)
+        .on("mouseout.links", resetConnectedLinks);
+
+    function highlightConnectedLinks(d) {
+        // Add `connected` class to the link if it is connected to the node
+        link.classed("connected", function(l) {
+            if (l.source.name == d.name || l.target.name == d.name) {
+                return true;
+            }
+            else
+                return false;
+        });
+    }
+
+    // Remove `connected` class from all links
+    function resetConnectedLinks(d) {
+        link.classed("connected", false);
+    }
+
+
+    function highlightCurrentNode(d) {
+        if(d3.event.defaultPrevented) {
+            return;
+        }
+        // Highlight current node
+        var node = d3.select(this);
+        var isHighlighted = node.classed("highlighted");
+        node.classed("highlighted", !isHighlighted);
+        // Get names of currently highlighted nodes
+        var highlightedNodes = [];
+        svg.selectAll(".node.highlighted").each(function(n) { highlightedNodes.push(n.name) });
+        // Toggle `highlighted` class to connected links as appropriate
+        link.each(function (l) {
+            var currentLink = d3.select(this);
+            if((l.source.name === d.name || l.target.name === d.name) && (!highlightedNodes.includes(l.source.name) || !highlightedNodes.includes(l.target.name))) {
+                currentLink.classed("highlighted", !isHighlighted);
+            }
+        });
+    }
+
 
     function click(d) {
       if (d3.event.defaultPrevented)
@@ -535,9 +651,10 @@ function draw_sankey() {
     node.append("rect")
 	    .attr("height", function(d) { return d.dy; })
 	    .attr("width", sankey.nodeWidth())
-	    .style("fill", function(d) { return d.color = color(d.name); })
-	    .style("stroke", function(d) { return d3.rgb(d.color).darker(2); })
-	    .append("title")
+	    .style("fill", function(d) { console.log(d.name);return d.color = color(d.name); })
+	    // .style("stroke", function(d) { return d3.rgb(d.color).darker(2); })
+	    .style("stroke", function(d) { return d.color = color(d.name); })
+	    .append("hovertext")
 	    .text(function(d) { return create_hovertext(d)});
     node.append("text")
 	    .attr("x", -6)
@@ -551,18 +668,22 @@ function draw_sankey() {
 	    .attr("text-anchor", "start");
 
         function dragmove(d) {
-	        d3.select(this).attr("transform", "translate(" + d.x + "," + (d.y = Math.max(0, Math.min(height - d.dy, d3.event.y))) + ")");
+            d3.select(this).attr("transform", "translate(" + d.x + "," + (d.y = Math.max(0, Math.min(height - d.dy, d3.event.y))) + ")");
 	        sankey.relayout();
 	        link.attr("d", path);
+            // d3.select(this).on('click', click);
+
+
         }
 
         function create_hovertext(d){
             if(d.name in label_counts ) {
-                return d.name + "\n" + label_counts[d.name] + " transcript" + (label_counts[d.name] !== 1 ? 's' : '');
+                return "<span class='d3-tip-title'>" + d.name + "</span><br>\n" + label_counts[d.name] + " transcript" + (label_counts[d.name] !== 1 ? 's' : '');
+                // return d.name + "\n" + label_counts[d.name] + " transcript" + (label_counts[d.name] !== 1 ? 's' : '');
             }
-            var hover_text = d.name;
+            var hover_text = "<span class='d3-tip-title'>" + d.name + "</span><br>";
             if(d.name in descriptions){
-               hover_text += "\n" + descriptions[d.name].desc;
+               hover_text += "\n" + descriptions[d.name].desc + "<br>";
             }
             var used_name = d.name;
             if(!(used_name in current_flow)){
@@ -574,7 +695,7 @@ function draw_sankey() {
 
         // The hovertext varies depending on the normalization used
         function create_link_hovertext(d){
-            var label_node, target_node, arrow = " → ";
+            var label_node, target_node, arrow = "<br>→ ";
             if( d.source.name in names){
                 label_node = d.source;
                 target_node = d.target;
@@ -582,7 +703,7 @@ function draw_sankey() {
                 label_node = d.target;
                 target_node = d.source;
             }
-            var hover_string = label_node.name + arrow + target_node.name + "\n";
+            var hover_string = "<span class='d3-tip-title'>" + label_node.name + arrow + target_node.name + "</span><br>\n";
             var option = parseInt($(normalize_id + " option:selected").val());
             switch(option){
                 case 0:
