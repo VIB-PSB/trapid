@@ -213,14 +213,25 @@
         <?php
         //$this->Paginator->options(array("url"=>$this->passedArgs));
         $this->Paginator->options(array("url" => array("controller" => "trapid", "action" => "experiment", $exp_id, "#" => "transcripts")));
+
+        // Functional annotation types that are displayed in the table: by default, all types are shown.
+        // If `$exp_info` is set, use the list of functional annotation types defined there.
+        $function_types = ['go', 'interpro', 'ko'];
+        if(isset($exp_info)){
+            $function_types = $exp_info['function_types'];
+        }
+
+        $function_headers = array("go"=>"GO annotation", "interpro"=>"Protein domain annotation", "ko"=>"KO annotation");
         ?>
-        <table cellpadding="0" cellspacing="0" style="width:100%;" class="table table-striped table-bordered" id="transcripts_table">
+
+        <table style="width:100%;" class="table table-striped table-bordered table-condensed table-hover small" id="transcripts_table">
             <thead>
             <th style="width:10%">Transcript</th>
             <th style="width:15%">Gene family</th>
-            <th style="width:20%">GO annotation</th>
-            <th style="width:20%">Protein domain annotation</th>
-            <th style="width:20%">KO annotation</th>
+            <?php foreach ($function_types as $ft): ?>
+                <!-- <?php echo "<th style=\"" . 60/count($function_types) . "%;\">" ?> -->
+                <th><?php echo $function_headers[$ft]; ?></th>
+            <?php endforeach; ?>
             <th style="width:10%">Subset</th>
             <th style="width:10%">Meta annotation</th>
             <!--<th style="width:5%">Edit</th>-->
@@ -228,18 +239,14 @@
             <tbody>
             <?php
             $bad_status = "Unassigned";
-            $tr_counter = 0;
+            $max_items = 3;
             foreach ($transcript_data as $transcript_dat) {
-                $row_class = null;
-                if ($tr_counter++ % 2 == 0) {
-                    $row_class = " class='altrow' ";
-                }
 
                 $td = $transcript_dat['Transcripts'];
                 $this->Paginator->options(array("url" => array("controller" => "trapid", "action" => "experiment", $exp_id, "#" => "transcripts")));
                 // echo print_r($paginator);
                 // echo $td;
-                echo "<tr $row_class>";
+                echo "<tr>";
 
                 //TRANSCRIPT ID
                 echo "<td>" . $this->Html->link($td['transcript_id'],
@@ -247,101 +254,113 @@
 
 
                 //GF ID
-                echo "<td>";
                 if ($td['gf_id']) {
+                    echo "<td>";
                     echo $this->Html->link($td['gf_id'],
                         array("controller" => "gene_family", "action" => "gene_family", $exp_id, urlencode($td['gf_id'])));
+                    echo "</td>\n";
                 } else {
-                    echo "<span class='disabled'>" . $bad_status . "</span>";
+                    echo "<td class='text-muted'>";
+                    echo $bad_status;
+                    echo "</td>\n";
                 }
-                echo "</td>\n";
 
 
                 //GO annotation
-                if (!array_key_exists($td['transcript_id'], $transcripts_go)) {
-                    echo "<td><span class='disabled'>Unavailable</span></td>";
-                } else {
-                    echo "<td class='left'>";
-                    for ($i = 0; $i < count($transcripts_go[$td['transcript_id']]) && $i < 3; $i++) {
-                        $go = $transcripts_go[$td['transcript_id']][$i];
-                        $go_web = str_replace(":", "-", $go);
-                        $desc = $go_info[$go]['desc'];
-                        echo ($i + 1) . ". " . $this->Html->link($desc, array("controller" => "functional_annotation", "action" => "go", $exp_id, $go_web));
-                        echo " " . $this->element("go_category_badge", array("go_category"=>$go_info[$go]["type"], "small_badge"=>true, "no_color"=>false));
-                        if($i < 2) {
-                            echo "<br/>";
+                if(in_array("go", $function_types)) {
+                    if (!array_key_exists($td['transcript_id'], $transcripts_go)) {
+                        echo "<td class='text-muted'>Unavailable</td>";
+                    } else {
+                        $n_trs_go = count($transcripts_go[$td['transcript_id']]);
+                        echo "<td>";
+                        echo "<ul class='table-items'>";
+                        for ($i = 0; $i < $n_trs_go && $i < $max_items; $i++) {
+                            $go = $transcripts_go[$td['transcript_id']][$i];
+                            $go_web = str_replace(":", "-", $go);
+                            $desc = $go_info[$go]['desc'];
+                            $type = $go_info[$go]['type'];
+                            echo "<li>";
+                            echo $this->Html->link($desc, array("controller" => "functional_annotation", "action" => "go", $exp_id, $go_web));
+                            echo " " . $this->element("go_category_badge", array("go_category"=>$type, "small_badge"=>true, "no_color"=>false));
+                            // If there are more items to show and this is the last item of the array to print,
+                            // add 'more' label to the item
+                            if(($i == $max_items - 1) && ($n_trs_go > $max_items)) {
+                                    echo $this->element("table_more_label", array("trs_data"=>$transcripts_go[$td['transcript_id']], "data_desc"=>$go_info, "data_type"=>"go", "data_offset"=>$max_items));
+                            }
+                            echo "</li>";
                         }
+                        echo "</ul>";
+                        echo "</td>";
                     }
-                        if (count($transcripts_go[$td['transcript_id']]) > 3) {
-                            $more_go = count($transcripts_go[$td['transcript_id']]) -3;
-                            echo "<label title='" . $more_go . " more GO terms are associated to this transcript" .
-                                "' class='pull-right label label-default' style='cursor:help;'>...</label>";
-                        }
-                    echo "</td>";
                 }
-
 
                 //InterPro annotation
-                if (!array_key_exists($td['transcript_id'], $transcripts_ipr)) {
-                    echo "<td><span class='disabled'>Unavailable</span></td>";
-                } else {
-                    echo "<td class='left'>";
-                    for ($i = 0; $i < count($transcripts_ipr[$td['transcript_id']]) && $i < 3; $i++) {
-                        $ipr = $transcripts_ipr[$td['transcript_id']][$i];
-                        $desc = $ipr_info[$ipr]['desc'];
-                        echo ($i + 1) . ". " . $this->Html->link($desc, array("controller" => "functional_annotation", "action" => "interpro", $exp_id, $ipr));
-                        if($i < 2) {
-                            echo "<br/>";
+                if(in_array("interpro", $function_types)) {
+                    if (!array_key_exists($td['transcript_id'], $transcripts_ipr)) {
+                        echo "<td class='text-muted'>Unavailable</td>";
+                    } else {
+                        $n_trs_ipr = count($transcripts_ipr[$td['transcript_id']]);
+                        echo "<td>";
+                        echo "<ul class='table-items'>";
+                        for ($i = 0; $i < $n_trs_ipr && $i < $max_items; $i++) {
+                            $ipr = $transcripts_ipr[$td['transcript_id']][$i];
+                            $desc = $ipr_info[$ipr]['desc'];
+                            echo "<li>";
+                            echo $this->Html->link($desc, array("controller" => "functional_annotation", "action" => "interpro", $exp_id, $ipr));
+                            // If there are more items to show and this is the last item of the array to print,
+                            // add 'more' label to the item
+                            if(($i == $max_items - 1) && ($n_trs_ipr > $max_items)) {
+                                echo $this->element("table_more_label", array("trs_data"=>$transcripts_ipr[$td['transcript_id']], "data_desc"=>$ipr_info, "data_type"=>"ipr", "data_offset"=>$max_items));
+                            }
+                            echo "</li>";
                         }
+                        echo "</ul>";
+                        echo "</td>";
                     }
-                    if (count($transcripts_ipr[$td['transcript_id']]) > 3) {
-                        $more_ipr = count($transcripts_ipr[$td['transcript_id']]) -3;
-                        echo "<label title='" . $more_ipr . " more InterPro domains are associated to this transcript" .
-                            "' class='pull-right label label-default' style='cursor:help;'>...</label>";
-                    }
-                    echo "</td>";
                 }
-
 
                 //KO annotation
-                if (!array_key_exists($td['transcript_id'], $transcripts_ko)) {
-                    echo "<td><span class='disabled'>Unavailable</span></td>";
-                } else {
-                    echo "<td class='left'>";
-                    for ($i = 0; $i < count($transcripts_ko[$td['transcript_id']]) && $i < 3; $i++) {
-                        $ko = $transcripts_ko[$td['transcript_id']][$i];
-                        $desc = $ko_info[$ko]['desc'];
-                        echo ($i + 1) . ". " . $this->Html->link($desc, array("controller" => "functional_annotation", "action" => "ko", $exp_id, $ko));
-                        if($i < 2) {
-                            echo "<br/>";
+                if(in_array("ko", $function_types)) {
+                    if (!array_key_exists($td['transcript_id'], $transcripts_ko)) {
+                        echo "<td class='text-muted'>Unavailable</td>";
+                    } else {
+                        $n_trs_ko = count($transcripts_ko[$td['transcript_id']]);
+                        echo "<td>";
+                        echo "<ul class='table-items'>";
+                        for ($i = 0; $i < $n_trs_ko && $i < $max_items; $i++) {
+                            $ko = $transcripts_ko[$td['transcript_id']][$i];
+                            $desc = $ko_info[$ko]['desc'];
+                            echo "<li>";
+                            echo $this->Html->link($desc, array("controller" => "functional_annotation", "action" => "ko", $exp_id, $ko));
+                            if (($i == $max_items - 1) && ($n_trs_ko > $max_items)) {
+                                echo $this->element("table_more_label", array("trs_data"=>$transcripts_ko[$td['transcript_id']], "data_desc"=>$ko_info, "data_type"=>"ko", "data_offset"=>$max_items));
+                            }
+                            echo "</li>";
                         }
+                        echo "</ul>";
+                        echo "</td>";
                     }
-                    if (count($transcripts_ko[$td['transcript_id']]) > 3) {
-                        $more_ko = count($transcripts_ko[$td['transcript_id']]) -3;
-                        echo "<label title='" . $more_ko . " more KO terms are associated to this transcript" .
-                            "' class='pull-right label label-default' style='cursor:help;'>...</label>";
-                    }
-                    echo "</td>";
                 }
-
 
                 //SUBSET
                 if (!array_key_exists($td['transcript_id'], $transcripts_labels)) {
-                    echo "<td><span class='disabled'>Unavailable</span></td>";
+                    echo "<td class='text-muted'>Unavailable</span></td>";
                 } else {
-                    echo "<td class='left'>";
-                    for ($i = 0; $i < count($transcripts_labels[$td['transcript_id']]) && $i < 3; $i++) {
+                    $n_trs_sub = count($transcripts_labels[$td['transcript_id']]);
+                    echo "<td>";
+                    echo "<ul class='table-items'>";
+                    for ($i = 0; $i < $n_trs_sub && $i < $max_items; $i++) {
                         $label = $transcripts_labels[$td['transcript_id']][$i];
-                        echo ($i + 1) . ". " . $this->Html->link($label, array("controller" => "labels", "action" => "view", $exp_id, urlencode($label)));
-                        if($i < 2) {
-                            echo "<br/>";
+                        echo "<li>";
+                        echo $this->Html->link($label, array("controller" => "labels", "action" => "view", $exp_id, urlencode($label)));
+                        // If there are more items to show and this is the last item of the array to print,
+                        // add 'more' label to the item
+                        if (($i == $max_items - 1) && ($n_trs_sub > $max_items)) {
+                            echo $this->element("table_more_label", array("trs_data"=>$transcripts_labels[$td['transcript_id']], "data_type"=>"subset", "data_offset"=>$max_items));
                         }
+                        echo "</li>";
                     }
-                    if (count($transcripts_labels[$td['transcript_id']]) > 3) {
-                        $more_sub = count($transcripts_labels[$td['transcript_id']]) -3;
-                        echo "<label title='This transcript is in " . $more_sub . " more subsets" .
-                            "' class='pull-right label label-default' style='cursor:help;'>...</label>";
-                    }
+                    echo "</ul>";
                     echo "</td>";
                 }
 
@@ -353,17 +372,30 @@
             ?>
             </tbody>
         </table>
-        <div class='paging'>
-            <?php
-            echo $this->Paginator->prev('<< ' . __('previous'), array(), null, array('class' => 'disabled'));
-            echo "&nbsp;";
-            echo $this->Paginator->numbers();
-            echo "&nbsp;";
-            echo $this->Paginator->next(__('next') . ' >>', array(), null, array('class' => 'disabled'));
-            ?>
+        <div class="text-right">
+            <div class='pagination pagination-sm no-margin-top'>
+                <?php
+                echo $this->Paginator->prev(__('Previous'), array('tag'=>'li'), null, array('tag' => 'li','class' => 'disabled','disabledTag' => 'a'));
+                echo $this->Paginator->numbers(array('separator' => '','currentTag' => 'a', 'currentClass' => 'active','tag' => 'li','first' => 1));
+                echo $this->Paginator->next(__('Next'), array('tag' => 'li','currentClass' => 'disabled'), null, array('tag' => 'li','class' => 'disabled','disabledTag' => 'a'));
+                ?>
+            </div>
         </div>
     <?php endif; ?>
     <br/>
+    <script type="text/javascript">
+        $('[data-toggle="popover"]').popover({
+            placement: 'bottom',
+            content: function() {
+                return $(this).children(".table-more-content:first").html();
+            },
+//        placement: 'right',
+            template: '<div class="popover"><div class="arrow"></div><div class="popover-content"></div></div>',
+            html: true,
+            delay: 50
+        });
+    </script>
+
     <?php if(isset($admin)) : ?>
     <div style='height:50px;'></div><hr>
     <h2 class="text-danger">Experimental zone!</h2>

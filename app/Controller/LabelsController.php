@@ -7,7 +7,7 @@ class LabelsController extends AppController{
   var $name		= "Labels";
   var $helpers		= array("Html", "Form");  // ,"Javascript","Ajax");
   var $uses		= array("Authentication","Experiments", "ExperimentJobs", "ExperimentLog", "Configuration","Transcripts","AnnotSources","Annotation",
-				"PlazaConfiguration","GeneFamilies","ExtendedGo","KoTerms","ProteinMotifs", "GoParents", "GfData",
+				"PlazaConfiguration","GeneFamilies","ExtendedGo","KoTerms","ProteinMotifs", "GoParents", "GfData", "HelpTooltips",
 				"TranscriptsGo","TranscriptsInterpro", "TranscriptsKo","TranscriptsLabels");
 
   var $components	= array("Cookie","TrapidUtils","Statistics", "Session");
@@ -77,7 +77,14 @@ class LabelsController extends AppController{
           $this->Session->delete("error");
       }
 
-    $this->set("transcript_data",$transcripts);
+      // Subsets - # transcripts information and tooltip (for subset creation form)
+      $all_subsets = $this->TranscriptsLabels->getLabels($exp_id);
+      $tooltip_text_subset_creation = $this->HelpTooltips->getTooltipText("transcript_table_subset_creation");
+      $this->set("all_subsets", $all_subsets);
+      $this->set("tooltip_text_subset_creation", $tooltip_text_subset_creation);
+
+
+      $this->set("transcript_data",$transcripts);
     $this->set("transcripts_go",$transcripts_go);
     $this->set("transcripts_ipr",$transcripts_ipr);
     $this->set("transcripts_ko",$transcripts_ko);

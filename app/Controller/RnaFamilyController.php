@@ -8,6 +8,7 @@ class RnaFamilyController extends AppController{
     var $helpers		= array("Html"); // ,"Javascript","Ajax");
     var $uses		= array("Authentication","Experiments","Configuration","Transcripts","RnaFamilies",
                             "ExtendedGo", "TranscriptsGo", "TranscriptsInterpro", "ProteinMotifs", "TranscriptsLabels",
+                            "HelpTooltips",
         // To remove 'overloaded property' warning messages ...
         "GfData", "ProteinMotifs", "GoParents", "ExtendedGo", "Annotation", "AnnotSources", "KoTerms", "TranscriptsKo"
     );
@@ -112,6 +113,12 @@ class RnaFamilyController extends AppController{
         }
         // Get subset/label information
         $transcripts_labels	= $this->TrapidUtils->indexArray($this->TranscriptsLabels->find("all",array("conditions"=>array("experiment_id"=>$exp_id,"transcript_id"=>$transcript_ids))),"TranscriptsLabels","transcript_id","label");
+
+        // Subsets - # transcripts information and tooltip (for subset creation form)
+        $all_subsets = $this->TranscriptsLabels->getLabels($exp_id);
+        $tooltip_text_subset_creation = $this->HelpTooltips->getTooltipText("transcript_table_subset_creation");
+        $this->set("all_subsets", $all_subsets);
+        $this->set("tooltip_text_subset_creation", $tooltip_text_subset_creation);
 
 
         $this->set("exp_info",$exp_info);

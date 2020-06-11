@@ -2296,7 +2296,7 @@ function label_go_intersection($exp_id=null,$label=null){
             if(sizeof($transcripts)>0) {
                 // Here I tried multiple ways to save the data
                 // Would it be faster to use one of Cake's built-in saving functions?
-                // Way 1: `INSERT` statements, looping on selected transcripts (w/o data check implemented in `enterTranscripts` method
+                // Way 1: `INSERT` statements, looping on selected transcripts (w/o data check implemented in `enterTranscripts` method)
                 // $counter = $this->TranscriptsLabels->enterTranscriptsNoCheck($exp_id, $transcripts, $subset_name);
                 // Way 2: usuing CakePHP's `saveMany()` function
                 // $counter = 0;
@@ -2309,7 +2309,8 @@ function label_go_intersection($exp_id=null,$label=null){
                 // pr($to_save);
 
                 // Way 3: using DboSource's `insertMulti()` method: seems to be the fastest as of now.
-                $counter = $this->TranscriptsLabels->enterTranscriptsInsertMulti($exp_id, $transcripts, $subset_name);
+//                $counter = $this->TranscriptsLabels->enterTranscriptsInsertMulti($exp_id, $transcripts, $subset_name);
+                $counter = $this->TranscriptsLabels->enterTranscriptsByChunks($exp_id, $transcripts, $subset_name, 20000, null);
                 return "<label class=\"label label-success\">Subset created (".$counter." transcripts)</label>";
 //                return "<label class=\"label label-success\">Subset created</label>";
             }

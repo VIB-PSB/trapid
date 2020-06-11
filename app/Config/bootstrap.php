@@ -88,3 +88,6 @@ CakeLog::config('error', array(
     'types' => array('warning', 'error', 'critical', 'alert', 'emergency'),
     'file' => 'error',
 ));
+
+// Add 'BigData' behavior plugin (used to insert large amounts of data by chunks)
+CakePlugin::load('BigData');

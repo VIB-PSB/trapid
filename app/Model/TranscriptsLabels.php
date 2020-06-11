@@ -4,6 +4,9 @@
    */
 class TranscriptsLabels extends AppModel{
 
+  // The 'BigData' behavior is used to used for subset creation/update (to insert large amounts of data by chunks).
+  public $actsAs = array('BigData.BigData');
+
   var $name	= 'TranscriptsLabels';
   var $useTable = 'transcripts_labels';
 
@@ -120,11 +123,25 @@ class TranscriptsLabels extends AppModel{
             $counter += 1;
             array_push($to_save, array($transcript, $exp_id, $label));
         }
-
         $result = $trapid_db->insertMulti("transcripts_labels", $fields, $to_save);
         return $counter;
     }
 
+
+    function enterTranscriptsByChunks($exp_id, $transcripts, $label, $chunk_size=20000, $replace="ignore") {
+//        $trapid_db = ConnectionManager::getDataSource('default');
+        $fields = array('transcript_id', 'experiment_id', 'label');
+        // $to_save = array();
+        $counter = 0;
+        foreach($transcripts as $transcript) {
+            $counter += 1;
+//            $this->addToBundle([$transcript, $exp_id, $label]);
+            $this->addToBundle(array("id"=>0, "transcript_id"=>$transcript, "experiment_id"=>$exp_id, "label"=>$label));
+        }
+        $this->saveBundle($chunk_size, $replace);
+//        $result = $trapid_db->insertMulti("transcripts_labels", $fields, $to_save);
+        return $counter;
+    }
 }
 
 

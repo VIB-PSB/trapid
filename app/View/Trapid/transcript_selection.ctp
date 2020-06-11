@@ -66,14 +66,17 @@
 
     ?>
 <?php else: ?>
+    <?php
+    // Selectize JS + CSS
+    echo $this->Html->script('selectize.min.js');
+    echo $this->Html->css('https://cdn.jsdelivr.net/gh/Syone/selectize-bootswatch@master/css/selectize.paper.css');
+    ?>
     <div>
         <div class="page-header">
-        <h1 class="text-primary">Transcript subsets</h1>
+        <h1 class="text-primary">Transcript selection</h1>
         </div>
-        <div class="subdiv">
             <?php // echo $this->element("trapid_experiment"); ?>
-            <h3>Parameters</h3>
-            <div class="subdiv">
+            <h3>Selection parameters</h3>
                 <?php
                 //pr($parameters);
                 ?>
@@ -128,20 +131,35 @@
 	-->
 
             <h3>Transcripts</h3>
-            <div class="subdiv">
-                <?php echo $this->element("table_func"); ?>
+            <div class="row" id="table-header">
+                <div class="col-md-9">
+                    <?php echo $this->element("subset_create_form",  array("exp_id"=>$exp_id, "all_subsets"=>$all_subsets, "collection_type"=>"selection", "tooltip_text"=>$tooltip_text_subset_creation, "selection_parameters"=>array_slice($raw_parameters, 1))); ?>
+                </div>
+                <div class="col-md-3 pull-right text-right">
+                    <?php
+                    $download_url = "";
+                    $this->set("download_url", $download_url);
+                    $this->set("allow_reference_aa_download", 0);
+                    echo $this->element("download_dropdown", array("align_right"=>true));
+                    ?>
+                </div>
             </div>
+
+            <section class="page-section-xs">
+                <?php echo $this->element("table_func"); ?>
+            </section>
 
 <!--            <h3>Download</h3>-->
-            <div class="subdiv">
+<!--            <div class="subdiv">-->
                 <?php
-                $download_url = "";
-                $this->set("download_url", $download_url);
-                $this->set("allow_reference_aa_download", 0);
-                echo $this->element("download");
+//                $download_url = "";
+//                $this->set("download_url", $download_url);
+//                $this->set("allow_reference_aa_download", 0);
+//                echo $this->element("download_dropdown");
+//                echo $this->element("download");
                 ?>
-            </div>
+<!--            </div>-->
 
-        </div>
-    </div>
+    <!-- Enable bootstrap tooltips -->
+    <?php echo $this->element("help_tooltips/enable_tooltips",  array("container"=>"#table-header")); ?>
 <?php endif; ?>

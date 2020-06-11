@@ -1016,6 +1016,7 @@ class TrapidController extends AppController{
       $this->layout = "";
       $this->set("download_type",$download_type);
       $this->paginate['TranscriptsPagination']['limit'] = $exp_info['transcript_count'];
+      $this->paginate['TranscriptsPagination']['maxLimit'] = $exp_info['transcript_count'];
     }
     //ok, now retrieve the transcripts
     $transcript_ids	= $this->paginate("TranscriptsPagination", $parameters);
@@ -1058,11 +1059,16 @@ class TrapidController extends AppController{
       $ko_ids = array_unique(call_user_func_array("array_merge",array_values($transcripts_ko)));
       $ko_info = $this->KoTerms->retrieveKoInformation($ko_ids);
     }
-    //retrieve subset/label information
+
+    // Retrieve subset/label information
     $transcripts_labels	= $this->TrapidUtils->indexArray($this->TranscriptsLabels->find("all",array("conditions"=>array("experiment_id"=>$exp_id,"transcript_id"=>$transcript_ids))),"TranscriptsLabels","transcript_id","label");
+    // Subsets - # transcripts information and tooltip (for subset creation form)
+    $all_subsets = $this->TranscriptsLabels->getLabels($exp_id);
+    $tooltip_text_subset_creation = $this->HelpTooltips->getTooltipText("transcript_table_subset_creation");
 
 
     $this->set("parameters",$parsed_parameters);
+    $this->set("raw_parameters", $parameters);
     $this->set("transcripts_go",$transcripts_go);
     $this->set("transcripts_ipr",$transcripts_ipr);
     $this->set("transcripts_ko",$transcripts_ko);
@@ -1070,8 +1076,126 @@ class TrapidController extends AppController{
     $this->set("go_info_transcripts",$go_info);
     $this->set("ipr_info_transcripts",$ipr_info);
     $this->set("ko_info_transcripts",$ko_info);
+    $this->set("all_subsets", $all_subsets);
+    $this->set("tooltip_text_subset_creation", $tooltip_text_subset_creation);
 
-    if($download_type=="table"){$this->set("file_name","table_".implode("_",$parameters).".txt");return;}
+
+      if($download_type=="table"){$this->set("file_name","table_".implode("_",$parameters).".txt");return;}
+  }
+
+
+  /* Create a transcript subset or add transcripts to an existing subset, from any collection of transcripts (tables
+     on the website). Possible collection types:
+      * 'gf'/'rf': from a gene or RNA family page
+      * 'go'/'ipr'/'ko': from a functional annotation page
+      * 'selection': from a transcript selection page
+  */
+  function create_collection_subset($exp_id=null, $collection_type=null){
+      $this->autoRender = false;
+      parent::check_user_exp($exp_id);
+      $exp_info	= $this->Experiments->getDefaultInformation($exp_id);
+      $label_base = "<label class=\"label {label_class}\">{label_content}</label>";
+      $allowed_types = ["gf", "rf", "go", "ipr", "ko", "selection", "subset"];
+      if($this->request->is('post')) {
+          set_time_limit(75);
+          // Check if collection type validity
+          if (!in_array($collection_type, $allowed_types)) {
+              return;
+          }
+//          pr($this->request->data);
+
+          // Sanitize subset name and check validity
+          $subset_name = filter_var($this->request->data['subset-add-select'], FILTER_SANITIZE_STRING);
+          // Strip + replace blank spaces by underscores
+          $subset_name = preg_replace('/\s+/', '_', trim($subset_name));
+          if(empty($subset_name)){
+              return("<label class=\"label label-warning\">Error: incorrect subset name</label>");
+          }
+          $exp_subsets = $this->TranscriptsLabels->find("all",array("fields"=>array("label"), "conditions"=>array("experiment_id"=>$exp_id)));
+          $subset_exists = false;
+          $creation_msg = "Subset created";
+          $creation_class = "label-success";
+          foreach($exp_subsets as $subset) {
+              $subset_to_test = $subset["TranscriptsLabels"]["label"];
+              if($subset_to_test == $subset_name) {
+                  $subset_exists = true;
+                  break;
+              }
+          }
+
+          if($subset_exists) {
+              $creation_msg = "Subset updated";
+              $creation_class = "label-primary";
+          }
+
+          $parameters = json_decode($this->request->data['selection-parameters']);
+          // Depending on the type of collection, retrieve the corresponding transcripts
+          $transcript_ids = [];
+          // Transcript selection
+          // Replace by a switch statement?
+          switch($collection_type) {
+              case "selection":
+                  // Get selection parameters
+                  if (sizeof($parameters) % 2 != 0) {
+                      return;
+                  }
+                  // Retrieve transcripts for selection parameters
+                  // Mostly copied from `transcript_selection()`, and could be improved
+                  // Replace hyphen by colon in GO id (should be replaced) + decode parameters
+                  for ($i = 0; $i < count($parameters); $i++) {
+                      $value = $parameters[$i];
+                      if ($value == "go" && $i < (count($parameters) - 1)) {
+                          $next_value = $parameters[$i + 1];
+                          $parameters[$i + 1] = str_replace("-", ":", $next_value);
+                      }
+                      $parameters[$i] = urldecode($value);
+                  }
+                  // Add `$exp_id` as first parameter (expected in TranscriptPagination)
+                  array_unshift($parameters, $exp_id);
+                  $this->paginate['TranscriptsPagination']['limit'] = $exp_info['transcript_count'];
+                  $this->paginate['TranscriptsPagination']['maxLimit'] = $exp_info['transcript_count'];
+                  $transcript_ids = $this->paginate("TranscriptsPagination", $parameters);
+                  break;
+              // Functional annotation
+              case "go":
+                  $go_term = str_replace("-", ":", $parameters[0]);
+                  $transcript_data = $this->TranscriptsGo->find("all",array("fields"=>"transcript_id", "conditions"=>array("experiment_id"=>$exp_id, "type"=>"go", "name"=>$go_term)));
+                  $transcript_ids = array_map(function($x) {return $x['TranscriptsGo']['transcript_id'];}, $transcript_data);
+                  break;
+              case "ipr":
+                  $transcript_data = $this->TranscriptsInterpro->find("all",array("fields"=>"transcript_id", "conditions"=>array("experiment_id"=>$exp_id,"is_hidden"=>"0", "type"=>"ipr", "name"=>$parameters[0])));
+                  $transcript_ids = array_map(function($x) {return $x['TranscriptsInterpro']['transcript_id'];}, $transcript_data);
+                  break;
+              case "ko":
+                  $transcript_data = $this->TranscriptsKo->find("all",array("fields"=>"transcript_id", "conditions"=>array("experiment_id"=>$exp_id,"is_hidden"=>"0", "type"=>"ko", "name"=>$parameters[0])));
+                  $transcript_ids = array_map(function($x) {return $x['TranscriptsKo']['transcript_id'];}, $transcript_data);
+                  break;
+              case "gf":
+                  $transcript_data = $this->Transcripts->find("all", array("fields"=>array("transcript_id"), "conditions"=>array("experiment_id"=>$exp_id,"gf_id"=>$parameters[0])));
+                  $transcript_ids = array_map(function($x) {return $x['Transcripts']['transcript_id'];}, $transcript_data);
+                  break;
+              case "rf":
+                  $transcript_data = $this->Transcripts->find("all", array("fields"=>array("transcript_id"), "conditions"=>array("experiment_id"=>$exp_id,"rf_ids"=>$parameters[0])));
+                  $transcript_ids = array_map(function($x) {return $x['Transcripts']['transcript_id'];}, $transcript_data);
+                  break;
+              case "subset":
+                  $transcript_data = $this->TranscriptsLabels->find("all",array("fields"=>array("transcript_id"), "conditions"=>array("experiment_id"=>$exp_id,"label"=>$parameters[0])));
+                  $transcript_ids = array_map(function($x) {return $x['TranscriptsLabels']['transcript_id'];}, $transcript_data);
+                  break;
+              default:
+                  $transcript_ids = [];
+          }
+          // Return an error message if no transcript were selected
+          if(empty($transcript_ids)) {
+              return str_replace(["{label_class}", "{label_content}"], ["label-warning", "Error: no transcripts retrieved"], $label_base);
+          }
+          // Add transcripts to the subset
+          // If the subset exsists, first remove transcripts from it (no support for `INSERT IGNORE` in CakePHP)?
+          // TODO: find a better way to deal with that -- at the moment we added 'ignore' to the insertMulti() function of CakePHP.
+          $counter = $this->TranscriptsLabels->enterTranscriptsByChunks($exp_id, $transcript_ids, $subset_name);
+          // Return label with appropriate style / content
+          return str_replace(["{label_class}", "{label_content}"], [$creation_class, $creation_msg . " (" . $counter . " transcripts)"], $label_base);
+      }
   }
 
 

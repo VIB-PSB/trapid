@@ -2,6 +2,11 @@
   echo $this->Html->script(array('dataTables.min.js', 'dataTables.bootstrap.min.js'));
   echo $this->Html->script(array('dataTables.min.js', 'dataTables.bootstrap.min.js'));
 	echo $this->Html->css(array('dataTables.bootstrap.min.css'))."\n";
+
+// Selectize JS + CSS
+echo $this->Html->script('selectize.min.js');
+echo $this->Html->css('https://cdn.jsdelivr.net/gh/Syone/selectize-bootswatch@master/css/selectize.paper.css');
+
 ?>
 <div class="page-header">
     <h1 class="text-primary"><?php echo $go_info["name"]; ?> <small>GO term</small></h1>
@@ -18,6 +23,7 @@
 			    $go_web	= str_replace(":","-",$go_info["name"]);
 			    if(!$exp_info['allow_linkout']){
 				echo $go_info["name"];
+                echo "&nbsp;";
                 echo $this->element("go_category_badge", array("go_category"=>$go_info["info"], "small_badge"=>true));
 			    }
 			    else{
@@ -72,14 +78,29 @@
 	</div>
 
 	<h3>Transcripts</h3>
-	<div class="subdiv">
-	<?php echo $this->element("table_func");?>
-	</div>
+
+    <div class="row" id="table-header">
+        <div class="col-md-9">
+            <?php echo $this->element("subset_create_form",  array("exp_id"=>$exp_id, "all_subsets"=>$all_subsets, "collection_type"=>"go", "tooltip_text"=>$tooltip_text_subset_creation, "selection_parameters"=>[$go_web])); ?>
+        </div>
+        <div class="col-md-3 pull-right text-right">
+            <?php
+                $download_url	= $this->Html->url(array("controller"=>"trapid","action"=>"transcript_selection",$exp_id,"go",$go_web));
+                $this->set("download_url", $download_url);
+                $this->set("allow_reference_aa_download", 1);
+                echo $this->element("download_dropdown", array("align_right"=>true));
+            ?>
+        </div>
+    </div>
+
+
+    <?php echo $this->element("table_func");?>
 	<?php
-		$download_url	= $this->Html->url(array("controller"=>"trapid","action"=>"transcript_selection",$exp_id,"go",$go_web),true);
-		$this->set("download_url",$download_url);
-		$this->set("allow_reference_aa_download",1);
-		echo $this->element("download");
+//		$download_url	= $this->Html->url(array("controller"=>"trapid","action"=>"transcript_selection",$exp_id,"go",$go_web));
+//		$this->set("download_url",$download_url);
+//		$this->set("allow_reference_aa_download",1);
+//		echo $this->element("download");
 	?>
 </div>
 </div>
+<?php echo $this->element("help_tooltips/enable_tooltips",  array("container"=>"#table-header")); ?>

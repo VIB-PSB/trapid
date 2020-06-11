@@ -9,7 +9,7 @@ class GeneFamilyController extends AppController{
   var $uses		= array("Authentication","Experiments","Configuration","Transcripts","GeneFamilies","TranscriptsGo",
 				"TranscriptsInterpro","TranscriptsLabels","TranscriptsKo","DataSources","ExperimentJobs", "GoParents",
 
-				"GfData","AnnotSources","Annotation","ExtendedGo","KoTerms","ProteinMotifs");
+				"GfData","AnnotSources","Annotation","ExtendedGo","KoTerms","ProteinMotifs", "HelpTooltips");
 
   var $components	= array("Cookie","TrapidUtils", "DataTable");
 
@@ -373,6 +373,13 @@ class GeneFamilyController extends AppController{
     if(strpos($exp_info['used_plaza_database'], "eggnog") !== false) {
         $this->set("eggnog_og_linkout", true);
     }
+
+    // Subsets - # transcripts information and tooltip (for subset creation form)
+    $all_subsets = $this->TranscriptsLabels->getLabels($exp_id);
+    $tooltip_text_subset_creation = $this->HelpTooltips->getTooltipText("transcript_table_subset_creation");
+    $this->set("all_subsets", $all_subsets);
+    $this->set("tooltip_text_subset_creation", $tooltip_text_subset_creation);
+
 
     $this->set("transcript_data",$transcripts);
     $this->set("transcripts_go",$transcripts_go);
