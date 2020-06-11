@@ -4,10 +4,8 @@
     </div>
 <!--<div class='subdiv'>-->
 <section class="page-section-sm">
-    <p class="text-justify">These pages contain the documentation for the TRAPID platform for the fast analysis of transcriptome data.
-        If you think something is missing, or unclear, do not hesitate to <?php echo $this->Html->link("contact us", array("controller"=>"documentation","action"=>"contact")); ?>. </p>
-<!--    <a href='mailto:plaza@psb.vib-ugent.be'>contact us</a>.-->
-    <p class="text-justify">Several sections are available within the documentation. Use the <strong>menu below</strong> to start browsing.</p>
+    <p class="text-justify">These pages contain the documentation for the TRAPID platform.
+        If you think something is missing, or unclear, do not hesitate to <?php echo $this->Html->link("contact us", array("controller"=>"documentation","action"=>"contact")); ?>. Several sections are available within the documentation. Use the <strong>menu below</strong> to start browsing.</p>
 </section>
 	<section class="page-section-sm">
 	<dl class='standard dl-horizontal'>

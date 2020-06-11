@@ -1,7 +1,7 @@
 
 <div class="container">
     <div class="page-header">
-		<h1 class="text-primary">TRAPID Tutorials</h1>
+		<h1 class="text-primary">Tutorials</h1>
     </div>
 
     <div class="row">
@@ -24,7 +24,7 @@
                 <div class="row">
                     <div class="col-md-4">
                         <div class="doc-figure">
-                            <?php echo $this->Html->image('tutorial/authentication_register.png', array('alt' => 'TRAPID login page', 'class'=>'img-responsive img-centered')); ?>
+                            <?php echo $this->Html->image('tutorial/optimized/authentication_register.png', array('alt' => 'TRAPID login page', 'class'=>'img-responsive img-centered')); ?>
                             <p class="text-justify doc-figure-legend small">
                             <strong>Figure 1: registration form.</strong> Fill in your information and click the 'register' button: an e-mail with login credentials will be sent.
                             </p>
@@ -40,7 +40,7 @@
                 <div class="row">
                     <div class="col-md-4">
                         <div class="doc-figure">
-                            <?php echo $this->Html->image('tutorial/authentication_login.png', array('alt' => 'TRAPID login page', 'class'=>'img-responsive img-centered')); ?>
+                            <?php echo $this->Html->image('tutorial/optimized/authentication_login.png', array('alt' => 'TRAPID login page', 'class'=>'img-responsive img-centered')); ?>
                             <p class="text-justify doc-figure-legend small">
                                 <strong>Figure 2: login form.</strong> Login using your e-mail address and the provided password.
                             </p>
@@ -64,7 +64,7 @@
                     <div class="row">
                         <div class="col-md-4">
                             <div class="doc-figure">
-                                <?php echo $this->Html->image('tutorial/experiments_empty.png', array('alt' => 'Experiments overview (empty)', 'class'=>'img-responsive img-centered')); ?>
+                                <?php echo $this->Html->image('tutorial/optimized/experiments_empty.png', array('alt' => 'Experiments overview (empty)', 'class'=>'img-responsive img-centered')); ?>
                                 <p class="text-justify doc-figure-legend small">
                                 <strong>Figure 3: empty experiments overview.</strong> At the bottom of the page, click <strong>'add new experiment'</strong> to create a new experiment.
                                 </p>
@@ -83,7 +83,7 @@
                         <div class="row">
                             <div class="col-md-4">
                             <div class="doc-figure">
-                            <?php echo $this->Html->image('tutorial/experiments_creation.png', array('alt' => 'Experiment creation', 'class'=>'img-responsive img-centered')); ?>
+                            <?php echo $this->Html->image('tutorial/optimized/experiments_creation.png', array('alt' => 'Experiment creation', 'class'=>'img-responsive img-centered')); ?>
                             <p class="text-justify doc-figure-legend small">
                              <strong>Figure 4: experiment creation.</strong> A name, a description, and  reference database need to be chosen for the new experiment. Finalize the creation by clicking <code>Create experiment</code>.
                             </p>
@@ -99,7 +99,7 @@
                         <div class="row">
                         <div class="col-md-4">
                             <div class="doc-figure">
-                                <?php echo $this->Html->image('tutorial/experiments_created.png', array('alt' => 'Experiments overview', 'class'=>'img-responsive img-centered')); ?>
+                                <?php echo $this->Html->image('tutorial/optimized/experiments_created.png', array('alt' => 'Experiments overview', 'class'=>'img-responsive img-centered')); ?>
                                 <p class="text-justify doc-figure-legend small">
                                  <strong>Figure 5: experiments overview.</strong> The newly created experiment appeared in the current experiments table. To add sequences, first click on the name of the experiment.
                                 </p>
@@ -113,7 +113,7 @@
                     <div class="row">
                         <div class="col-md-4">
                             <div class="doc-figure">
-                                <?php echo $this->Html->image('tutorial/experiment_page.png', array('alt' => 'Experiment page', 'class'=>'img-responsive img-centered')); ?>
+                                <?php echo $this->Html->image('tutorial/optimized/experiment_page.png', array('alt' => 'Experiment page', 'class'=>'img-responsive img-centered')); ?>
                                 <p class="text-justify doc-figure-legend small">
                                     <strong>Figure 6: empty experiment overview page. </strong> The newly created experiment overview page. Click on <code>Import data</code> in the side menu to import sequences.
                                 </p>
@@ -131,7 +131,7 @@
                     <div class="row">
                         <div class="col-md-4">
                             <div class="doc-figure">
-                                <?php echo $this->Html->image('tutorial/import_transcripts.png', array('alt' => 'Import data page', 'class'=>'img-responsive img-centered')); ?>
+                                <?php echo $this->Html->image('tutorial/optimized/import_transcripts.png', array('alt' => 'Import data page', 'class'=>'img-responsive img-centered')); ?>
                                 <p class="text-justify doc-figure-legend small">
                                     <strong>Figure 7: uploading transcript sequences.</strong> From this page, a dataset can be uploaded from a file or a URL. After adding files or URLs, please click <code>Load data into database</code> to upload the data.
                                 </p>
@@ -149,7 +149,7 @@
                     <div class="row">
                         <div class="col-md-4">
                             <div class="doc-figure">
-                                <?php echo $this->Html->image('tutorial/process_transcripts.png', array('alt' => 'Initial processing page', 'class'=>'img-responsive img-centered')); ?>
+                                <?php echo $this->Html->image('tutorial/optimized/process_transcripts.png', array('alt' => 'Initial processing page', 'class'=>'img-responsive img-centered')); ?>
                                 <p class="text-justify doc-figure-legend small">
                                  <strong>Figure 8: process transcripts.</strong> Select the desired settings for the various processing steps and click <code>Run initial processing</code>.
                                 </p>
@@ -171,7 +171,7 @@
                     <div class="row">
                         <div class="col-md-4">
                             <div class="doc-figure">
-                                <?php echo $this->Html->image('tutorial/general_statistics.png', array('alt' => 'General statistics page', 'class'=>'img-responsive img-centered')); ?>
+                                <?php echo $this->Html->image('tutorial/optimized/general_statistics.png', array('alt' => 'General statistics page', 'class'=>'img-responsive img-centered')); ?>
                                 <p class="text-justify doc-figure-legend small">
                                     <strong>Figure 9: the general statistics page.</strong> This page displays general information that can be used to assess the quality of the transcripts, their taxonomic classification (if performed), how many were assigned to gene or RNA families, and how many received functional annotation. This report can be exported to PDF by clicking the <code>Export to PDF</code> button in the top right.
                                 </p>
@@ -192,7 +192,7 @@
                     <div class="row">
                         <div class="col-md-4">
                             <div class="doc-figure">
-                                <?php echo $this->Html->image('tutorial/go_term_search.png', array('alt' => 'GO term search results', 'class'=>'img-responsive img-centered')); ?>
+                                <?php echo $this->Html->image('tutorial/optimized/go_term_search.png', array('alt' => 'GO term search results', 'class'=>'img-responsive img-centered')); ?>
                                 <p class="text-justify doc-figure-legend small"><strong> Figure 10: GO term search results for <code>leaf senescence</code>.</strong> The GO terms having matching descriptions were retrieved. From here, the associated sequences can rapidly be found. </p>
                             </div>
                         </div>
@@ -207,7 +207,7 @@
                     <div class="row">
                         <div class="col-md-4">
                             <div class="doc-figure">
-                                <?php echo $this->Html->image('tutorial/phylogenetic_tree.png', array('alt' => 'Gene family phylogenetic tree', 'class'=>'img-responsive img-centered')); ?>
+                                <?php echo $this->Html->image('tutorial/optimized/phylogenetic_tree.png', array('alt' => 'Gene family phylogenetic tree', 'class'=>'img-responsive img-centered')); ?>
                                 <p class="text-justify doc-figure-legend small"><strong>Figure 11: phylogenetic tree.</strong> Interactive tree viewer (PhyD3) showing the phylogenetic tree of <code>contig01069</code> and its homologues. Transcript meta-annotation and subset information  are also displayed, depicted next to the transcript identifiers as colored squares and circles, respectively.
                                 </p>
                             </div>
@@ -228,7 +228,7 @@
                     <div class="row">
                         <div class="col-md-4">
                             <div class="doc-figure">
-                                <?php echo $this->Html->image('tutorial/cell_cycle_ipr_enrichment.png', array('alt' => 'InterPro domain enrichment results', 'class'=>'img-responsive img-centered')); ?>
+                                <?php echo $this->Html->image('tutorial/optimized/cell_cycle_ipr_enrichment.png', array('alt' => 'InterPro domain enrichment results', 'class'=>'img-responsive img-centered')); ?>
                                 <p class="text-justify doc-figure-legend small"><strong>Figure 12: enriched InterPro domains. </strong> Overview of InterPro domain enriched within the <code>Cell_cycle</code> subset (maximum corrected p-value 0.005).
                                 </p>
                             </div>
@@ -256,7 +256,7 @@
                         <strong>For this second tutorial we'll continue using the TRAPID experiment created previously. Please make sure that the initial processing has been perfomed before following this tutorial. </strong></p>
 
                     <p class='text-justify'>
-                        TRAPID enables users to assess and examine the gene space completeness of transcriptomes by checking the presence of core gene families (‘core GFs’), leveraging the GF assignment step of the initial processing.
+                        TRAPID enables users to assess and examine the gene space completeness of transcriptomes by checking the presence of <strong>core gene families</strong> (‘core GFs’), leveraging the GF assignment step of the initial processing.
                     <ul>
                         <li>Core GFs consist of a set of gene families that are highly conserved in a majority of species within a defined evolutionary lineage. </li>
                         <li>Core GF sets can be defined on-the-fly for any clade represented in the selected reference database, making it possible to rapidly examine gene space completeness along an evolutionary gradient. </li>
@@ -270,7 +270,7 @@
                 <div class="row">
                     <div class="col-md-4">
                         <div class="doc-figure">
-                            <?php echo $this->Html->image('tutorial/completeness_job.png', array('alt' => 'Core GF completeness analysis', 'class'=>'img-responsive img-centered')); ?>
+                            <?php echo $this->Html->image('tutorial/optimized/completeness_job.png', array('alt' => 'Core GF completeness analysis', 'class'=>'img-responsive img-centered')); ?>
                             <p class="text-justify doc-figure-legend small"><strong>Figure 13: core GF completeness analysis submission form. </strong> Any phylogenetic clade represented in the selected reference database may be used for the analysis.
                             </p>
                         </div>
@@ -285,7 +285,7 @@
                     <div class="row">
                     <div class="col-md-4">
                         <div class="doc-figure">
-                            <?php echo $this->Html->image('tutorial/completeness_results.png', array('alt' => 'Core GF completeness results', 'class'=>'img-responsive img-centered')); ?>
+                            <?php echo $this->Html->image('tutorial/optimized/completeness_results.png', array('alt' => 'Core GF completeness results', 'class'=>'img-responsive img-centered')); ?>
                             <p class="text-justify doc-figure-legend small"><strong>Figure 14: list of previous analyses and core GF completeness result panel. </strong> The result panel is organized in three tabs: a summary, the represented GFs table, and the missing GFs table.
                             </p>
                         </div>
@@ -303,7 +303,8 @@
 
         <div class="col-md-3 scrollspy" id="navigation-col">
             <ul class="nav hidden-xs hidden-sm" id="sidebar-nav" data-spy="affix">
-                <h5 class="doc-sidebar-header"><i class="material-icons md-24">toc</i> Sections</h5>
+<!--                <h5 class="doc-sidebar-header"><i class="material-icons md-24">toc</i> Sections</h5>-->
+                <h5 class="doc-sidebar-header">Contents</h5>
                 <li><a href="#introduction">Introduction</a></li>
                 <li><a href="#account-setup">Registration & login</a></li>
                 <li><a href="#tutorial-1">Functional annotation tutorial</a>

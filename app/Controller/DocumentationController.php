@@ -7,27 +7,32 @@ class DocumentationController extends AppController{
   var $layout = "external";  // Layout for external pages (i.e. not in experiment)
 
   function index(){
+      $this->set("active_header_item", "Documentation");
       $this -> set('title_for_layout', 'Documentation index');
   }
 
 
   function about(){
+      $this->set("active_header_item", "About");
       $this -> set('title_for_layout', 'About');
   }
 
 
   /* Trying to separate 'about' and 'contact' pages! */
   function contact(){
+      $this->set("active_header_item", "Contact");
       $this -> set('title_for_layout', 'Contact us');
   }
 
 
+  /* TODO: delete as this page is unused */
   function quickstart(){
       $this -> set('title_for_layout', 'Quick start');
   }
 
 
   function faq(){
+      $this->set("active_header_item", "Documentation");
       $this -> set('title_for_layout', 'Frequently Asked Questions');
   }
 
@@ -43,12 +48,13 @@ class DocumentationController extends AppController{
       }
 
       $this -> set("export_examples", $export_examples);
+      $this->set("active_header_item", "Documentation");
       $this -> set('title_for_layout', 'General documentation');
   }
 
 
   function tutorial(){
-    // Configure::write("debug",2);
+      $this->set("active_header_item", "Documentation");
       $this -> set('title_for_layout', 'TRAPID tutorial');
   }
 
@@ -62,8 +68,10 @@ class DocumentationController extends AppController{
       }
       // Get tools' data
       $tools_parameters_data = $this->Configuration->getDocToolsParameters();
+
       $this -> set('title_for_layout', 'Tools & parameters');
       $this -> set('ref_db_data', $ref_db_data);
+      $this->set("active_header_item", "Documentation");
       $this -> set('tools_parameters_data', $tools_parameters_data);
   }
 

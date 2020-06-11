@@ -3,7 +3,7 @@
         <h1 class="text-primary">Tools & parameters</h1>
     </div>
     <section class="page-section">
-        <p class="text-justify">This page lists the external resources and tools used within TRAPID. </p>
+        <p class="text-justify">This page lists the third-party resources and tools used within TRAPID. </p>
             <p class="text-justify">They are organized by general categories, depending on which part of TRAPID makes use of them, and sorted by alphabetical order. Further information about used versions and parameters, together with links to either the official website or to the relevant publication (when applicable), are also provided.
         </p>
     </section>
@@ -40,21 +40,21 @@
                             <td>55</td>
                             <td>39</td>
                             <td>39</td>
-                            <td>2.031</td>
+                            <td>2,031</td>
                         </tr>
                         <tr>
                             <td class="first-col"># Genes</td>
                             <td>3,065,012</td>
                             <td>1,563,555</td>
-                            <td>705.020</td>
+                            <td>705,020</td>
                             <td>14,116,949</td>
                         </tr>
                         <tr>
                             <td class="first-col"># Gene families</td>
-                            <td>208.456</td>
-                            <td>213.318</td>
-                            <td>127.718</td>
-                            <td>190.803</td>
+                            <td>208,456</td>
+                            <td>213,318</td>
+                            <td>127,718</td>
+                            <td>190,803</td>
                         </tr>
                         <tr>
                             <td class="first-col">Taxonomic focus</td>
@@ -115,7 +115,8 @@
 
         <div class="col-md-3 scrollspy" id="navigation-col">
             <ul class="nav hidden-xs hidden-sm" id="sidebar-nav" data-spy="affix">
-                <h5 class="doc-sidebar-header"><i class="material-icons md-24">toc</i> Sections</h5>
+<!--                <h5 class="doc-sidebar-header"><i class="material-icons md-24">toc</i> Sections</h5>-->
+                <h5 class="doc-sidebar-header">Contents</h5>
                 <li><a href="#ref-dbs">Reference databases</a></li>
                 <li><a href="#init-processing">Initial processing</a></li>
                 <li><a href="#msa-phylogeny">MSA and pylogeny</a></li>

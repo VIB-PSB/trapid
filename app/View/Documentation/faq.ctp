@@ -1,7 +1,10 @@
 <?php
 
+
+$trapid_ref = $this->element("doc_paper",  array("title"=>"TRAPID, an efficient online tool for the functional and comparative analysis of de novo RNA-Seq transcriptomes.", "authors"=>"Michiel Van Bel, Sebastian Proost, Christophe Van Neste, Dieter Deforce, Yves Van de Peer and Klaas Vandepoele", "url"=>"https://genomebiology.biomedcentral.com/articles/10.1186/gb-2013-14-12-r134", "journal"=>"Genome Biology, 14:R134, 2013"));
+
 // FAQ content is defined here, as associative arrays (one per FAQ category).
-// The rest of the page parses this information to display the content.
+// The rest of the view parses this information to display the content.
 // array structure: array("element-id"=>array("q"=>"question", "a"=>"answer"))... Element ids must be unique!
 
 $faq_general = array(
@@ -10,7 +13,7 @@ $faq_general = array(
         "a"=>"Each user has the ability to create up to 20 different TRAPID experiments."),
     "forgotten-pwd"=>array(
         "q"=>"I've lost my password. What to do next?",
-        "a"=>"Go to the " . $this->Html->link("forgotten password page",array("controller"=>"trapid","action"=>"authentication","password_recovery")) . " and fill in the form with the email address used to create a TRAPID account to reset your password. If this does not work, <a href='http://bioinformatics.psb.ugent.be/trapid_02/documentation/contact'>contact us</a> and we will send you a news password for your user-account. "),
+        "a"=>"Go to the " . $this->Html->link("forgotten password page",array("controller"=>"trapid","action"=>"authentication","password_recovery")) . " and fill in the form with the email address used to create a TRAPID account to reset your password. If this does not work, <a href='http://bioinformatics.psb.ugent.be/trapid_02/documentation/contact'>contact us</a> and we will send you a new password for your user account. "),
     "bug-report"=>array(
         "q"=>"I think I found a bug. Can I report it?",
         "a"=>"Please do. Just <a href='http://bioinformatics.psb.ugent.be/trapid_02/documentation/contact'>send us an email</a>, and we will investigate the issue."),
@@ -21,8 +24,7 @@ $faq_general = array(
         "q"=>"Is my data secure?",
         "a"=>"Yes. We have taken extensive measures to ensure that only authorized people have access to the user data."),
     "licensing"=>array("q"=>"Is TRAPID free to use?", "a"=>"TRAPID is freely accessible for academic use exclusively. If you have a commercial interest in the platform, or would like to use TRAPID for commercial purposes, please <a href='http://bioinformatics.psb.ugent.be/trapid_02/documentation/contact'>contact Klaas Vandepoele</a>. "),
-    "citation"=>array("q"=>"How can I cite TRAPID?", "a"=>"In case you publish results generated using TRAPID, please cite this paper: <p class=\"text-justify\" style='border-left: 4px lightgray solid;padding-left: 10px;'><strong>TRAPID, an efficient online tool for the functional and comparative analysis of de novo RNA-Seq transcriptomes.</strong> <br>Michiel Van Bel, Sebastian Proost, Christophe Van Neste, Dieter Deforce, Yves Van de Peer and Klaas Vandepoele<sup>*</sup> <br>
-<em>Genome Biology, 14:R134, 2013</em></p>If you cite results based on external resources used by TRAPID (e.g. taxonomic classification, phylogenetic trees), please cite the appropriate papers as well. More information about this can be found in the " . $this->Html->link("general documentation", array("controller" => "documentation", "action" => "general", "#"=>"citations")) . ". ")
+    "citation"=>array("q"=>"How can I cite TRAPID?", "a"=>"In case you publish results generated using TRAPID, please cite this paper: " . $trapid_ref . "If you cite results based on third-party resources used by TRAPID (e.g. taxonomic classification, phylogenetic trees), please cite the appropriate papers as well. More information about this can be found in " . $this->Html->link("tools & parameters", array("controller" => "documentation", "action" => "tools_parameters")) . ". ")
 );
 
 $faq_io = array(
@@ -45,7 +47,7 @@ $faq_io = array(
 
 $faq_analyses = array(
     "ref-dbs"=>array("q"=>"What reference databases are available, and which one should I use?", "a"=>"We offer four reference databases: the latest PLAZA databases (PLAZA dicots and monocots 4.5, pico-PLAZA 3), and EggNOG 4.5. In case you are working with data originating from plants or algae, we recommend using the most suited PLAZA instance (i.e. that contains genomes from closely related species). In case data from other lineages is analyzed, we recommend selecting EggNOG 4.5. An overview of the content of the various reference databases can be found in the " . $this->Html->link("tools & parameters", array("controller" => "documentation", "action" => "tools_parameters", "#"=>"ref-dbs")) .  " documentation page. "),
-    "tools-parameters"=>array("q"=>"What external resources and tools are used by TRAPID? What software version and parameters are used?", "a"=>"All external resources used by TRAPID are listed in the " . $this->Html->link("tools & parameters", array("controller" => "documentation", "action" => "tools_parameters", "#"=>"ref-dbs")) . " page, along with version and parameters information. "),
+    "tools-parameters"=>array("q"=>"What third-party resources and tools are used by TRAPID? What software version and parameters are used?", "a"=>"All third-party resources used by TRAPID are listed in the " . $this->Html->link("tools & parameters", array("controller" => "documentation", "action" => "tools_parameters", "#"=>"ref-dbs")) . " page, along with version and parameters information. "),
     "tree-download"=>array(
         "q"=>"How can I download an alignment or phylogenetic tree?",
         "a"=>"After the multiple sequence alignment (MSA) or phylogenetic tree has been created for a given gene family, the user can download the MSA in <code>.faln</code> (fasta) format, or the phylogenetic tree in newick and phyloXML format, by following the download links provided in the <code>Files & extra</code> tab of the MSA/tree page. "),
@@ -61,111 +63,88 @@ $faq_analyses = array(
 		<h1 class="text-primary">Frequently Asked Questions</h1>
     </div>
 
+
     <div class="row">
+        <div class="col-md-9" id="tutorial-col">
         <section class="page-section-sm">
-            <div class="panel panel-slim panel-default">
+            <div class="panel panel-slim panel-default" id="faq-general" role="tablist">
                 <div class="panel-heading">General</div>
                 <div class="list-group">
-                    <?php
-                    foreach ($faq_general as $faq_key=>$faq_data) {
-                echo "<a class=\"list-group-item\" href='#" . $faq_key . "'><i class=\"material-icons md-18 text-muted\">contact_support</i> &nbsp;" . $faq_data['q'] . "</a>";
-//                        echo "<a class=\"list-group-item\" href='#" . $faq_key . "'>" . $faq_data['q'] . "</a>";
-                    }
-                    ?>
+                    <?php foreach ($faq_general as $faq_key=>$faq_data): ?>
+                        <a class="list-group-item" data-toggle="collapse" data-target="#<?php echo $faq_key; ?>" data-parent="#faq-general" role="button">
+                            <i class="material-icons md-18 text-muted">contact_support</i> &nbsp;
+                            <?php echo $faq_data['q']; ?>
+                        </a>
+                        <div class="collapse" id="<?php echo $faq_key; ?>">
+                            <div class="list-group-item faq-answer">
+                                <p class="text-justify">
+                                    <?php echo $faq_data['a']; ?>
+                                </p>
+                            </div>
+                        </div>
+                    <?php endforeach;?>
                 </div>
             </div>
         </section>
         <section class="page-section-sm">
-            <div class="panel panel-slim panel-default">
-                <div class="panel-heading">Input/output</div>
+            <div class="panel panel-slim panel-default" id="faq-io" role="tablist">
+                <div class="panel-heading">Input / output</div>
                 <div class="list-group">
-                    <?php
-                    foreach ($faq_io as $faq_key=>$faq_data) {
-                        echo "<a class=\"list-group-item\" href='#" . $faq_key . "'><i class=\"material-icons md-18 text-muted\">contact_support</i> &nbsp;" . $faq_data['q'] . "</a>";
-                    }
-                    ?>
+                    <?php foreach ($faq_io as $faq_key=>$faq_data): ?>
+                        <a class="list-group-item" data-toggle="collapse" data-target="#<?php echo $faq_key; ?>" data-parent="#faq-io" role="button">
+                            <i class="material-icons md-18 text-muted">contact_support</i> &nbsp;
+                            <?php echo $faq_data['q']; ?>
+                        </a>
+                        <div class="collapse" id="<?php echo $faq_key; ?>">
+                            <div class="list-group-item faq-answer">
+                                <p class="text-justify">
+                                <?php echo $faq_data['a']; ?>
+                                </p>
+                            </div>
+                        </div>
+                    <?php endforeach;?>
                 </div>
             </div>
         </section>
         <section class="page-section-sm">
-            <div class="panel panel-slim panel-default">
+            <div class="panel panel-slim panel-default" id="faq-analyses" role="tablist">
                 <div class="panel-heading">Analyses</div>
                 <div class="list-group">
-                    <?php
-                    foreach ($faq_analyses as $faq_key=>$faq_data) {
-                        echo "<a class=\"list-group-item\" href='#" . $faq_key . "'><i class=\"material-icons md-18 text-muted\">contact_support</i> &nbsp;" . $faq_data['q'] . "</a>";
-                    }
-                    ?>
+                    <?php foreach ($faq_analyses as $faq_key=>$faq_data): ?>
+                        <a class="list-group-item" data-toggle="collapse" data-target="#<?php echo $faq_key; ?>" data-parent="#faq-analyses" role="button">
+                            <i class="material-icons md-18 text-muted">contact_support</i> &nbsp;
+                            <?php echo $faq_data['q']; ?>
+                        </a>
+                        <div class="collapse" id="<?php echo $faq_key; ?>">
+                            <div class="list-group-item faq-answer">
+                                <p class="text-justify">
+                                <?php echo $faq_data['a']; ?>
+                                </p>
+                            </div>
+                        </div>
+                    <?php endforeach;?>
                 </div>
             </div>
         </section>
     </div>
-
-    <hr>
-    <div class="row">
-        <h2>Answers</h2>
-
-        <div class="col-md-9" id="tutorial-col">
-            <section class="page-section">
-                <h3 id="general">General</h3>
-                    <?php foreach ($faq_general as $faq_key=>$faq_data): ?>
-                    <div class="panel panel-default" id="<?php echo $faq_key; ?>">
-                        <div class="panel-heading"><?php echo $faq_data['q'] ?></div>
-                        <div class="panel-body">
-                            <p class="text-justify">
-                                <?php echo $faq_data['a'] ?>
-                            </p>
-                        </div>
-                    </div>
-                    <?php endforeach;?>
-            </section>
-
-            <section class="page-section">
-                <h3 id="in-out">Input/Output</h3>
-                <?php foreach ($faq_io as $faq_key=>$faq_data): ?>
-                    <div class="panel panel-default" id="<?php echo $faq_key; ?>">
-                        <div class="panel-heading"><?php echo $faq_data['q'] ?></div>
-                        <div class="panel-body">
-                            <p class="text-justify">
-                                <?php echo $faq_data['a'] ?>
-                            </p>
-                        </div>
-                    </div>
-                <?php endforeach;?>
-            </section>
-
-            <section class="page-section">
-                <h3 id="analyzes">Analyses</h3>
-            <?php foreach ($faq_analyses as $faq_key=>$faq_data): ?>
-                <div class="panel panel-default" id="<?php echo $faq_key; ?>">
-                    <div class="panel-heading"><?php echo $faq_data['q'] ?></div>
-                    <div class="panel-body">
-                        <p class="text-justify">
-                            <?php echo $faq_data['a'] ?>
-                        </p>
-                    </div>
-                </div>
-            <?php endforeach;?>
-            </section>
-    	</div>
         <div class="col-md-3 scrollspy" id="navigation-col">
             <ul class="nav hidden-xs hidden-sm" id="sidebar-nav" data-spy="affix">
-                <h5 class='doc-sidebar-header'><i class="material-icons md-24">toc</i> Sections</h5>
+<!--                <h5 class='doc-sidebar-header'><i class="material-icons md-24">toc</i> Sections</h5>-->
+                <h5 class="doc-sidebar-header">Contents</h5>
                 <li>
-                    <a href="#general">General</a>
+                    <a href="#faq-general">General</a>
                 </li>
                 <li>
-                    <a href="#in-out">Input/output</a>
+                    <a href="#faq-io">Input/output</a>
                 </li>
                 <li>
-                    <a href="#analyzes">Analyses</a>
+                    <a href="#faq-analyses">Analyses</a>
                 </li>
                 <li class="sidebar-nav-to-top"><a href="#top">Back to top</a></li>
             </ul>
         </div>
     </div>
 </div>
-
 
 <script type="text/javascript">
     // Affix navigation (bootstrap)
