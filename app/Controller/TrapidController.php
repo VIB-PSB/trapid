@@ -103,7 +103,12 @@ class TrapidController extends AppController{
     // Delete jobs that already finished but that may still be in `experiment_jobs` table, before getting `$exp_info`
     $experiment_jobs = $this->ExperimentJobs->getJobs($exp_id);
     $finished_jobs = $this->TrapidUtils->getFinishedJobIds($exp_id, $experiment_jobs);
-    // pr($finished_jobs);
+    $cluster_status = $this->TrapidUtils->check_cluster_status();
+    $this->set("cluster_status", $cluster_status);
+    $tooltip_text_cluster_status = $this->HelpTooltips->getTooltipText("cluster_status");
+    $this->set("tooltip_text_cluster_status", $tooltip_text_cluster_status);
+
+      // pr($finished_jobs);
     foreach($finished_jobs as $finished_job_id) {
         // pr("Delete job ". $finished_job_id);
         $this->ExperimentJobs->deleteJob($exp_id, $finished_job_id);

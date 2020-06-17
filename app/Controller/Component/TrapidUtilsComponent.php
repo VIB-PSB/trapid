@@ -366,6 +366,37 @@ class TrapidUtilsComponent extends Component{
     }
 
 
+  // Get the status of the webcluster's queues `$queues`
+  // If the fraction of running jobs is more than `$busy`, status of the queue is set to 'busy'
+  // If the fraction of running jobs is more than `$full`, status of the queue is set to 'full'
+  function check_cluster_status($busy=0.5, $full=1.0, $queues = ["long", "medium", "short"]){
+    $cluster_status = [];
+    $qhost_cmd = ". /opt/sge/default/common/settings.sh && qhost -q";
+    $qhost_out = [];
+    $exit_status = 0;
+    exec($qhost_cmd, $qhost_out, $exit_status);
+    if($exit_status == 0) {
+      // Parse qhost output
+      foreach($qhost_out as $line) {
+        $split = preg_split('/\s+/', preg_replace('/^\s+/', '', $line));
+        if(in_array($split[0], $queues)) {
+          $queue_data = explode("/", end($split));
+          $queue_load = $queue_data[1] / $queue_data[2];
+          if($queue_load >= $full) {
+            $cluster_status[$split[0]] = "full";
+          }
+          elseif($queue_load >= $busy) {
+            $cluster_status[$split[0]] = "busy";
+          }
+          else{
+              $cluster_status[$split[0]] = "ok";
+          }
+        }
+      }
+    }
+    return $cluster_status;
+  }
+
 
     function checkAvailableDiamondDB($plaza_db, $data){
         $result		= array();
