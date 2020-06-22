@@ -64,43 +64,28 @@ class TranscriptsLabels extends AppModel{
   }
 
 
-  function getLabeltoGOMapping($exp_id){
+  function getLabelToFctMapping($exp_id, $fct_type){
+     $result = array();
+     if(!in_array($fct_type, ["go", "ipr", "ko"])) {
+         return $result;
+     }
     // Add `is_hidden` = 0?
     $query	= "SELECT COUNT(*), label, name
                 FROM `transcripts_annotation`
                 LEFT JOIN `transcripts_labels` USING (experiment_id,transcript_id)
                 WHERE experiment_id = ".$exp_id."
-                AND `type`='go' 
+                AND `type`='" . $fct_type . "' 
                 GROUP BY label,name";
     $res	= $this->query($query);
-    $result	= array();
     foreach($res as $r){
       $label   = $r['transcripts_labels']['label'];
-      $GO    = $r['transcripts_annotation']['name'];
+      $fct    = $r['transcripts_annotation']['name'];
       $count    = reset($r[0]);
-      $result[] = array($label,$GO,$count);
+      $result[] = array($label, $fct, $count);
     }
     return $result;
   }
 
-
-  function getLabeltoInterproMapping($exp_id){
-    $query	= "SELECT COUNT(*), label, name
-                FROM `transcripts_annotation`
-                LEFT JOIN `transcripts_labels` USING (experiment_id,transcript_id)
-                WHERE experiment_id = ".$exp_id."
-                AND `type`='ipr'
-                GROUP BY label,name";
-    $res	= $this->query($query);
-    $result	= array();
-    foreach($res as $r){
-      $label   = $r['transcripts_labels']['label'];
-      $interpro    = $r['transcripts_annotation']['name'];
-      $count    = reset($r[0]);
-      $result[] = array($label,$interpro,$count);
-    }
-    return $result;
-  }
 
 
     function enterTranscriptsNoCheck($exp_id,$transcripts,$label){

@@ -112,7 +112,7 @@ class LabelsController extends AppController{
     $data_venn			= $this->Statistics->makeVennOverview($data_raw);
     $this->set("data_venn",$data_venn);
 
-    $this->set("active_sidebar_item", "Explore subsets");
+    $this->set("active_sidebar_item", "Browse subsets");
     $this -> set('title_for_layout', 'Subsets overview');
   }
 

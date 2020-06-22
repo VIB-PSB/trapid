@@ -27,23 +27,38 @@ echo $this->Html->css('https://cdn.jsdelivr.net/gh/Syone/selectize-bootswatch@ma
 
 	<div class="subdiv">
 	<?php
-	$toolbox	= array("Compare"=>array(
-					array(
-						"Label Gene Family intersection",
-						$this->Html->url(array("controller"=>"tools","action"=>"label_gf_intersection",$exp_id,$label)),
-						"some_image.png"
-					),							
-					array(
-						"Label Interpro intersection",
-						$this->Html->url(array("controller"=>"tools","action"=>"label_interpro_intersection",$exp_id,$label)),
-						"some_image.png"
-					),							
-					array(
-						"Label GO intersection",
-						$this->Html->url(array("controller"=>"tools","action"=>"label_go_intersection",$exp_id,$label)),
-						"some_image.png"			
-					)		
-				),
+
+    // Sankey intersection toolbox items
+    $sankey_intersection_fcts = array(
+        "go"=>array(
+            "Subset - GO intersection",
+            $this->Html->url(array("controller"=>"tools","action"=>"label_go_intersection",$exp_id,$label)),
+            "some_image.png"
+        ),
+        "interpro"=>array(
+            "Subset - InterPro intersection",
+            $this->Html->url(array("controller"=>"tools","action"=>"label_interpro_intersection",$exp_id,$label)),
+            "some_image.png"
+        ),
+        "ko"=>array(
+            "Subset - KO intersection",
+            $this->Html->url(array("controller"=>"tools","action"=>"label_ko_intersection",$exp_id,$label)),
+            "some_image.png"
+        )
+    );
+    $sankey_intersection_toolbox = array(
+        "gf"=>array(
+            "Subset - Gene Family intersection",
+            $this->Html->url(array("controller"=>"tools","action"=>"label_gf_intersection",$exp_id,$label)),
+            "some_image.png"
+        )
+    );
+    // Add toolbox items depending on the available functional annotation types
+    foreach ($exp_info['function_types'] as $fct_type) {
+        $sankey_intersection_toolbox[$fct_type] = $sankey_intersection_fcts[$fct_type];
+    }
+
+	$toolbox	= array("Compare"=>$sankey_intersection_toolbox,
                 "Sequences"=>array(
                         array(
                             "Predict ORF sequences using another genetic code",

@@ -2038,6 +2038,49 @@ class ToolsController extends AppController{
   }
 
 
+  function label_enrichedko_gf2($exp_id=null){
+    $this->general_set_up($exp_id);
+    $this -> set('title_for_layout', 'Sankey diagram');
+    $this->set("col_names", array('Label','KO','Gene family'));
+    $this->set('dropdown_names',array('KOs', 'gene families'));
+    $place_holder = '###';
+    $this->set("place_holder", $place_holder);
+
+    $enriched_kos = $this->FunctionalEnrichments->getEnrichedKo($exp_id);
+    $transcriptLabelGF = []; // $this->FunctionalEnrichments->getTranscriptToLabelAndGF($exp_id);
+    $transcriptKo = []; // $this->FunctionalEnrichments->getTranscriptInterproMapping($exp_id);
+    $counts = $this->TranscriptsLabels->getLabels($exp_id);// not necessary anymore
+    $sankey_enrichment_data = $this->FunctionalEnrichments->getSankeyEnrichmentResults($exp_id, 'ko');
+
+    $ko_ids = array();
+    foreach($enriched_kos as $label){
+        if(array_key_exists('0.05',$label)){
+            foreach ($label['0.05'] as $key => $val){
+                $ko_ids[] = $key;
+            }
+        }
+    }
+    $interpro_info	= $this->KoTerms->retrieveKoInformation($ko_ids);
+    $this->set('counts', $counts);
+
+    $gf_prefix = $exp_id . "_";
+
+    $urls = array(urldecode(Router::url(array("controller"=>"labels","action"=>"view",$exp_id,$place_holder))),
+        urldecode(Router::url(array("controller"=>"functional_annotation","action"=>"interpro",$exp_id,$place_holder))),
+        urldecode(Router::url(array("controller"=>"gene_family","action"=>"gene_family",$exp_id, $gf_prefix . $place_holder)))
+    );
+    $this->set('enriched_gos',$enriched_kos);
+    $this->set('transcriptGO', $transcriptKo);
+    $this->set('transcriptLabelGF', $transcriptLabelGF);
+    $this->set('descriptions', $interpro_info);
+    $this->set('sankey_enrichment_data', $sankey_enrichment_data['enrichment']);
+    $this->set('sankey_gf_data', $sankey_enrichment_data['n_hits_gf']);
+    $this->set('urls', $urls);
+    $this->set('GO', false);
+    $this->render('sankey_enriched2');
+  }
+
+
 
   function label_gf_intersection($exp_id=null,$label=null){
     $this->general_set_up($exp_id);
@@ -2067,11 +2110,10 @@ class ToolsController extends AppController{
 
     $this->set('selected_label',$label);
     $this->set('dropdown_name','IPR Domains');
-    $this->set('dropdown_name','IPR Domains');
-    $this->set("col_names", array('Label','Interpro','Label'));
+    $this->set("col_names", array('Label','InterPro','Label'));
 
     $this->set('counts',$this->TranscriptsLabels->getLabels($exp_id));
-    $label_rows	= $this->TranscriptsLabels->getLabelToInterproMapping($exp_id,true);
+    $label_rows	= $this->TranscriptsLabels->getLabelToFctMapping($exp_id, "ipr", true);
     $interpros = array();
     foreach ($label_rows as $row){
         $interpros[] = $row[1];
@@ -2091,6 +2133,33 @@ class ToolsController extends AppController{
   }
 
 
+  function label_ko_intersection($exp_id=null,$label=null){
+    $this->general_set_up($exp_id);
+
+    $this->set('selected_label',$label);
+    $this->set('dropdown_name','KOs');
+    $this->set("col_names", array('Label','KO','Label'));
+
+    $this->set('counts',$this->TranscriptsLabels->getLabels($exp_id));
+    $label_rows	= $this->TranscriptsLabels->getLabelToFctMapping($exp_id, "ko", true);
+    $ko_ids = array();
+    foreach ($label_rows as $row){
+        $ko_ids[] = $row[1];
+    }
+    $ko_info = $this->KoTerms->retrieveKoInformation($ko_ids);
+    $this->set('mapping', $label_rows);
+    $this->set('descriptions', $ko_info);
+    $place_holder = '###';
+    $this->set("place_holder", $place_holder);
+    $urls = array(urldecode(Router::url(array("controller"=>"labels", "action"=>"view", $exp_id, $place_holder))),
+                  urldecode(Router::url(array("controller"=>"functional_annotation", "action"=>"ko", $exp_id, $place_holder)))
+    );
+    $this->set('urls', $urls);
+    $this->set('GO', false);
+    $this->render('sankey_intersection');
+  }
+
+
 
 function label_go_intersection($exp_id=null,$label=null){
     $this->general_set_up($exp_id);
@@ -2101,7 +2170,7 @@ function label_go_intersection($exp_id=null,$label=null){
     $this->set("col_names", array('Label','Go','Label'));
 
     $this->set('counts',$this->TranscriptsLabels->getLabels($exp_id));
-    $label_rows	= $this->TranscriptsLabels->getLabelToGOMapping($exp_id,true);
+    $label_rows	= $this->TranscriptsLabels->getLabelToFctMapping($exp_id, "go", true);
     $go_ids = array();
     foreach ($label_rows as $row){
         $go_ids[] = $row[1];

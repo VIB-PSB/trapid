@@ -104,6 +104,10 @@ function getSankeyEnrichmentResults($exp_id, $type){
     return $this->getEnrichedIdentifier($exp_id, 'ipr');
   }
 
+  function getEnrichedKo($exp_id){
+    return $this->getEnrichedIdentifier($exp_id, 'ko');
+  }
+
  function getTranscriptGOMapping($exp_id){
     $result	= array();
     $query	=  "SELECT transcript_id, name

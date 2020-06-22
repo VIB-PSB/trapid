@@ -17,20 +17,21 @@ $link_text = array(
     "gen_stats"=>array("General statistics",  $this->Html->Url(array("controller" => "tools", "action" => "statistics", $exp_id))),
     "len_tr"=>array("Sequence length distribution", $this->Html->Url(array("controller" => "tools", "action" => "length_distribution", $exp_id, "transcript"))),
     "len_orf"=>array("Length distribution ORF", $this->Html->Url(array("controller" => "tools", "action" => "length_distribution", $exp_id, "orf"))),
-    "tax_binning"=>array("Taxonomic binning", $this->Html->Url(array("controller" => "tools", "action" => "tax_binning", $exp_id))),
+    "tax_binning"=>array("Taxonomic classification", $this->Html->Url(array("controller" => "tools", "action" => "tax_binning", $exp_id))),
     "gf"=>array("Browse gene families", $this->Html->Url(array("controller" => "gene_family", "action" => "index", $exp_id))),
-    "rf"=>array("Browse RNA families (beta)", $this->Html->Url(array("controller" => "rna_family", "action" => "index", $exp_id))),
+    "rf"=>array("Browse RNA families", $this->Html->Url(array("controller" => "rna_family", "action" => "index", $exp_id))),
     "cgfc"=>array("Core GF completeness", $this->Html->Url(array("controller" => "tools", "action" => "core_gf_completeness", $exp_id))),
-    "subsets"=>array("Explore subsets", $this->Html->Url(array("controller" => "labels", "action" => "subset_overview", $exp_id))),
+    "subsets"=>array("Browse subsets", $this->Html->Url(array("controller" => "labels", "action" => "subset_overview", $exp_id))),
     "enrichment"=>array("Subset enrichment", $this->Html->Url(array("controller" => "tools", "action" => "enrichment", $exp_id))),
     "enrichment_go"=>array("GO term enrichment", $this->Html->Url(array("controller" => "tools", "action" => "enrichment", $exp_id, "go"))),
     "enrichment_ipr"=>array("Protein domain enrichment", $this->Html->Url(array("controller" => "tools", "action" => "enrichment", $exp_id, "ipr"))),
     "sankey"=>array("Sankey diagrams", ""),
-    "sankey_enriched_go_gf"=>array("Label→Enriched GO→GF", $this->Html->Url(array("controller" => "tools", "action" => "label_enrichedgo_gf2", $exp_id))),
-    "sankey_enriched_ipr_gf"=>array("Label→Enriched IPR→GF", $this->Html->Url(array("controller" => "tools", "action" => "label_enrichedinterpro_gf2", $exp_id))),
-    "compare_subsets"=>array("Compare subsets", ""),
-    "compare_subsets_go"=>array("GO terms between subsets", $this->Html->Url(array("controller" => "tools", "action" => "compare_ratios", $exp_id, "go"))),
-    "compare_subsets_ipr"=>array("Protein domains between subsets", $this->Html->Url(array("controller" => "tools", "action" => "compare_ratios", $exp_id, "ipr"))),
+    "sankey_enriched_go_gf"=>array("Subset↔Enriched GO↔GF", $this->Html->Url(array("controller" => "tools", "action" => "label_enrichedgo_gf2", $exp_id))),
+    "sankey_enriched_ipr_gf"=>array("Subset↔Enriched IPR↔GF", $this->Html->Url(array("controller" => "tools", "action" => "label_enrichedinterpro_gf2", $exp_id))),
+    "sankey_enriched_ko_gf"=>array("Subset↔Enriched KO↔GF", $this->Html->Url(array("controller" => "tools", "action" => "label_enrichedko_gf2", $exp_id))),
+    "compare_subsets"=>array("Compare subsets", $this->Html->Url(array("controller" => "tools", "action" => "compare_ratios", $exp_id))),
+    // "compare_subsets_go"=>array("GO terms between subsets", $this->Html->Url(array("controller" => "tools", "action" => "compare_ratios", $exp_id, "go"))),
+    // "compare_subsets_ipr"=>array("Protein domains between subsets", $this->Html->Url(array("controller" => "tools", "action" => "compare_ratios", $exp_id, "ipr"))),
     "doc"=>array("Documentation", $this->Html->Url(array("controller" => "documentation", "action" => "index"))),
     "back_exp"=>array("Back to experiments", $this->Html->Url(array("controller" => "trapid", "action" => "experiments")))
 );
@@ -132,7 +133,7 @@ $link_text = array(
     <!-- Sidebar header -->
     <div class="sidebar-header">
         <a class="sidebar-brand" href="<?php echo $this->Html->Url(array("controller" => "trapid", "action" => "experiments")); ?>">TRAPID
-            <label class="label label-beta">beta</label>
+            <label class="label label-beta">dev</label>
         </a>
         <!-- Sidebar brand image -->
         <!--        <div class="sidebar-image">-->
@@ -223,6 +224,7 @@ $link_text = array(
             echo "<li><a href='"  . $link_text[$link_id][1] . "'>" . $link_text[$link_id][0] . "</a></li>\n";
         }
         ?>
+        <li class="divider"></li>
         <?php if($exp_info['label_count'] == 0): ?>
             <?php
             foreach (["subsets", "enrichment", "sankey", "compare_subsets"] as $link_id) {
@@ -238,20 +240,20 @@ $link_text = array(
                     <?php echo $link_text["sankey"][0];?><b class="caret"></b>
                 </a>
                 <ul id="stats-dropdown" class="dropdown-menu">
-                    <?php echo "<li><a href='"  . $link_text["sankey_enriched_go_gf"][1] . "'>" . $link_text["sankey_enriched_go_gf"][0] . "</a></li>\n"; ?>
-                    <?php echo "<li><a href='"  . $link_text["sankey_enriched_ipr_gf"][1] . "'>" . $link_text["sankey_enriched_ipr_gf"][0] . "</a></li>\n"; ?>
+                    <?php
+                    $link = ["go"=>"sankey_enriched_go_gf", "interpro"=>"sankey_enriched_ipr_gf", "ko"=>"sankey_enriched_ko_gf"];
+                    foreach($exp_info['function_types'] as $fct_type){
+                        echo "<li><a href='"  . $link_text[$link[$fct_type]][1] . "'>" . $link_text[$link[$fct_type]][0] . "</a></li>\n";
+                    }
+                    ?>
                 </ul>
             </li>
 
         <?php if($exp_info['label_count'] > 1): ?>
-        <li class="dropdown">
-                <a class="ripple-effect dropdown-toggle" href="#" data-toggle="dropdown">
-                    <?php echo $link_text["compare_subsets"][0];?><b class="caret"></b>
+        <li>
+                <a href="<?php echo $link_text["compare_subsets"][1]; ?>">
+                    <?php echo $link_text["compare_subsets"][0];?>
                 </a>
-                <ul id="stats-dropdown" class="dropdown-menu">
-                    <?php echo "<li><a href='"  . $link_text["compare_subsets_go"][1] . "'>" . $link_text["compare_subsets_go"][0] . "</a></li>\n"; ?>
-                    <?php echo "<li><a href='"  . $link_text["compare_subsets_ipr"][1] . "'>" . $link_text["compare_subsets_ipr"][0] . "</a></li>\n"; ?>
-                </ul>
         </li>
         <?php else : ?>
         <?php echo "<li class=\"sidebar-text sidebar-disabled\">"  . $link_text["compare_subsets"][0] . "</li>\n"; ?>
