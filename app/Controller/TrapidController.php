@@ -641,12 +641,41 @@ class TrapidController extends AppController{
     }
     $gene_ids		= array_unique($gene_ids);
     $gf_ids		= array();
+
+    // Get reference DB type
+      $db_type = "plaza";
+      if(strpos($exp_info["used_plaza_database"], "eggnog") !== false){
+          $db_type = "eggnog";
+      }
+      $this->set("db_type", $db_type);  // move?
+
     //ok, now see whether the experiment is HOM or IORTHO. If IORTHO, don't do anything.
+    // `HOM` can correspond to either PLAZA or EggNOG reference databases.
+    // If the experiment's reference database is EggNOG, we retrieve GF data at the taxonomic level of the current
+    // transcript's GF (if any)
     if($exp_info['genefamily_type']=="HOM"){
       $gf_prefix	= $this->DataSources->find("first",array("conditions"=>array("name"=>$exp_info['datasource'])));
       $gf_prefix	= $gf_prefix['DataSources']['gf_prefix'];
-      if($gf_prefix){$gf_ids=$this->GfData->find("all",array("conditions"=>array("gene_id"=>$gene_ids,"`gf_id` LIKE '".$gf_prefix."%'")));}
-      else{$gf_ids=$this->GfData->find("all",array("conditions"=>array("gene_id"=>$gene_ids)));}
+      if($gf_prefix) {
+          $gf_ids=$this->GfData->find("all",array("conditions"=>array("gene_id"=>$gene_ids,"`gf_id` LIKE '".$gf_prefix."%'")));
+      }
+      else {
+          if($db_type == "eggnog") {
+              // Set taxonomic scope
+              $tax_scope = "NOG";
+              if($transcript_info['Transcripts']['gf_id']) {
+                  $ref_gf = $this->GeneFamilies->find("first", array("fields"=>"plaza_gf_id",
+                      "conditions"=>array("experiment_id"=>$exp_id, "gf_id"=>$transcript_info['Transcripts']['gf_id'])));
+                  $tax_scope_data = $this->GfData->getEggnogTaxScope($ref_gf['GeneFamilies']['plaza_gf_id']);
+                  $tax_scope = $tax_scope_data['scope'];
+              }
+              $gf_ids = $this->GfData->find("all",array("conditions"=>array("gene_id"=>$gene_ids, "scope"=>$tax_scope)));
+          }
+          else {
+              $gf_ids = $this->GfData->find("all",array("conditions"=>array("gene_id"=>$gene_ids)));
+          }
+//          pr($gf_ids);
+      }
       $gf_ids		= $this->TrapidUtils->indexArraySimple($gf_ids,"GfData","gene_id","gf_id");
       $plaza_gf_ids	= array_unique(array_values($gf_ids));
       $plaza_gf_counts  = $this->GfData->getGeneCount($plaza_gf_ids);
