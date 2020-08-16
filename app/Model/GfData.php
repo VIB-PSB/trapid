@@ -106,7 +106,7 @@ class GfData extends AppModel{
         }
     }
 
-
+    // To move to another model?
     function getTopGoTerms($ref_gf_id, $n_max) {
         $top_gos = [];
         $query		= "SELECT gf_fd.`name`, fd.`desc`, fd.`info` FROM  `gf_functional_data` gf_fd, `functional_data` fd WHERE gf_fd.`gf_id`='" . $ref_gf_id . "' AND gf_fd.`type`='go' AND gf_fd.`is_hidden`='0' AND fd.`name`=gf_fd.`name` ORDER BY gf_fd.`f_score` DESC";
@@ -123,6 +123,22 @@ class GfData extends AppModel{
             }
         }
         return $top_gos;
+    }
+
+    // Retrieve EggNOG taxonomic scope for orthologous group `$nog_id`
+    // Return taxonomic scope data (identifier and name/description) as an associative array
+    function getEggnogTaxScope($nog_id) {
+        $tax_scope_data = array();
+        $db = $this->getDataSource();
+        // Tax. scope could also be retrieved from `gene_families`
+        $res = $db->fetchAll(
+            'select name,scope from taxonomic_levels where scope = (select scope from gf_data where gf_id =? limit 1)',
+            array($nog_id)
+        );
+        if($res) {
+            $tax_scope_data = array("name"=>$res[0]['taxonomic_levels']['name'], "scope"=>$res[0]['taxonomic_levels']['scope']);
+        }
+        return $tax_scope_data;
     }
 }
 ?>

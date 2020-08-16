@@ -1,5 +1,4 @@
 <?php
-App::uses('Sanitize', 'Utility');
 /*
  * General controller class for the trapid functionality
  */
@@ -375,8 +374,11 @@ class GeneFamilyController extends AppController{
 
 
     // Adapt linkout if we use eggnog. Not clean but will do for the workshop.
+    // Also get taxonomic scope of the currrent NOG
     if(strpos($exp_info['used_plaza_database'], "eggnog") !== false) {
         $this->set("eggnog_og_linkout", true);
+        $gf_tax_scope = $this->GfData->getEggnogTaxScope($gf_info['GeneFamilies']['plaza_gf_id']);
+        $this->set("gf_tax_scope", $gf_tax_scope);
     }
 
     // Subsets - # transcripts information and tooltip (for subset creation form)
@@ -399,7 +401,7 @@ class GeneFamilyController extends AppController{
   }
 
 
-  // Get top GF GO terms to display GF tooltip (used in cor GF completeness core GF tables).
+  // Get top GF GO terms to display GF tooltip (used in core GF completeness core GF tables).
   function top_go_tooltip($exp_id=null, $ref_gf_id=null){
       $this->layout = "";
       $n_max = 3;

@@ -35,10 +35,6 @@
 
         <section class="page-section">
         <h3>Similarity hits</h3>
-            <?php
-            //pr($transcript_info);
-            //pr($exp_info);
-            ?>
             <table class="table table-hover table-condensed table-bordered table-striped">
                 <thead>
                 <tr>
@@ -46,9 +42,9 @@
                     <th>E-value</th>
                     <th>Alignment length</th>
                     <th>Percent identity</th>
-                    <th>Gene family(ext.)</th>
+                    <th>Gene family (ext.)</th>
                     <th>#genes</th>
-                    <th>Gene family(TRAPID)</th>
+                    <th>Gene family (TRAPID)</th>
                     <th>#transcripts</th>
                     <th>Select as GF</th>
                 </tr>
@@ -56,24 +52,20 @@
                 <tbody>
                 <?php
                 $prev_gf = null;
-                $altrow = null;
                 foreach ($sim_hits as $gene_id => $simd) {
                     /*if($exp_info['genefamily_type']=="HOM"){
                         $plaza_gf_id	= $gf_ids[$gene_id];
                         if($prev_gf==null){$prev_gf=$plaza_gf_id;}
                         if($prev_gf!=$plaza_gf_id){
                             $prev_gf	= $plaza_gf_id;
-                            if($altrow==null){$altrow=" class='altrow' ";}
-                            else{$altrow=null;}
                         }
                     }
                     */
-
                     foreach ($simd as $index => $sim) {
-                        echo "<tr $altrow>";
+                        echo "<tr>";
                         //gene identifier
                         if ($index == 0) {
-                            if (!$exp_info['allow_linkout']) {
+                            if (!$exp_info['allow_linkout'] || $db_type == 'eggnog') {
                                 echo "<td>" . $gene_id . "</td>";
                             } else {
                                 echo "<td>" . $this->Html->link($gene_id,
@@ -95,7 +87,7 @@
                         echo "<td>" . $sim[3] . "</td>";
                         echo "<td>" . round($sim[4], 1) . "%</td>";
 
-                        if ($exp_info['genefamily_type'] == "HOM") {
+                        if ($exp_info['genefamily_type'] == "HOM" && array_key_exists($gene_id, $gf_ids)) {
                             $plaza_gf_id = $gf_ids[$gene_id];
                             $display_change_form = false;
                             $disabled_change_form = null;
@@ -108,8 +100,13 @@
                             if (!$exp_info['allow_linkout']) {
                                 echo "<td>" . $plaza_gf_id . "</td>";
                             } else {
+                                $gf_linkout_base = "gene_families/view/";
+                                if($db_type == 'eggnog') {
+                                    $gf_linkout_base = "#/app/results?target_nogs=";
+                                }
                                 echo "<td>" . $this->Html->link($plaza_gf_id,
-                                        $exp_info['datasource_URL'] . "gene_families/view/" . urlencode($plaza_gf_id)) . "</td>";
+                                        $exp_info['datasource_URL'] . $gf_linkout_base . urlencode($plaza_gf_id),
+                                        array("class"=>"linkout", "target"=>"_blank")) . "</td>";
                             }
                             //NUM GENES PLAZA GF
                             echo "<td>" . $plaza_gf_counts[$plaza_gf_id] . "</td>";
@@ -126,8 +123,8 @@
                                 $trapid_gf_count = $transcript_gfs2[$trapid_gf_id];
                                 echo "<td>" . $trapid_gf_count . "</td>";
                             } else {
-                                echo "<td><span class='disabled'>Unavailable</span></td>";
-                                echo "<td><span class='disabled'>Unavailable</span></td>";
+                                echo "<td class='text-muted'>Unavailable</td>";
+                                echo "<td class='text-muted'>Unavailable</td>";
                             }
 
                             //change gene gene family form
@@ -147,12 +144,12 @@
                                 echo "<td></td>";
                             }
 
-                        } else {    //IORTHO
-                            echo "<td><span class='disabled'>Unavailable</span></td>";
-                            echo "<td><span class='disabled'>Unavailable</span></td>";
-                            echo "<td><span class='disabled'>Unavailable</span></td>";
-                            echo "<td><span class='disabled'>Unavailable</span></td>";
-                            echo "<td><span class='disabled'>Unavailable</span></td>";
+                        } else {    //IORTHO or no GF
+                            echo "<td><span class='text-muted'>Unavailable</span></td>";
+                            echo "<td><span class='text-muted'>Unavailable</span></td>";
+                            echo "<td><span class='text-muted'>Unavailable</span></td>";
+                            echo "<td><span class='text-muted'>Unavailable</span></td>";
+                            echo "<td><span class='text-muted'>Unavailable</span></td>";
                         }
                         echo "</tr>\n";
                     }

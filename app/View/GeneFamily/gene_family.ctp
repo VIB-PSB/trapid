@@ -8,18 +8,16 @@ echo $this->Html->css('https://cdn.jsdelivr.net/gh/Syone/selectize-bootswatch@ma
         <h1 class="text-primary"><?php echo $gf_info['gf_id']; ?> <small>gene family</small></h1>
 <!--        <h1 class="text-primary">Gene Family</h1>-->
 </div>
-<div class="subdiv">
-	<?php // echo $this->element("trapid_experiment");?>
-	
+
 	<h3>Overview</h3>
-	<div class="subdiv">
+	<section class="page-section-sm">
 		<dl class="standard dl-horizontal">
 			<dt>Gene Family</dt>
 			<dd><?php echo $gf_info['gf_id'];?></dd>
 			<dt>Transcript count</dt>
 			<dd><?php echo $gf_info['num_transcripts'];?></dd>
 			<?php
-			if($exp_info['genefamily_type']=="HOM"){
+			if($exp_info['genefamily_type'] == "HOM"){
 			    echo "<dt>Original Gene Family</dt>\n";
 			    echo "<dd>";
 			    if($exp_info['allow_linkout']){
@@ -34,21 +32,25 @@ echo $this->Html->css('https://cdn.jsdelivr.net/gh/Syone/selectize-bootswatch@ma
 				echo $gf_info['plaza_gf_id'];
 			    }			 
 			    echo "</dd>\n";
+			    if(isset($gf_tax_scope)) {
+			        echo "<dt>NOG taxonomic level</dt>";
+                    echo "<dd>" . $gf_tax_scope['name'] . " <span class='label label-default'>" . $gf_tax_scope['scope'] . "</span>" . "</dd>";
+                }
 			}
 			else{	
 			    echo "<dt>Ortho group content</dt>\n";
 			    echo "<dd>\n";		
 			    echo "<div id='ocg1'>";
-		 	    echo "<a href=\"javascript:$('ocg1').style.display='none';$('ocg2').style.display='block';void(0);\">Show content</a>";			   
+		 	    echo "<a href=\"javascript:$('#ocg1').css('display', 'none');$('#ocg2').css('display', 'block');void(0);\">Show content</a>";
 			    echo "</div>\n";
 			    echo "<div id='ocg2' style='display:none;'>";
-			    echo "<a href=\"javascript:$('ocg1').style.display='block';$('ocg2').style.display='none';void(0);\">Hide content</a><br/>";
-			    echo "<table class='small' cellpadding='0' cellspacing='0' style='width:800px;'>";
-			    echo "<tr><th style='width:30%;'>Species</th><th style='width:'10%;'>#genes</th><th style='width:60%;'>Genes</th></tr>";			$i=0;
+			    echo "<a href=\"javascript:$('#ocg1').css('display', 'block');$('#ocg2').css('display', 'none');void(0);\">Hide content</a><br/>";
+			    echo "<table class='table table-bordered table-striped table-condensed' cellpadding='0' cellspacing='0' style='width:800px;font-size:90%;'>";
+			    echo "<thead><tr><th style='width:30%;'>Species</th><th style='width:'10%;'>#genes</th><th style='width:60%;'>Genes</th></tr></thead>";			$i=0;
+				echo "<tbody>";
 			    foreach($gf_content as $species=>$gc){
 				$common_name	= $all_species[$species];
-				$class=null; if($i++%2==0){$class=" class='altrow' ";}
-				echo "<tr $class>";
+				echo "<tr>";
 				echo "<td>".$this->Html->link($common_name,$exp_info['datasource_URL']."/organism/view/".urlencode($common_name))."</td>";
 				echo "<td>".count($gc)."</td>";
 				echo "<td>";
@@ -57,16 +59,17 @@ echo $this->Html->css('https://cdn.jsdelivr.net/gh/Syone/selectize-bootswatch@ma
 				}
 				echo "</td>";
 				echo "</tr>";
-			    }			    
-			    echo "</table>";		
+			    }
+				echo "</tbody>";
+			    echo "</table>";
 			    echo "</div>\n";
 			    echo "</dd>\n";			    
 			}						
 			?>						
 		</dl>			
-	</div>
+	</section>
 	
-	<div class="subdiv">
+	<section class="page-section-sm">
 		<?php
 		$disable_cluster_tools	= false;
 		if(isset($max_number_jobs_reached)){
@@ -85,14 +88,6 @@ echo $this->Html->css('https://cdn.jsdelivr.net/gh/Syone/selectize-bootswatch@ma
 
 
 		$toolbox= array(
-		        /*"Structural data"=>array(
-				    array(
-					"Correct frameshift(s) with FrameDP",
-					$this->Html->url(array("controller"=>"tools","action"=>"framedp",$exp_id,$gf_info['gf_id'])),
-					"some_image.png",
-					$disable_cluster_tools
-				    ),
-				),*/
 				"Comparative genomics"=>array(
 				    array(
 					$msa_tree_string,
@@ -113,7 +108,7 @@ echo $this->Html->css('https://cdn.jsdelivr.net/gh/Syone/selectize-bootswatch@ma
 		echo $this->element("toolbox");
 
         ?>
-	</div>	
+	</section>
 
 	<h3>Transcripts</h3>
     <div class="row" id="table-header">
@@ -130,5 +125,4 @@ echo $this->Html->css('https://cdn.jsdelivr.net/gh/Syone/selectize-bootswatch@ma
         </div>
     </div>
 		<?php echo $this->element("table_func");?>
-</div>
 <?php echo $this->element("help_tooltips/enable_tooltips",  array("container"=>"#table-header")); ?>
