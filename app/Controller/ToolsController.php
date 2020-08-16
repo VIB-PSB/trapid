@@ -832,10 +832,9 @@ class ToolsController extends AppController{
 		array_key_exists("go_category",$_POST) && array_key_exists("go_depth",$_POST) )){
 	       	$this->redirect(array("controller"=>"trapid","action"=>"experiment",$exp_id));
 	    }
-            // Useless/unclean?
-	        $subset1	= $this->TranscriptsLabels->getDataSource()->value($_POST['subset1'], 'string');
-            $subset2	= $this->TranscriptsLabels->getDataSource()->value($_POST['subset2'], 'string');
-            if($subset1==$subset2){$this->set("error","Subset 1 should not be equal to Subset 2");return;}
+        $subset1	= filter_var($_POST['subset1'], FILTER_SANITIZE_STRING);
+        $subset2	= filter_var($_POST['subset2'], FILTER_SANITIZE_STRING);
+        if($subset1==$subset2){$this->set("error","Subset 1 should not be equal to Subset 2");return;}
 	    if(!(array_key_exists($subset1,$subsets) && array_key_exists($subset2,$subsets))){
 		$this->redirect(array("controller"=>"trapid","action"=>"experiment",$exp_id));
 	    }
@@ -875,17 +874,17 @@ class ToolsController extends AppController{
             $this->set("subset1_size",count($subset1_transcripts));
             $this->set("subset2_size",count($subset2_transcripts));
 
-	    //pr(count($subset1_transcripts));
-	    //pr(count($subset2_transcripts));
+	    // pr(count($subset1_transcripts));
+	    // pr(count($subset2_transcripts));
 
 	    //ok, now select all the GOs from extended go which adhere to the given category and depth
-	    $go_ids	= $this->ExtendedGo->find("all",array("conditions"=>array("type"=>$go_category,"num_sptr_steps"=>$go_depth,"is_obsolete"=>"0"),"fields"=>array("go","desc")));
-	    if(count($go_ids)==0){$this->set("error","No GO terms match with the given parameters");return;}
-	    $go_ids	= $this->TrapidUtils->indexArraySimple($go_ids,"ExtendedGo","go","desc");
-	    $data_all	= $this->TranscriptsGo->findTranscriptCountsFromGos($exp_id,array_keys($go_ids));
-	    $data_sub1	= $this->TranscriptsGo->findTranscriptCounts($exp_id,array_keys($go_ids),$subset1_transcripts);
-	    $data_sub2	= $this->TranscriptsGo->findTranscriptCounts($exp_id,array_keys($go_ids),$subset2_transcripts);
+	    $go_ids	= $this->ExtendedGo->find("all",array("conditions"=>array("type"=>"go","num_sptr_steps"=>$go_depth,"is_obsolete"=>"0", "info"=>$go_category),"fields"=>array("name","desc")));
 
+	    if(count($go_ids)==0){$this->set("error","No GO terms match with the given parameters");return;}
+	    $go_ids	= $this->TrapidUtils->indexArraySimple($go_ids,"ExtendedGo","name","desc");
+	    $data_all = $this->TranscriptsGo->findTranscriptCountsFromGos($exp_id,array_keys($go_ids));
+	    $data_sub1 = $this->TranscriptsGo->findTranscriptCounts($exp_id,array_keys($go_ids),$subset1_transcripts);
+	    $data_sub2 = $this->TranscriptsGo->findTranscriptCounts($exp_id,array_keys($go_ids),$subset2_transcripts);
 
 	    //making JSON data for the
 
@@ -893,7 +892,6 @@ class ToolsController extends AppController{
 	    $sub1_count	= $subsets[$subset1];
 	    $sub2_count	= $subsets[$subset2];
 	    $selected_gos = array();
-
 	    $result	= array("vars"=>array(),"smps"=>array("All",$subset1,$subset2),"desc"=>array("Ratios"),"data"=>array());
 	    $counter	= 0;
 	    foreach($data_all as $k=>$v){
@@ -920,6 +918,7 @@ class ToolsController extends AppController{
 	    }
 	    $this->set("num_selected_gos",$counter);
 	    $this->set("result",$result);
+//	    pr($result);
       }
 
     }
@@ -933,42 +932,53 @@ class ToolsController extends AppController{
   /*
    * Display ratios between GO or protein domains
    */
-  function compare_ratios($exp_id=null,$type=null){
-    // Configure::write("debug",2);
-    // $exp_id	= mysql_real_escape_string($exp_id);
+  function compare_ratios($exp_id=null, $type=null){
     parent::check_user_exp($exp_id);
     $exp_info	= $this->Experiments->getDefaultInformation($exp_id);
     $this->TrapidUtils->checkPageAccess($exp_info['title'],$exp_info["process_state"],$this->process_states["finished"]);
     $this->set("exp_info",$exp_info);
     $this->set("exp_id",$exp_id);
     $this -> set('title_for_layout', "Compare transcript subsets");
+    $this->set("active_sidebar_item", "Compare subsets");
 
+
+      // Possible functional annotation types, depending on ref. DB type
     $possible_types	= array("go"=>"GO","ipr"=>"Protein domain");
-    //check type
-    // $type		= mysql_real_escape_string($type);
-      // No need to escape since `type` is only compared to two possible values?
-    if(!array_key_exists($type,$possible_types)){$this->redirect("/");}
+    if(strpos($exp_info["used_plaza_database"], "eggnog") !== false){
+        // Modify available types for EggNOG database
+        $possible_types = array("go"=>"GO", "ko"=>"KO");
+    }
+
     $this->set("available_types",$possible_types);
-    $this->set("type",$type);
 
     $subsets	= $this->TranscriptsLabels->getLabels($exp_id);
     if(count($subsets) <= 1){$this->redirect(array("controller"=>"trapid","action"=>"experiment",$exp_id));}
     $this->set("subsets",$subsets);
-    $this->set("hashed_user_id",parent::get_hashed_user_id());
+    // $this->set("hashed_user_id",parent::get_hashed_user_id());
 
     if($_POST){
-      if(!(array_key_exists("subset1",$_POST) && array_key_exists("subset2",$_POST))){
-	$this->redirect(array("controller"=>"trapid","action"=>"experiment",$exp_id));
-      }
-      // No need to do that since these variables are used with `find()`?
-      $subset1	= filter_var($_POST['subset1'], FILTER_SANITIZE_STRING);
-      $subset2	= filter_var($_POST['subset2'], FILTER_SANITIZE_STRING);
-      if($subset1==$subset2){
-	$this->set("error","Subset 1 should not be equal to Subset 2");return;
-      }
-      if(!(array_key_exists($subset1,$subsets) && array_key_exists($subset2,$subsets))){
-	$this->redirect(array("controller"=>"tools","action"=>"go_ratios",$exp_id));
-      }
+        // Check functional annotation type
+        if(!array_key_exists("type",$_POST)) {
+            $this->redirect("/");
+        }
+        $type = $_POST['type'];
+
+        if(!array_key_exists($type, $possible_types)) {
+            $this->redirect("/");
+        }
+        // Check subsets
+        if(!(array_key_exists("subset1",$_POST) && array_key_exists("subset2",$_POST))) {
+        	$this->redirect(array("controller"=>"trapid","action"=>"experiment",$exp_id));
+        }
+        // No need to do that since these variables are used with `find()`?
+        $subset1 = filter_var($_POST['subset1'], FILTER_SANITIZE_STRING);
+        $subset2 = filter_var($_POST['subset2'], FILTER_SANITIZE_STRING);
+        if($subset1==$subset2) {
+            $this->set("error","subset 1 must be different from subset 2");return;
+        }
+        if(!(array_key_exists($subset1, $subsets) && array_key_exists($subset2, $subsets))) {
+        	$this->redirect(array("controller"=>"tools","action"=>"go_ratios",$exp_id));
+        }
       $this->set("subset1",$subset1);
       $this->set("subset2",$subset2);
       $subset1_transcripts	= $this->TranscriptsLabels->find("all",array("conditions"=>array("experiment_id"=>$exp_id,"label"=>$subset1),"fields"=>array("transcript_id")));
@@ -1003,10 +1013,11 @@ class ToolsController extends AppController{
 	$ipr_descriptions	= $this->ProteinMotifs->find("all",array("conditions"=>array("name"=>$ipr_ids, "type"=>"interpro")));
 //	$ipr_descriptions	= $this->TrapidUtils->indexArraySimple($ipr_descriptions,"ProteinMotifs","motif_id","desc");
 	$ipr_descriptions	= $this->TrapidUtils->indexArraySimple($ipr_descriptions,"ProteinMotifs","name","desc");
-	$this->set("data_subset1",$subset1_ipr_counts);
+    $this->set("data_subset1",$subset1_ipr_counts);
 	$this->set("data_subset2",$subset2_ipr_counts);
 	$this->set("descriptions",$ipr_descriptions);
       }
+    $this->set("type", $type);
     }
   }
 

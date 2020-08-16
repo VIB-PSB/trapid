@@ -245,12 +245,6 @@
 	/*color:#DDDDDD;*/
 /*}*/
 
-/*ul.tabbed_header{*/
-	/*list-style: none outside none;*/
-	/*margin:0;*/
-	/*padding:0;*/
-/*}*/
-
 /*ul.tabbed_header li{*/
 	/*border-style:solid;*/
 	/*border-width: 1px 1px 0;*/
@@ -426,12 +420,6 @@ div.selected_tabbed_div{
 /*#tutorial .clear {*/
 	/*clear:both;*/
 /*}*/
-.faq_question{
-	font-weight:bold;
-}
-.faq_answer{
-	margin-bottom:15px;
-}
 
 /* Leave space at the bottom of a div/section having this class ('-sm' for smaller size) */
 .page-section {
@@ -480,7 +468,7 @@ div.selected_tabbed_div{
 /**:after,*/
 /**:before {*/
 	/*-webkit-box-sizing: border-box;*/
-	/*-moz-box-sizing: border-box;*/
+	-moz-box-sizing: border-box;
 	/*box-sizing: border-box;*/
 /*}*/
 /* CodePen demo style */
@@ -497,8 +485,9 @@ body {
 	/*font-size: 14px;*/
 	/*line-height: 1.4;*/
 	/*color: #212121;*/
-	/*background-color: #f5f5f5;*/
-	background-color: #fcfcfc;
+	background-color: #f5f5f5;
+	/*background-color: #ffffff;*/
+	/*background-color: #fcfcfc;*/
 	/*-webkit-font-smoothing: antialiased;*/
 	/*-moz-osx-font-smoothing: grayscale;*/
 	/*text-rendering: optimizeLegibility;*/
@@ -2484,6 +2473,51 @@ ul.table-items li:before {
 	font-size: 1em;
 	padding-right: 0.25em;
 }
+
+.padded-top-1em {
+	padding-top: 1em;
+}
+
+.row-table-download {
+    margin-bottom: 10px;
+}
+
+
+/* Override some dataTables styles */
+.dataTables_length {
+    display: inline-flex;
+    /*text-align: right;*/
+    vertical-align: top;
+    margin-left: 15px;
+}
+.dataTables_info {
+    display: inline-flex;
+    /*text-align: right;*/
+    vertical-align: top;
+    margin-right: 15px;
+    padding-top: 3px!important;
+}
+.dataTables_length select {
+    width: auto!important;
+}
+
+.dataTables_filter {
+    /*text-align: right;*/
+    display: inline-flex;
+    margin-left: 10px;
+}
+.dataTables_filter input {
+    max-width: 120px!important;
+}
+
+.dataTables_paginate {
+    display: inline-flex;
+}
+.dataTables_info {
+    color: #bbbbbb;
+}
+
+
 
 /* Lots of ugly borders: useful for debugging when things are not displayed as expected */
 /*
