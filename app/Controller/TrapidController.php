@@ -9,8 +9,8 @@ class TrapidController extends AppController{
   var $helpers		= array("Html", "Form"); // ,"Javascript","Ajax"); //NOTE: Javascript and Ajax helpers were removed in Cake 2.X
 
   var $uses	= array('Authentication', 'AnnotSources', 'Annotation', 'CleanupDate', 'CleanupExperiments',
-                    'Configuration', 'DataSources', 'DataUploads', 'ExperimentJobs', 'ExperimentLog', 'Experiments',
-                    'ExtendedGo', 'FullTaxonomy', 'GeneFamilies', 'GfData', 'GoParents', 'HelpTooltips', 'KoTerms',
+                    'Configuration', 'DataSources', 'DataUploads', 'DeletedExperiments', 'ExperimentJobs', 'ExperimentLog', 'Experiments', 'ExperimentStats',
+                    'ExtendedGo', 'FunctionalEnrichments', 'FullTaxonomy', 'GeneFamilies', 'GfData', 'GoParents', 'HelpTooltips', 'KoTerms',
                     'ProteinMotifs', 'SharedExperiments', 'Similarities', 'Transcripts', 'TranscriptsGo',
                     'TranscriptsInterpro', 'TranscriptsLabels', 'TranscriptsKo', 'TranscriptsPagination', 'TranscriptsTax',
                     'RnaSimilarities', 'RnaFamilies'
@@ -2718,38 +2718,47 @@ class TrapidController extends AppController{
 
 
   function delete_experiment($exp_id=null){
-    // $exp_id	= mysql_real_escape_string($exp_id);
     parent::check_user_exp($exp_id);
     $exp_info	= $this->Experiments->getDefaultInformation($exp_id);
     $this->TrapidUtils->checkPageAccess($exp_info['title'],$exp_info["process_state"],$this->process_states["default"]);
-    //delete everything from all tables for this experiment
-    // Only one query needed since there is now only one table for the annotations?
+
+    // Delete records from all tables for this experiment
     $this->TranscriptsGo->query("DELETE FROM `transcripts_annotation` WHERE `experiment_id`='".$exp_id."'");
-    // $this->TranscriptsGo->query("DELETE FROM `transcripts_go` WHERE `experiment_id`='".$exp_id."'");
-    // $this->TranscriptsInterpro->query("DELETE FROM `transcripts_interpro` WHERE `experiment_id`='".$exp_id."'");
+    $this->TranscriptsTax->query("DELETE FROM `transcripts_tax` WHERE `experiment_id`='".$exp_id."'");
     $this->GeneFamilies->query("DELETE FROM `gene_families` WHERE `experiment_id`='".$exp_id."'");
+    $this->RnaFamilies->query("DELETE FROM `rna_families` WHERE `experiment_id`='".$exp_id."'");
     $this->TranscriptsLabels->query("DELETE FROM `transcripts_labels` WHERE `experiment_id`='".$exp_id."'");
+    $this->FunctionalEnrichments->query("DELETE FROM `functional_enrichments` WHERE `experiment_id`='".$exp_id."'");
     $this->Transcripts->query("DELETE FROM `transcripts` WHERE `experiment_id`='".$exp_id."'");
     $this->Similarities->query("DELETE FROM `similarities` WHERE `experiment_id`='".$exp_id."'");
+    $this->RnaSimilarities->query("DELETE FROM `rna_similarities` WHERE `experiment_id`='".$exp_id."'");
     $this->DataUploads->query("DELETE FROM `data_uploads` WHERE `experiment_id`='".$exp_id."'");
 
-    //first things first: delete all the jobs from the cluster, which are attached to this experiment
-    //this will prevent overloading of the cluster system by malignant people constantly creating new experiments with new jobs,
-    //and subsequently deleting them
-    $jobs	= $this->ExperimentJobs->getJobs($exp_id);
+    // Delete all associated jobs from the cluster
+    // This will prevent overloading of the cluster system by malignant people constantly creating new experiments with
+    // new jobs, and subsequently deleting them
+    $jobs = $this->ExperimentJobs->getJobs($exp_id);
     foreach($jobs as $job){$job_id=$job['job_id'];$this->TrapidUtils->deleteClusterJob($exp_id,$job_id);}
     $this->ExperimentJobs->query("DELETE FROM `experiment_jobs` WHERE `experiment_id`='".$exp_id."'");
 
     $this->ExperimentLog->query("DELETE FROM `experiment_log` WHERE `experiment_id`='".$exp_id."'");
-    //remove experiment
+    $this->ExperimentStats->query("DELETE FROM `experiment_stats` WHERE `experiment_id`='".$exp_id."'");
+
+    // Remove experiment
     $this->Experiments->deleteAll(array("Experiments.experiment_id"=>$exp_id));
 
-    //remove directory from the temp storage
+    // Remove directory from the temp storage
     $tmp_dir	= TMP."experiment_data/".$exp_id."/";
-    if(file_exists($tmp_dir) && is_dir($tmp_dir)){
-	shell_exec("rm -rf $tmp_dir");
+    if(file_exists($tmp_dir) && is_dir($tmp_dir)) {
+    	shell_exec("rm -rf $tmp_dir");
     }
 
+    // Keep track of the experiment in `deleted_experiments`
+    $this->DeletedExperiments->save(
+        array("user_id"=>$exp_info["user_id"], "experiment_id"=>$exp_info["experiment_id"], "used_plaza_database"=>$exp_info["used_plaza_database"],
+            "num_transcripts"=>$exp_info["transcript_count"], "title"=>$exp_info["title"], "creation_date"=>$exp_info["creation_date"],
+            "last_edit_date"=>$exp_info["last_edit_date"], "deletion_date"=>date("Y-m-d H:i:s"))
+    );
     $this->redirect(array("controller"=>"trapid","action"=>"experiments"));
   }
 

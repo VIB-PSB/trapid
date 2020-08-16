@@ -103,19 +103,29 @@ sub delete_experiments($ $ $){
 	my $tmp_dir		= $_[1];
 	my @to_delete_exps	= @{$_[2]};
 
-	### TRAPID v2 database does not have this structure anymore
-	# my $query1	= "DELETE FROM `transcripts_go` WHERE `experiment_id`= ? ";
-	# my $query2	= "DELETE FROM `transcripts_interpro` WHERE `experiment_id`= ? ";
+	# Queries to retrieve experiment's information and create a new record in `deleted_experiments`
+	my $exp_info_query	= "SELECT exp.user_id, exp.used_plaza_database, tr.`transcript_count` AS transcript_count, exp.title, exp.creation_date, exp.last_edit_date FROM `experiments` exp, (SELECT COUNT(transcript_id) AS transcript_count FROM transcripts WHERE experiment_id = ?) tr WHERE exp.`experiment_id` = ? ";
+	my $deleted_exp_query = "INSERT INTO `deleted_experiments` (`user_id`, `experiment_id`, `used_plaza_database`, `num_transcripts`, `title`, `creation_date`, `last_edit_date`, `deletion_date`) VALUES (?, ?, ?, ?, ?, ?, ?, NOW())";
+
+	# Deletion queries
 	my $query1	= "DELETE FROM `transcripts_annotation` WHERE `experiment_id`= ? ";
-	my $query2	= "DELETE FROM `gene_families` WHERE `experiment_id`= ? ";
-	my $query3	= "DELETE FROM `transcripts_labels` WHERE `experiment_id`= ? ";
-	my $query4	= "DELETE FROM `transcripts` WHERE `experiment_id`= ? ";
-	my $query5	= "DELETE FROM `similarities` WHERE `experiment_id`= ? ";
-	my $query6	= "DELETE FROM `data_uploads` WHERE `experiment_id`= ? ";
-	my $query7	= "DELETE FROM `experiment_jobs` WHERE `experiment_id`= ? ";
-	my $query8	= "DELETE FROM `experiment_log` WHERE `experiment_id` = ? ";
-	my $query9	= "DELETE FROM `experiments` WHERE `experiment_id`= ? ";
-	my $query10	= "DELETE FROM `cleanup_experiments` WHERE `experiment_id` = ? ";
+	my $query2	= "DELETE FROM `transcripts_tax` WHERE `experiment_id`= ? ";
+	my $query3	= "DELETE FROM `functional_enrichments` WHERE `experiment_id`= ? ";
+	my $query4	= "DELETE FROM `gene_families` WHERE `experiment_id`= ? ";
+	my $query5	= "DELETE FROM `rna_families` WHERE `experiment_id`= ? ";
+	my $query6	= "DELETE FROM `transcripts_labels` WHERE `experiment_id`= ? ";
+	my $query7	= "DELETE FROM `transcripts` WHERE `experiment_id`= ? ";
+	my $query8	= "DELETE FROM `similarities` WHERE `experiment_id`= ? ";
+	my $query9	= "DELETE FROM `rna_similarities` WHERE `experiment_id`= ? ";
+	my $query10	= "DELETE FROM `data_uploads` WHERE `experiment_id`= ? ";
+	my $query11	= "DELETE FROM `experiment_jobs` WHERE `experiment_id`= ? ";
+	my $query12	= "DELETE FROM `experiment_log` WHERE `experiment_id` = ? ";
+	my $query13	= "DELETE FROM `experiment_stats` WHERE `experiment_id` = ? ";
+	my $query14	= "DELETE FROM `experiments` WHERE `experiment_id`= ? ";
+	my $query15	= "DELETE FROM `cleanup_experiments` WHERE `experiment_id` = ? ";
+
+	my $db_exp_info = $dbh->prepare($exp_info_query);
+	my $db_deleted_exp = $dbh->prepare($deleted_exp_query);
 
 	my $dbq1	= $dbh->prepare($query1);
 	my $dbq2	= $dbh->prepare($query2);
@@ -127,10 +137,27 @@ sub delete_experiments($ $ $){
 	my $dbq8	= $dbh->prepare($query8);
 	my $dbq9	= $dbh->prepare($query9);
 	my $dbq10	= $dbh->prepare($query10);
-	# my $dbq11	= $dbh->prepare($query11);
+	my $dbq11	= $dbh->prepare($query11);
+	my $dbq12	= $dbh->prepare($query12);
+	my $dbq13	= $dbh->prepare($query13);
+	my $dbq14	= $dbh->prepare($query14);
+	my $dbq15	= $dbh->prepare($query15);
 
 	foreach my $tde (@to_delete_exps){
-		#first:delete all the data from the database
+		# Retrieve experiment's data
+		$db_exp_info->execute($tde, $tde);
+		while((my @record) = $db_exp_info->fetchrow_array){
+			my $tde_user = $record[0];
+			my $tde_ref_db = $record[1];
+			my $tde_num_trs = $record[2];
+			my $tde_title = $record[3];
+			my $tde_creation = $record[4];
+			my $tde_edit = $record[5];
+			# Store deleted experiment data in `deleted_experiments`
+			$db_deleted_exp->execute($tde_user, $tde, $tde_ref_db, $tde_num_trs, $tde_title, $tde_creation, $tde_edit);
+		}
+
+		# Delete all the data from the database
 		$dbq1->execute($tde);
 		$dbq2->execute($tde);
 		$dbq3->execute($tde);
@@ -141,10 +168,15 @@ sub delete_experiments($ $ $){
 		$dbq8->execute($tde);
 		$dbq9->execute($tde);
 		$dbq10->execute($tde);
-		# $dbq11->execute($tde);
+		$dbq11->execute($tde);
+		$dbq12->execute($tde);
+		$dbq13->execute($tde);
+		$dbq14->execute($tde);
+		$dbq15->execute($tde);
 
-		#second: delete the data on the web-share
+		# Delete the data on the web-share
 		system("rm -rf ".$tmp_dir."/".$tde."/");
+
 	}
 }
 

@@ -43,11 +43,27 @@ def load_config(ini_file_initial):
     return config_dict
 
 
+def run_cmfetch(exp_id, tmp_exp_dir, rfam_dir):
+    """Call `cmfetch` to retrieve the experiment's CMs and create `cm` file (needed to run Infernal). """
+    cmd_str = "cmfetch -f {all_rfam_cm_file} {exp_cms_file} > {rfam_cm_file}"
+    # Path of general RFAM CM file
+    all_rfam_cm_file = os.path.join(rfam_dir, "Rfam.cm")
+    # Get path of experiment directory and RFAM CM file to use for `cmfetch` call
+    exp_cms_file = os.path.join(tmp_exp_dir, "rfam_cms_%s.lst" % exp_id)
+    rfam_cm_file = os.path.join(tmp_exp_dir, "Rfam_%s.cm" % exp_id)
+    # Format cmd string and run!
+    formatted_cmd = cmd_str.format(all_rfam_cm_file=all_rfam_cm_file, exp_cms_file=exp_cms_file, rfam_cm_file=rfam_cm_file)
+    sys.stderr.write("[Message] Call `cmfetch` with command: '%s'.\n" % formatted_cmd)
+    job = subprocess.Popen(formatted_cmd, shell=True)
+    job.communicate()
+
+
 def create_infernal_files(exp_id, tmp_exp_dir, rfam_dir, exp_clans, trapid_db_data):
     """Create `cm` and `clanin` files needed by Infernal for user-selected RFAM clans. """
-    individual_cms = "individual_cms"  # Name of directory containing individual CMs (in `rfam_dir`)
-    rfam_cm_file = "Rfam_%s.cm" % exp_id
+    # individual_cms = "individual_cms"  # Name of directory containing individual CMs (in `rfam_dir`)
     rfam_clans_file = "Rfam_%s.clanin" % exp_id
+    rfam_cm_file = os.path.join(tmp_exp_dir, "Rfam_%s.cm" % exp_id)
+    exp_cms_file = "rfam_cms_%s.lst" % exp_id
     sys.stderr.write("[Message] Create RFAM `cm` and `clanin` files for Infernal ('%s' and '%s').\n" % (rfam_cm_file, rfam_clans_file))
     clan_members = {}
     exp_cms = set()
@@ -67,32 +83,35 @@ def create_infernal_files(exp_id, tmp_exp_dir, rfam_dir, exp_clans, trapid_db_da
             out_file.write(clanin_str.format(clan=clan,members="\t".join(clan_members[clan])))
             # Also retrieve RFAM models (update `exp_cms`, later used to retrieve individual models)
             exp_cms.update(clan_members[clan])
-    # Create `cm` file
-    with open(os.path.join(tmp_exp_dir, rfam_cm_file), "w") as out_file:
-        for model in sorted(list(exp_cms)):
-            for model_type in ["infernal", "hmmer"]:
-                cm_name = "{cm_id}_{cm_type}.cm".format(cm_id=model, cm_type=model_type)
-                cm_file = os.path.join(rfam_dir, individual_cms, cm_name)
-                cm_lines = []
-                with open(cm_file, "r") as in_file:
-                    cm_lines = [line for line in in_file]
-                out_file.write(''.join(cm_lines))
+    # Create file listing the experiment's CM (input file for `cmfetch`)
+    with open(os.path.join(tmp_exp_dir, exp_cms_file), "w") as out_file:
+        out_file.write('\n'.join(sorted(list(exp_cms))) + '\n')
+    # Create `cm` file using Infernal's `cmfetch` command
+    run_cmfetch(exp_id, tmp_exp_dir, rfam_dir)
+    # with open(os.path.join(tmp_exp_dir, rfam_cm_file), "w") as out_file:
+    #     for model in sorted(list(exp_cms)):
+    #         for model_type in ["infernal", "hmmer"]:
+    #             cm_name = "{cm_id}_{cm_type}.cm".format(cm_id=model, cm_type=model_type)
+    #             cm_file = os.path.join(rfam_dir, individual_cms, cm_name)
+    #             cm_lines = []
+    #             with open(cm_file, "r") as in_file:
+    #                 cm_lines = [line for line in in_file]
+    #             out_file.write(''.join(cm_lines))
 
 
 def run_cmpress(exp_id, tmp_exp_dir):
     """Call `cmpress` (to run before Infernal). """
     cmd_str = "cmpress -F {rfam_cm_file}"
     # Get path of experiment directory and RFAM CM file to use for `cmpress` call
-    rfam_cm_file = "Rfam_%s.cm" % exp_id
-    rfam_cm_file = os.path.join(tmp_exp_dir, rfam_cm_file)
+    rfam_cm_file = os.path.join(tmp_exp_dir, "Rfam_%s.cm" % exp_id)
     # Format cmd string and run!
-    formatted_cmd = cmd_str.format(rfam_cm_file=os.path.join(tmp_exp_dir, rfam_cm_file))
-    sys.stderr.write("[Message] Call `cmpress` with command: %s.\n" % formatted_cmd)
+    formatted_cmd = cmd_str.format(rfam_cm_file=rfam_cm_file)
+    sys.stderr.write("[Message] Call `cmpress` with command: '%s'.\n" % formatted_cmd)
     job = subprocess.Popen(formatted_cmd, shell=True)
     job.communicate()
 
 
-def get_cmscan_z_value(exp_id, trapid_db_data):
+def get_infernal_z_value(exp_id, trapid_db_data):
     """Retrieve value needed for cmscan `-Z` parameter (total length in million of nucleotides of query sequences). """
     query_str = "SELECT SUM(`len`) FROM (SELECT CHAR_LENGTH(UNCOMPRESS(`transcript_sequence`)) AS len FROM `transcripts` WHERE experiment_id ='{exp_id}') tr;"
     db_conn = common.db_connect(*trapid_db_data)
@@ -100,24 +119,25 @@ def get_cmscan_z_value(exp_id, trapid_db_data):
     cursor.execute(query_str.format(exp_id=exp_id))
     total_nts = float([record for record in cursor.fetchone()][0])
     db_conn.close()
-    print total_nts
     return (total_nts / 10e6) * 2
 
 
 def run_infernal(exp_id, tmp_exp_dir, z_value):
-    """Run infernal, return path of tabulated output file"""
+    """Run infernal (cmsearch), return path of tabulated output file"""
     # Command-line to run
-    cmd_str = "cmscan -Z {z_value} --cut_ga --rfam --nohmmonly --cpu {n_cpu} --tblout {tblout_out_file} --fmt 2 --clanin {rfam_clans_file} {rfam_cm_file} {fasta_file} > {cmscan_out_file}"
+    # cmd_str = "cmscan -Z {z_value} --cut_ga --rfam --noali --nohmmonly --cpu {n_cpu} --tblout {tblout_out_file} --fmt 2 --clanin {rfam_clans_file} {rfam_cm_file} {fasta_file} > {cmscan_out_file}"
+    cmd_str = "cmsearch --cut_ga --rfam --noali --nohmmonly --cpu {n_cpu} -Z {z_value}  --clanin {rfam_clans_file} --tblout {tblout_out_file} -o {cmsearch_out_file} {rfam_cm_file} {fasta_file}"
     # Define path/name of files to use for Infernal
     fasta_file = os.path.join(tmp_exp_dir, "transcripts_%s.fasta" % exp_id)
-    cmscan_out_file = os.path.join(tmp_exp_dir, "infernal_%s.cmscan" % exp_id)
+    # cmscan_out_file = os.path.join(tmp_exp_dir, "infernal_%s.cmscan" % exp_id)
+    cmsearch_out_file = os.path.join(tmp_exp_dir, "infernal_%s.cmsearch" % exp_id)
     tblout_out_file = os.path.join(tmp_exp_dir, "infernal_%s.tblout" % exp_id)
     rfam_clans_file = os.path.join(tmp_exp_dir, "Rfam_%s.clanin" % exp_id)
     rfam_cm_file = os.path.join(tmp_exp_dir, "Rfam_%s.cm" % exp_id)
     # Format cmd string and run!
     formatted_cmd = cmd_str.format(z_value=str(z_value), n_cpu="2", tblout_out_file=tblout_out_file,
-        rfam_clans_file=rfam_clans_file, rfam_cm_file=rfam_cm_file, fasta_file=fasta_file, cmscan_out_file=cmscan_out_file)
-    sys.stderr.write("[Message] Call Infernal with command: %s.\n" % formatted_cmd)
+        rfam_clans_file=rfam_clans_file, rfam_cm_file=rfam_cm_file, fasta_file=fasta_file, cmsearch_out_file=cmsearch_out_file)
+    sys.stderr.write("[Message] Call Infernal (cmsearch) with command: '%s'.\n" % formatted_cmd)
     job = subprocess.Popen(formatted_cmd, shell=True)
     job.communicate()
     return tblout_out_file
@@ -136,30 +156,64 @@ def filter_out_overlaps(exp_id, tmp_exp_dir, tblout_file):
     return tblout_filtered_file
 
 
+def keep_best_results(exp_id, tmp_exp_dir, tblout_file):
+    """Filter out Infernal tabulated output file to keep only the best hit per query sequence. Return name of filtered output"""
+    tblout_filtered_file = os.path.join(tmp_exp_dir, "infernal_%s.filtered.tblout" % exp_id)
+    to_keep = {}
+    with open(tblout_file, "r") as in_file:
+        for line in in_file:
+            if not line.startswith("#"):
+                splitted = line.split()
+                query = splitted[0]
+                score = float(splitted[14])
+                # If there already is a result for this query, replace it if the current one has a better score
+                if query in to_keep:
+                    if score > to_keep[query]['score']:
+                        to_keep[query]['score'] = score
+                        to_keep[query]['line'] = line
+                # If there are no result for this query yet, add the current result
+                else:
+                    to_keep[query] = {'score': score, 'line': line}
+    # Write filtered output to a file and return its path
+    with open(tblout_filtered_file, "w") as out_file:
+        out_file.write(''.join([to_keep[query]['line'] for query in to_keep]))
+    return tblout_filtered_file
+
+
 #TODO: use the same attributes as in the output file for more consistency?
-def parse_infernal_tblout_rec(rec_str):
+def parse_infernal_tblout_rec(rec_str, cm_clans):
     """Parse 1 record (line) from filtered Infernal tabulated output. Return a dictionary. """
     splitted = rec_str.split()
+    # When we were using `cmscan`
+    # rec_dict = {
+    #     "cm_id": splitted[1], "cm_acc": splitted[2], "query": splitted[3], "clan": splitted[5],
+    #     "mdl_type": splitted[6], "mdl_from": splitted[7], "mdl_to": splitted[8],
+    #     "seq_from": splitted[9], "seq_to": splitted[10], "strand": splitted[11],
+    #     "trunc": splitted[12], # "pass": splitted[13],  # Probably not useful to keep this value
+    #     "gc": splitted[14], "bias": splitted[15], "score": splitted[16], "e_value": splitted[17],
+    #     "inc": splitted[18]  # ,
+    #     # "olp": splitted[19]  # No need to keep that one because we already removed overlapping hits?
+    #     # The rest of the columns have to see with overlapping hits too...
+    # }
     rec_dict = {
-        "cm_id": splitted[1], "cm_acc": splitted[2], "query": splitted[3], "clan": splitted[5],
-        "mdl_type": splitted[6], "mdl_from": splitted[7], "mdl_to": splitted[8],
-        "seq_from": splitted[9], "seq_to": splitted[10], "strand": splitted[11],
-        "trunc": splitted[12], # "pass": splitted[13],  # Probably not useful to keep this value
-        "gc": splitted[14], "bias": splitted[15], "score": splitted[16], "e_value": splitted[17],
-        "inc": splitted[18]  # ,
-        # "olp": splitted[19]  # No need to keep that one because we already removed overlapping hits?
-        # The rest of the columns have to see with overlapping hits too...
+        "query": splitted[0], "cm_id": splitted[2], "cm_acc": splitted[3],
+        "mdl_type": splitted[4], "mdl_from": splitted[5], "mdl_to": splitted[6],
+        "seq_from": splitted[7], "seq_to": splitted[8], "strand": splitted[9],
+        "trunc": splitted[10], # "pass": splitted[13],  # Probably not useful to keep this value
+        "gc": splitted[12], "bias": splitted[13], "score": splitted[14], "e_value": splitted[15],
+        "inc": splitted[16],
+        "clan": cm_clans[splitted[2]]
     }
     return rec_dict
 
 
-def infernal_tblout_to_list(tblout_file):
-    """Parse Infernal tabulated output (filtered) and return results as dictionary"""
+def infernal_tblout_to_list(tblout_file, cm_clans):
+    """Parse Infernal tabulated output (filtered), add clan information, and return results as a list of dictionary"""
     infernal_res = []
     with open(tblout_file, "r") as in_file:
         for line in in_file:
             if not line.startswith("#"):
-                infernal_res.append(parse_infernal_tblout_rec(rec_str=line.strip()))
+                infernal_res.append(parse_infernal_tblout_rec(rec_str=line.strip(), cm_clans=cm_clans))
     return infernal_res
 
 
@@ -201,12 +255,13 @@ def store_rna_similarities(exp_id, trapid_db_data, infernal_results):
     """Store Infernal tabulated output data in the `rna_similarities` table of TRAPID's db. """
     # First cleanup the table
     cleanup_table(exp_id=exp_id, table_name="rna_similarities", trapid_db_data=trapid_db_data)
+    sorted_infernal_results = sorted(infernal_results, key=lambda k: float(k['score']), reverse=True)
     sys.stderr.write('[Message] Store Infernal results in `rna_similarities`. \n')
     query_str = "INSERT INTO `rna_similarities` (`experiment_id`,`transcript_id`,`similarity_data`) VALUES ('{exp_id}','{transcript_id}', COMPRESS(\"{infernal_data}\"))";
     # Get and format similarity data
     fields_to_keep = ["cm_acc", "cm_id", "clan", "e_value", "score", "bias", "mdl_from", "mdl_to", "trunc", "seq_from", "seq_to"]
     rna_sim_data = {}
-    for rec in infernal_results:
+    for rec in sorted_infernal_results:
         if rec["query"] not in rna_sim_data:
             sim_str = ",".join([rec[f] for f in fields_to_keep])
             rna_sim_data[rec["query"]] = [sim_str]
@@ -404,6 +459,19 @@ def perform_go_annotation(infernal_results, trapid_db_data, go_data, rfam_go, ex
         out_file.write("\n")
 
 
+def get_exp_cm_clans(exp_id, tmp_exp_dir):
+    """Read experiment's RFAM clan data from `clanin` file. Return as dictionary (cm_id:clan_acc). """
+    cm_clans = {}
+    rfam_clans_file = os.path.join(tmp_exp_dir, "Rfam_%s.clanin" % exp_id)
+    with open(rfam_clans_file, 'r') as in_file:
+        for line in in_file:
+            splitted = line.split('\t')
+            clan_acc = splitted[0]
+            for cm_id in splitted[1:]:
+                cm_clans[cm_id] = clan_acc
+    return cm_clans
+
+
 # TODO: clean up transcripts table
 # TODO: more results filtering...
 def main(config_dict):
@@ -421,26 +489,29 @@ def main(config_dict):
     common.update_experiment_log(experiment_id=exp_id, action='start_nc_rna_search', params='Infernal', depth=2, db_conn=db_connection)
     db_connection.close()
     create_infernal_files(exp_id=exp_id, tmp_exp_dir=tmp_exp_dir, rfam_dir=rfam_dir, exp_clans=exp_clans, trapid_db_data=trapid_db_data)
-    run_cmpress(exp_id=exp_id, tmp_exp_dir=tmp_exp_dir)
-    total_m_nts = get_cmscan_z_value(exp_id=exp_id, trapid_db_data=trapid_db_data)
+    # run_cmpress(exp_id=exp_id, tmp_exp_dir=tmp_exp_dir)
+    total_m_nts = get_infernal_z_value(exp_id=exp_id, trapid_db_data=trapid_db_data)
     infernal_tblout = run_infernal(exp_id=exp_id, tmp_exp_dir=tmp_exp_dir, z_value=total_m_nts)
     # Filter Infernal tabulated output (keep best non-ovelrapping matches)
-    infernal_tblout_filtered = filter_out_overlaps(exp_id=exp_id, tmp_exp_dir=tmp_exp_dir, tblout_file=infernal_tblout)
-    # Get filtered results as list of dict
-    infernal_results = infernal_tblout_to_list(tblout_file=infernal_tblout_filtered)
-    # Flag potential rna genes (`is_rna_gene` value set to 1 in `transcripts` table)
-    flag_rna_genes(exp_id=exp_id, trapid_db_data=trapid_db_data, infernal_results=infernal_results)
+    # infernal_tblout_filtered = filter_out_overlaps(exp_id=exp_id, tmp_exp_dir=tmp_exp_dir, tblout_file=infernal_tblout)
+    infernal_tblout_filtered = keep_best_results(exp_id=exp_id, tmp_exp_dir=tmp_exp_dir, tblout_file=infernal_tblout)
+    # Get filtered results as list of dict and add clan information
+    # Read RFAM clan information from `clanin` file. Would it make more sense to retrieve it when creating it?
+    cm_clans = get_exp_cm_clans(exp_id=exp_id, tmp_exp_dir=tmp_exp_dir)
+    filtered_infernal_results = infernal_tblout_to_list(tblout_file=infernal_tblout_filtered, cm_clans=cm_clans)
+    infernal_results = infernal_tblout_to_list(tblout_file=infernal_tblout, cm_clans=cm_clans)
+    # Flag potential rna genes (set `is_rna_gene` value to 1 and `rf_ids` in `transcripts` table)
+    flag_rna_genes(exp_id=exp_id, trapid_db_data=trapid_db_data, infernal_results=filtered_infernal_results)
     # Store filtered results in `rna_similarities` ...
     store_rna_similarities(exp_id=exp_id, trapid_db_data=trapid_db_data, infernal_results=infernal_results)
     # ... and `rna_families`
-    store_rna_families(exp_id=exp_id, trapid_db_data=trapid_db_data, infernal_results=infernal_results)
+    store_rna_families(exp_id=exp_id, trapid_db_data=trapid_db_data, infernal_results=filtered_infernal_results)
     # Annotate transcripts using GO terms from RFAM
     rfam_go = retrieve_rfam_go_data(trapid_db_data=trapid_db_data)
     go_data = get_go_data(reference_db_data=reference_db_data)
     perform_go_annotation(infernal_results=infernal_results, trapid_db_data=trapid_db_data, go_data=go_data,
                           rfam_go=rfam_go, exp_id=exp_id, tmp_exp_dir=tmp_exp_dir)
     # That's it for now... More soon!
-
     db_connection = common.db_connect(*trapid_db_data)
     common.update_experiment_log(experiment_id=exp_id, action='stop_nc_rna_search', params='Infernal', depth=2, db_conn=db_connection)
     db_connection.close()
