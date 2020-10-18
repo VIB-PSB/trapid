@@ -20,16 +20,16 @@ else{
     ?>
 
     <style>
-        /* Override some dataTables styles */
+/*        !* Override some dataTables styles *!
         .dataTables_length {
             display: inline-flex;
-            /*text-align: right;*/
+            !*text-align: right;*!
             vertical-align: top;
             margin-left: 15px;
         }
         .dataTables_info {
             display: inline-flex;
-            /*text-align: right;*/
+            !*text-align: right;*!
             vertical-align: top;
             margin-right: 15px;
             padding-top: 3px!important;
@@ -47,25 +47,25 @@ else{
             max-width: 120px!important;
         }
 
-        /*.dataTables_filter label {*/
-        /*font-weight: bold !important;*/
-        /*}*/
+        !*.dataTables_filter label {*!
+        !*font-weight: bold !important;*!
+        !*}*!
 
         .dataTables_paginate {
-            /*border: 2px purple solid;*/
+            !*border: 2px purple solid;*!
             display: inline-flex;
         }
         .dataTables_info {
             color: #bbbbbb;
         }
-        /*#go-filter label {*/
-        /*font-weight: bold;*/
-        /*}*/
-        /*.col-aspect {*/
-            /*width:1%;*/
-            /*padding-right: 25px!important;*/
-            /*white-space:nowrap;*/
-        /*}*/
+        !*#go-filter label {*!
+        !*font-weight: bold;*!
+        !*}*!
+        !*.col-aspect {*!
+            !*width:1%;*!
+            !*padding-right: 25px!important;*!
+            !*white-space:nowrap;*!
+        !*}*!*/
         #go-parent-div {
             padding-left: 0;
             margin-bottom:0;
@@ -137,7 +137,8 @@ else{
                 <!--            <li style="margin-top:10px;"><strong>View: </strong></li>-->
                 <li class="active"><a href="#go-charts-tab" data-toggle="tab">GO enrichment charts</a></li>
                 <li><a href="#go-table-tab" data-toggle="tab">GO enrichment table</a></li>
-                <div class="btn-group" role="group" style="float: right; margin-top: 10px;">
+                <li><a href="#go-graph-tab" data-toggle="tab">GO enrichment graph</a></li>
+                <div class="btn-group pull-right" role="group" style="margin-top: 10px;">
                     <form action="<?php echo $download_url; ?>" method="post">
                         <button class="btn btn-default btn-sm" type="submit"><span
                                     class="glyphicon glyphicon-download-alt"></span> Download results
@@ -185,13 +186,13 @@ else{
                     echo "<p class='text-justify'><strong>No GO enrichment chart to show for this aspect: no enriched GO term was found. </strong></p>";
                 }
                 echo "</div>";
-                echo "<div class='panel-footer'>";
+/*                echo "<div class='panel-footer'>";
                 if ($n_results > 0) {
                     echo $this->Html->link("View GO enrichment graph", array("controller" => "tools", "action" => "go_enrichment_graph", $exp_id, $subset, $go_type, $selected_pvalue));
                 } else {
                     echo "<span class='text-muted'>View GO enrichment graph</span>";
                 }
-                echo "</div>";
+                echo "</div>";*/
                 echo "</div>";
                 echo "</div>";
                 echo "</div>";
@@ -275,6 +276,7 @@ else{
             echo "</div>\n";
             ?>
         </div><!-- end GO charts tab -->
+
         <div class="tab-pane" id="go-table-tab">
         <div class="checkbox input-sm" id="go-parent-div">
             <label>
@@ -321,10 +323,15 @@ else{
         }
     }
     echo "</table>\n";
-    //	echo "</div>\n";
-
     ?>
-    <script type='text/javascript'>
+        </div> <!-- End GO table tab -->
+
+        <div class="tab-pane" id="go-graph-tab">
+            <?php echo $this->element('enrichment_go_graph'); ?>
+        </div>
+
+
+        <script type='text/javascript'>
         // DataTables
         // $('#go-table').dataTable({"scrollY": "400px", "scrollCollapse": true, "paging": false});
         enrichmentDataTable("go-table", [[5, "asc"]], 1, "All aspects");
@@ -392,7 +399,7 @@ else{
 
         if($n_results > 0) {
             echo "<div style='max-width:98%; margin: 0 auto;'>";
-            echo $this->element('charts/bar_ipr_enrichment', array("chart_title"=>"Enrichment results (".$subset.")" , "chart_subtitle"=>"Interpro domains", "enrichment_results"=>$result, "descriptions"=>$ipr_descriptions, "chart_div_id"=>"ipr_enrichment_chart", "linkout"=>$this->Html->Url(array("controller"=>"functional_annotation","action"=>"interpro",$exp_id))));
+            echo $this->element('charts/bar_ipr_enrichment', array("chart_title"=>"Enrichment results (".$subset.")" , "chart_subtitle"=>"InterPro domains", "enrichment_results"=>$result, "descriptions"=>$ipr_descriptions, "chart_div_id"=>"ipr_enrichment_chart", "linkout"=>$this->Html->Url(array("controller"=>"functional_annotation","action"=>"interpro",$exp_id))));
             echo "</div>";
         }
 

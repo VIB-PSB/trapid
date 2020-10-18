@@ -1,0 +1,473 @@
+text, tspan, .tipsy {
+	-webkit-touch-callout: none;
+	-webkit-user-select: none;
+	-khtml-user-select: none;
+	-moz-user-select: none;
+	-ms-user-select: none;
+	user-select: none;
+}
+
+.pulsate-css {
+    animation: pulsate 1s ease-out;
+    animation-iteration-count: infinite;
+    opacity: 0.0;
+
+    /* you dont need the stuff below, but its what I used to create the loading circle */
+    border: 3px solid #f00;
+    border-radius: 30px;
+    height: 15px;
+    width: 15px;
+    position: relative;
+    display: inline-block;
+	margin: 0px;
+	padding: 0px;
+	text-align: center;
+	top: 5px;
+}
+
+@-webkit-keyframes pulsate {
+    0% {-webkit-transform: scale(0.1, 0.1); opacity: 0.0;}
+    50% {opacity: 1.0;}
+    100% {-webkit-transform: scale(1.2, 1.2); opacity: 0.0;}
+}
+
+
+/* ============================ NODES & EDGES ============================== */
+
+.graph, .list {
+	cursor: default;
+}
+
+.graph .node rect {
+	fill: none;
+	stroke: none;
+}
+
+.graph .node text {
+	font-size: 1.5em;
+	border: 1px red solid;
+}
+
+.graph .node text tspan:first-child {
+	stroke: #424242;
+	fill: #424242;
+}
+
+.graph .node text .node-desc {
+	/*stroke: #616161;*/
+	fill: #424242;
+}
+
+.graph .node text .node-desc {
+	/*stroke: #616161;*/
+	fill: #424242;
+}
+
+.graph .node text a:hover,
+.graph .node text a:focus {
+	text-decoration: none;
+}
+
+.graph .node text a:hover tspan,
+.graph .node text a:focus tspan {
+	stroke: #2196f3 !important;
+	fill: #2196f3 !important;
+}
+
+.graph .node .root {
+	fill: white;
+	/*stroke: black;*/
+	stroke: #212121;
+	stroke-width: 10px;
+}
+
+.graph .edge {
+	fill: none;
+	stroke: black;
+	stroke-width: 1px;
+	opacity: 0.75;
+}
+
+.graph .edge.visible {
+	opacity: 1;
+}
+
+.graph .node.selected path.fill, .hovering .graph .node.selected path.fill, .hovering .graph .node.selected.hovered.immediate path.fill {
+	fill: #ff841f !important;
+}
+.graph .node.selected path.root, .hovering .graph .node.selected path.root, .hovering .graph .node.selected.hovered.immediate path.root {
+	fill: #ff841f;
+	stroke: #ff9c4a;
+}
+.graph .node.selected path.donutValue, .hovering .graph .node.selected path.donutValue, .hovering .graph .node.selected.hovered.immediate path.donutValue {
+	fill: #ff9c4a !important;
+}
+.graph .node.selected path.donutFill, .hovering .graph .node.selected path.donutFill, .hovering .graph .node.selected.hovered.immediate path.donutFill {
+	fill: #d76201 !important;
+}
+
+.graph .edge.visible.selected, .hovering .graph .edge.hovered.immediate.selected {
+	stroke: #ff841f;
+	stroke-width: 4px;
+}
+
+/*
+.graph .node.preview path.fill, .hovering .graph .node.preview path.fill {
+	fill: #ff4e1f !important;
+}
+*/
+.graph .node.preview path.root, .hovering .graph .node.preview path.root {
+	/* fill: #ff4e1f; */
+	stroke: #ff704a;
+}
+.graph .node.preview path.donutValue, .hovering .graph .node.preview path.donutValue {
+	fill: #ff704a !important;
+}
+.graph .node.preview path.donutFill, .hovering .graph .node.preview path.donutFill {
+	fill: #d70e01 !important;
+}
+
+.graph .edge.visible.preview, .hovering .graph .edge.hovered.immediate.preview {
+	stroke: #ff4e1f;
+	stroke-width: 4px;
+}
+
+/* ================================ HOVER ================================== */
+
+.hovering .graph .node.visible, .hovering .graph .node.visible rect, .hovering .graph .node.visible path, .hovering .graph .node.visible text {
+	opacity: 0.3;
+}
+
+.hovering .graph .node.visible.selected, .hovering .graph .node.visible.selected rect, .hovering .graph .node.visible.selected path, .hovering .graph .node.visible.selected text {
+	opacity: 0.7;
+}
+
+.hovering .graph .node.visible.hovered, .hovering .graph .node.visible.hovered rect, .hovering .graph .node.visible.hovered path, .hovering .graph .node.visible.hovered text {
+	opacity: 1;	
+}
+/*
+.hovering .graph .node.hovered.immediate .fill {
+	fill: #ff841f !important;
+}
+*/
+.hovering .graph .node.hovered.immediate .root {
+	/* fill: #ff841f; */
+	stroke: #ff9c4a;
+}
+.hovering .graph .node.hovered.immediate .donutValue {
+	fill: #ff9c4a !important;
+}
+
+.hovering .graph .node.hovered.immediate .donutFill {
+	fill: #d76201 !important;
+}
+
+.hovering .graph .edge.visible {
+	opacity: 0.25;
+}
+
+.hovering .graph .edge.visible.hovered, .hovering .graph .edge.selected {
+	opacity: 1;
+	stroke-width: 1px;
+}
+
+.hovering .graph .edge.hovered.immediate {
+	stroke: #ff841f;
+	opacity: 1;
+	stroke-width: 4px;
+}
+
+/* ============================= ANIMATIONS ================================ */
+
+.graph.animate .node {
+	opacity: 0;
+	transition: fill 0.5s, stroke 0.5s, opacity 0.5s;
+	-webkit-transition: fill 0.5s, stroke 0.5s, opacity 0.5s;
+}
+
+.graph.animate .node.visible {
+	opacity: 1;
+	transition: fill 0.5s, stroke 0.5s, opacity 0.5s;
+	-webkit-transition: fill 0.5s, stroke 0.5s, opacity 0.5s;
+}
+
+.graph.animate .node.visible rect {
+	transition: fill 0.5s, stroke 0.5s, opacity 0.5s;
+	-webkit-transition: fill 0.5s, stroke 0.5s, opacity 0.5s;
+}
+
+.graph.animate .node.visible path {
+	transition: fill 0.5s, stroke 0.5s, opacity 0.5s;
+	-webkit-transition: fill 0.5s, stroke 0.5s, opacity 0.5s;
+}
+
+.graph.animate .node.visible text {
+	transition: fill 0.5s, stroke 0.5s, opacity 0.5s;
+	-webkit-transition: fill 0.5s, stroke 0.5s, opacity 0.5s;
+}
+
+.graph.animate .node.visible.entering {
+	transition: fill 0.5s, stroke 0.5s, opacity 0.5s;
+	-webkit-transition: fill 0.5s, stroke 0.5s, opacity 0.5s;
+}
+
+.graph.animate .edge {
+	transition: fill 0.1s, stroke 0.1s, stroke-width 0.1s, opacity 0.3s;
+	-webkit-transition: fill 0.1s, stroke 0.1s, stroke-width 0.1s, opacity 0.3s;
+}
+
+.graph.animate .edge.visible {
+	transition: fill 0.5s, stroke 0.5s, stroke-width 0.5s, opacity 0.5s;
+	-webkit-transition: fill 0.5s, stroke 0.5s, stroke-width 0.5s, opacity 0.5s;
+}
+
+.graph.animate .edge.visible.entering {
+	transition: fill 0.5s, stroke 0.5s, stroke-width 0.5s, opacity 1.5s;
+	transition-delay: 0, 0, 0, 0.5s;
+	-webkit-transition: fill 0.5s, stroke 0.5s, stroke-width 0.5s, opacity 1.5s;
+	-webkit-transition-delay: 0, 0, 0, 0.5s;
+}
+
+.hovering .graph.animate .node.visible {
+	transition: fill 0.5s, stroke 0.5s, opacity 0.5s;
+	-webkit-transition: fill 0.5s, stroke 0.5s, opacity 0.5s;
+}
+
+.hovering .graph.animate .edge.visible {
+	transition: fill 0.5s, stroke 0.5s, stroke-width 0.5s, opacity 0.4s;
+	-webkit-transition: fill 0.5s, stroke 0.5s, stroke-width 0.5s, opacity 0.4s;
+}
+
+/* ============================== MINI MAP ================================= */
+
+.minimap-attach .background {
+	stroke: #191919;
+	fill: #DDD;
+	fill-opacity: 0.5;
+}
+
+.minimap .viewfinder {
+	stroke: #191919;
+	stroke-opacity: 1;
+	fill: black;
+	opacity: 0.1;
+}
+
+.minimap .edge {
+	stroke-width: 2px;
+	stroke: #191919;
+	fill-opacity: 0;
+}
+
+.minimap .node rect {
+	fill: #ddd;
+	stroke-width: 2px;
+	stroke: #191919;
+}
+
+/* ============================== NODE LIST ================================ */
+.history-attach .background {
+	fill: #DDD;
+	stroke: black;
+	fill-opacity: 0.5;
+}
+
+.list .item rect {
+	stroke: #d70e01;
+	fill: #ff704a;
+	fill-opacity: 0.5;
+	stroke-width: 1;
+	transition: fill 0.5s, stroke 0.5s;
+	-webkit-transition: fill 0.5s, stroke 0.5s;
+}
+
+.list .item:hover rect {
+	fill: #ff9c4a;
+	stroke: #d76201;
+}
+
+.list .item text {
+	x: 50%;
+	dy: 1em;
+	text-anchor: middle;
+	dominant-baseline: central;
+}
+
+/* =========================== CONTEXT MENU ================================ */
+
+.context-menu {
+	background: rgba(245, 245, 245, 0.7);
+	border: 1px solid #999999;
+	list-style-type: none;
+	margin: 0;
+	padding: 0;
+}
+
+.context-menu a {
+	color: #111;
+	display: block;
+	padding: 3px;
+	text-decoration: none;
+}
+
+.context-menu a:hover {
+	background: rgba(102, 102, 102, 0.7);
+	color: white;
+	text-decoration: none;
+}
+
+
+/* ============================= HOVER TOOLTIP ============================= */
+
+.tipsy {
+	font-size: 15px;
+	position: absolute;
+	padding: 5px;
+	z-index: 100000;
+}
+
+.tipsy-inner {
+	background: rgba(245, 245, 245, 0.7);
+	border: 1px solid #999999;
+	color: #424242;
+	max-width: 550px;
+	padding: 5px 8px 4px 8px;
+	text-align: center;
+}
+
+/*
+.tipsy-inner {
+	border-radius: 3px;
+	-moz-border-radius: 3px;
+	-webkit-border-radius: 3px;
+}
+*/
+
+.tipsy-arrow {
+	position: absolute;
+	width: 0;
+	height: 0;
+	line-height: 0;
+	border: 5px dashed #000;
+	opacity: 0.5;
+}
+
+.tipsy-arrow-n {
+	border-bottom-color: #000;
+}
+
+.tipsy-arrow-s {
+	border-top-color: #000;
+}
+
+.tipsy-arrow-e {
+	border-left-color: #000;
+}
+
+.tipsy-arrow-w {
+	border-right-color: #000;
+}
+
+.tipsy-n .tipsy-arrow {
+	top: 0px;
+	left: 50%;
+	margin-left: -5px;
+	border-bottom-style: solid;
+	border-top: none;
+	border-left-color: transparent;
+	border-right-color: transparent;
+}
+
+.tipsy-nw .tipsy-arrow {
+	top: 0;
+	left: 10px;
+	border-bottom-style: solid;
+	border-top: none;
+	border-left-color: transparent;
+	border-right-color: transparent;
+}
+
+.tipsy-ne .tipsy-arrow {
+	top: 0;
+	right: 10px;
+	border-bottom-style: solid;
+	border-top: none;
+	border-left-color: transparent;
+	border-right-color: transparent;
+}
+
+.tipsy-s .tipsy-arrow {
+	bottom: 0;
+	left: 50%;
+	margin-left: -5px;
+	border-top-style: solid;
+	border-bottom: none;
+	border-left-color: transparent;
+	border-right-color: transparent;
+}
+
+.tipsy-sw .tipsy-arrow {
+	bottom: 0;
+	left: 10px;
+	border-top-style: solid;
+	border-bottom: none;
+	border-left-color: transparent;
+	border-right-color: transparent;
+}
+
+.tipsy-se .tipsy-arrow {
+	bottom: 0;
+	right: 10px;
+	border-top-style: solid;
+	border-bottom: none;
+	border-left-color: transparent;
+	border-right-color: transparent;
+}
+
+.tipsy-e .tipsy-arrow {
+	right: 0;
+	top: 50%;
+	margin-top: -5px;
+	border-left-style: solid;
+	border-right: none;
+	border-top-color: transparent;
+	border-bottom-color: transparent;
+}
+
+.tipsy-w .tipsy-arrow {
+	left: 0;
+	top: 50%;
+	margin-top: -5px;
+	border-right-style: solid;
+	border-left: none;
+	border-top-color: transparent;
+	border-bottom-color: transparent;
+}
+
+.enricher-tooltip {
+	text-align: left;
+}
+
+.enricher-tooltip .key {
+	display: inline-block;
+	float: left;
+	width: 140px;
+	font-weight: bold;
+	color: #424242;
+}
+
+.enricher-tooltip .value {
+	display: inline-block;
+	float: left;
+	word-wrap: break-word;
+	max-width: 350px;
+	color: #424242;
+}
+
+.enricher-tooltip .clear {
+	clear: both;
+}
+
+.enricher-tooltip div {
+	line-height: 1.4;
+}

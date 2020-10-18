@@ -1,11 +1,38 @@
 <?php
-    echo $this->Html->script("canvasXpress/canvasXpress.min.js");
-    // TODO: host locally
-    // Highcharts
-    echo $this->Html->script('https://code.highcharts.com/highcharts.js');
-    echo $this->Html->script('https://code.highcharts.com/modules/exporting.js');
-    echo $this->Html->script("swfobject");
+    // TODO: host highcahrts locally
+    echo $this->Html->script(
+        array(
+            'https://code.highcharts.com/highcharts.js',
+            'https://code.highcharts.com/modules/exporting.js',
+            'dagre.js',
+            'd3-3.5.6.min.js',
+            'd3/d3-color.v1.min.js',
+            'd3/d3-interpolate.v1.min.js',
+            'd3/d3-scale-chromatic.v1.min.js',
+            'jQuery/jquery.contextMenu.js',
+            'jQuery/jquery.tipsy.js',
+//            'enricher.min.js'
+            'enricher/ContextMenu.js',
+            'enricher/DirectedAcyclicGraph.js',
+            'enricher/Enricher.js',
+            'enricher/Graph.js',
+            'enricher/History.js',
+            'enricher/List.js',
+            'enricher/Minimap.js',
+            'enricher/MinimapZoom.js',
+            'enricher/Selectable.js',
+            'enricher/Tooltip.js',
+            'enricher/Utils.js'
+        )
+    );
+
+    echo $this->Html->css(
+        array(
+            'enricher.css'
+        )
+);
 ?>
+
     <div class="page-header">
         <h1 class="text-primary">Subset functional enrichment</h1>
     </div>

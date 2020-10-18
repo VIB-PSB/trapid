@@ -6,15 +6,13 @@
 <head>
   <meta charset="utf-8">
   <meta name="description" content="TRAPID: Rapid analysis of transcriptomics data">
-  <meta name="author" content="Michiel Van Bel">
+  <meta name="author" content="The CNB group at VIB-UGent">
   <meta name="viewport" content="width=device-width, user-scalable=no">
   <meta http-equiv="Content-Style-Type" content="text/css">
     <?php
-	echo $this->Html->script(array('jquery-3.1.1.min', 'bootstrap-3.3.7.min'));
-	// echo $this->Html->script(array('prototype-1.7.0.0','scriptaculous'));
     // TODO: only import what is actually used from bootstrap + use minified version
-	// echo $this->Html->script(array('prototype-1.7.0.0','swfobject', 'bootstrap-3.3.7'));
-	// echo $this->Html->script(array('swfobject', 'bootstrap-3.3.7'));
+    // Note: we use a legacy version of jQuery because version >=3.0 breaks the GO enrichment graph tooltips (tipsy)
+    echo $this->Html->script(array('jquery-2.2.4.min', 'bootstrap-3.3.7.min'));
     ?>
     <title>
         <?php

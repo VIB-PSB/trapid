@@ -365,7 +365,7 @@ function create_export_example($elmt_id, $example_data){
                 <div class="row">
                     <div class="col-md-4">
                         <div class="doc-figure">
-                            <?php echo $this->Html->image('documentation/optimized/003_go_graph.png', array('alt' => 'GO enrichment graph', 'class'=>'img-responsive img-centered')); ?>
+                            <?php echo $this->Html->image('documentation/optimized/go_graph.png', array('alt' => 'GO enrichment graph', 'class'=>'img-responsive img-centered')); ?>
                             <p class="text-justify doc-figure-legend small">
                                 <strong>Figure 4: GO enrichment graph example (biological process).</strong></p>
                         </div>
@@ -373,7 +373,7 @@ function create_export_example($elmt_id, $example_data){
                     <div class="col-md-8">
                         <p class="text-justify">Various comparative analyses can be performed using subsets, accessible from the side menu of an experiment:
                         <ul>
-                            <li><code>Subset enrichment</code>: subset functional enrichment (subset versus all; hypergeometric distribution): visualized as bar chart (Figure 3A), table, Sanley diagrams (Figure 3B), and enrichment
+                            <li><code>Subset enrichment</code>: subset functional enrichment (subset versus all; hypergeometric distribution): visualized as bar chart (Figure 3A), table, Sankey diagrams (Figure 3B), and enrichment
                                 GO graph output when working with GO terms (Figure 4).
                             </li>
                             <li><code>Compare subset</code>: calculates functional annotation frequencies between subsets. Also includes

@@ -44,12 +44,26 @@ class ExtendedGo extends AppModel{
   }
 
 
-
   function getGeneralProfile($go_ids){
     if(!is_array($go_ids)){$go_ids = array($go_ids);}
 
   }
 
+
+    /**
+     * Retrieve the root GO terms (GO:0005575 [CC], GO:0003674 [MF], GO:0008150 [BP])
+     *
+     * @return array Root-level GO terms
+     *
+     */
+    function getRootGoTerms(){
+        $result                 = array();
+        $query_result   = $this->find("all", array("fields"=>"name", "conditions"=>array("type"=>"go","is_obsolete"=>0,"num_sptr_steps"=>0)));
+        if($query_result){
+            $result = array_map(function($qr) {return $qr['ExtendedGo']['name'];}, $query_result);
+        }
+        return $result;
+    }
 
 }
 ?>

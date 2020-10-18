@@ -10,7 +10,7 @@ class GoParents extends AppModel {
 
 
 	/**
-	 * This method retrievs all the parental GO terms from a given GO, and their associated smallest path to root (sptr).
+	 * This method retrieves all the parental GO terms from a given GO, and their associated smallest path to root (sptr).
 	 * Data is stored in 2 ways (go to sptr, sptr to multiple go's), in order for fast lookups.
 	 *
 	 * @param go_id GO term for which we want the parent terms
@@ -147,6 +147,35 @@ class GoParents extends AppModel {
 	  $result["parent_child"] = $pc_array;
 	  $result["child_parent"] = $cp_array;
 	  return $result;
+	}
+
+
+	/* Get parental terms, return them as an associative array */
+	function getGoParentsSimple($go_children) {
+		$result = [];
+        $go_parental_data = $this->find("all", array("fields"=>array("child", "parent"), "conditions"=>array("type"=>"go","child"=>$go_children)));
+        if($go_parental_data) {
+        	foreach ($go_parental_data as $rec) {
+        		$child = $rec['GoParents']['child'];
+        		$parent = $rec['GoParents']['parent'];
+        		$result[$child][] = $parent;
+			}
+		}
+		// Keep direct parents only (i.e. for each GO term's array of parents, remove their parents).
+		foreach($result as $go_id=>$parents) {
+        	$exclude = [];
+        	foreach($parents as $parent) {
+        		if(array_key_exists($parent, $result)) {
+	        		$exclude[] = $result[$parent];
+				}
+			}
+			if(!empty($exclude)) {
+				$exclude = array_merge(...$exclude);
+        		$result[$go_id] = array_diff($result[$go_id], $exclude);
+			}
+		}
+
+        return $result;
 	}
 
 }

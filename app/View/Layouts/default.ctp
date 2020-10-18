@@ -10,7 +10,8 @@
     <meta name="viewport" content="width=device-width, user-scalable=no">
     <meta http-equiv="Content-Style-Type" content="text/css">
     <?php
-    echo $this->Html->script(array('jquery-3.1.1.min', 'bootstrap-3.3.7.min'));
+    // Note: we use a legacy version of jQuery because version >=3.0 breaks the GO enrichment graph tooltips (tipsy)
+    echo $this->Html->script(array('jquery-2.2.4.min', 'bootstrap-3.3.7.min', 'datatables.min'));
 //     echo $this->Html->script(array('scriptaculous'));
 //     TODO: only import what is actually used from bootstrap + use minified version
 //     echo $this->Html->script(array('swfobject', 'bootstrap-3.3.7'));

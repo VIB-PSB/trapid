@@ -1456,7 +1456,7 @@ class ToolsController extends AppController{
 
     // No error when running enrichment job on the cluster, so let's retrieve the results from the database
     $db_results = $this->FunctionalEnrichments->find("all", array(
-        "fields"=>array("identifier", "label", "p_value", "log_enrichment", "subset_ratio", "is_hidden"),
+        "fields"=>array("identifier", "label", "p_value", "log_enrichment", "subset_ratio", "subset_hits", "is_hidden"),
         "conditions"=>array("experiment_id"=>$exp_id, "label"=>$subset_title, "max_p_value"=>$pvalue, "data_type"=>$type)
     ));
     // pr($db_results);
@@ -1466,37 +1466,109 @@ class ToolsController extends AppController{
         $res = $r['FunctionalEnrichments'];
       // Only working with enrichment (not depletion)
       if($res['log_enrichment'] > 0) {
-	    if($type=="go"){
-		  $result[$res['identifier']] = array("go"=>$res['identifier'],"is_hidden"=>$res['is_hidden'],"p-value"=>$res['p_value'], "enrichment"=>$res['log_enrichment'], "subset_ratio"=>$res['subset_ratio']);
-	    }
-	    else if($type=="ipr"){
-          $result[$res['identifier']] = array("ipr"=>$res['identifier'],"is_hidden"=>$res['is_hidden'],"p-value"=>$res['p_value'], "enrichment"=>$res['log_enrichment'], "subset_ratio"=>$res['subset_ratio']);
-	    }
-	    else if($type=="ko"){
-          $result[$res['identifier']] = array("ko"=>$res['identifier'], "is_hidden"=>$res['is_hidden'], "p-value"=>$res['p_value'], "enrichment"=>$res['log_enrichment'], "subset_ratio"=>$res['subset_ratio']);
-	    }
+		  $result[$res['identifier']] = array($type=>$res['identifier'],"is_hidden"=>$res['is_hidden'],"p-value"=>$res['p_value'], "enrichment"=>$res['log_enrichment'], "subset_ratio"=>$res['subset_ratio'], "subset_hits"=>$res['subset_hits']);
 	  }
     }
 
     $this->set("result",$result);
-      // pr($result);
+//       pr($result);
 
-
-    // Get extra information
+    // Get extra information when working with GO: aspects / interactive enrichment GO graph input data
     if($type=="go"){
-    	$go_data		= $this->ExtendedGo->find("all",array("conditions"=>array("name"=>array_keys($result))));
-    	$go_descriptions	= $this->TrapidUtils->indexArray($go_data,"ExtendedGo","name","desc");
-//    	pr($go_descriptions);
-    	$go_types		= array("BP"=>array(), "MF"=>array(), "CC"=>array());
+        $go_graph_namespaces = array("BP"=>"biological_process", "MF"=>"molecular_function", "CC"=>"cellular_component");
+        $go_graph_data_all = array("headers"=>array("ontology"=>"go"), "nodes"=>array());
+//        $go_graph_data = array("headers"=>array("ontology"=>"go"), "nodes"=>array());
+        $n_trs_subset = $this->TranscriptsLabels->find("count", array("conditions"=>array("experiment_id"=>$exp_id, "label"=>$subset_title)));
+        $root_go_terms = $this->ExtendedGo->getRootGoTerms();
+        $root_go_data = $this->ExtendedGo->retrieveGoInformation($root_go_terms);
+        $root_go_per_type = array();
+        foreach ($root_go_data as $go_id=>$go_data) {
+          $root_go_per_type[$go_data['type']] = $go_id;
+        }
+
+    	$go_data = $this->ExtendedGo->find("all",array("conditions"=>array("name"=>array_keys($result))));
+    	$go_descriptions = $this->TrapidUtils->indexArray($go_data,"ExtendedGo","name","desc");
+    	$go_parents = $this->GoParents->getGoParentsSimple(array_keys($result));
+
+    	$go_types = array("BP"=>array(), "MF"=>array(), "CC"=>array());
+        $go_graph_data_all["headers"]["ontology"] = "go";
+        $go_graph_data_all["nodes"] = array();
     	foreach($go_data as $gd){
 //      		$go_type	= $gd['ExtendedGo']['type'];
 //      		$go_types[$go_type][] = $gd['ExtendedGo']['go'];
             // Db structure changed...
+            $go_id = $gd['ExtendedGo']['name'];
       		$go_type	= $gd['ExtendedGo']['info'];
-      		$go_types[$go_type][] = $gd['ExtendedGo']['name'];
+      		$go_types[$go_type][] = $go_id;
+      		// Create node data for enrichment GO graph
+            $node_parents = array_values(array_intersect(array_keys($result), $go_parents[$go_id]));
+            // Add root term as parent for current aspect if there are none
+            if(empty($node_parents)) {
+              $node_parents[] = $root_go_per_type[$go_type];
+            }
+            $node_data = array(
+                "id"    => $go_id,
+                "name"  => $gd['ExtendedGo']['desc'],
+                "namespace"     => $go_graph_namespaces[$go_type],
+                "parents"       => $node_parents,
+                "enricher"      => array(
+                    "counts"=> array(
+                        "ftr_size"      => intval($n_trs_subset),  // We set this to the size of the subset
+//                        "set_size"      => intval("100"),
+                        "n_hits"        => intval($result[$go_id]['subset_hits'])
+                    ),
+                    "scores"=> array(
+                        "enr_fold"      => floatval($result[$go_id]['enrichment']),
+                        "p-val"         => floatval($result[$go_id]['p-value'])
+                    )
+                )
+            );
+            $go_graph_data_all["nodes"][$go_id] = $node_data;
+/*            if($result[$go_id]['is_hidden'] == 0) {
+                // Filter parents to keep only those for which `is_hidden` equals zero (or root terms)
+                $go_graph_data["nodes"][$go_id] = $node_data;
+            }*/
     	}
+
+    	// Add root nodes for each aspect having enriched GO terms
+        foreach($go_types as $type => $gos) {
+    	  if(!empty($gos)) {
+    	      $root_go_id = $root_go_per_type[$type];
+              $node_data = array(
+                  "id"	=> $root_go_id,
+                  "name"	=> $root_go_data[$root_go_id]['desc'],
+                  "namespace"	=> $go_graph_namespaces[$type],
+                  "is_root" => 1
+              );
+              $go_graph_data_all["nodes"][$root_go_id] = $node_data;
+//              $go_graph_data["nodes"][$go_id] = $node_data;
+          }
+        }
+
+/*        foreach($root_go_terms as $go_id) {
+    	  $node_data = array(
+              "id"	=> $go_id,
+              "name"	=> $root_go_data[$go_id]['desc'],
+              "namespace"	=> $go_graph_namespaces[$root_go_data[$go_id]['type']],
+              "is_root" => 1
+          );
+            $go_graph_data_all["nodes"][$go_id] = $node_data;
+//            $go_graph_data["nodes"][$go_id] = $node_data;
+
+        }*/
+
     	$this->set("go_descriptions",$go_descriptions);
-    	$this->set("go_types",$go_types);
+    	$this->set("go_types", $go_types);
+    	$this->set("go_graph_data_all", $go_graph_data_all);
+//    	$this->set("go_graph_data", $go_graph_data);
+
+        // Get tooltip content
+        $tooltips = $this->TrapidUtils->indexArraySimple(
+            $this->HelpTooltips->find("all", array("conditions"=>array("tooltip_id LIKE 'go_enrichment_graph%'"))),
+            "HelpTooltips","tooltip_id","tooltip_text"
+        );
+        $this->set("tooltips", $tooltips);
+
     }
     else if($type=="ipr"){
       $ipr_data			= $this->ProteinMotifs->find("all",array("conditions"=>array("name"=>array_keys($result))));
