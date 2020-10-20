@@ -378,7 +378,9 @@ class GeneFamilyController extends AppController{
     if(strpos($exp_info['used_plaza_database'], "eggnog") !== false) {
         $this->set("eggnog_og_linkout", true);
         $gf_tax_scope = $this->GfData->getEggnogTaxScope($gf_info['GeneFamilies']['plaza_gf_id']);
+        $gf_func_data = $this->GfData->getEggnogFuncData($gf_info['GeneFamilies']['plaza_gf_id']);
         $this->set("gf_tax_scope", $gf_tax_scope);
+        $this->set("gf_func_data", $gf_func_data);
     }
 
     // Subsets - # transcripts information and tooltip (for subset creation form)
@@ -401,21 +403,29 @@ class GeneFamilyController extends AppController{
   }
 
 
-  // Get top GF GO terms to display GF tooltip (used in core GF completeness core GF tables).
-  function top_go_tooltip($exp_id=null, $ref_gf_id=null){
+  // Get top GF enriched functions to display GF tooltip (used in core GF completeness core GF tables).
+  // For PLAZA ref DBs, get GOs InterPros. For eggNOG ref DBs, get NOG functional data and GOs.
+  function top_fct_tooltip($exp_id=null, $ref_gf_id=null){
       $this->layout = "";
       $n_max = 3;
       if(!$exp_id || !$ref_gf_id){return;}
       parent::check_user_exp($exp_id);
-      $exp_info	= $this->Experiments->getDefaultInformation($exp_id);
-      // $this->set("exp_info",$exp_info);
-      // $this->set("exp_id",$exp_id);
+      $ref_db_type = $this->Experiments->getRefDbType($exp_id);
+      // pr($ref_db_type);
       // Check if GF exists in reference database
       $gf_exists = $this->GfData->gfExists($ref_gf_id);
       if($gf_exists) {
-        $this->set("ref_gf_id", $ref_gf_id);
-        $ref_gf_top_gos = $this->GfData->getTopGoTerms($ref_gf_id, $n_max);
-        $this->set("top_gos", $ref_gf_top_gos);
+          $this->set("ref_gf_id", $ref_gf_id);
+          if($ref_db_type == "eggnog") {
+              $ref_gf_func_data = $this->GfData->getEggnogFuncData($ref_gf_id);
+              $this->set("func_data", $ref_gf_func_data);
+          }
+          else {
+              $ref_gf_top_iprs = $this->GfData->getTopIprTerms($ref_gf_id, $n_max);
+              $this->set("top_iprs", $ref_gf_top_iprs);
+          }
+          $ref_gf_top_gos = $this->GfData->getTopGoTerms($ref_gf_id, $n_max);
+          $this->set("top_gos", $ref_gf_top_gos);
       }
   }
 

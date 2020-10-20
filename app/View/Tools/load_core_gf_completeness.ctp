@@ -19,7 +19,9 @@
         <div id="core-gf-summary" class="tab-pane active"><br>
             <div class="row">
                 <div class="col-md-6">
-                    <?php echo $this->element("charts/bar_core_gfs", array("n_missing"=>$n_missing, "n_represented"=>$n_represented, "n_total"=>$n_total, "chart_div_id"=>"bar_core_gfs", "chart_title"=> $tax_name. " core gene families (GFs)", "chart_subtitle"=>"Represented and missing core GFs (".$label.")"));?>
+                    <?php
+                    $chart_label = ($label == "None" ? "all transcripts" : $label);
+                    echo $this->element("charts/bar_core_gfs", array("n_missing"=>$n_missing, "n_represented"=>$n_represented, "n_total"=>$n_total, "chart_div_id"=>"bar_core_gfs", "chart_title"=> $tax_name. " core gene families (GFs)", "chart_subtitle"=>"Represented and missing core GFs (".$chart_label.")"));?>
                 </div>
                 <div class="col-md-6">
                     <br>
@@ -27,14 +29,23 @@
                     <li><strong>Core GF completeness score</strong>: <?php echo number_format((float)$completeness_score, 3, '.', ',');?></li>
                     <li><strong>Represented core GFs</strong>: <?php echo $n_represented . " / " . $n_total;?></li>
                     <li><strong>Missing core GFs</strong>: <?php echo $n_missing . " / " . $n_total;?></li>
-                    <li><strong>Transcript subset</strong>: <code><?php echo $label;?></code></li>
+                    <li><strong>Transcript subset</strong>:
+                        <?php
+                        if($label == "None") {
+                            echo "all transcripts (<code>none</code>)";
+                        }
+                        else {
+                            echo "<code>" . $label . "</code>";
+                        }
+                        ?>
+                    </li>
                     <li><strong>Parameters</strong>: conservation threshold <code><?php echo $species_perc; ?></code> - top hits <code><?php echo $top_hits; ?></code></li>
                 </ul>
                 </div>
             </div>
             <br>
         </div>
-        <div id="represented-gfs" class="tab-pane" style="margin-bottom: 50px;"><br>
+        <div id="represented-gfs" class="tab-pane" style="margin-bottom: 80px;"><br>
 
             <?php
             if($n_represented > 0) {
@@ -80,7 +91,7 @@
             ?>
         </div>
 
-        <div id="missing-gfs" class="tab-pane" style="margin-bottom: 50px;"><br>
+        <div id="missing-gfs" class="tab-pane" style="margin-bottom: 80px;"><br>
             <?php
             if($n_missing > 0) {
                 echo "<table id=\"missing-gfs-table\" class=\"table table-compact table-striped table-hover table-bordered table-responsive gf-table\">
@@ -146,7 +157,7 @@
                 $(this).append(tooltip_html_str);
                 // Ok now populate the tooltip!
                 jQuery.ajax({
-                    url:"<?php echo $this->Html->url(array("controller" => "gene_family", "action" => "top_go_tooltip", $exp_id)); ?>/" + gf_txt,
+                    url:"<?php echo $this->Html->url(array("controller" => "gene_family", "action" => "top_fct_tooltip", $exp_id)); ?>/" + gf_txt,
                     type:'GET',
                     dataType:'html',
                     success:function(data){
@@ -165,10 +176,25 @@
 <?php endif; ?>
 <script>
 <?php if($n_missing > 0): ?>
-$('#missing-gfs-table').dataTable( { dom: 'lBfrtip', buttons: [{ extend: 'csvHtml5', text: '<span class="glyphicon glyphicon-download-alt"></span>  Export to CSV', className: 'pull-right btn btn-sm btn-default', title: "missing_core_gfs_" + "<?php echo $tax_name; ?>"}] } );
+$('#missing-gfs-table').dataTable( { dom:
+"<'row'<'col-sm-12 text-right'B>>" + "<'row'<'col-md-4 col-sm-12'f><'col-md-8 col-sm-12 text-right'ipl>>" + "<'row'<'col-sm-12'tr>>" + "<'row'<'col-md-2'><'col-md-10 text-right'ipl>>", lengthMenu: [[10, 20, 50, 100, -1], [10, 20, 50, 100, "All"]], pageLength: 20, "language": {"lengthMenu": "_MENU_", "info": "_START_ - _END_ of _TOTAL_", "infoEmpty": "0 - 0 of 0", "infoFiltered":"(filtered from _MAX_)"}, buttons: [{ extend: 'csvHtml5', text: '<span class="glyphicon glyphicon-download-alt"></span>  Export to CSV', className: 'btn btn-sm btn-default row-table-download', title: "missing_core_gfs_" + "<?php echo $tax_name; ?>"}] } );
 <?php endif; ?>
 <?php if($n_represented > 0): ?>
-$('#represented-gfs-table').dataTable( { dom: 'lBfrtip', buttons: [{ extend: 'csvHtml5', text: '<span class="glyphicon glyphicon-download-alt"></span>  Export to CSV', className: 'pull-right btn btn-sm btn-default', title: "represented_core_gfs_" + "<?php echo $tax_name; ?>"}] } );
+$('#represented-gfs-table').dataTable( { dom: "<'row'<'col-sm-12 text-right'B>>" + "<'row'<'col-md-4 col-sm-12'f><'col-md-8 col-sm-12 text-right'ipl>>" + "<'row'<'col-sm-12'tr>>" + "<'row'<'col-md-2'><'col-md-10 text-right'ipl>>", lengthMenu: [[10, 20, 50, 100, -1], [10, 20, 50, 100, "All"]], pageLength: 20, "language": {"lengthMenu": "_MENU_", "info": "_START_ - _END_ of _TOTAL_", "infoEmpty": "0 - 0 of 0", "infoFiltered":"(filtered from _MAX_)"}, buttons: [{ extend: 'csvHtml5', text: '<span class="glyphicon glyphicon-download-alt"></span>  Export to CSV', className: 'btn btn-sm btn-default row-table-download', title: "represented_core_gfs_" + "<?php echo $tax_name; ?>"}] } );
 <?php endif; ?>
-</script>
 
+/*
+dom:
+    "<'row'<'col-sm-12 text-right'B>>" +
+    "<'row'<'col-md-5 col-sm-12'f><'col-md-7 col-sm-12 text-right'ipl>>" +
+    "<'row'<'col-sm-12'tr>>" +
+    "<'row'<'col-md-2'><'col-md-10 text-right'ipl>>",
+        "language": {
+    "lengthMenu": "_MENU_",
+        "info": "_START_ - _END_ of _TOTAL_",
+        "infoEmpty": "0 - 0 of 0",
+        "infoFiltered": "(filtered from _MAX_)"
+},
+*/
+
+</script>

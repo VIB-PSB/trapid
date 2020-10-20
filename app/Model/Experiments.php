@@ -5,8 +5,8 @@
    */
 class Experiments extends AppModel{
 
-  var $name	= 'Experiments';
-  var $useTable = 'experiments';
+//  var $name	= 'Experiments';
+//  var $useTable = 'experiments';
   var $primaryKey = "experiment_id";
 
 
@@ -86,9 +86,24 @@ class Experiments extends AppModel{
                 $result["function_types"][] = $fa_type;
             }
         }
+        // Check and set the current reference database type: plaza or eggnog
+        $result['ref_db_type'] = (strpos($result['used_plaza_database'], "eggnog") !== false ? "eggnog": "plaza");
     }
     return $result;
   }
+
+
+    function getRefDbType($exp_id){
+      $ref_db_type = "plaza";  // PLAZA by default
+      $exp_data = $this->find("first", array("conditions"=>array("experiment_id"=>$exp_id), "fields"=>array("used_plaza_database")));
+      if($exp_data) {
+          $ref_db_name = $exp_data['Experiments']['used_plaza_database'];
+          if(strpos($ref_db_name, "eggnog") !== false) {
+              $ref_db_type = "eggnog";
+          }
+      }
+    return $ref_db_type;
+    }
 
 
     function getTranscriptCount($exp_id){

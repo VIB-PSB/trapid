@@ -29,13 +29,19 @@ echo $this->Html->css('https://cdn.jsdelivr.net/gh/Syone/selectize-bootswatch@ma
                     }
 			    }
 			    else{
-				echo $gf_info['plaza_gf_id'];
+    				echo $gf_info['plaza_gf_id'];
 			    }			 
 			    echo "</dd>\n";
 			    if(isset($gf_tax_scope)) {
 			        echo "<dt>NOG taxonomic level</dt>";
-                    echo "<dd>" . $gf_tax_scope['name'] . " <span class='label label-default'>" . $gf_tax_scope['scope'] . "</span>" . "</dd>";
+                    echo "<dd>"  . $gf_tax_scope['name'] .  " <span class='label label-default'>" . $gf_tax_scope['scope'] . "</span></dd>";
                 }
+                if(isset($gf_func_data)) {
+                    echo "<dt>NOG functional data</dt>";
+                    echo "<dd>" . $gf_func_data['func_cat_label'] .  " <span class=\"label label-default\">" . $gf_func_data['func_cat_id']  ."</span> ; " . $gf_func_data['description'] . "</dd>";
+//                    echo "<dd>" . $gf_tax_scope['name'] . " <span class='label label-default'>" . $gf_tax_scope['scope'] . "</span>" . "</dd>";
+                }
+
 			}
 			else{	
 			    echo "<dt>Ortho group content</dt>\n";

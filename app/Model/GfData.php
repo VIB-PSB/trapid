@@ -95,7 +95,7 @@ class GfData extends AppModel{
   }
 
 
-  // Check if GF exists -- use `gene_families` instead?
+  // Check if a reference GF exists -- use `gene_families` instead?
     function gfExists($ref_gf_id){
         $gf_data = $this->find("first", array('conditions'=>array('gf_id'=>$ref_gf_id)));
         if($gf_data) {
@@ -106,39 +106,79 @@ class GfData extends AppModel{
         }
     }
 
+
     // To move to another model?
     function getTopGoTerms($ref_gf_id, $n_max) {
-        $top_gos = [];
+        $top_gos = array("BP"=>array(), "MF"=>array(), "CC"=>array());
         $query		= "SELECT gf_fd.`name`, fd.`desc`, fd.`info` FROM  `gf_functional_data` gf_fd, `functional_data` fd WHERE gf_fd.`gf_id`='" . $ref_gf_id . "' AND gf_fd.`type`='go' AND gf_fd.`is_hidden`='0' AND fd.`name`=gf_fd.`name` ORDER BY gf_fd.`f_score` DESC";
         $res		= $this->query($query);
         foreach($res as $r) {
             $go_aspect = $r['fd']['info'];
             $go_name = $r['gf_fd']['name'];
             $go_desc = $r['fd']['desc'];
-            if(!array_key_exists($go_aspect, $top_gos)){
-                $top_gos[$go_aspect] = [];
-            }
             if(count($top_gos[$go_aspect]) < $n_max){
                 $top_gos[$go_aspect][] =  array("name"=>$go_name, "desc"=>$go_desc);
             }
         }
+        $top_gos = array_filter($top_gos);
         return $top_gos;
     }
+
+
+    // To move to another model?
+    function getTopIprTerms($ref_gf_id, $n_max) {
+        $top_iprs = [];
+        $query		= "SELECT gf_fd.`name`, fd.`desc` FROM  `gf_functional_data` gf_fd, `functional_data` fd WHERE gf_fd.`gf_id`='" . $ref_gf_id . "' AND gf_fd.`type`='interpro' AND gf_fd.`is_hidden`='0' AND fd.`name`=gf_fd.`name` ORDER BY gf_fd.`f_score` DESC";
+        $res		= $this->query($query);
+        foreach($res as $r) {
+            $ipr_name = $r['gf_fd']['name'];
+            $ipr_desc = $r['fd']['desc'];
+            if(count($top_iprs) < $n_max){
+                $top_iprs[] =  array("name"=>$ipr_name, "desc"=>$ipr_desc);
+            }
+        }
+        return $top_iprs;
+    }
+
 
     // Retrieve EggNOG taxonomic scope for orthologous group `$nog_id`
     // Return taxonomic scope data (identifier and name/description) as an associative array
     function getEggnogTaxScope($nog_id) {
-        $tax_scope_data = array();
+        $tax_scope_data = [];
         $db = $this->getDataSource();
         // Tax. scope could also be retrieved from `gene_families`
         $res = $db->fetchAll(
-            'select name,scope from taxonomic_levels where scope = (select scope from gf_data where gf_id =? limit 1)',
+            'SELECT name, scope FROM taxonomic_levels WHERE scope = (SELECT scope FROM gf_data WHERE gf_id =? LIMIT 1)',
             array($nog_id)
         );
         if($res) {
             $tax_scope_data = array("name"=>$res[0]['taxonomic_levels']['name'], "scope"=>$res[0]['taxonomic_levels']['scope']);
         }
         return $tax_scope_data;
+    }
+
+
+    // Retrieve EggNOG functional data (COG functional category and description) for orthologous group `$nog_id`
+    // Return an associative array containing functional category (id and label) and description
+    // Note: move to another model?
+    function getEggnogFuncData($nog_id) {
+        $func_data = [];
+        $db = $this->getDataSource();
+        $res = $db->fetchAll(
+            'SELECT `func_cats`, `description` FROM `gene_families` WHERE `gf_id` = ?',
+            array($nog_id)
+        );
+        if($res) {
+            $func_data['description'] = $res[0]['gene_families']['description'];
+            $func_data['func_cat_id'] = $res[0]['gene_families']['func_cats'];
+            // Get labels for functional cateogories (some NOGs have multiple, e.g. '0003T@acidNOG')
+            $func_cats = explode(",", $res[0]['gene_families']['func_cats']);
+            // Get functional category descriptions
+            $func_cat_query = "SELECT group_concat(`description`) AS `func_cat_label` FROM `functional_categories` WHERE `func_cat_id` IN ('" . implode("','", $func_cats)  . "')";
+            $func_cat_res = $this->query($func_cat_query, true);
+            $func_data['func_cat_label'] = $func_cat_res[0][0]['func_cat_label'];
+        }
+        return $func_data;
     }
 }
 ?>
