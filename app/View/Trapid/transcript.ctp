@@ -10,19 +10,7 @@
         $disable_cluster_tools = true;
     }
 
-    $disabled_framedp = true;
-    if ($transcript_info['gf_id']) {
-        $disabled_framedp = false;
-    }
     $toolbox = array(
-//            "Structural data" => array(
-//        array(
-//            "Correct frameshifts with FrameDP",
-//            $this->Html->url(array("controller" => "tools", "action" => "framedp", $exp_id, $transcript_info['gf_id'], $transcript_info['transcript_id'])),
-//            "some_image.png",
-//            $disabled_framedp || $disable_cluster_tools
-//        ),
-//    ),
         "Similarity search" => array(
             array(
                 "Browse similarity search output",
@@ -165,9 +153,6 @@
                             echo "<div class=\"col-md-10 col-xs-8\">\n";
                             echo "<ul class='list-unstyled'>";
                             echo "<li $style1>A putative frameshift was detected in this sequence</li>";
-                            if ($transcript_info['is_frame_corrected'] == 1) {
-                                echo "<li style='color:green'>A putative frameshift was corrected with FrameDP</li>";
-                            }
                             echo "</ul>\n";
                             echo "</div>\n";
                             echo "</div>\n";
@@ -691,7 +676,7 @@
     <?php endif; ?>
 
     <?php if($exp_info['perform_tax_binning'] == 1): ?>
-    // Toggle intermediate taxonomic lcades in the taxonomic lineage
+    // Toggle intermediate taxonomic clades in the taxonomic lineage
     $(".toggle-clades").on("click", function(){
         var $hide_clades_elmt = $("#hide-clades");
         var clades_shown = $hide_clades_elmt.hasClass("hidden");

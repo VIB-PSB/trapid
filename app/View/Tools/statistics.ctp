@@ -68,18 +68,18 @@
             <?php create_stats_row("Average ORF length", $loading_span_elmt, null,  "avg_orf_length"); ?>
             <?php create_stats_row("#ORFs with a start codon", $num_start_codons, perc($num_start_codons,$num_transcripts,1,false)); ?>
             <?php create_stats_row("#ORFs with a stop codon", $num_stop_codons, perc($num_stop_codons,$num_transcripts,1,false)); ?>
+            <?php create_stats_row("#Transcripts with putative frameshift", $num_putative_fs, perc($num_putative_fs,$num_transcripts,1,false)); ?>
         </div>
     </div>
 
-    <div class="panel panel-default">
-        <div class="panel-heading">
-            <h3 class="panel-title">Frameshift information</h3>
-        </div>
-        <div class="panel-body">
-            <?php create_stats_row("#Transcripts with putative frameshift", $num_putative_fs, perc($num_putative_fs,$num_transcripts,1,false)); ?>
-            <?php create_stats_row("#Transcripts with corrected frameshift", $num_correct_fs, perc($num_correct_fs,$num_transcripts,1,false)); ?>
-        </div>
-    </div>
+<!--    <div class="panel panel-default">-->
+<!--        <div class="panel-heading">-->
+<!--            <h3 class="panel-title">Frameshift information</h3>-->
+<!--        </div>-->
+<!--        <div class="panel-body">-->
+<!--            --><?php //create_stats_row("#Transcripts with corrected frameshift", $num_correct_fs, perc($num_correct_fs,$num_transcripts,1,false)); ?>
+<!--        </div>-->
+<!--    </div>-->
 
     <div class="panel panel-default">
         <div class="panel-heading">
@@ -111,7 +111,7 @@
             }
             ?>
         <?php else: ?>
-            <p class="lead text-muted">No taxonomic classification was performed or this experiment. </p>
+            <p class="lead text-muted">No taxonomic classification was performed for this experiment. </p>
         <?php endif; ?>
         </div>
     </div>
@@ -327,7 +327,7 @@
 
 
 	//next, frameshift information
-	$fpdf->SetFont('Arial','U',12);
+/*	$fpdf->SetFont('Arial','U',12);
 	$fpdf->Cell(60,10,"Frameshift information");
 	$fpdf->Ln();
 	$fpdf->SetFont("Arial","",10);
@@ -340,7 +340,7 @@
 		$fpdf->Ln();
 	}
 	$fpdf->Ln();
-	$fpdf->Ln();
+	$fpdf->Ln();*/
 
 
 	//next, meta information
@@ -436,4 +436,4 @@
 	echo $fpdf->Output();
 ?>
 <?php endif; ?>
-<?php  echo $this->element('sql_dump');  // Dump all MySQL queries (debug) ?>
+<?php // echo $this->element('sql_dump');  // Dump all MySQL queries (debug) ?>

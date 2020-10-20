@@ -129,12 +129,14 @@ public class InitialTranscriptsProcessing {
 		String chosen_scope = expConfig.get("initial_processing", "tax_scope");  // "auto";
 		// The minimum representation frequency of GF members to transfer functional annotation (e.g. if a GO term is
 		// represented in at least this fraction of members of a gene family, assign it to the transcript).
-		double gf_min_rep = Double.parseDouble(args[2]);
+		// Note: this variable is now retrieved from the experiment's initial processing configuration file
+		double gf_min_rep = Double.parseDouble(expConfig.get("initial_processing", "gf_min_rep"));
 
-        // Check if input sequences are CDS or not. If they are, ORF prefiction is jsut translating everything in +1 frame
+        // Check if input sequences are (untranslated) CDSes. If they are, ORF prefiction is skipped, and everything
+				// is translated in `+1` frame.
         // We keep track of that with `seq_type`.
         SEQ_TYPE seq_type = SEQ_TYPE.TR;
-        boolean use_cds = Boolean.valueOf(expConfig.get("initial_processing", "use_cds"));  // "auto";
+        boolean use_cds = Boolean.valueOf(expConfig.get("initial_processing", "use_cds"));
         if(use_cds) {
             seq_type = SEQ_TYPE.CDS;
         }
@@ -159,78 +161,79 @@ public class InitialTranscriptsProcessing {
                 // No need to run step 1!
 
                 // Step 2: parse the similarity search output file, and store some information in the TRAPID db:
-    			// transcript_id -> ({hit_gene,bitscore,query_start,query_stop,perc_identity,aln_length,log_e_val});
-    			long t21	= System.currentTimeMillis();
-    			Map<String,List<String[]>> simsearch_data		= itp.parseSimilarityOutputFile(similarity_search_file,NUM_BLAST_HITS_CACHE);
-    			long t22	= System.currentTimeMillis();
-    			timing("Parsing similarity search file",t21,t22);
+			    			// transcript_id -> ({hit_gene,bitscore,query_start,query_stop,perc_identity,aln_length,log_e_val});
+			    			long t21	= System.currentTimeMillis();
+			    			Map<String,List<String[]>> simsearch_data		= itp.parseSimilarityOutputFile(similarity_search_file,NUM_BLAST_HITS_CACHE);
+			    			long t22	= System.currentTimeMillis();
+			    			timing("Parsing similarity search file",t21,t22);
 
 
-    			// Step 2b: store the similarity search information in the database.
-    			plaza_db_connection			= itp.createDbConnection(plaza_database_server,plaza_database_name,plaza_database_login,plaza_database_password);
-    			trapid_db_connection		= itp.createDbConnection(trapid_server,trapid_name,trapid_login,trapid_password);
-    			long t2b1	= System.currentTimeMillis();
-    			itp.storeSimilarityData(trapid_db_connection,trapid_experiment_id,simsearch_data);
-    			long t2b2	= System.currentTimeMillis();
-    			timing("Storing similarities information",t2b1,t2b2);
-    			plaza_db_connection.close();
-    			trapid_db_connection.close();
+			    			// Step 2b: store the similarity search information in the database.
+			    			plaza_db_connection			= itp.createDbConnection(plaza_database_server,plaza_database_name,plaza_database_login,plaza_database_password);
+			    			trapid_db_connection		= itp.createDbConnection(trapid_server,trapid_name,trapid_login,trapid_password);
+			    			long t2b1	= System.currentTimeMillis();
+			    			itp.storeSimilarityData(trapid_db_connection,trapid_experiment_id,simsearch_data);
+			    			long t2b2	= System.currentTimeMillis();
+			    			timing("Storing similarities information",t2b1,t2b2);
+			    			plaza_db_connection.close();
+			    			trapid_db_connection.close();
 
 
-                // Step 2c: determine for the similarity search what the best hitting species are
-                // species -> hitcount
-                 plaza_db_connection = itp.createDbConnection(plaza_database_server, plaza_database_name, plaza_database_login, plaza_database_password);
-                 trapid_db_connection = itp.createDbConnection(trapid_server, trapid_name, trapid_login, trapid_password);
-                 Map<String, Integer> species_hit_count = itp.getSpeciesHitCount(plaza_db_connection, simsearch_data);
-                 itp.storeBestSpeciesHitData(trapid_db_connection, trapid_experiment_id, species_hit_count);
-                 plaza_db_connection.close();
-                 trapid_db_connection.close();
+			          // Step 2c: determine for the similarity search what the best hitting species are
+			          // species -> hitcount
+			           plaza_db_connection = itp.createDbConnection(plaza_database_server, plaza_database_name, plaza_database_login, plaza_database_password);
+			           trapid_db_connection = itp.createDbConnection(trapid_server, trapid_name, trapid_login, trapid_password);
+			           Map<String, Integer> species_hit_count = itp.getSpeciesHitCount(plaza_db_connection, simsearch_data);
+			           itp.storeBestSpeciesHitData(trapid_db_connection, trapid_experiment_id, species_hit_count);
+			           plaza_db_connection.close();
+			           trapid_db_connection.close();
 
 
-                // Step 3: create the transcript to gene family mapping, with extra info kept for later
-     			// This is the actual homology assignment done for the transcripts.
-                // TODO: read assigned GFs directly from TRAPID database (since GF assignment was already performed in the python script)
-     			plaza_db_connection			= itp.createDbConnection(plaza_database_server,plaza_database_name,plaza_database_login,plaza_database_password);
-     			trapid_db_connection		= itp.createDbConnection(trapid_server,trapid_name,trapid_login,trapid_password);
-     			long t31	= System.currentTimeMillis();
-     			Map<String,GeneFamilyAssignment> transcript2gf	= null;
-     			Map<String, List<String>> gf2transcripts = null;  // Reverse mapping
+	                // Step 3: create the transcript to gene family mapping, with extra info kept for later
+		     					// This is the actual homology assignment done for the transcripts.
+                	// TODO: read assigned GFs directly from TRAPID database (since GF assignment was already performed in the python script)
+				     			// plaza_db_connection			= itp.createDbConnection(plaza_database_server,plaza_database_name,plaza_database_login,plaza_database_password);
+				     			trapid_db_connection		= itp.createDbConnection(trapid_server,trapid_name,trapid_login,trapid_password);
+				     			long t31	= System.currentTimeMillis();
+				     			Map<String,GeneFamilyAssignment> transcript2gf	= null;
+				     			Map<String, List<String>> gf2transcripts = null;  // Reverse mapping
 
-                // TODO: check taxonomic scope (must be 'auto' or anything in `LEVEL_CONTENT`)
-                // Initialize OG-specific maps.
-                Map<String,List<String>> transcript2ogs	= null;
-                Map<String, List<String>> ogs2transcripts = null;
-                // We retrieve all the corresponding OGs at multiple levels
-                transcript2ogs = itp.inferTranscriptOGsEggnog(plaza_db_connection, simsearch_data, chosen_scope);
-                // Choose the largest acceptable OG and assign it as GF.
-                transcript2gf = itp.inferTranscriptGenefamiliesEggnog(plaza_db_connection, transcript2ogs);
-     			plaza_db_connection.close();
-     			trapid_db_connection.close();
+	                // TODO: check taxonomic scope (must be 'auto' or anything in `LEVEL_CONTENT`)
+	                // Initialize OG-specific maps.
+	                // Map<String,List<String>> transcript2ogs	= null;
+	                // Map<String, List<String>> ogs2transcripts = null;
+	                // We retrieve all the corresponding OGs at multiple levels
+	                // transcript2ogs = itp.inferTranscriptOGsEggnog(plaza_db_connection, simsearch_data, chosen_scope);
+	                // Choose the largest acceptable OG and assign it as GF.
+	                // transcript2gf = itp.inferTranscriptGenefamiliesEggnog(plaza_db_connection, transcript2ogs);
+	                transcript2gf = itp.fetchTranscriptGenefamiliesEggnog(trapid_db_connection, trapid_experiment_id);
+				     			// plaza_db_connection.close();
+				     			trapid_db_connection.close();
 
-     			// Make reverse mapping of: OGs/transcript, GF/transcript
-     			plaza_db_connection			= itp.createDbConnection(plaza_database_server,plaza_database_name,plaza_database_login,plaza_database_password);
-     			trapid_db_connection		= itp.createDbConnection(trapid_server,trapid_name,trapid_login,trapid_password);
-     			System.out.println("Reverse mapping");
-                 // This mapping is needed for functional annotation with OGs
-     			ogs2transcripts = itp.reverseMappingOgsEggnog(transcript2ogs);
-                 // This mapping is used in other steps as well (i.e. meta-annotation)
-     			gf2transcripts = itp.reverseMapping(transcript2gf);
-     			long t32	= System.currentTimeMillis();
-     			timing("GF inferring",t31,t32);
-     			plaza_db_connection.close();
-     			trapid_db_connection.close();
+				     			// Make reverse mapping of: OGs/transcript, GF/transcript
+				     			// plaza_db_connection			= itp.createDbConnection(plaza_database_server,plaza_database_name,plaza_database_login,plaza_database_password);
+				     			trapid_db_connection		= itp.createDbConnection(trapid_server,trapid_name,trapid_login,trapid_password);
+				     			System.out.println("Reverse mapping");
+                  // This mapping is needed for functional annotation with OGs
+				     			// ogs2transcripts = itp.reverseMappingOgsEggnog(transcript2ogs);
+                  // This mapping is used in other steps as well (i.e. meta-annotation)
+				     			gf2transcripts = itp.reverseMapping(transcript2gf);
+				     			long t32	= System.currentTimeMillis();
+				     			timing("GF inferring",t31,t32);
+				     			// plaza_db_connection.close();
+				     			trapid_db_connection.close();
 
 
                  // Step 5: perform putative frameshift detection and store best frame.
-     			plaza_db_connection			= itp.createDbConnection(plaza_database_server,plaza_database_name,plaza_database_login,plaza_database_password);
-     			trapid_db_connection		= itp.createDbConnection(trapid_server,trapid_name,trapid_login,trapid_password);
-     			long t51	= System.currentTimeMillis();
-     			itp.performPutativeFrameDetection(trapid_db_connection,trapid_experiment_id,simsearch_data);
-     			long t52	= System.currentTimeMillis();
-     			timing("PutativeFrameDetection",t51,t52);
-     			itp.update_log(trapid_db_connection,trapid_experiment_id,"frameshift_detection","","3");
-     			plaza_db_connection.close();
-     			trapid_db_connection.close();
+				     			plaza_db_connection			= itp.createDbConnection(plaza_database_server,plaza_database_name,plaza_database_login,plaza_database_password);
+				     			trapid_db_connection		= itp.createDbConnection(trapid_server,trapid_name,trapid_login,trapid_password);
+				     			long t51	= System.currentTimeMillis();
+				     			itp.performPutativeFrameDetection(trapid_db_connection,trapid_experiment_id,simsearch_data);
+				     			long t52	= System.currentTimeMillis();
+				     			timing("PutativeFrameDetection",t51,t52);
+				     			itp.update_log(trapid_db_connection,trapid_experiment_id,"frameshift_detection","","3");
+				     			plaza_db_connection.close();
+				     			trapid_db_connection.close();
 
                 // Step 6: get longest ORFs in preferred frame.
     			// TODO: update this procedure to work with multiple translation tables
@@ -243,21 +246,21 @@ public class InitialTranscriptsProcessing {
                 else {
                     itp.performInitialORFPrediction(trapid_db_connection,trapid_experiment_id, transl_tables_file, transl_table);
                 }
-    			long t62	= System.currentTimeMillis();
-    			timing("ORF prediction",t61,t62);
-    			itp.update_log(trapid_db_connection,trapid_experiment_id,"orf_prediction","","3");
-    			plaza_db_connection.close();
-    			trapid_db_connection.close();
+	    			long t62	= System.currentTimeMillis();
+	    			timing("ORF prediction",t61,t62);
+	    			itp.update_log(trapid_db_connection,trapid_experiment_id,"orf_prediction","","3");
+	    			plaza_db_connection.close();
+	    			trapid_db_connection.close();
 
 
-    			// Step 7: perform check on lengths of transcripts, compared to gene family CDS length, store the results.
-    			plaza_db_connection			= itp.createDbConnection(plaza_database_server,plaza_database_name,plaza_database_login,plaza_database_password);
-    			trapid_db_connection		= itp.createDbConnection(trapid_server,trapid_name,trapid_login,trapid_password);
-    			long t71	= System.currentTimeMillis();
-    			itp.performMetaAnnotationPrediction(plaza_db_connection,trapid_db_connection,plaza_database_name,trapid_experiment_id,transcript2gf,gf2transcripts,gf_type);
-    			long t72	= System.currentTimeMillis();
-    			timing("Meta annotation",t71,t72);
-    			itp.update_log(trapid_db_connection,trapid_experiment_id,"meta_annotation","","3");
+	    			// Step 7: perform check on lengths of transcripts, compared to gene family CDS length, store the results.
+	    			plaza_db_connection			= itp.createDbConnection(plaza_database_server,plaza_database_name,plaza_database_login,plaza_database_password);
+	    			trapid_db_connection		= itp.createDbConnection(trapid_server,trapid_name,trapid_login,trapid_password);
+	    			long t71	= System.currentTimeMillis();
+	    			itp.performMetaAnnotationPrediction(plaza_db_connection,trapid_db_connection,plaza_database_name,trapid_experiment_id,transcript2gf,gf2transcripts,gf_type);
+	    			long t72	= System.currentTimeMillis();
+	    			timing("Meta annotation",t71,t72);
+	    			itp.update_log(trapid_db_connection,trapid_experiment_id,"meta_annotation","","3");
 
             }
 
@@ -540,12 +543,10 @@ public class InitialTranscriptsProcessing {
 		String sql2	= "DELETE FROM `gene_families` WHERE `experiment_id`='"+trapid_experiment+"' ";
 		// TRAPID db structure update for version 2: all the annotations are in one table, `transcripts_annotation`
 		String sql3	= "DELETE FROM `transcripts_annotation` WHERE `experiment_id`='"+trapid_experiment+"' ";
-		// String sql3	= "DELETE FROM `transcripts_go` WHERE `experiment_id`='"+trapid_experiment+"' ";
-		// String sql4	= "DELETE FROM `transcripts_interpro` WHERE `experiment_id`='"+trapid_experiment+"' ";
 		String sql4 = "DELETE FROM `similarities` WHERE `experiment_id`='"+trapid_experiment+"' ";
 		String sql5 = "DELETE FROM `experiment_stats` WHERE `experiment_id`='"+trapid_experiment+"' ";
-		// String sql5 = "DELETE FROM `similarities` WHERE `experiment_id`='"+trapid_experiment+"' ";
-		String[] sql_queries	= {sql1,sql2,sql3,sql4,sql5};
+		String sql6 = "DELETE FROM `completeness_results` WHERE `experiment_id`='"+trapid_experiment+"' ";
+		String[] sql_queries	= {sql1,sql2,sql3,sql4,sql5,sql6};
 		for(String sql:sql_queries){
 			Statement stmt	= db_connection.createStatement();
 			stmt.execute(sql);
@@ -775,7 +776,9 @@ public class InitialTranscriptsProcessing {
 		Hashtable<String, Character> geneStrand = new Hashtable<String, Character>();
 		Hashtable<String, Integer> geneFrame = new Hashtable<String, Integer>();
 
-		String query_transcripts	= "SELECT `transcript_id`, UNCOMPRESS(`transcript_sequence`), `detected_strand`, `detected_frame`  FROM `transcripts` WHERE `experiment_id` = " + experiment_id;
+		// Do not infer ORF sequences for transcripts flagged as RNA transcripts and with no similarity search hit
+		// (i.e. `is_rna_gene` is 1 `full_frame_info` is null).
+		String query_transcripts	= "SELECT `transcript_id`, UNCOMPRESS(`transcript_sequence`), `detected_strand`, `detected_frame`  FROM `transcripts` WHERE `experiment_id` = " + experiment_id + " AND NOT (`is_rna_gene` = 1 AND `full_frame_info` IS NULL)";
 		Statement stmt				= db_connection.createStatement();
 		ResultSet set				= stmt.executeQuery(query_transcripts);
 		while(set.next()){
@@ -825,7 +828,9 @@ public class InitialTranscriptsProcessing {
 		//First get all genes + transcripts in the experiment
 		Hashtable<String, String> geneSequences = new Hashtable<String, String>();
 
-		String query_transcripts	= "SELECT `transcript_id`, UNCOMPRESS(`transcript_sequence`), `detected_strand`, `detected_frame`  FROM `transcripts` WHERE `experiment_id` = " + experiment_id;
+		// Do not translate transcripts flagged as RNA transcripts and with no similarity search hit
+		// (i.e. `is_rna_gene` is 1 `full_frame_info` is null).
+		String query_transcripts	= "SELECT `transcript_id`, UNCOMPRESS(`transcript_sequence`), `detected_strand`, `detected_frame`  FROM `transcripts` WHERE `experiment_id` = " + experiment_id + " AND NOT (`is_rna_gene` = 1 AND `full_frame_info` IS NULL)";
 		Statement stmt				= db_connection.createStatement();
 		ResultSet set				= stmt.executeQuery(query_transcripts);
 		while(set.next()){
@@ -2011,7 +2016,7 @@ public class InitialTranscriptsProcessing {
 		stmt.setFetchSize(2000);
 		ResultSet set						= stmt.executeQuery(query);
 		 int counter = 0;
-		 System.out.println("I was still alive");
+		 // System.out.println("I was still alive");
 		while(set.next()){
 		    if((counter % 1000000) == 0) {
                 System.out.println(counter + " rows...");
@@ -2585,112 +2590,6 @@ public class InitialTranscriptsProcessing {
 
 
 	/* EggNOG-related code */
-    /**
-     * Perform the actual transcript to IntegrativeOrthology group assignment, based on the
-     * similarity data output from RapSearch2.
-     * Result consists of a mapping of the transcript, to the list of OGs gene family.
-     * @param plaza_db_connection Connection to the PLAZA database
-     * @param data Data from similarity search
-     * @param tax_scope Taxonomic scope, can be `auto` or any EggNOG level
-     * @return Mapping of transcripts to OGs and maximum level, to consider later for the annotation (and GF association)
-     * @throws Exception Databse problems
-     */
-    private Map<String,List<String>> inferTranscriptOGsEggnog(Connection plaza_db_connection, Map<String,List<String[]>> data, String tax_scope) throws Exception{
-        Map<String,List<String>> result		= new HashMap<String,List<String>>();
-        // Load og level-content map
-        List<String> taxonomic_resolution = null;
-        Map<String,List<String>> level_content_map = this.loadLevelContentMapEggnog();
-        if(tax_scope.equals("auto")) {
-            // Load taxonomic resolution list
-            taxonomic_resolution = this.loadTaxonomicResolutionEggnog();
-            System.out.println(taxonomic_resolution.toString());
-        }
-        // create an SQL-query which performs the necessary database queries for each hit_gene.
-        PreparedStatement stmt	= plaza_db_connection.prepareStatement("SELECT gf_id, scope FROM `gf_data` WHERE `gene_id` = ?;");
-        for(String transcript_id: data.keySet()){
-                String[] top_hit	= data.get(transcript_id).get(0);
-                String top_hit_gene_id = top_hit[0];
-                // For our top hit, get all OGs and levels.
-                stmt.setString(1, top_hit_gene_id);
-                ResultSet set = stmt.executeQuery();
-                // System.out.println(transcript_id + "\t" + top_hit_gene_id);
-                List<String> all_ogs = new ArrayList<String>();
-                List<String> all_scopes = new ArrayList<String>();
-                while(set.next()) {
-                    all_ogs.add(set.getString("gf_id"));
-                    all_scopes.add(set.getString("scope"));
-                }
-                set.close();
-                // Convert list of levels to set
-                Set<String> scopes = new HashSet<String>(all_scopes);
-                // If the current best match does not belong to any OG (i.e. no records in `gf_data`), report it!
-                if(all_ogs.size() == 0){
-                    System.err.println("[Warning] No OG found for " + transcript_id);
-                    // TODO: Return empty result (w e do not have orphan GFs in eggnog)
-                    result.put(transcript_id, Arrays.asList("None", "None"));
-                }
-                // Otherwise, just proceed with getting the max level + OGs
-                else {
-                    // The best hit will now at least be in a group at the root.
-                    List<String> levels_to_keep = new ArrayList<String>();
-                    String max_level = "";
-                     System.out.println("Found OGs levels: " + scopes.toString());
-                    if(tax_scope.equals("auto")) {
-                        for(String level: taxonomic_resolution) {
-                            if(scopes.contains(level)) {
-                                // Get level content
-                                // It should be an ArrayList from start, no??
-								// System.out.println(level);
-								// System.out.println("LEVEL CONTENT");
-								// System.out.println(level_content_map.get(level));
-                                levels_to_keep = new ArrayList<String>();
-								if(level_content_map.keySet().contains(level)) {
-                                    levels_to_keep.addAll(level_content_map.get(level));
-                                }
-                                levels_to_keep.add(level);  // Add level to level list
-                                max_level = level;
-                                break;
-                            }
-                        }
-                    }
-                    else {
-                        // System.out.println("Not auto!");
-                        if(level_content_map.keySet().contains(tax_scope)){
-                            levels_to_keep = new ArrayList<String>(level_content_map.get(tax_scope));
-                            levels_to_keep.add(tax_scope);  // Add level to level list
-                        }
-                        else {
-                            levels_to_keep.add(tax_scope);
-                            // System.out.println("I am NOT in there");
-                        }
-                        max_level = tax_scope;
-                    }
-                    // Need to convert to set?
-                    // System.out.println(levels_to_keep);
-                    // System.out.println(max_level);
-                    // Return results (chosen OGs + max level)
-                    List<String> chosen_ogs = new ArrayList<String>();
-                    for(int i=0; i < all_ogs.size() ; i++) {
-                        if(levels_to_keep.contains(all_scopes.get(i))) {
-                            // System.out.println("CHOSEN: " + all_ogs.get(i) + " " + all_scopes.get(i));
-                            chosen_ogs.add(all_ogs.get(i) + "@" + all_scopes.get(i));
-                        }
-                    }
-                    if(chosen_ogs.size() == 0) {
-                        // No OGs matching (can happen for example if user chose a wrong tax scope)
-                        chosen_ogs.add("None");
-                    }
-                    // System.out.println(chosen_ogs.toString());
-                    result.put(transcript_id, Arrays.asList(chosen_ogs.toString().replaceAll("[\\[.\\].\\s+]", ""), max_level));
-                }
-
-        }
-        stmt.close();
-        // System.out.println(result.toString());
-        return result;
-    }
-
-
 
 	/**
 	 * Perform the actual transcript to GF (i.e. the 'best OG') asssignment, based on the
@@ -2757,6 +2656,39 @@ public class InitialTranscriptsProcessing {
             result.put(transcript_id, gfa);
             }
         }
+		stmt.close();
+		return result;
+	}
+
+
+	/**
+	 * Retrieve transcript's gene family data from TRAPID's database. Use for processing eggNOG experiments, since
+	 * this information should already be stored (see `process_emapper.py` script).
+	 * Result consists of a mapping of the transcript, to the gene family.
+	 * @param trapid_db_connection Connection to the TRAPID database
+	 * @param trapid_exp_id a TRAPID experiment identifier
+	 * @throws Exception Databse problems
+	 */
+	private Map<String,GeneFamilyAssignment> fetchTranscriptGenefamiliesEggnog(Connection trapid_db_connection, String trapid_exp_id) throws Exception{
+		Map<String,GeneFamilyAssignment> result		= new HashMap<String,GeneFamilyAssignment>();
+
+		// Create an SQL query to get GF information
+		PreparedStatement stmt	= trapid_db_connection.prepareStatement("SELECT transcript_id, gf_id FROM `transcripts` WHERE `experiment_id` = ? ;");
+		stmt.setString(1, trapid_exp_id);
+		ResultSet set	= stmt.executeQuery();
+		while(set.next()) {
+				String trapid_gf_id = set.getString("gf_id");
+				String transcript_id = set.getString("transcript_id");
+				if(trapid_gf_id != null) {
+					String ref_gf_id = trapid_gf_id.split("_")[1];  // Get rid of experiment id prefix
+					GeneFamilyAssignment gfa	= new GeneFamilyAssignment(ref_gf_id, "1");
+					// We set a dummy `gf_size` value, since this variable is not used for any other post-processing step for
+					// eggNOG experiments
+					gfa.gf_size	= 0;
+					result.put(transcript_id, gfa);
+				}
+		}
+		set.close();
 		stmt.close();
 		return result;
 	}
@@ -3459,71 +3391,6 @@ public class InitialTranscriptsProcessing {
         stmt.close();
         return result;
     }
-
-
-    /* Load the `LEVEL_CONTENT` EggNOG map (link NOG levels that ,automatically chosen or user defined, to its content). */
-    // Should this information be parsed from a configuration file / db in the future?
-    private Map<String,List<String>> loadLevelContentMapEggnog() {
-        // Create empty map
-        Map<String,List<String>> levelContentMap	= new HashMap<String,List<String>>();
-        // Fill the map with EggNOG level content information (retrieved from the EggNOG mapper source, in `common.py`)
-        levelContentMap.put("NOG", Arrays.asList("arNOG","bactNOG","euNOG","thaNOG","eurNOG","creNOG","synNOG","spiNOG","firmNOG","fusoNOG","aquNOG","aciNOG","therNOG","tenNOG","proNOG","defNOG","plaNOG","actNOG","chloNOG","cyaNOG","deiNOG","bctoNOG","chlNOG","chlaNOG","verNOG","kinNOG","perNOG","virNOG","apiNOG","opiNOG","arcNOG","metNOG","methNOG","thermNOG","methaNOG","halNOG","theNOG","negNOG","cloNOG","eryNOG","bacNOG","acidNOG","delNOG","gproNOG","aproNOG","bproNOG","chlorNOG","dehNOG","cytNOG","bacteNOG","sphNOG","flaNOG","verrNOG","strNOG","chloroNOG","acoNOG","cocNOG","meNOG","fuNOG","dproNOG","eproNOG","braNOG","lilNOG","haeNOG","cryNOG","biNOG","basNOG","ascNOG","poaNOG","nemNOG","artNOG","chorNOG","agarNOG","treNOG","saccNOG","euroNOG","sordNOG","dotNOG","chrNOG","inNOG","veNOG","agaNOG","sacNOG","debNOG","eurotNOG","onyNOG","hypNOG","magNOG","sorNOG","pleNOG","rhaNOG","lepNOG","dipNOG","hymNOG","fiNOG","aveNOG","maNOG","arthNOG","necNOG","chaNOG","droNOG","spriNOG","carNOG","prNOG","roNOG","homNOG"));
-        levelContentMap.put("arNOG", Arrays.asList("thaNOG","eurNOG","creNOG","arcNOG","metNOG","methNOG","thermNOG","methaNOG","halNOG","theNOG"));
-        levelContentMap.put("bactNOG", Arrays.asList("synNOG","spiNOG","firmNOG","fusoNOG","aquNOG","aciNOG","therNOG","tenNOG","proNOG","defNOG","plaNOG","actNOG","chloNOG","cyaNOG","deiNOG","bctoNOG","chlNOG","chlaNOG","verNOG","negNOG","cloNOG","eryNOG","bacNOG","acidNOG","delNOG","gproNOG","aproNOG","bproNOG","chlorNOG","dehNOG","cytNOG","bacteNOG","sphNOG","flaNOG","verrNOG","dproNOG","eproNOG"));
-        levelContentMap.put("euNOG", Arrays.asList("kinNOG","perNOG","virNOG","apiNOG","opiNOG","strNOG","chloroNOG","acoNOG","cocNOG","meNOG","fuNOG","braNOG","lilNOG","haeNOG","cryNOG","biNOG","basNOG","ascNOG","poaNOG","nemNOG","artNOG","chorNOG","agarNOG","treNOG","saccNOG","euroNOG","sordNOG","dotNOG","chrNOG","inNOG","veNOG","agaNOG","sacNOG","debNOG","eurotNOG","onyNOG","hypNOG","magNOG","sorNOG","pleNOG","rhaNOG","lepNOG","dipNOG","hymNOG","fiNOG","aveNOG","maNOG","arthNOG","necNOG","chaNOG","droNOG","spriNOG","carNOG","prNOG","roNOG","homNOG"));
-        levelContentMap.put("eurNOG", Arrays.asList("arcNOG","metNOG","methNOG","thermNOG","methaNOG","halNOG","theNOG"));
-        levelContentMap.put("firmNOG", Arrays.asList("negNOG","cloNOG","eryNOG","bacNOG"));
-        levelContentMap.put("aciNOG", Arrays.asList("acidNOG"));
-        levelContentMap.put("proNOG", Arrays.asList("delNOG","gproNOG","aproNOG","bproNOG","dproNOG","eproNOG"));
-        levelContentMap.put("chloNOG", Arrays.asList("chlorNOG","dehNOG"));
-        levelContentMap.put("bctoNOG", Arrays.asList("cytNOG","bacteNOG","sphNOG","flaNOG"));
-        levelContentMap.put("verNOG", Arrays.asList("verrNOG"));
-        levelContentMap.put("virNOG", Arrays.asList("strNOG","chloroNOG","braNOG","lilNOG","poaNOG"));
-        levelContentMap.put("apiNOG", Arrays.asList("acoNOG","cocNOG","haeNOG","cryNOG"));
-        levelContentMap.put("opiNOG", Arrays.asList("meNOG","fuNOG","biNOG","basNOG","ascNOG","nemNOG","artNOG","chorNOG","agarNOG","treNOG","saccNOG","euroNOG","sordNOG","dotNOG","chrNOG","inNOG","veNOG","agaNOG","sacNOG","debNOG","eurotNOG","onyNOG","hypNOG","magNOG","sorNOG","pleNOG","rhaNOG","lepNOG","dipNOG","hymNOG","fiNOG","aveNOG","maNOG","arthNOG","necNOG","chaNOG","droNOG","spriNOG","carNOG","prNOG","roNOG","homNOG"));
-        levelContentMap.put("delNOG", Arrays.asList("dproNOG","eproNOG"));
-        levelContentMap.put("strNOG", Arrays.asList("braNOG","lilNOG","poaNOG"));
-        levelContentMap.put("acoNOG", Arrays.asList("haeNOG"));
-        levelContentMap.put("cocNOG", Arrays.asList("cryNOG"));
-        levelContentMap.put("meNOG", Arrays.asList("biNOG","nemNOG","artNOG","chorNOG","chrNOG","inNOG","veNOG","rhaNOG","lepNOG","dipNOG","hymNOG","fiNOG","aveNOG","maNOG","droNOG","spriNOG","carNOG","prNOG","roNOG","homNOG"));
-        levelContentMap.put("fuNOG", Arrays.asList("basNOG","ascNOG","agarNOG","treNOG","saccNOG","euroNOG","sordNOG","dotNOG","agaNOG","sacNOG","debNOG","eurotNOG","onyNOG","hypNOG","magNOG","sorNOG","pleNOG","arthNOG","necNOG","chaNOG"));
-        levelContentMap.put("lilNOG", Arrays.asList("poaNOG"));
-        levelContentMap.put("biNOG", Arrays.asList("nemNOG","artNOG","chorNOG","chrNOG","inNOG","veNOG","rhaNOG","lepNOG","dipNOG","hymNOG","fiNOG","aveNOG","maNOG","droNOG","spriNOG","carNOG","prNOG","roNOG","homNOG"));
-        levelContentMap.put("basNOG", Arrays.asList("agarNOG","treNOG","agaNOG"));
-        levelContentMap.put("ascNOG", Arrays.asList("saccNOG","euroNOG","sordNOG","dotNOG","sacNOG","debNOG","eurotNOG","onyNOG","hypNOG","magNOG","sorNOG","pleNOG","arthNOG","necNOG","chaNOG"));
-        levelContentMap.put("nemNOG", Arrays.asList("chrNOG","rhaNOG"));
-        levelContentMap.put("artNOG", Arrays.asList("inNOG","lepNOG","dipNOG","hymNOG","droNOG"));
-        levelContentMap.put("chorNOG", Arrays.asList("veNOG","fiNOG","aveNOG","maNOG","spriNOG","carNOG","prNOG","roNOG","homNOG"));
-        levelContentMap.put("agarNOG", Arrays.asList("agaNOG"));
-        levelContentMap.put("saccNOG", Arrays.asList("sacNOG","debNOG"));
-        levelContentMap.put("euroNOG", Arrays.asList("eurotNOG","onyNOG","arthNOG"));
-        levelContentMap.put("sordNOG", Arrays.asList("hypNOG","magNOG","sorNOG","necNOG","chaNOG"));
-        levelContentMap.put("dotNOG", Arrays.asList("pleNOG"));
-        levelContentMap.put("chrNOG", Arrays.asList("rhaNOG"));
-        levelContentMap.put("inNOG", Arrays.asList("lepNOG","dipNOG","hymNOG","droNOG"));
-        levelContentMap.put("veNOG", Arrays.asList("fiNOG","aveNOG","maNOG","spriNOG","carNOG","prNOG","roNOG","homNOG"));
-        levelContentMap.put("onyNOG", Arrays.asList("arthNOG"));
-        levelContentMap.put("hypNOG", Arrays.asList("necNOG"));
-        levelContentMap.put("sorNOG", Arrays.asList("chaNOG"));
-        levelContentMap.put("dipNOG", Arrays.asList("droNOG"));
-        levelContentMap.put("maNOG", Arrays.asList("spriNOG","carNOG","prNOG","roNOG","homNOG"));
-        levelContentMap.put("spriNOG", Arrays.asList("prNOG","roNOG","homNOG"));
-        levelContentMap.put("prNOG", Arrays.asList("homNOG"));
-        // Return the map
-        return levelContentMap;
-    }
-
-
-    /* Load the `TAXONOMIC_RESOLUTION` EggNOG map (a list of NOG levels used to adjust automatically the max considered level) */
-    // Should this information be parsed from a configuration file / db in the future?
-    private List<String> loadTaxonomicResolutionEggnog() {
-        // Create the list with EggNOG tax. resolution data (retrieved from the EggNOG mapper source, in `common.py`)
-        List<String> taxonomicResolution = Arrays.asList("apiNOG", "virNOG", "nemNOG", "artNOG", "maNOG","fiNOG", "aveNOG", "meNOG", "fuNOG", "opiNOG", "euNOG", "arNOG", "bactNOG", "NOG");
-        // Return the list
-        return taxonomicResolution;
-    }
-
-
 
 
 	/**

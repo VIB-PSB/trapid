@@ -50,146 +50,8 @@ class ToolsController extends AppController{
 			  );
 
 
-  /*
-   * Function for running framedp on a set of transcripts (from gene family page).
-   */
-  function framedp($exp_id=null,$gf_id=null,$transcript_id=null){
-    //Configure::write("debug",2);
-    if(!$exp_id || !$gf_id){$this->redirect(array("controller"=>"trapid","action"=>"experiments"));}
-    // $exp_id	= mysql_real_escape_string($exp_id);
-    parent::check_user_exp($exp_id);
-    $exp_info	= $this->Experiments->getDefaultInformation($exp_id);
-    $this->set("exp_info",$exp_info);
-    $this->set("exp_id",$exp_id);
-    $this->TrapidUtils->checkPageAccess($exp_info['title'],$exp_info["process_state"],$this->process_states["default"]);
 
-    //if($exp_info['framedp_state']!="finished"){
-    //  $this->set("error","framedp_state");
-    //}
-
-    //check if correct gene family
-    // $gf_id	= mysql_real_escape_string($gf_id);
-    $gf_info	= $this->GeneFamilies->find("first",array("conditions"=>array("experiment_id"=>$exp_id,"gf_id"=>$gf_id)));
-    if(!$gf_info){$this->redirect(array("controller"=>"trapid","action"=>"experiment",$exp_id));}
-
-    $transcripts = $this->Transcripts->find("all",array("conditions"=>array("experiment_id"=>$exp_id,"gf_id"=>$gf_id)));
-
-    $this->set("transcripts",$transcripts);
-    $this->set("gf_id",$gf_id);
-    if($transcript_id){	//just for visualization reasons
-	    $this->set("selected_transcript_id",$transcript_id);
-    }
-    if($_POST){
-      //pr($_POST);
-      //return;
-      //select the transcripts
-      $selected_transcripts = array();
-      foreach($_POST as $k=>$v){
-    	$transcript_info = $this->Transcripts->find("first",array("conditions"=>array("experiment_id"=>$exp_id,"transcript_id"=>$k)));
-	    // if($transcript_info){$selected_transcripts[mysql_real_escape_string($k)]=$transcript_info['Transcripts']['transcript_sequence'];}
-          // TODO: check more carefully this function to see if escaping is needed!
-	    if($transcript_info){$selected_transcripts[$k]=$transcript_info['Transcripts']['transcript_sequence'];}
-      }
-      //pr($selected_transcripts);return;
-
-      if(count($selected_transcripts)==0){
-	$this->set("error","No transcripts selected");
-	return;
-      }
-      $MIN_NUM_SEQUENCES = 10;
-      //ok, we need at least a certain amount of sequences (e.g. 10) for the training/evaluation to make any kind of sense
-      //so what we do is, we continously add new sequences until we have reached the minimum limit.
-      //we can do this through adding random putative non-frameshifted sequences from other gene families
-      $extra_transcripts = $this->Transcripts->getRandomTranscriptsFrameDP($exp_id,$gf_id,($MIN_NUM_SEQUENCES-count($selected_transcripts)));
-
-      //pr($selected_transcripts);pr($extra_transcripts);return;
-
-      //create shell_file, also allready write the multi-fasta file containing the sequences
-      $qsub_file		= $this->TrapidUtils->create_qsub_script($exp_id);
-      $shell_file      		= $this->TrapidUtils->create_shell_script_framedp($exp_id,$exp_info['used_plaza_database'],$gf_id,$selected_transcripts,$extra_transcripts);
-
-      //pr($shell_file);return;
-
-      if($shell_file == null || $qsub_file == null ){$this->set("error","problem creating program files");return;}
-      $tmp_dir	= TMP."experiment_data/".$exp_id."/framedp/".$gf_id."/";
-      $qsub_out	= $tmp_dir."framedp_".$exp_id."_".$gf_id.".out";
-      $qsub_err	= $tmp_dir."framedp_".$exp_id."_".$gf_id.".err";
-      if(file_exists($qsub_out)){unlink($qsub_out);}
-      if(file_exists($qsub_err)){unlink($qsub_err);}
-      $command  	= "sh $qsub_file -q medium -o $qsub_out -e $qsub_err $shell_file";
-      $output		= array();
-      exec($command,$output);
-      $cluster_job	= $this->TrapidUtils->getClusterJobId($output);
-      if($cluster_job==null){$this->set("error","Problem with retrieving job identifier from web cluster");return;}
-
-      $this->ExperimentLog->addAction($exp_id,"framedp",$gf_id);
-      //declare options
-      $this->ExperimentLog->addAction($exp_id,"framedp","options",1);
-      $this->ExperimentLog->addAction($exp_id,"framedp","selected_transcripts",2);
-      foreach($selected_transcripts as $k=>$v){$this->ExperimentLog->addAction($exp_id,"framedp",$k,3);}
-      $this->ExperimentLog->addAction($exp_id,"framedp","training_transcripts",2);
-      foreach($extra_transcripts as $k=>$v){$this->ExperimentLog->addAction($exp_id,"framedp",$k,3);}
-      $this->ExperimentLog->addAction($exp_id,"framedp_start",$gf_id,1);
-
-      //add job to the cluster queue, and then redirect the entire program.
-      //the user will receive an email to notify him when the job is done, together with a link to this page.
-      //the result will then automatically be opened.
-      $this->ExperimentJobs->addJob($exp_id,$cluster_job,"short","run_framedp ".$gf_id);
-
-      $this->set("run_pipeline",true);
-      return;
-    }
-  }
-
-
-
-
-
-  function load_framedp($exp_id=null,$gf_id=null,$job_id=null){
-    // $exp_id	= mysql_real_escape_string($exp_id);
-    parent::check_user_exp($exp_id);
-    $exp_info	= $this->Experiments->getDefaultInformation($exp_id);
-    $this->TrapidUtils->checkPageAccess($exp_info['title'],$exp_info["process_state"],$this->process_states["finished"]);
-    $this->set("exp_id",$exp_id);
-    $this->set("gf_id",$gf_id);
-    $this->layout = "";
-    if($gf_id==null || $job_id==null){$this->set("error","Incorrect parameters");return;}
-    $cluster_res	= $this->TrapidUtils->waitfor_cluster($exp_id,$job_id,600,15);
-    $this->ExperimentLog->addAction($exp_id,"framedp_stop",$gf_id,1);
-    if(isset($cluster_res["error"])){$this->set("error",$cluster_res["error"]);return;}
-
-  }
-
-
-
-
-
-
-
- function load_msa($exp_id=null,$gf_id=null,$job_id=null){
-    // $exp_id	= mysql_real_escape_string($exp_id);
-    parent::check_user_exp($exp_id);
-    $exp_info	= $this->Experiments->getDefaultInformation($exp_id);
-    $this->TrapidUtils->checkPageAccess($exp_info['title'],$exp_info["process_state"],$this->process_states["finished"]);
-    $this->set("exp_id",$exp_id);
-    $this->layout = "";
-    if($gf_id==null || $job_id==null){$this->set("error","Incorrect parameters");return;}
-    $cluster_res	= $this->TrapidUtils->waitfor_cluster($exp_id,$job_id,180,5);
-    if(isset($cluster_res["error"])){$this->set("error",$cluster_res["error"]);return;}
-    $gf_info	= $this->GeneFamilies->find("first",array("conditions"=>array("experiment_id"=>$exp_id,"gf_id"=>$gf_id)));
-    if(!$gf_info){$this->set("error","No gene family information found");return;}
-    $this->ExperimentLog->addAction($exp_id,"create_msa_stop",$gf_id,1);
-
-    $this->set("gf_id",$gf_id);
-    $this->set("gf_info",$gf_info);
-    $this->set("hashed_user_id",parent::get_hashed_user_id());
-  }
-
-
-
-
-
- function view_msa($user_identifier=null,$exp_id=null,$gf_id=null,$type="normal",$viewtype="display"){
+  function view_msa($user_identifier=null,$exp_id=null,$gf_id=null,$type="normal",$viewtype="display"){
    //Configure::write("debug",1);
     $this->layout = "";
     if(!$user_identifier||!$exp_id || !$gf_id){return;}
@@ -241,7 +103,7 @@ class ToolsController extends AppController{
 
 
 
- function create_msa($exp_id=null,$gf_id=null,$stripped=null){
+  function create_msa($exp_id=null,$gf_id=null,$stripped=null){
     if(!$exp_id || !$gf_id){$this->redirect(array("controller"=>"trapid","action"=>"experiments"));}
     // $exp_id	= mysql_real_escape_string($exp_id);
     parent::check_user_exp($exp_id);
@@ -435,32 +297,7 @@ class ToolsController extends AppController{
 
 
 
- function load_tree($exp_id=null,$gf_id=null,$job_id=null){
-    // $exp_id	= mysql_real_escape_string($exp_id);
-    parent::check_user_exp($exp_id);
-    $exp_info	= $this->Experiments->getDefaultInformation($exp_id);
-    $this->TrapidUtils->checkPageAccess($exp_info['title'],$exp_info["process_state"],$this->process_states["finished"]);
-    $this->set("exp_id",$exp_id);
-    $this->layout = "";
-    if($gf_id==null || $job_id==null){$this->set("error","Incorrect parameters");return;}
-    $cluster_res	= $this->TrapidUtils->waitfor_cluster($exp_id,$job_id,600,5);
-    if(isset($cluster_res["error"])){$this->set("error",$cluster_res["error"]);return;}
-    $gf_info	= $this->GeneFamilies->find("first",array("conditions"=>array("experiment_id"=>$exp_id,"gf_id"=>$gf_id)));
-    if(!$gf_info){$this->set("error","No gene family information found");return;}
-    $this->set("gf_id",$gf_id);
-    $this->set("gf_info",$gf_info);
-    $this->set("hashed_user_id",parent::get_hashed_user_id());
-
-    $this->ExperimentLog->addAction($exp_id,"create_tree_stop",$gf_id,1);
-    // $atv_config_file	= TMP_WEB."experiment_data/".$exp_id."/atv_config.cfg";
-    // $this->set("atv_config_file",$atv_config_file);
-    // $subset_colors	= $this->TrapidUtils->getSubsetColorsATVConfig(TMP."experiment_data/".$exp_id."/atv_config.cfg");
-    // $this->set("subset_colors",$subset_colors);
-  }
-
-
-
- function view_tree($user_identifier=null,$exp_id=null,$gf_id=null,$format="xml"){
+  function view_tree($user_identifier=null,$exp_id=null,$gf_id=null,$format="xml"){
     $this->layout 	= "";
     if(!$user_identifier||!$exp_id || !$gf_id){return;}
     $user_identifer 	= filter_var($user_identifier, FILTER_SANITIZE_NUMBER_INT);
@@ -654,15 +491,6 @@ class ToolsController extends AppController{
       $this->set("hashed_user_id",parent::get_hashed_user_id());
 
     }
-
-    // Handle tree annotation (if there is already a tree) -- legacy code to remove?
-    // if($previous_results['tree']) {
-        // $subset_colors	= $this->TrapidUtils->getSubsetColorsATVConfig(TMP."experiment_data/".$exp_id."/atv_config.cfg");
-        // $this->set("subset_colors",$subset_colors);
-        // $meta_colors	= array("Full Length"=>"","Quasi Full Length"=>"","Partial"=>"","No Information"=>"");
-        // $this->set("meta_colors",$meta_colors);
-    // }
-
 
     // New MSA/tree creation
     if($_POST){
@@ -1893,13 +1721,14 @@ class ToolsController extends AppController{
         "#Transcripts with ORF"=>$num_orfs,
         "Average ORF length"=>$seq_stats['orf']." basepairs",
         "#ORFs with start codon"=>$num_start_codons." (".round(100*$num_start_codons/$num_transcripts,1)."%)",
-        "#ORFs with stop codon"=>$num_stop_codons." (".round(100*$num_stop_codons/$num_transcripts,1)."%)"
+        "#ORFs with stop codon"=>$num_stop_codons." (".round(100*$num_stop_codons/$num_transcripts,1)."%)",
+        "#Transcripts with putative frameshift"=>$num_putative_fs." (".round(100*$num_putative_fs/$num_transcripts,1)."%)"
     );
 
-	$pdf_frameshift_info	= array(
-		        "#Transcripts with putative frameshift"=>$num_putative_fs." (".round(100*$num_putative_fs/$num_transcripts,1)."%)",
-			"#Transcripts with corrected frameshift"=>$num_correct_fs." (".round(100*$num_correct_fs/$num_transcripts,1)."%)"
-					);
+//	$pdf_frameshift_info	= array(
+//		        "#Transcripts with putative frameshift"=>$num_putative_fs." (".round(100*$num_putative_fs/$num_transcripts,1)."%)",
+//			"#Transcripts with corrected frameshift"=>$num_correct_fs." (".round(100*$num_correct_fs/$num_transcripts,1)."%)"
+//					);
 
 	$pdf_meta_info		= array(
 	        "#Meta annotation full-length"=>$meta_annot_fulllength." (".round(100*$meta_annot_fulllength/$num_transcripts,1)."%)",
@@ -1926,7 +1755,7 @@ class ToolsController extends AppController{
 
 
 	$this->set("pdf_transcript_info",$pdf_transcript_info);
-	$this->set("pdf_frameshift_info",$pdf_frameshift_info);
+//	$this->set("pdf_frameshift_info",$pdf_frameshift_info);
 	$this->set("pdf_meta_info",$pdf_meta_info);
 	$this->set("pdf_gf_info",$pdf_gf_info);
 	$this->set("pdf_rf_info", $pdf_rf_info);

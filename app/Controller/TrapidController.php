@@ -1,6 +1,4 @@
 <?php
-//App::import("Sanitize");
-App::uses('Sanitize', 'Utility');
 /*
  * General controller class for the trapid functionality
  */
@@ -59,38 +57,6 @@ class TrapidController extends AppController{
     exec("sh ".$qdel_file." ".$cluster_id." 2>&1",$out);
     pr($out);
   }
-
-  function clear_framedp_evaluation(){
-    $exp_id			= "48";
-    $tmp_dir			= TMP."experiment_data/".$exp_id."/";
-    $framedp_dir_eval		= $tmp_dir."framedp/evaluation/";
-    //shell_exec("rm -rf ".$framedp_dir_eval);
-    $framedp_dir_results	= $tmp_dir."framedp/training/000/";
-    shell_exec("rm -rf ".$framedp_dir_results);
-  }
-
-  function clear_framedp(){
-    $exp_id			= "55";
-    $tmp_dir			= TMP."experiment_data/".$exp_id."/";
-    $framedp_dir		= $tmp_dir."framedp/";
-    shell_exec("rm -rf ".$framedp_dir);
-  }
-
-  function clear_framedp_training(){
-    $exp_id			= "25";
-    $tmp_dir			= TMP."experiment_data/".$exp_id."/";
-    $framedp_dir		= $tmp_dir."framedp/";
-    $framedp_dir_training	= $framedp_dir."training/";
-    if(!(file_exists($framedp_dir_training) && is_dir($framedp_dir_training))){
-	  mkdir($framedp_dir_training);
-	  shell_exec("chmod a+rw ".$framedp_dir_training);
-    }
-    else{
-	  //delete previous content for now!!!
-	  shell_exec("rm -rf ".$framedp_dir_training."*");
-    }
-  }
-
 
 
 
@@ -244,10 +210,11 @@ class TrapidController extends AppController{
   function experiments(){
     // Configure::write("debug",2);
     $this->layout = "external";  // Layout for external pages (i.e. not in experiment)
+    $this->set("active_header_item", "Experiments");
     $this -> set('title_for_layout', 'Experiments overview');
 
-    $MAX_USER_EXPERIMENTS	= 100;  // Put back to 10 when releasing
-    $this->set("max_user_experiments",$MAX_USER_EXPERIMENTS);
+    $max_user_experiments	= MAX_USER_EXPERIMENTS;
+    $this->set("max_user_experiments",$max_user_experiments);
 
     //check whether valid user id.
     //$user_id 		= $this->check_user();
@@ -331,7 +298,7 @@ class TrapidController extends AppController{
 	    $data_source		= $_POST['data_source'];
 
 	//check whether person has not already reached the limit of number of experiments (normally form should be disabled as well)
-	if(count($experiments)>=$MAX_USER_EXPERIMENTS){
+	if(count($experiments)>=$max_user_experiments){
 	  $this->set("error","Maximum experiments reached for this user account");
 	  return;
 	}
@@ -358,6 +325,8 @@ class TrapidController extends AppController{
 	$user_experiments	= $this->Experiments->query("SELECT `experiment_id` FROM `experiments` WHERE `user_id`='". $this->Authentication->getDataSource()->value($user_id, 'integer') ."' ORDER BY `experiment_id` DESC ");
 	$exp_id			= $user_experiments[0]['experiments']['experiment_id'];
 	$this->ExperimentLog->addAction($exp_id,"create_experiment","");
+	$this->ExperimentLog->addAction($exp_id,"create_experiment","options", 1);
+	$this->ExperimentLog->addAction($exp_id,"create_experiment_options","reference_database=" . $data_source_name, 2);
 	$this->redirect(array("controller"=>"trapid","action"=>"experiments"));
       }
       else{
@@ -1826,7 +1795,7 @@ class TrapidController extends AppController{
             $job_id	= $this->TrapidUtils->getClusterJobId($output);
 
             //indicate int the database the new job-id
-            $this->ExperimentJobs->addJob($exp_id,$job_id,"long", "enrichment_preprocessing_" . $type);
+            $this->ExperimentJobs->addJob($exp_id,$job_id, "medium", "enrichment_preprocessing_" . $type);
 
             //indicate in the database that the current experiments enrichment_state is "processing"
             $this->Experiments->updateAll(array("enrichment_state"=>"'processing'"),array("experiment_id"=>$exp_id));
