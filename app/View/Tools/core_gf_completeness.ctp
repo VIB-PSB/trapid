@@ -3,34 +3,37 @@
 // Highcharts
 echo $this->Html->script('https://code.highcharts.com/highcharts.js');
 echo $this->Html->script('https://code.highcharts.com/modules/exporting.js');
-// Choices JS (https://github.com/jshjohnson/Choices) + CSS
-echo $this->Html->script('https://cdn.rawgit.com/jshjohnson/Choices/3e889633/assets/scripts/dist/choices.min.js');
-echo $this->Html->css('https://cdn.rawgit.com/jshjohnson/Choices/3e889633/assets/styles/css/choices.min.css');
+// Selectize JS + CSS
+echo $this->Html->script('selectize.min.js');
+echo $this->Html->css('selectize.paper.css');
 // jQuery dataTable buttons
 echo $this->Html->script('https://cdn.datatables.net/buttons/1.5.6/js/dataTables.buttons.min.js');
 echo $this->Html->script('https://cdn.datatables.net/buttons/1.5.6/js/buttons.html5.min.js');
 ?>
 
 <style>
-    .choices__inner {
-        display: inline-block;
-        vertical-align: top;
-        width: 100%;
-        background-color: #f9f9f9;
-        padding: 3.75px 7.5px 3.75px;
-    }
-    .choices * {
-        font-size: 13px;
-    }
-    .choices__list * {
-        font-size: 13px;
-    }
-    .choices__list--dropdown .choices__item--selectable {
-        padding-right: 52px;
-    }
-    #core-gf-settings {
-        min-height: 158px;
-    }
+    /*.choices__inner {*/
+    /*display: inline-block;*/
+    /*vertical-align: top;*/
+    /*width: 100%;*/
+    /*background-color: #f9f9f9;*/
+    /*padding: 3.75px 7.5px 3.75px;*/
+    /*}*/
+    /*.choices * {*/
+    /*font-size: 13px;*/
+    /*}*/
+    /*.choices__list * {*/
+    /*font-size: 13px;*/
+    /*}*/
+    /*.choices__list--dropdown .choices__item--selectable {*/
+    /*padding-right: 52px;*/
+    /*}*/
+
+    /*
+        #core-gf-settings {
+            min-height: 151px;
+        }
+    */
     .dt-button {
         margin-left: 15px;
     }
@@ -51,15 +54,19 @@ echo $this->Html->script('https://cdn.datatables.net/buttons/1.5.6/js/buttons.ht
         max-width:400px;
         /*height:200px;*/
     }
+
+    .selectize-control.single .selectize-input::after {
+        right: 5px;
+    }
 </style>
 
 <div class="page-header">
     <h1 class="text-primary">Core GF completeness</h1>
 </div>
-    <p class="text-justify">Core gene families (core GFs) are defined as a set of gene families that we expect to be represented in the species of a given taxonomic level.
-        They correspond to gene families that are present in at least a certain percentage of species (referred as the conservation threshold), at a given taxonomic level. </p>
-    <p class="text-justify">The core GF completeness score provides a quick measurement of how complete the gene space is, at a certain taxonomic level. Exploring the list of missing and represented core GFs can also give an idea of the function of missing/represented core GFs. </p>
-    <p class="text-justify">For more details and explanations about the methods, please have a look at the <?php echo $this->Html->link("documentation", array("controller" => "documentation", "action" => "index")); ?>.</p>
+<p class="text-justify">Core gene families (core GFs) are defined as a set of gene families that we expect to be represented in the species of a given taxonomic level.
+    They correspond to gene families that are present in at least a certain percentage of species (referred as the conservation threshold), at a given taxonomic level. </p>
+<p class="text-justify">The core GF completeness score provides a quick measurement of how complete the gene space is, at a certain taxonomic level. Exploring the list of missing and represented core GFs can also give an idea of the function of missing/represented core GFs. </p>
+<p class="text-justify">For more details and explanations about the methods, please have a look at the <?php echo $this->Html->link("documentation", array("controller" => "documentation", "action" => "index")); ?>.</p>
 <br>
 
 <div id="content">
@@ -75,19 +82,19 @@ echo $this->Html->script('https://cdn.datatables.net/buttons/1.5.6/js/buttons.ht
     <div class="tab-content"> <!-- style="border: 1px lightgray solid;"> -->
         <div id="new-job" class="tab-pane active"><br>
             <?php if(isset($error)){
-            echo "<div class=\"alert alert-warning alert-dismissible\" role=\"alert\"><strong>Watch out! </strong>";
-            echo "<a href=\"#\" class=\"close\" data-dismiss=\"alert\" aria-label=\"close\">&times;</a>";
-            echo $error;
-            echo "</div>";
+                echo "<div class=\"alert alert-warning alert-dismissible\" role=\"alert\"><strong>Watch out! </strong>";
+                echo "<a href=\"#\" class=\"close\" data-dismiss=\"alert\" aria-label=\"close\">&times;</a>";
+                echo $error;
+                echo "</div>";
             }
             ?>
             <?php
-                // echo $this->Form->create(false, array("action" => "core_gf_completeness/" . $exp_id, "type" => "post", "default"=>"false", "id"=>"completeness-form"));
-                echo $this->Form->create(false, array("url"=>array("controller"=>"tools", "action"=>"core_gf_completeness", $exp_id), "type" => "post", "default"=>"false", "id"=>"completeness-form"));
+            // echo $this->Form->create(false, array("action" => "core_gf_completeness/" . $exp_id, "type" => "post", "default"=>"false", "id"=>"completeness-form"));
+            echo $this->Form->create(false, array("url"=>array("controller"=>"tools", "action"=>"core_gf_completeness", $exp_id), "type" => "post", "default"=>"false", "id"=>"completeness-form"));
             ?>
 
             <div class="row">
-                    <!-- Data -->
+                <!-- Data -->
                 <div class="col-lg-6">
                     <div class="panel panel-default">
                         <div class="panel-heading"><h3 class="panel-title">Data</h3></div>
@@ -110,15 +117,17 @@ echo $this->Html->script('https://cdn.datatables.net/buttons/1.5.6/js/buttons.ht
                                     <div class="form-group">
                                         <label for="clade"><strong>Phylogenetic clade</strong></label>
                                         <?php echo $this->element("help_tooltips/create_tooltip", array("tooltip_text"=>$tooltips['core_gf_clade'], "tooltip_placement"=>"top", "use_html"=>true)); ?>
-                                        <select class="form-control" id="clade" name="clade" placeholder="Clade selection" required>
-                                            <option placeholder>Select clade</option>
+                                        <!--                                        <select class="form-control" id="clade" name="clade" placeholder="Clade selection" required>-->
+                                        <!--                                            <option placeholder>Select clade</option>-->
+                                        <select class="form-control" id="clade" name="clade" required>
+                                            <option value="">Select a clade...</option>
                                             <?php foreach($core_gf_clades as $tax_id=>$tax_name) {
                                                 echo "<option value=\"" . $tax_id . "\">" . $tax_name . " [" . $tax_id . "]</option>";
                                             }
                                             ?>
                                         </select>
-<!--                                        <input class="form-control" id="clade" name="clade" placeholder="Clade tax ID"-->
-<!--                                               type="text" required>-->
+                                        <!--                                        <input class="form-control" id="clade" name="clade" placeholder="Clade tax ID"-->
+                                        <!--                                               type="text" required>-->
                                     </div>
                                 </div>
                             </div>
@@ -148,16 +157,16 @@ echo $this->Html->script('https://cdn.datatables.net/buttons/1.5.6/js/buttons.ht
                                                step="1" value="1" required type="number">
                                     </div>
                                 </div>
-<!--                                <div class="col-md-4">-->
-<!--                                    <div class="form-group">-->
-<!--                                        <label for="tax-radio"><strong>Taxonomy source</strong></label>-->
-<!--                                        --><?php //echo $this->element("help_tooltips/create_tooltip", array("tooltip_text"=>$tooltips['core_gf_tax_source'], "tooltip_placement"=>"top")); ?>
-<!--                                        <div class="radio" id="tax-radio" name="tax-radio">-->
-<!--                                            <label><input type="radio" name="tax-radio-ncbi" checked>NCBI</label>-->
-<!--                                            <label class="unavailable"><input type="radio" name="tax-radio-db" disabled>PLAZA</label>-->
-<!--                                        </div>-->
-<!--                                    </div>-->
-<!--                                </div>-->
+                                <!--                                <div class="col-md-4">-->
+                                <!--                                    <div class="form-group">-->
+                                <!--                                        <label for="tax-radio"><strong>Taxonomy source</strong></label>-->
+                                <!--                                        --><?php //echo $this->element("help_tooltips/create_tooltip", array("tooltip_text"=>$tooltips['core_gf_tax_source'], "tooltip_placement"=>"top")); ?>
+                                <!--                                        <div class="radio" id="tax-radio" name="tax-radio">-->
+                                <!--                                            <label><input type="radio" name="tax-radio-ncbi" checked>NCBI</label>-->
+                                <!--                                            <label class="unavailable"><input type="radio" name="tax-radio-db" disabled>PLAZA</label>-->
+                                <!--                                        </div>-->
+                                <!--                                    </div>-->
+                                <!--                                </div>-->
 
                             </div>
                         </div>
@@ -169,7 +178,7 @@ echo $this->Html->script('https://cdn.datatables.net/buttons/1.5.6/js/buttons.ht
             <!-- Form submission -->
             <p class="text-center">
                 <input type="submit" class="btn btn-primary" id="completeness-submit" value="Run analysis"/>
-                | <a id="completeness-reset" style="cursor: pointer;" onclick="document.getElementById('completeness-form').reset();">Reset all</a>
+                | <a id="completeness-reset" style="cursor: pointer;">Reset all</a>
 
             </p>
             <?php echo $this->Form->end(); ?>
@@ -186,7 +195,7 @@ echo $this->Html->script('https://cdn.datatables.net/buttons/1.5.6/js/buttons.ht
                     <thead>
                     <th>Phylogenetic clade</th>
                     <th>Transcript subset</th>
-<!--                    <th>Used taxonomy</th>-->
+                    <!--                    <th>Used taxonomy</th>-->
                     <th>Conservation threshold</th>
                     <th>Top hits</th>
                     <th>Completeness score</th>
@@ -232,10 +241,10 @@ echo $this->Html->script('https://cdn.datatables.net/buttons/1.5.6/js/buttons.ht
     </div>
     <br>
     <div id="loading" style="display:none;">
-        <p class="text-center">
-            <?php echo $this->Html->image('ajax-loader.gif'); ?><br>
-        Loading... Please wait.
-        </p>
+        <div class="text-center">
+            <div class="ajax-spinner"></div><br>
+            Loading... Please wait.
+        </div>
     </div>
     <div id="display-results"></div>
 </div>
@@ -300,80 +309,94 @@ echo $this->Html->script('https://cdn.datatables.net/buttons/1.5.6/js/buttons.ht
                 }
             });
         });
+
     });
-</script>
 
-
-<script type="text/javascript">
     /* Quick test: choices-js for clade selection (with autocompletion).
      * Adapted/simplified from: https://github.com/jshjohnson/Choices/issues/162 */
 
     // Some configuration and variables for ajax calls
-/*
-    var ajaxUrl = "<?php echo $this->Html->url(array("controller" => "tools", "action" => "search_tax")); ?>";
-    var lookupDelay = 250;
-    var lookupTimeout = null;
-    var lookupCache = {};
-    var choices_elmt = document.getElementById("clade");
-    var config = {
-        searchFloor: 3,
-        searchChoices: false,
-        shouldSort: false,
-        itemSelectText: "Select",
-        searchPlaceholderValue: "Search a taxon name... "
-        // searchResultLimit: 100,
-    };
+    /*
+     var ajaxUrl = "<?php echo $this->Html->url(array("controller" => "tools", "action" => "search_tax")); ?>";
+     var lookupDelay = 250;
+     var lookupTimeout = null;
+     var lookupCache = {};
+     var choices_elmt = document.getElementById("clade");
+     var config = {
+     searchFloor: 3,
+     searchChoices: false,
+     shouldSort: false,
+     itemSelectText: "Select",
+     searchPlaceholderValue: "Search a taxon name... "
+     // searchResultLimit: 100,
+     };
 
-    // Construct the Choices object
-    var choices = new Choices(choices_elmt, config);
-*/
-    var choices_elmt = document.getElementById("clade");
-    var choices = new Choices(choices_elmt);
+     // Construct the Choices object
+     var choices = new Choices(choices_elmt, config);
 
-/*
+     var choices_elmt = document.getElementById("clade");
+     var choices = new Choices(choices_elmt);
+     */
 
-    // Function to perform the lookup.
-    var serverLookup = function () {
-        // we can't use choices.currentValue because this is blank if we set searchChoices
-        // to false. Instead we use the actual input field's value.
-        var query = choices.input.value;
-        if (query in lookupCache) {
-            populateOptions(lookupCache[query]);
-        } else {
-            // console.log("Data retrieval...");
-            $.get(ajaxUrl + "/" + query, function (data) {
-                var results = JSON.parse(data);
-                lookupCache[query] = results;
-                populateOptions(results);
-            });
-        }
-    };
+    /*
 
-    // Function to actually populate the results from the lookup.
-    var populateOptions = function (options) {
-        // console.log("Populating Choices element. ");
-        // We removed the part about duplicate data removal from the original snippet because we should not have any
-        var toKeep = [];
-        for (var key in options) {
-            toKeep.push({value: key, label: options[key] + " [" + key + "]"});
-        }
-        // console.log(toKeep);  // Debug
-        // Now set results.
-        choices.setChoices(toKeep, 'value', 'label', true);
-    };
+     // Function to perform the lookup.
+     var serverLookup = function () {
+     // we can't use choices.currentValue because this is blank if we set searchChoices
+     // to false. Instead we use the actual input field's value.
+     var query = choices.input.value;
+     if (query in lookupCache) {
+     populateOptions(lookupCache[query]);
+     } else {
+     // console.log("Data retrieval...");
+     $.get(ajaxUrl + "/" + query, function (data) {
+     var results = JSON.parse(data);
+     lookupCache[query] = results;
+     populateOptions(results);
+     });
+     }
+     };
 
-    // Trigger the lookup when the user pauses after typing.
-    choices_elmt.addEventListener('search', function (event) {
-        clearTimeout(lookupTimeout);
-        lookupTimeout = setTimeout(serverLookup, lookupDelay);
+     // Function to actually populate the results from the lookup.
+     var populateOptions = function (options) {
+     // console.log("Populating Choices element. ");
+     // We removed the part about duplicate data removal from the original snippet because we should not have any
+     var toKeep = [];
+     for (var key in options) {
+     toKeep.push({value: key, label: options[key] + " [" + key + "]"});
+     }
+     // console.log(toKeep);  // Debug
+     // Now set results.
+     choices.setChoices(toKeep, 'value', 'label', true);
+     };
+
+     // Trigger the lookup when the user pauses after typing.
+     choices_elmt.addEventListener('search', function (event) {
+     clearTimeout(lookupTimeout);
+     lookupTimeout = setTimeout(serverLookup, lookupDelay);
+     });
+
+     // Clear the options when a choice is selected.
+     choices_elmt.addEventListener('choice', function (event) {
+     choices.setChoices([], 'value', 'label', true);
+     });
+
+     */
+
+
+    // Replacement by selectize
+    $("#clade").selectize();
+
+    function reset_clade_selectize() {
+        $("#clade")[0].selectize.setValue('');
+    }
+
+    $("#completeness-reset").on('click', function() {
+        document.getElementById('completeness-form').reset();
+        reset_clade_selectize();
     });
 
-    // Clear the options when a choice is selected.
-    choices_elmt.addEventListener('choice', function (event) {
-        choices.setChoices([], 'value', 'label', true);
-    });
 
-*/
 
     // Resize bar chart on toggling of the side menu
     // TODO: implement that everywhere where we have highcharts?
