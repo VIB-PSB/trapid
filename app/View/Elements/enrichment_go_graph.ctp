@@ -57,7 +57,7 @@
                 <strong>&nbsp; |&nbsp; </strong> <a onclick="toggleExtraSettings()" id="toggle-extra-settings"><span id="toggle-extra-settings-icon" class="glyphicon small-icon glyphicon-menu-right"></span> Toggle graph settings</a>
             </div>
             <!--            <span class="pull-right">-->
-            <span class="pull-right" style="margin-top: 0.4rem;">
+            <span class="pull-right" style="margin-top: 0.35rem;">
                 <a href="#go-graph-modal" data-toggle="modal" data-target="#go-graph-modal">Legend & usage</a>
                 <strong>  | Export as: </strong>
                 <a id="export_png" class="btn btn-default btn-xs" title="Export Sankey diagram (PNG)">PNG</a>
@@ -116,7 +116,7 @@
 </div> <!-- end settings -->
 
 <div class="row" id="go-graph-container">
-    <div id='graphGO' style='width:100%;height:775px;margin:0px;'></div>
+    <div id='go-graph-viz' style='width:100%;height:780px;margin:0px;'></div>
 </div>
 
 <!-- GO graph usage modal -->
@@ -249,6 +249,27 @@
         return scale_result;
     }
 
+
+    /**
+     * Count GO terms present in the hierarchy data for a given namespace
+     *
+     * @param json data JSON object with data points for the ontology terms
+     * @param string GO aspect/namespace string ('biological_process', 'molecular_function', or 'cellular_component')
+     *
+     * @return number GO term count
+     */
+    function countGOterms(data, namespace) {
+        var go_count = 0;
+        for(var ontology_term in data.nodes){
+            const node_data = data.nodes[ontology_term];
+            if(node_data.namespace === namespace) {
+                go_count += 1;
+            }
+        }
+        return go_count;
+    }
+
+
     function initGraph(){
         //Data options
 /*
@@ -301,117 +322,143 @@
         // Base URL for GO term page
         var goBaseUrl = "<?php echo $this->Html->Url(array("controller" => "functional_annotation", "action" => "go", $exp_id)) . "/";?>";
 
+        // Maximum allowed GO terms (nodes) to display the graph
+        var max_graph_gos = 300;
+
         try{
-            var fold_scale	= createScaling(
-                data,
-                {namespace:filter_subtype,per_namespace_scaling:per_namespace_scaling},
-                {score_name:"enr_fold",score_transform:function(n){return n;}},
-                {target_range:[0,1],adaptive_range_scaling:adaptive_range_scaling}
-            );
-            var pval_scale	= createScaling(
-                data,
-                {namespace:filter_subtype,per_namespace_scaling:per_namespace_scaling},
-                {score_name:"p-val",score_transform:function(n){return -1*Math.log10(n);}},
-                {target_range:[30,60],adaptive_range_scaling:adaptive_range_scaling}
-            );
-
-            // A quick fix to clear existing PNG/SVG event listeners
-            ['export_png', 'export_svg'].forEach(function(export_btn) {
-                const export_elmt = document.getElementById(export_btn);
-                const export_elmt_clone = export_elmt.cloneNode(true);
-                export_elmt.parentNode.replaceChild(export_elmt_clone, export_elmt);
-            });
-
-            //Construct new enricher visualization
-            $("#graphGO").html("");
-            new EnricherGo(document.getElementById("graphGO"),data,{
-                export: {
-                    png:'export_png',
-                    svg:'export_svg'
-                },
-                namespace: filter_subtype,
-                nodeOpacity:function(n){
-                    var opacity	= 1;
-                    if(n.enricher){
-                        var local_pval			= n.enricher.scores['p-val'];
-                        var local_enr_fold		= n.enricher.scores['enr_fold'];
-                        var local_perc_present	= n.enricher.counts['n_hits'] / n.enricher.counts['ftr_size'] * 100;
-                        if(local_pval > filter_pvalue){opacity = 0.25;}
-                        if(Math.abs(local_enr_fold) < filter_enrichment_fold){opacity = 0.25;}
-//                        if(local_enr_fold>0 && filter_show_enrichments=='depletion'){opacity = 0.25;}
-//                        if(local_enr_fold<0 && filter_show_enrichments=='enrichment'){opacity = 0.25;}
-                        if(local_perc_present < filter_perc_present){opacity = 0.25;}
+            // Get number of GO terms to display for current aspect/namespace
+            var num_graph_gos = countGOterms(data, filter_subtype);
+            // If it is more than the allowed max, show an error message and hide the graph
+            if(num_graph_gos > max_graph_gos) {
+                const error_text = "<strong>Error:</strong> GO enrichment graph not shown. The number of enriched terms for this GO aspect is higher than the allowed maximum (" + max_graph_gos + "). <br>Using a lower p-value threshold should result in less enriched GO terms.";
+                $("#go-graph-viz").html("<p class='text-danger go-graph-error'>" + error_text + "</p>");
+            }
+            else {
+                var fold_scale = createScaling(
+                    data,
+                    {namespace: filter_subtype, per_namespace_scaling: per_namespace_scaling},
+                    {
+                        score_name: "enr_fold", score_transform: function (n) {
+                        return n;
                     }
-                    else{
-                        opacity	= 0.25;
-                    }
-                    return opacity;
-                },
-                nodeValue:function(n){
-                    return fold_scale(n.enricher.scores['enr_fold']);
-                },
-                nodeSize:function(n){
-                    if(n.enricher){
-                        return pval_scale(-1*Math.log10(n.enricher.scores['p-val']));
-                    }
-                    return 45;	//should be in range of the pval_scale function limits defined above
-                },
-                donutGraphValue:function(n){
-                    if(n.enricher){
-                        return n.enricher.counts['n_hits'] / n.enricher.counts['ftr_size'];
-                    }
-                    return 1;
-                },
-                donutGraphOuterWidth:function(n){
-                    if(n.enricher){
-                        return Math.round((this.nodeSize(n))/3);
-                    }
-                    return 20;
-                },
-                donutGraphInnerWidth:function(n){
-                    if(n.enricher){
-                        return Math.round((this.nodeSize(n))/5);
-                    }
-                    return 10;
-                },
-                levelSeparation:level_separation_distance,
-                nodeSeparation:node_separation_distance,
-                animationEnabled:true,
-                linkUrl: goBaseUrl,
-                linkTarget:'_blank',
-                tooltipFields:{
-                    "P-value":function(n){
-                        if(n.enricher){
-                            return n.enricher.scores['p-val'].toExponential(3);
-                        }
-                        return "N/A";
                     },
-                    "Enrichment (log<sub>2</sub>)":function(n){
-                        if(n.enricher){
-                            return n.enricher.scores['enr_fold'].toFixed(3);
-                        }
-                        return "N/A";
-                    },
-                    "Transcripts":function(n){
-                        if(n.enricher){
-                            var percentage	= n.enricher.counts['n_hits'] / n.enricher.counts['ftr_size'] * 100;
-                            var perc_string	= percentage.toFixed(3)+"%";
-                            var gene_string	=  n.enricher.counts['n_hits']+" ("+perc_string+")";
-                            return gene_string;
-                        }
-                        return "N/A";
+                    {target_range: [0, 1], adaptive_range_scaling: adaptive_range_scaling}
+                );
+                var pval_scale = createScaling(
+                    data,
+                    {namespace: filter_subtype, per_namespace_scaling: per_namespace_scaling},
+                    {
+                        score_name: "p-val", score_transform: function (n) {
+                        return -1 * Math.log10(n);
                     }
-                },
-                sidebarMiniMapShow:false,
-                ontologyDescriptionsTextSize:font_size_ontology_descs,
-                ontologyTermsTextSize:font_size_ontology_ids,
-                subsetName: '<?php echo $subset; ?>'
-            });
+                    },
+                    {target_range: [30, 60], adaptive_range_scaling: adaptive_range_scaling}
+                );
+
+                // A quick fix to clear existing PNG/SVG event listeners
+                ['export_png', 'export_svg'].forEach(function (export_btn) {
+                    const export_elmt = document.getElementById(export_btn);
+                    const export_elmt_clone = export_elmt.cloneNode(true);
+                    export_elmt.parentNode.replaceChild(export_elmt_clone, export_elmt);
+                });
+
+                //Construct new enricher visualization
+                $("#go-graph-viz").html("");
+                new EnricherGo(document.getElementById("go-graph-viz"), data, {
+                    export: {
+                        png: 'export_png',
+                        svg: 'export_svg'
+                    },
+                    namespace: filter_subtype,
+                    nodeOpacity: function (n) {
+                        var opacity = 1;
+                        if (n.enricher) {
+                            var local_pval = n.enricher.scores['p-val'];
+                            var local_enr_fold = n.enricher.scores['enr_fold'];
+                            var local_perc_present = n.enricher.counts['n_hits'] / n.enricher.counts['ftr_size'] * 100;
+                            if (local_pval > filter_pvalue) {
+                                opacity = 0.25;
+                            }
+                            if (Math.abs(local_enr_fold) < filter_enrichment_fold) {
+                                opacity = 0.25;
+                            }
+                            //                        if(local_enr_fold>0 && filter_show_enrichments=='depletion'){opacity = 0.25;}
+                            //                        if(local_enr_fold<0 && filter_show_enrichments=='enrichment'){opacity = 0.25;}
+                            if (local_perc_present < filter_perc_present) {
+                                opacity = 0.25;
+                            }
+                        }
+                        else {
+                            opacity = 0.25;
+                        }
+                        return opacity;
+                    },
+                    nodeValue: function (n) {
+                        return fold_scale(n.enricher.scores['enr_fold']);
+                    },
+                    nodeSize: function (n) {
+                        if (n.enricher) {
+                            return pval_scale(-1 * Math.log10(n.enricher.scores['p-val']));
+                        }
+                        return 45;	//should be in range of the pval_scale function limits defined above
+                    },
+                    donutGraphValue: function (n) {
+                        if (n.enricher) {
+                            return n.enricher.counts['n_hits'] / n.enricher.counts['ftr_size'];
+                        }
+                        return 1;
+                    },
+                    donutGraphOuterWidth: function (n) {
+                        if (n.enricher) {
+                            return Math.round((this.nodeSize(n)) / 3);
+                        }
+                        return 20;
+                    },
+                    donutGraphInnerWidth: function (n) {
+                        if (n.enricher) {
+                            return Math.round((this.nodeSize(n)) / 5);
+                        }
+                        return 10;
+                    },
+                    levelSeparation: level_separation_distance,
+                    nodeSeparation: node_separation_distance,
+                    animationEnabled: true,
+                    linkUrl: goBaseUrl,
+                    linkTarget: '_blank',
+                    tooltipFields: {
+                        "P-value": function (n) {
+                            if (n.enricher) {
+                                return n.enricher.scores['p-val'].toExponential(3);
+                            }
+                            return "N/A";
+                        },
+                        "Enrichment (log<sub>2</sub>)": function (n) {
+                            if (n.enricher) {
+                                return n.enricher.scores['enr_fold'].toFixed(3);
+                            }
+                            return "N/A";
+                        },
+                        "Transcripts": function (n) {
+                            if (n.enricher) {
+                                var percentage = n.enricher.counts['n_hits'] / n.enricher.counts['ftr_size'] * 100;
+                                var perc_string = percentage.toFixed(3) + "%";
+                                var gene_string = n.enricher.counts['n_hits'] + " (" + perc_string + ")";
+                                return gene_string;
+                            }
+                            return "N/A";
+                        }
+                    },
+                    sidebarMiniMapShow: false,
+                    ontologyDescriptionsTextSize: font_size_ontology_descs,
+                    ontologyTermsTextSize: font_size_ontology_ids,
+                    subsetName: '<?php echo $subset; ?>'
+                });
+            }
         }
         catch(err){
-            $("#go-graph-settings").hide();
+            $("#go-graph-settings").addClass("hidden");
             console.log(err);
-            $("#graph_container").html("<p class='text-danger'><strong>Error:</strong> failed to construct GO enrichment graph.</p>");
+            $("#go-graph-container").html("<p class='text-danger'><strong>Error:</strong> failed to construct GO enrichment graph.</p>");
         }
     }
 </script>

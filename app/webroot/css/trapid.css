@@ -1473,6 +1473,11 @@ body {
 	float: right;
 }
 
+.help-tooltip-icon-inline {
+	color : #8c8c8c;
+	cursor: default;
+}
+
 
 /* And smaller icon size when needed */
 .small-icon {
@@ -1735,7 +1740,7 @@ span.badge-go-sm {
 	text-align: left;
 }
 
-#toggle-extra-hits {
+#toggle-extra-hits, #toggle-extra-settings {
 	cursor: pointer;
 }
 
@@ -2517,7 +2522,15 @@ ul.table-items li:before {
     color: #bbbbbb;
 }
 
+/* GO enrichment graph */
+#go-graph-viz {
+	border: 1px solid #aaaaaa;
+}
 
+p.go-graph-error {
+	margin-top: 15px;
+	margin-left: 15px;
+}
 
 /* Lots of ugly borders: useful for debugging when things are not displayed as expected */
 /*
