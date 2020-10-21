@@ -19,19 +19,19 @@ class TranscriptsPagination extends AppModel{
 	      array("min_transcript_length"=>array("query"=>"CHAR_LENGTH(UNCOMPRESS(`transcript_sequence`))>=",
 						   "table"=>"`transcripts`",
 						   "tabid"=>"a",
-						   "desc"=>"Minimum transcript length"),
+						   "desc"=>"Min. transcript length"),
 		    "max_transcript_length"=>array("query"=>"CHAR_LENGTH(UNCOMPRESS(`transcript_sequence`))<=",
 						   "table"=>"`transcripts`",
 						   "tabid"=>"a",
-						   "desc"=>"Maximum transcript length"),
+						   "desc"=>"Max. transcript length"),
 		    "min_orf_length"=>array("query"=>"CHAR_LENGTH(UNCOMPRESS(`orf_sequence`))>=",
 					    "table"=>"`transcripts`",
 					    "tabid"=>"a",
-					    "desc"=>"Minimum ORF length"),
+					    "desc"=>"Min. ORF length"),
 		    "max_orf_length"=>array("query"=>"CHAR_LENGTH(UNCOMPRESS(`orf_sequence`))<=",
 					    "table"=>"`transcripts`",
 					    "tabid"=>"a",
-					    "desc"=>"Maximum ORF length"),
+					    "desc"=>"Max. ORF length"),
 		    "meta_annotation"=>array("query"=>"`meta_annotation`=",
 					     "table"=>"`transcripts`",
 					     "tabid"=>"a",
@@ -52,6 +52,10 @@ class TranscriptsPagination extends AppModel{
 				      "table"=>"`transcripts_annotation`",
 				      "tabid"=>"d",
 				      "desc"=>"InterPro domain"),
+		    "ko"=>array("query"=>"`type`='ko' AND `name`=",
+				      "table"=>"`transcripts_annotation`",
+				      "tabid"=>"d",  // Still set to `d` as InterPro and KO are mutually exclusive
+				      "desc"=>"KO term")
 		    );
 	 return $possible_parameters;
   }

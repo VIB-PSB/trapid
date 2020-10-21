@@ -1,6 +1,5 @@
 <?php if (isset($download_type)): ?>
-    <?php
-//pr($transcript_data);
+<?php
     header("Content-disposition: attachment; filename=$file_name");
     header("Content-type: text/plain");
     if ($download_type == "fasta_transcript") {
@@ -16,7 +15,24 @@
             echo $t['orf_sequence'] . "\n";
         }
     } else if ($download_type == "table") {
-        echo "Transcript\tGene Family\tGO annotation\tInterPro annotation\tSubsets\n";
+        // The table content depends on the available functional annotation types.
+        $function_headers = array("go"=>"GO annotation", "ko"=>"KO annotation", "interpro"=>"InterPro annotation");
+        // Functional annotation types that are displayed in the table: by default, all types are shown.
+        // If `$exp_info` is set, use the list of functional annotation types defined there.
+        $function_types = ['go', 'interpro', 'ko'];
+        if(isset($exp_info)){
+            $function_types = $exp_info['function_types'];
+        }
+        $table_columns = ["Transcript", "Gene Family"]; // First columns
+        // Add functional data columns for available functional types
+        foreach ($function_types as $ft) {
+            $table_columns[] = $function_headers[$ft];
+        }
+        // Add subset column
+        $table_columns[] = "Subsets";
+        $table_header = implode("\t", $table_columns) . "\n";
+
+        echo $table_header;
         foreach ($transcript_data as $transcript_dat) {
             $td = $transcript_dat['Transcripts'];
             echo $td['transcript_id'] . "\t";
@@ -25,23 +41,38 @@
             } else {
                 echo "Unavailable\t";
             }
-            if (array_key_exists($td['transcript_id'], $transcripts_go)) {
-                for ($i = 0; $i < count($transcripts_go[$td['transcript_id']]) && $i < 3; $i++) {
-                    $go = $transcripts_go[$td['transcript_id']][$i];
-                    echo $go . ",";
+            if(in_array("go", $function_types)) {
+                if (array_key_exists($td['transcript_id'], $transcripts_go)) {
+                    for ($i = 0; $i < count($transcripts_go[$td['transcript_id']]) && $i < 3; $i++) {
+                        $go = $transcripts_go[$td['transcript_id']][$i];
+                        echo $go . ",";
+                    }
+                    echo "\t";
+                } else {
+                    echo "Unavailable\t";
                 }
-                echo "\t";
-            } else {
-                echo "Unavailable\t";
             }
-            if (array_key_exists($td['transcript_id'], $transcripts_ipr)) {
-                for ($i = 0; $i < count($transcripts_ipr[$td['transcript_id']]) && $i < 3; $i++) {
-                    $ipr = $transcripts_ipr[$td['transcript_id']][$i];
-                    echo $ipr . ",";
+            if(in_array("interpro", $function_types)) {
+                if (array_key_exists($td['transcript_id'], $transcripts_ipr)) {
+                    for ($i = 0; $i < count($transcripts_ipr[$td['transcript_id']]) && $i < 3; $i++) {
+                        $ipr = $transcripts_ipr[$td['transcript_id']][$i];
+                        echo $ipr . ",";
+                    }
+                    echo "\t";
+                } else {
+                    echo "Unavailable\t";
                 }
-                echo "\t";
-            } else {
-                echo "Unavailable\t";
+            }
+            if(in_array("ko", $function_types)) {
+                if (array_key_exists($td['transcript_id'], $transcripts_ko)) {
+                    for ($i = 0; $i < count($transcripts_ko[$td['transcript_id']]) && $i < 3; $i++) {
+                        $ko = $transcripts_ko[$td['transcript_id']][$i];
+                        echo $ko . ",";
+                    }
+                    echo "\t";
+                } else {
+                    echo "Unavailable\t";
+                }
             }
             if (array_key_exists($td['transcript_id'], $transcripts_labels)) {
                 for ($i = 0; $i < count($transcripts_labels[$td['transcript_id']]) && $i < 3; $i++) {
@@ -52,6 +83,7 @@
             } else {
                 echo "Unavailable\n";
             }
+
         }
     } else if ($download_type == "fasta_protein_ref") {
         foreach ($trapid_sequences as $transcript_id => $sequence) {

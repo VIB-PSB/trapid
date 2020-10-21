@@ -977,7 +977,7 @@ class TrapidController extends AppController{
    * necessary joins and required tables.
    */
   function transcript_selection(){
-    Configure::write("debug",1);
+//    Configure::write("debug",1);
     $num_parameters	= func_num_args();
     if($num_parameters < 3 || $num_parameters%2==0 ){$this->redirect("/");}
     $parameters		= func_get_args();
@@ -1083,7 +1083,7 @@ class TrapidController extends AppController{
     $this->set("tooltip_text_subset_creation", $tooltip_text_subset_creation);
 
 
-      if($download_type=="table"){$this->set("file_name","table_".implode("_",$parameters).".txt");return;}
+      if($download_type=="table"){$this->set("file_name","table_".implode("_",$parameters).".tsv");return;}
   }
 
 
