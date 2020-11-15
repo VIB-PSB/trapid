@@ -15,7 +15,7 @@ import time
 import pandas as pd
 import math
 from common import print_log_msg
-import matplotlib.pyplot as plt
+# import matplotlib.pyplot as plt
 
 
 TIMESTAMP = time.strftime('%Y_%m_%d_%H%M%S')  # Get timestamp (for default output directory name)
@@ -142,6 +142,7 @@ def gf_lookup(gene_id, gene_gf_map):
     if gene_id in gene_gf_map:
         return gene_gf_map[gene_id]
     else:
+        print(gene_id)
         return None
 
 

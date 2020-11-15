@@ -95,7 +95,7 @@ if($par{"tax_binning"} eq "false") {
 
 else {
     print STDERR "[Message] Perform taxonomic classification\n";
-    my $kaiju_program	= "run_kaiju_splitted.py";
+    my $kaiju_program	= "run_kaiju_split.py";
     my $python_location	= $par{"base_script_location"} . "python/";
     my $kaiju_command   = "python " . $python_location . $kaiju_program;
     my @kaiju_options   = ($initial_processing_ini_file);
@@ -126,18 +126,11 @@ print STDOUT "###Time used for DIAMOND: ".($stime2-$stime1)."s \n";
 # Extra step (test): run Infernal to detect ncRNAs (only certain clans)
 ###
 # TODO: do not hardcode Rfam filepaths
-&update_log($par{"trapid_db_server"},$par{"trapid_db_name"},$par{"trapid_db_port"},
-    $par{"trapid_db_user"},$par{"trapid_db_password"},$par{"experiment"},
-    "start_nc_rna_search", "Infernal", 2);
 my $itime1 = time();
 # Run Infernal
-my $infernal_output = &perform_infernal_cmscan($initial_processing_ini_file);
+my $infernal_output = &perform_infernal_cmsearch($initial_processing_ini_file);
 my $itime2 = time();
 print STDOUT "###Time used for Infernal: ".($itime2-$itime1)."s \n";
-&update_log($par{"trapid_db_server"},$par{"trapid_db_name"},$par{"trapid_db_port"},
-    $par{"trapid_db_user"},$par{"trapid_db_password"},$par{"experiment"},
-    "stop_nc_rna_search", "Infernal", 2);
-
 
 
 #clear
@@ -186,7 +179,7 @@ my $java_program	= "transcript_pipeline.InitialTranscriptsProcessing";
 my $java_location	= $par{"base_script_location"}."java/";
 
 my $java_command        = "java -cp .:..:".$java_location.":".$java_location."lib/* ".$java_program;
-my @java_options        = ($initial_processing_ini_file, $similarity_output, 0.50);
+my @java_options        = ($initial_processing_ini_file, $similarity_output);
 
 my $java_exec           = $java_command." ".join(" ",@java_options);
 print STDOUT $java_exec."\n";
@@ -386,11 +379,12 @@ sub perform_similarity_search($ $ $ $ $){
 	print STDOUT "Used DIAMOND database : ".$blast_dir."\n";
 
 	# my $exec_command	= $DIAMOND_EXECUTABLE." --query ".$multi_fasta_file." --db ".$blast_dir." --evalue 1e".$DIAMOND_EVALUE." --out ".$output_file.".m8 -p 2 -k 100 --more-sensitive --log";
-	my $exec_command	= $DIAMOND_EXECUTABLE." --query ".$multi_fasta_file." --db ".$blast_dir." --evalue 1e".$DIAMOND_EVALUE." --out ".$output_file.".m8 -p 5 --more-sensitive -k 100 --log";
+	my $exec_command	= $DIAMOND_EXECUTABLE." --query ".$multi_fasta_file." --db ".$blast_dir." --evalue 1e".$DIAMOND_EVALUE." --out ".$output_file.".m8 -p 2 --more-sensitive -k 100 --log";
 	print STDOUT $exec_command."\n";
 
 	#perform similarity search
 	system($exec_command);
+#	sleep (int(rand(600)) + 420);
 
 	#remove alignment file and input multi-fasta file
 	system("rm -f ".$align_file);
@@ -433,14 +427,12 @@ sub perform_similarity_search_rapsearch($ $ $ $ $){
 }
 
 
-# A first naive trial: run cmscan after DIAMOND (2 threads, limited selection of LSU/SSU rRNA models)
-sub perform_infernal_cmscan($) {
+# Run cmsearch after DIAMOND (2 threads, limited selection of user-selected RNA models)
+sub perform_infernal_cmsearch($) {
     my $initial_processing_ini_file = $_[0];
 	my $infernal_wrapper_script = $par{"base_script_location"} . "python/run_infernal.py";
-    # Call Infernal (`cmscan` command)
-    # my $exec_command	= "cmscan -Z ". $total_m_nts . " --cut_ga --rfam --nohmmonly --tblout " . $output_tbl . " --fmt 2 --clanin " . $rfam_dir.$rfam_clans_file . " ". $rfam_dir.$rfam_cm_file . " ". $multi_fasta_file . " > ". $output_cm;
+    # Call Infernal wrapper script
     my $exec_command	= "python " . $infernal_wrapper_script . " " . $initial_processing_ini_file;
     print STDOUT $exec_command."\n";
-    # Call Infernal wrapper script
     system($exec_command);
 }

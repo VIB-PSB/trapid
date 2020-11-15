@@ -1,16 +1,14 @@
 """
-A collection of functions used to perform subset functional enrichment analysis within TRAPID
+A collection of functions used to perform subset functional enrichment analysis within TRAPID.
 """
 
-import argparse
 import math
-import MySQLdb as MS
 import os
 import subprocess
 import sys
 import time
 
-from ConfigParser import ConfigParser
+import MySQLdb as MS
 
 import common
 
@@ -18,7 +16,12 @@ GO_FILTER = {"GO:0005575", "GO:0003674", "GO:0008150"}  # Default list of GO to 
 
 
 def check_enricher_bin(enricher_bin, verbose=False):
-    """Check if the path to @dreec enricher binary exists. If not, print an error message and exit. """
+    """Check if the path to @dreec enricher binary exists. If not, print an error message and exit.
+
+    :param enricher_bin: path to enricher binary
+    :param verbose: whether to be verbose (print extra information to stderr if set to True)
+
+    """
     if not os.path.exists(enricher_bin):
         sys.stderr.write("[Error] Enricher binary ('%s') not found\n" % enricher_bin)
         sys.exit(1)
@@ -28,17 +31,27 @@ def check_enricher_bin(enricher_bin, verbose=False):
 
 
 def del_files(files):
-    """Delete the files given as parameters (typically a list of temporary files). """
+    """Delete the files given as parameters (typically a list of temporary files).
+
+    :param files: a collection of files
+
+    """
     sys.stderr.write("[Message] Removing temporary files...\n")
     for file in files:
         os.remove(file)
 
 
 def delete_previous_results(trapid_db_conn, exp_id, fa_type, subset, max_pval, verbose=False):
-    """
-    Delete functional enrichment results from the `functional_enrichments` and `functional_enrichments_sankey` tables of
-    TRAPID db (accessed with `trapid_db_conn`), for experiment `exp_id`, subset `subset`, functional annotation type
-    `fa_type` and maximum p-value `max_pval`.
+    """Delete functional enrichment results from the `functional_enrichments` and `functional_enrichments_sankey` tables
+    of TRAPID db for given subset, functional annotation type, and maximum p-value.
+
+    :param trapid_db_conn: TRAPID db connection as returned by common.db_connect()
+    :param exp_id: TRAPID experiment id
+    :param fa_type: functional annotation type
+    :param subset: subset name
+    :param max_pval: maximum p-value
+    :param verbose: whether to be verbose (print extra information to stderr if set to True)
+
     """
     sys.stderr.write("[Message] Delete previous enrichment results from TRAPID db...\n")
     # result_tables = ["functional_enrichments", "functional_enrichments_sankey"]  # Tables to delete records from
@@ -54,8 +67,11 @@ def delete_previous_results(trapid_db_conn, exp_id, fa_type, subset, max_pval, v
 
 
 def get_go_data(ref_db_conn):
-    """
-    Get GO data (hierarchy, alternative IDs, aspects) from the used reference database. Return the retrieved data as dictionary.
+    """Get GO data (hierarchy, alternative IDs, aspects) from the used reference database.
+
+    :param ref_db_conn: reference db connection as returned by common.db_connect()
+    :return: retrieved GO data as a dictionary
+
     """
     sys.stderr.write("[Message] Fetch GO data from ref. DB... \n")
     go_dict = {}
@@ -92,7 +108,7 @@ def get_go_data(ref_db_conn):
         else:
             go_children[parent].add(child)
     # Now populate `go_dict` with parents and children
-    # TODO: check `is_obsolete` in parents as well????
+    # TODO: check `is_obsolete` in parents as well?
     for go in go_dict:
         if not go_dict[go]['is_obsolete']:
             if go in go_parents:
@@ -105,8 +121,11 @@ def get_go_data(ref_db_conn):
 
 
 def get_alt_gos(go_dict):
-    """
-    Return an alt_id:go mapping dictionary from information retrieved from `go_dict`.
+    """Get alternative GO - canonical GO id correspondence.
+
+    :param go_dict: GO information dictionary
+    :return: alt_id:go mapping dictionary
+
     """
     alt_gos = {}
     for go in go_dict:
@@ -117,9 +136,18 @@ def get_alt_gos(go_dict):
 
 
 def create_enricher_input_set(trapid_db_conn, exp_id, subset, fa_type, tmp_dir, verbose=False):
-    """
-    Create input set file for Dries' enricher. Set file created based on transcript ids from subset `subset` retrieved
-    from `transcripts_labels` table. TRAPID db accessed through `trapid_db_conn`. Return path to the created input file.
+    """Create input set file for enricher script. The set file is created based on transcript ids from a subset
+    retrieved from the `transcripts_labels` table.
+
+
+    :param trapid_db_conn: TRAPID db connection as returned by common.db_connect()
+    :param exp_id: TRAPID experiment id
+    :param subset: subset for which enrichment analysis is performed
+    :param fa_type: functional annotation type (used for file naming)
+    :param tmp_dir: TRAPID experiment temporary directory
+    :param verbose: whether to be verbose (print extra information to stderr if set to True)
+    :return: path of the created input file.
+
     """
     sys.stderr.write("[Message] Create enricher input set file...\n")
     set_file = os.path.join(tmp_dir, "transcript_subset_{fa}_{subset}.lst".format(fa=fa_type, subset=subset))
@@ -137,10 +165,17 @@ def create_enricher_input_set(trapid_db_conn, exp_id, subset, fa_type, tmp_dir, 
 
 
 def create_enricher_input_feature(trapid_db_conn, exp_id, fa_type, tmp_dir, verbose=False):
-    """
-    Create input feature file for Dries' enricher. Feature file created from all transcript/functional annotation from
-    the `transcripts_annotation` table for all transcripts of experiment `exp_id` and for type `fa_type`. Return path to
-    the created input file.
+    """Create input feature file for enricher script. Feature file created from all transcript/functional annotation
+    from the `transcripts_annotation` table for all transcripts of an experiment and for a given functional annotation
+    type.
+
+    :param trapid_db_conn: TRAPID db connection as returned by common.db_connect()
+    :param exp_id: TRAPID experiment id
+    :param fa_type: functional annotation type (used for data etrieval and file naming)
+    :param tmp_dir: TRAPID experiment temporary directory
+    :param verbose: whether to be verbose (print extra information to stderr if set to True)
+    :return: path of the created input file
+
     """
     sys.stderr.write("[Message] Create enricher input feature file...\n")
     feature_file = os.path.join(tmp_dir, "all_transcripts_{fa_type}_{exp_id}.tsv".format(fa_type=fa_type, exp_id=exp_id))
@@ -160,9 +195,14 @@ def create_enricher_input_feature(trapid_db_conn, exp_id, fa_type, tmp_dir, verb
 
 # Note: this fix should not be necessary if potentially invalid GO terms are taken care of during initial processing.
 def clean_enricher_input_feature_go(feature_file, go_data, verbose=False, go_filter=GO_FILTER):
-    """
-    Clean input GO feature file `feature_file`: replace obsolete/alternative GO terms when possible, and remove missing
-    GO terms, based on ontology data from `go_data`.
+    """Clean input GO feature file: replace obsolete/alternative GO terms when possible, and remove missing
+    GO terms, based on ontology data from a reference database.
+
+    :param feature_file: feature file to clean
+    :param go_data: GO data dictionary
+    :param verbose: whether to be verbose (print extra information to stderr if set to True)
+    :param go_filter: GO terms to filter, the 3 root terms by default
+
     """
     sys.stderr.write("[Message] Clean enricher input feature file (GO check)...\n")
     go_trs = {}
@@ -203,10 +243,16 @@ def clean_enricher_input_feature_go(feature_file, go_data, verbose=False, go_fil
 
 
 def flag_invalid_gos(go_terms, go_data, alt_gos, verbose=False):
-    """
-    Using reference database GO data `go_data` and alternive GO data `alt_gos`, examine GO term set/list `go_terms` to
+    """Using reference database GO data and alternive GO data `alt_gos`, examine GO term set/list `go_terms` to
     flag invalid GO terms (obsolete, alternative, or not found in the data). Return the results as a dictionary of
     invalid GO sets per category.
+
+    :param go_terms: list or set of GO terms to check
+    :param go_data: GO data dictionary
+    :param alt_gos: alternative GO - canonical GO id correspondence
+    :param verbose: whether to be verbose (print extra information to stderr if set to True)
+    :return: invalid GO terms dictionary
+
     """
     invalid_gos = {'obsolete': set([]), 'alternative':set([]), 'unfound': set([])}
     for go in go_terms:
@@ -235,11 +281,19 @@ def flag_invalid_gos(go_terms, go_data, alt_gos, verbose=False):
 
 
 def create_enricher_input(trapid_db_conn, exp_id, fa_type, subset, tmp_dir, verbose=False):
-    """
-    Create input files for Dries' enricher. Feature file created from all transcript/functional annotation from the
-    `transcripts_annotation` table for all transcripts of experiment `exp_id` and for type `fa_type`. Set file created based on
-    transcript ids from subset `subset` retrieved from `transcripts_labels` table. TRAPID DB accessed through `trapid_db_conn`.
-    Return path to the created input files as tuple.
+    """Create input files for enricher script.
+        * Feature file created from all transcript/functional annotation from the `transcripts_annotation` table for all
+          transcripts of the experiment the selected functional annotation type
+        * Set file created based on transcript ids from a subset retrieved from the `transcripts_labels` table.
+
+    :param trapid_db_conn: TRAPID db connection as returned by common.db_connect()
+    :param exp_id: TRAPID experiment id
+    :param fa_type: functional annotation type
+    :param subset: subset for which enrichment analysis is performed
+    :param tmp_dir: TRAPID experiment temporary directory
+    :param verbose: whether to be verbose (print extra information to stderr if set to True)
+    :return: paths of the created input files as tuple.
+
     """
     sys.stderr.write("[Message] Create enricher input files...\n")
     feature_file = create_enricher_input_feature(trapid_db_conn, exp_id, fa_type, tmp_dir, verbose)
@@ -248,9 +302,18 @@ def create_enricher_input(trapid_db_conn, exp_id, fa_type, subset, tmp_dir, verb
 
 
 def call_enricher(feature_file, set_file, max_pval, exp_id, subset, fa_type, enricher_bin, tmp_dir):
-    """
-    Call enricher script with the defined input files `feature_file` and `set_file`, using a FDR threshold of `max_pval`.
-    `exp_id`, `subset`, and `fa_type` are used to name the output file. Return output file name.
+    """Call enricher script with the defined input files and selected parameters and return output file path.
+
+    :param feature_file: input feature file
+    :param set_file: input set file
+    :param max_pval: maximum correct p-value
+    :param exp_id: TRAPID experiment id
+    :param subset: subset for which enrichment analysis is performed
+    :param fa_type: functional annotation type
+    :param enricher_bin: path to enricher binary
+    :param tmp_dir: TRAPID experiment temporary directory
+    :return: path to output file
+
     """
     cmd_str = "{enricher_bin} -f {max_pval} -o {out_file} {feature_file} {set_file}"
     out_file = os.path.join(tmp_dir, "%s_enrichment_%s_%s_%s.out" % (fa_type, exp_id, subset, str(max_pval)))
@@ -262,9 +325,13 @@ def call_enricher(feature_file, set_file, max_pval, exp_id, subset, fa_type, enr
     return out_file
 
 
-def read_enricher_output(enricher_output, verbose=False):
-    """
-    Read enricher output file `enricher_output` and return results as a dictionary.
+def read_enricher_output(enricher_output):
+    """Read enricher output file and return results as a dictionary.
+
+
+    :param enricher_output: path of enricher output file
+    :return: enrichment result dictionary
+
     """
     enricher_results = {}
     # Columns of the enricher output (only from the 3rd)
@@ -278,13 +345,26 @@ def read_enricher_output(enricher_output, verbose=False):
     return enricher_results
 
 
-def run_enricher(trapid_db_data, exp_id, fa_type, subset, max_pval, go_data, enricher_bin, tmp_dir, keep_tmp=False, verbose=False):
+def run_enricher(trapid_db_data, exp_id, fa_type, subset, max_pval, go_data, enricher_bin, tmp_dir, keep_tmp=False,
+                 verbose=False):
+    """A wrapper function to create enricher input, run it, store output as a variable, and delete temporary files.
+
+    :param trapid_db_data: TRAPID database connection data (parameters for common.db_connect())
+    :param exp_id: TRAPID experiment id
+    :param fa_type: functional annotation type
+    :param subset: subset for which enrichment analysis is performed
+    :param max_pval: maximum p-value
+    :param go_data: GO data dictionary
+    :param enricher_bin: path to enricher binary
+    :param tmp_dir: TRAPID experiment temporary directory
+    :param keep_tmp: whtehr temporary files hsould be kept
+    :param verbose: whether to be verbose (print extra information to stderr if set to True)
+    :return: enrichment results and GF data
+
     """
-    A wrapper function to create enricher input, run it, store output as a variable, and delete temporary files.
-    """
-    enricher_results = {}
+    # enricher_results = {}
     # Columns of the enricher output (only from the 3rd)
-    enricher_cols = ["p-val", "q-val", "enr_fold", "set_size", "ftr_size", "n_hits"]
+    # enricher_cols = ["p-val", "q-val", "enr_fold", "set_size", "ftr_size", "n_hits"]
     # Fetch needed functional annotation data for enrichment script and create input files
     db_conn = common.db_connect(*trapid_db_data)
     enricher_files = create_enricher_input(db_conn, exp_id, fa_type, subset, tmp_dir, verbose)
@@ -292,7 +372,7 @@ def run_enricher(trapid_db_data, exp_id, fa_type, subset, max_pval, go_data, enr
         clean_enricher_input_feature_go(enricher_files[0], go_data, verbose)
     # Perform functional enrichment
     enricher_output = call_enricher(enricher_files[0], enricher_files[1], max_pval, exp_id, subset, fa_type, enricher_bin, tmp_dir)
-    enrichment_results = read_enricher_output(enricher_output, verbose)
+    enrichment_results = read_enricher_output(enricher_output)
     # Get GF data for enrichment results
     enrichment_gf_data = get_enrichment_gf_data(db_conn, exp_id, subset, enrichment_results, enricher_files[0], enricher_files[1], verbose)
     db_conn.close()
@@ -301,14 +381,23 @@ def run_enricher(trapid_db_data, exp_id, fa_type, subset, max_pval, go_data, enr
         to_delete = [enricher_output]
         to_delete.extend(enricher_files)
         del_files(to_delete)
-    return { "results": enrichment_results, "gf_data": enrichment_gf_data }
+    return {"results": enrichment_results, "gf_data": enrichment_gf_data}
 
 
 def create_enrichment_rows(enricher_results, enrichment_gf_data, exp_id, subset, fa_type, max_pval, go_data):
-    """
-    Process raw enrichment results `enricher_results` to create records that can be inserted into TRAPID's DB
-    'functional_enrichments' table. Also set `is_hidden` value for parental GO terms in enrichment results based on GO hierarchy
-    from `go_data`, if needed. Return correctly-formatted values to insert as list of tuples.
+    """Process raw enrichment results to create records that can be inserted into TRAPID's DB 'functional_enrichments'
+    table. Also set `is_hidden` value for parental GO terms in enrichment results based on GO hierarchy, if needed.
+
+
+    :param enricher_results: raw enrichment results
+    :param enrichment_gf_data: enrichment GF data (used for Sankey diagrams) as reutrned by get_enrichment_gf_data()
+    :param exp_id: TRAPID experiment id
+    :param subset: subset for which enrichment analysis is performed
+    :param fa_type: functional annotation type
+    :param max_pval: maximum (corrected) p-value used for the enrichment
+    :param go_data: GO data dictionary
+    :return: correctly-formatted values to insert as a list of tuples
+
     """
     sys.stderr.write("[Message] Process enricher output...\n")
     enrichment_rows = []
@@ -320,7 +409,7 @@ def create_enrichment_rows(enricher_results, enrichment_gf_data, exp_id, subset,
             # Compute subset ratio
             sub_ratio = enricher_results[fa]['n_hits'] / enricher_results[fa]['set_size'] * 100
             p_val = enricher_results[fa]['q-val']  # p-val stored in DB is the corrected one
-            sub_hits =  enricher_results[fa]['n_hits']  # This is used for the enrichment Sankey diagrams
+            sub_hits = enricher_results[fa]['n_hits']  # This is used for the enrichment Sankey diagrams
             is_hidden = 0
             # GO should be hidden if any of its parents or children has more significant enrichment results.
             # 'more significant' => larger log2 enrichment fold and lower p-value
@@ -349,16 +438,22 @@ def create_enrichment_rows(enricher_results, enrichment_gf_data, exp_id, subset,
             # Compute subset ratio
             sub_ratio = enricher_results[fa]['n_hits'] / enricher_results[fa]['set_size'] * 100
             p_val = enricher_results[fa]['q-val']  # p-val stored in DB is the corrected one
-            sub_hits =  enricher_results[fa]['n_hits']  # This is used for the enrichment Sankey diagrams
+            sub_hits = enricher_results[fa]['n_hits']  # This is used for the enrichment Sankey diagrams
             is_hidden = 0
-            values = (exp_id, subset, fa_type, max_pval, fa, is_hidden, p_val, log2_enr, sub_ratio, sub_hits,  enrichment_gf_data[fa])
+            values = (exp_id, subset, fa_type, max_pval, fa, is_hidden, p_val, log2_enr, sub_ratio, sub_hits, enrichment_gf_data[fa])
             enrichment_rows.append(values)
     return enrichment_rows
 
 
 def upload_results_to_db(trapid_db_conn, enrichment_rows, verbose=False, chunk_size=500):
-    """
-    Insert formatted enrichment results `enrichment_rows` into TRAPID DB (accessed with `trapid_db_conn`).
+    """Insert formatted enrichment results into TRAPID DB.
+
+
+    :param trapid_db_conn: TRAPID db connection as returned by common.db_connect()
+    :param enrichment_rows: formatted enrichment result records
+    :param verbose: whether to be verbose (print extra information to stderr if set to True)
+    :param chunk_size: number of records ot insert at once (500 by default)
+
     """
     sys.stderr.write("[Message] Upload enrichment results...\n")
     funct_enrichment_query = "INSERT INTO `functional_enrichments` (`id`, `experiment_id`, `label`, `data_type`, `max_p_value`, `identifier`, `is_hidden`, `p_value`, `log_enrichment`, `subset_ratio`, `subset_hits`, `subset_hits_gf_data`) VALUES (0, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"
@@ -374,9 +469,11 @@ def upload_results_to_db(trapid_db_conn, enrichment_rows, verbose=False, chunk_s
 
 
 def update_enrichment_state(trapid_db_conn, exp_id):
-    """
-    Update functional enrichment state in the `experiments` table of TRAPID db (accessed with `trapid_db_conn`), for
-    experiment `exp_id`.
+    """Update functional enrichment state in the `experiments` table of TRAPID db.
+
+    :param trapid_db_conn: TRAPID db connection as returned by common.db_connect()
+    :param exp_id: TRAPID experiment id
+
     """
     sql_query = "UPDATE `experiments` SET `enrichment_state`='finished' WHERE `experiment_id`='{exp_id}'"
     formatted_query = sql_query.format(exp_id=exp_id)
@@ -386,7 +483,13 @@ def update_enrichment_state(trapid_db_conn, exp_id):
 
 
 def send_end_email_preprocessing(trapid_db_conn, exp_id, fa_type):
-    """Send an email to the owner of experiment `exp_id` to warn them of job completion.  """
+    """Send an email to the owner of an experiment to warn them of job completion.
+
+    :param trapid_db_conn: TRAPID db connection as returned by common.db_connect()
+    :param exp_id: TRAPID experiment id
+    :param fa_type: functional annotation type
+
+    """
     # Functional annotation type labels used in the email
     fa_labels = {"go": "GO", "ipr": "protein domain", "ko": "KO"}
     # Get title & email address associated to the experiment
@@ -405,8 +508,14 @@ def send_end_email_preprocessing(trapid_db_conn, exp_id, fa_type):
 
 
 def get_transcript_gfs(trapid_db_conn, exp_id, transcripts, verbose=False):
-    """
-    Get GF for a set or list of transcripts `transcripts` from experiment `exp_id`. Return a transcript:gf dictionary.
+    """Get GF for a set or list of transcripts.
+
+    :param trapid_db_conn: TRAPID db connection as returned by common.db_connect()
+    :param exp_id: TRAPID experiment id
+    :param transcripts: set or list of transcript ids
+    :param verbose: whether to be verbose (print extra information to stderr if set to True)
+    :return: transcript:gf dictionary
+
     """
     trs_gf = {}
     trs_gf_query = "SELECT `transcript_id`, `gf_id` from `transcripts` WHERE `experiment_id`='{exp_id}' AND `transcript_id` IN ({trs_str})"
@@ -428,13 +537,17 @@ def get_transcript_gfs(trapid_db_conn, exp_id, transcripts, verbose=False):
 
 
 def cleanup_enrichment_preprocessing(trapid_db_conn, exp_id, fa_type, verbose):
-    """
-    Perform cleanup tasks at the end of functional enrichment preprocessing, for experiment `exp_id` and functional
-    annotation type `fa_type`:
+    """Perform cleanup tasks at the end of functional enrichment preprocessing:
         * Update `experiment_log`
         * Delete cluster job from `experiment_jobs`
         * Update `enrichment_state` for the experiment
-        * Send an email to the user
+        * Send a completion email to the user
+
+    :param trapid_db_conn: TRAPID db connection as returned by common.db_connect()
+    :param exp_id: TRAPID experiment id
+    :param fa_type: functional annotation type
+    :param verbose: whether to be verbose (print extra information to stderr if set to True)
+
     """
     sys.stderr.write("[Message] Cleanup at the end of enrichment preprocessing...\n")
     if verbose:
@@ -452,10 +565,18 @@ def cleanup_enrichment_preprocessing(trapid_db_conn, exp_id, fa_type, verbose):
 
 
 def get_enrichment_gf_data(trapid_db_conn, exp_id, subset, enricher_results, feature_file, set_file, verbose=False):
-    """
-    Get GF data for enrichment results (i.e. GFs of subset transcripts having enriched functional annotations).
+    """Get GF data for enrichment results (i.e. GFs of subset transcripts having enriched functional annotations).
     This data is used to display the enrichment Sankey diagrams within TRAPID.
-    Return GF data as fa:gf_string dictionary, with `gf_string` formatted as semi-colon separated `GF=n_hits` pairs.
+
+    :param trapid_db_conn: TRAPID db connection as returned by common.db_connect()
+    :param exp_id: TRAPID experiment id
+    :param subset: subset for which enrichment analysis is performed
+    :param enricher_results: parsed enricher results
+    :param feature_file:  enricher input feature file
+    :param set_file: enricher input set file
+    :param verbose: whether to be verbose (print extra information to stderr if set to True)
+    :return: GF data as fa:gf_string dictionary, with `gf_string` formatted as semi-colon separated `GF=n_hits` pairs.
+
     """
     sys.stderr.write("[Message] Generate enrichment GF data strings...\n")
     enriched_fa_gf_data = {}
@@ -490,7 +611,7 @@ def get_enrichment_gf_data(trapid_db_conn, exp_id, subset, enricher_results, fea
     # Create GF data strings
     for fa, trs in enriched_fa_trs.items():
         gfs = [trs_gf[t] for t in trs]
-        gf_data = ";".join(["%s=%d" % (gf.replace(gf_prefix, ''), gfs.count(gf)) for gf in set(gfs) ])
+        gf_data = ";".join(["%s=%d" % (gf.replace(gf_prefix, ''), gfs.count(gf)) for gf in set(gfs)])
         enriched_fa_gf_data[fa] = gf_data
 
     return enriched_fa_gf_data

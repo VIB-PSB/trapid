@@ -1,19 +1,19 @@
 #!/usr/bin/python
 """
-Retrieve core gene families for a given clade, from EggNOG TRAPID's reference database. Simply a quick protoype now.
+Retrieve core gene families for a given clade, from EggNOG TRAPID's reference database (quick working protoype).
 """
 
-# Usage: ./get_core_gfs_eggnog.py -u <mysql_user> -h <host_name> -sp <species_threshold> -o <output_name> <db_name> <nog_name>
+# Usage: ./get_core_gfs_eggnog.py -u <mysql_user> -h <host_name> -sp <species_threshold> -o <output_name> <db_name> <nog_level|tax_id>
 
-# Import modules
 import argparse
-import MySQLdb as MS
-import sys
-import os
-import json
 import getpass
+import json
+import os
+import sys
 import time
-from ete3 import NCBITaxa
+
+import MySQLdb as MS
+
 from common import *
 
 ### Command-line arguments
@@ -84,19 +84,25 @@ def get_target_nog(db_conn, query_str):
         chosen_nog = query_str
     else:
         # Get corresponding tax_id from NCBI taxonomy
-        ncbi_taxonomy = NCBITaxa(dbfile="/www/blastdb/biocomp/moderated/trapid_02/.etetoolkit/taxa.sqlite")  # HARDCODED LOCATION OF ETE3 TAXONOMY DB FILE
+        # Importing `ete3` slows down core GF retrieval (even when it's not used) so the import statement was moved here
+        from ete3 import NCBITaxa
+        ete_ncbi_dbfile = None
+        if os.environ.get("ETE_NCBI_DBFILE"):
+            ete_ncbi_dbfile = os.environ.get("ETE_NCBI_DBFILE")
+            print_log_msg(log_str="Load ETE NCBI taxonomy data from: %s" % ete_ncbi_dbfile, color="cyan")
+        ncbi_taxonomy = NCBITaxa(dbfile=ete_ncbi_dbfile)
         # tax_id = '0'
         try:
             tax_id = ncbi_taxonomy.get_name_translator([query_str]).values()[0][0]  # What if two tax_ids correspond to it?
             tax_id = str(tax_id)
         except:
-            print_log_msg(log_str='Error: invalide clade name: \'%s\'.' % query_str, color='red')
+            print_log_msg(log_str='Error: invalid clade name: \'%s\'.' % query_str, color='red')
             raise
         # Try getting corresponding NOG
         if tax_id in [all_nog_levels[nog]["tax_id"] for nog in all_nog_levels]:
             chosen_nog = [nog for nog in all_nog_levels if all_nog_levels[nog]["tax_id"] == tax_id][0]
     if not chosen_nog:
-        print_log_msg(log_str='Error: impossible to find suitable NOG for clade \'%s\'.' % query_str, color='red')
+        print_log_msg(log_str='Error: impossible to find suitable NOG level for clade \'%s\'.' % query_str, color='red')
         sys.exit(1)
     return {chosen_nog: all_nog_levels[chosen_nog]}
 
@@ -142,7 +148,7 @@ def get_core_gfs_nog(db_conn, cutoff_dict, output_file, target_nog):
         n_species = int(record['method'].split('|')[1].split(',')[0].split(':')[1])
         n_genes = int(record['method'].split('|')[1].split(',')[1].split(':')[1])
         weight = "{:.4f}".format(float(n_species) / n_genes)
-        core_gf = n_species > max_species * cutoff_dict['species_perc']
+        core_gf = n_species >= max_species * cutoff_dict['species_perc']
         gf_list.append([gf_id, n_genes, n_species, weight, core_gf, gf_genes[gf_id]])
     # print max(n_species)
     # print len(target_nog[target_nog.keys()[0]]['species'])

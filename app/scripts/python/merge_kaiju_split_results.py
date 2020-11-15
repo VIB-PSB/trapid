@@ -1,46 +1,52 @@
-#!/usr/bin/python
-
 """
-Merge kaiju output files. Read all the result and get the best classification for each input sequence. If there is
-conflict (i.e. two matches are equally good but in different splits), assign the LCA of conflicting tax ids to this sequence.
-The script should be used after kaiju was run with a splitted database.
+Merge Kaiju output files. Read all the result and get the best classification for each input sequence. If there is
+conflict (i.e. two matches are equally good but in different splits), assign the LCA of conflicting tax ids to this
+sequence. The script should be used after Kaiju was run with a split index.
 """
 
-# Usage: merge_splitted_kaiju_results.py <nodes.dmp> <splitted_resuls_dir> -o <merged_output_file>
+# Usage: python merge_split_kaiju_results.py <nodes.dmp> <split_results_dir> -o <merged_output_file>
 
-# Import modules
 import argparse
-import sys
-import os
-import time
 import glob
+import os
+import sys
 import random
+import time
 
 
-### Parse command-line arguments
-cmd_parser = argparse.ArgumentParser(
-    description='Merge kaiju results. Use this script after kaiju was run with a splitted database. ',
-    formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-# Positional arguments
-cmd_parser.add_argument('nodes_dmp_file',
-                        help='Path to nodes.dmp file. The same file should be used for running kaiju and merging results.')
-cmd_parser.add_argument('kaiju_outdir',
-                        help='Path to splitted kaiju results files (can be a `ls`-like expression). If a directory is \
-                        provided, will consider all the `.out` files in that directory. ')
-# Optional arguments
-cmd_parser.add_argument('-o', metavar='--output_file', dest='output_file', type=str,
-                        help='Output file. If none provide will output to STDOUT', default=None)
-# cmd_parser.add_argument('-m', metavar='--kaiju_mode', dest='kaiju_mode', type=str,
-#                         help='What mode was kaiju run with? Can be \'mem\' or \'greedy\'. \
-#                         THIS SCRIPT ONLY WORKS WITH MEM MODE FOR NOW!', default='mem')
+def parse_arguments():
+    """Parse command-line arguments.
 
-# sys.stderr.write(str(cmd_args)+'\n')  # Debug
+    :return: parsed arguments (Namespace object).
+
+    """
+    cmd_parser = argparse.ArgumentParser(
+        description='Merge Kaiju results. Use this script after Kaiju was run with a split index. ',
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+    # Positional arguments
+    cmd_parser.add_argument('nodes_dmp_file',
+                            help='Path to nodes.dmp file. The same file should be used for running kaiju and merging results.')
+    cmd_parser.add_argument('kaiju_outdir',
+                            help='Path to split kaiju results files (can be a `ls`-like expression). If a directory is \
+                            provided, will consider all the `.out` files in that directory. ')
+    # Optional arguments
+    cmd_parser.add_argument('-o', metavar='--output_file', dest='output_file', type=str,
+                            help='Output file. If none provided, will output to STDOUT', default=None)
+    # cmd_parser.add_argument('-m', '--kaiju_mode', type=str,
+    #                         help='What mode was kaiju run with? Can be \'mem\' or \'greedy\'. \
+    #                         THIS SCRIPT ONLY WORKS WITH MEM MODE FOR NOW!', default='mem')
+    # sys.stderr.write(str(cmd_args)+'\n')  # Debug
+    cmd_args = cmd_parser.parse_args()
+    return cmd_args
 
 
-### Functions
 def get_tax_parents(nodes_tax_file, tax_ids):
-    """Parse `nodes_tax_file` (nodes.dmp from NCBI taxonomy) to get all parents of `tax_ids` (list of tax ids).
-    Return a <tax_id>:<parent_list> dictionary.
+    """Parse nodes.dmp file from NCBI taxonomy to get all parents of a list of tax ids (until the root).
+
+    :param nodes_tax_file: `nodes.dmp` file from NCBI taxonomy (taxonomic tree)
+    :param tax_ids: list of tax ids
+    :return: <tax_id>:<parent_list> dictionary
+
     """
     # Read tax nodes
     tax_nodes = {}
@@ -48,14 +54,14 @@ def get_tax_parents(nodes_tax_file, tax_ids):
     with open(nodes_tax_file, 'r') as nodes_tax:
         for line in nodes_tax:
             current_node = [field.strip() for field in line.split('|')]
-            tax_nodes[current_node[0]]=current_node[1]
+            tax_nodes[current_node[0]] = current_node[1]
     # Get hierarchy to populate final dictionary
     for node in tax_ids:
         if node not in tax_nodes:
             tax_parents[node] = None
             sys.stderr.write('[Warning] Could not find %s in %s while parsing taxonomy hierarchy\n' % (node, nodes_tax_file))
         else:
-            parent=tax_nodes[node]
+            parent = tax_nodes[node]
             tax_parents[node] = []
             tax_parents[node].append(parent)
             while parent != tax_nodes[parent]:
@@ -66,16 +72,23 @@ def get_tax_parents(nodes_tax_file, tax_ids):
 
 # TODO: cleaner implementation LCA function.
 def get_lca(tax_ids, tax_parents):
-    """Return lowest common ancestor of a set of tax ids (`tax_ids`. The tax ids need to be present in `tax_parents`.
-    Very dumb/simplistic implementation of LCA, using the list of parents produced with `get_tax_parents`.
+    """Return lowest common ancestor (LCA) of a set of tax ids. The tax ids need to be present in `tax_parents`.
+
+    This function is a simplistic implementation of LCA that uses the list of parents produced with `get_tax_parents`.
+    Here, getting the LCA of a set of tax ids is equivalent to reading the parent list of each tax id backwards (i.e.
+    from root) until they differ. The last element to be identical represents the LCA.
+
+    :param tax_ids: set of tax ids for which to compute the LCA
+    :param tax_parents: <tax_id>:<parent_list> dictionary as returned by `get_tax_parents()`
+    :return: the LCA of input tax ids
+
     """
-    # Here, getting the LCA is equivalent to reading parent list pof each tax id backwards (from root) until they differ.
-    # The last element to be identical is the LCA
-    # We ignore tax ids not found in our results
-    # (should not happen with NCBI nr as all the data is retrieved approximately at the same time!)
+    # We ignore tax ids not found in our results: this should be no issue with NCBI nr as all the data (taxonomy files
+    # for Kaiju / TRAPID db, NCBI nr sequence) is retrieved approximately at the same time.
     # If only one tax_id provided, just return it as LCA.
-    # This should not happen but I am not mergining the kaiju results correctly (i.e. considering tha there is an a conflict when there is not an that we have the same match in the sam tax_id, just with two different sequences. To correct)
-    if len(tax_ids)==1:
+    # This should not happen but I am not merging the kaiju results ''correctly'' (i.e. considering there is a conflict
+    # when there is not and that we have the same match in the same tax_id, just with two different seqs. To correct)
+    if len(tax_ids) == 1:
         return next(iter(tax_ids))
     # parent_subset = {tax_id: tax_parents[tax_id][::-1] for tax_id in tax_ids if tax_parents[tax_id] is not None}
     parent_subset = {tax_id: tax_parents[tax_id][::-1]+[tax_id] for tax_id in tax_ids if tax_parents[tax_id] is not None}
@@ -87,7 +100,7 @@ def get_lca(tax_ids, tax_parents):
         ancestor_tax_ids = []
         for parent in parent_list:
             ancestor_tax_ids.append(parent[i])
-        if len(set(ancestor_tax_ids))==1:
+        if len(set(ancestor_tax_ids)) == 1:
             # print "Still CA "+lowest_common_ancestor
             lowest_common_ancestor = ancestor_tax_ids[0]
         else:
@@ -97,25 +110,32 @@ def get_lca(tax_ids, tax_parents):
 
 
 def create_transcript_dict(kaiju_outdir):
-    """Read a set of kaiju results, that are in `kaiju_outdir`. Create and return a dictionnary that summarizes
+    """Read a set of (split) Kaiju results from the same directory. Create and return a dictionnary that summarizes
     the results. The returned dictionary still needs to be processed to solve conflicts (need to get LCA).
-    Only tested with MEM mode (with verbose output files) but should work in greedy mode (instead of the match length,
-    the match score compared in case of sequences classified in different splits).
+    This method was only carefully tested with MEM mode (with verbose output files) but should work in greedy mode
+    (using score threshold with `-s`): instead of the match length, the match score is compared in case of sequences
+    classified in different splits.
+
+    :param kaiju_outdir: Kaiju split output directory (or glob pattern). If a directory is provided, all `*.out` files
+    from the directory are considered to be output files.
+    :return: Kaiju result as transcript_id:results dictionary
+
     """
     transcript_dict = {}
-    sys.stderr.write('[' + time.strftime("%H:%M:%S") + '] Retrieving results from kaiju output files...\n')
+    sys.stderr.write('[%s] Retrieving results from kaiju output files...\n' % time.strftime("%H:%M:%S"))
     if os.path.isdir(kaiju_outdir):
         file_list = glob.glob(os.path.join(kaiju_outdir, '*.out'))
     else:
         file_list = glob.glob(kaiju_outdir)
-    sys.stderr.write('[' + time.strftime("%H:%M:%S") + '] File list to consider: %s\n' % ', '.join([os.path.basename(f) for f in file_list]))
+    sys.stderr.write('[%s] File list to consider: %s\n'
+                     % (time.strftime("%H:%M:%S"), ', '.join([os.path.basename(f) for f in file_list])))
     for kaiju_output_file in file_list:
-        sys.stderr.write('[' + time.strftime("%H:%M:%S") + '] Reading results in %s\n' % os.path.basename(kaiju_output_file))
+        sys.stderr.write('[%s] Reading results in %s\n' % (time.strftime("%H:%M:%S"), os.path.basename(kaiju_output_file)))
         with open(kaiju_output_file, 'r') as kaiju_output:
             for line in kaiju_output:
                 current_data = line.strip().split('\t')
                 # print current_data
-                is_classified = True if current_data[0]=='C' else False
+                is_classified = True if current_data[0] == 'C' else False
                 transcript_id = current_data[1]
                 # if transcript_id=='TRINITY_DN15314_c0_g1_i1':
                 #     sys.stderr.write('---'.join(current_data)+'\n')
@@ -161,17 +181,21 @@ def create_transcript_dict(kaiju_outdir):
 
 
 def solve_match_conflicts(transcript_dict, nodes_tax_file):
-    '''Process a `transcript_dict` and return an updated dictionnary with conflict solved and updated tax ids.
-    Parents and LCA retrieved from `nodes_tax_file`.
-    '''
-    sys.stderr.write('[' + time.strftime("%H:%M:%S") + '] Solving conflicting matches (replacement by LCA). \n')
+    """Process a Kaiju result dictionary and return an updated dictionnary with conflict resolved and updated tax ids.
+
+    :param transcript_dict: input Kaiju result dictionary
+    :param nodes_tax_file: `nodes.dmp` file from NCBI taxonomy (taxonomic tree)
+    :return: updated Kaiju result dictionary with conflicting matched resolved and updated tax ids.
+
+    """
+    sys.stderr.write('[%s] Solving conflicting matches (replacement by LCA). \n' % time.strftime("%H:%M:%S"))
     updated_transcript_dict = transcript_dict
     # Try to get 'ambiguous' taxonomic results (i.e. we need to get the LCA).
     try:
         conflicting_tax_ids = set.union(*[(transcript_dict[t]['match_tax_ids']) for t in transcript_dict if not transcript_dict[t]['selected_taxon']])
         # print conflicting_tax_ids
     except:
-        sys.stderr.write('[' + time.strftime("%H:%M:%S") + '] No conflicting matches found! \n')
+        sys.stderr.write('[%s] No conflicting matches found! \n' % time.strftime("%H:%M:%S"))
         conflicting_tax_ids = None
     # If there were no 'ambiguities' to solve, just return `transcript_dict`
     if not conflicting_tax_ids:
@@ -195,25 +219,30 @@ def solve_match_conflicts(transcript_dict, nodes_tax_file):
 
 
 def produce_output(transcript_dict, output_file):
-    '''Produce merged output file. If no output file is provided, will output to STDOUT.'''
-    sys.stderr.write('[' + time.strftime("%H:%M:%S") + '] Producing merged output. \n')
+    """Produce merged output file. If no output file is provided, will output to STDOUT.
+
+    :param transcript_dict: Kaiju result dictionary
+    :param output_file: path of merged Kaiju output file
+
+    """
+    sys.stderr.write('[%s] Producing merged output. \n' % time.strftime("%H:%M:%S"))
     output_lines = []
-    for transcript_id,record in sorted(transcript_dict.items()):
+    for transcript_id, record in sorted(transcript_dict.items()):
         if not record['classified']:
             output_lines.append('\t'.join([
-            'U',
-            transcript_id,
-            record['selected_taxon']
+                'U',
+                transcript_id,
+                record['selected_taxon']
             ]))
         else:
             output_lines.append('\t'.join([
-            'C',
-            transcript_id,
-            record['selected_taxon'],
-            record['match_len'],
-            ','.join(sorted(list(record['match_tax_ids']), key=int))+',',
-            ','.join(sorted(list(record['match_sqce_ids'])))+',',
-            ','.join(sorted(list(record['match_sqces'])))+',',
+                'C',
+                transcript_id,
+                record['selected_taxon'],
+                record['match_len'],
+                ','.join(sorted(list(record['match_tax_ids']), key=int))+',',
+                ','.join(sorted(list(record['match_sqce_ids'])))+',',
+                ','.join(sorted(list(record['match_sqces'])))+','
             ]))
     if not output_file:
         sys.stdout.write('\n'.join(output_lines)+'\n')
@@ -222,16 +251,27 @@ def produce_output(transcript_dict, output_file):
             out_file.write('\n'.join(output_lines)+'\n')
 
 
-def main(kaiju_outdir, nodes_tax_file, output_file):
-    """Script execution"""
+def merge_results(kaiju_outdir, nodes_tax_file, output_file):
+    """Main function: read all split Kaiju output files, merge results, resolve conflicting matches, and create merged
+    Kaiju output file.
+
+    :param kaiju_outdir: path of split kaiju results files (directory or glob pattern)
+    :param nodes_tax_file: `nodes.dmp` file from NCBI taxonomy (taxonomic tree)
+    :param output_file: path of merged Kaiju output file
+
+    """
     transcript_dict = create_transcript_dict(kaiju_outdir=kaiju_outdir)
     final_transcript_dict = solve_match_conflicts(transcript_dict=transcript_dict, nodes_tax_file=nodes_tax_file)
     produce_output(transcript_dict=final_transcript_dict, output_file=output_file)
-    sys.stderr.write('[' + time.strftime("%H:%M:%S") + '] Finished!\n')
+    sys.stderr.write('[%s] Finished!\n' % time.strftime("%H:%M:%S"))
+
+
+def main():
+    """Script execution"""
+    cmd_args = parse_arguments()
+    merge_results(cmd_args.kaiju_outdir, cmd_args.nodes_dmp_file, cmd_args.output_file)
 
 
 # Script execution when the script is called from the command-line
 if __name__ == '__main__':
-    # Parse them. Move to main?
-    cmd_args = cmd_parser.parse_args()
-    main(kaiju_outdir=cmd_args.kaiju_outdir, nodes_tax_file=cmd_args.nodes_dmp_file, output_file=cmd_args.output_file)
+    main()

@@ -6,11 +6,13 @@ as input.
 
 # Usage: ./get_core_gfs.py -u <mysql_user> -h <host_name> -sp <species_threshold> -o <output_name> <db_name> <clade_name>
 
-# Import modules
 import argparse
 import json
-from common import *
+import os
+
 from numpy import average, median, std
+
+from common import *
 
 
 def parse_arguments():
@@ -315,9 +317,13 @@ def main(db_name, clade, username, mysql_server, output_file, min_genes, max_gen
     cutoff_dict = {"min_genes": min_genes, "max_genes": max_genes, "species_perc": species_perc}
     # Depending on `tax_source`, perform core GF retrieval.
     if tax_source == "ncbi":
-        # TODO: move import somewhere else?
+        # Importing `ete3` slows down core GF retrieval (even when it's not used) so the import statement was moved here
         from ete3 import NCBITaxa
-        ncbi_taxonomy = NCBITaxa(dbfile="/www/blastdb/biocomp/moderated/trapid_02/.etetoolkit/taxa.sqlite")  # HARDCODED LOCATION OF ETE3 TAXONOMY DB FILE
+        ete_ncbi_dbfile = None
+        if os.environ.get("ETE_NCBI_DBFILE"):
+            ete_ncbi_dbfile = os.environ.get("ETE_NCBI_DBFILE")
+            print_log_msg(log_str="Load ETE NCBI taxonomy data from: %s" % ete_ncbi_dbfile, color="cyan")
+        ncbi_taxonomy = NCBITaxa(dbfile=ete_ncbi_dbfile)
         species_list =  get_species_list_ncbi(clade=clade, ncbi_taxonomy=ncbi_taxonomy, db_conn=db_ref)
         if not species_list:
             print_log_msg(log_str="No species found for this clade, exit!", color="red")
