@@ -1,4 +1,4 @@
 *~
-app/scripts/java/transcript_pipeline/*class
-app/scripts/python/*pyc
+*.class
+*.pyc
 *.ini
