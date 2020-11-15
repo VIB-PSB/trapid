@@ -224,7 +224,7 @@ echo $this->Html->script('https://cdn.datatables.net/buttons/1.5.6/js/buttons.ht
                         echo "<td>" . $top_hits ."</td>";
                         echo "<td>" . number_format((float)$completeness_job['CompletenessResults']['completeness_score'], 3, '.', ',') . "</td>";
                         echo "<td><a class=\"result_link\" id=\"" . "results_".implode("_", array($completeness_job['CompletenessResults']['clade_txid'], $completeness_job['CompletenessResults']['label'], $tax_source, $species_perc, $top_hits)) . "\">View results</a></td>";
-                        echo "<td style=\"text-align:center;\">".$this->Html->link("<span class='material-icons'>delete</span>",
+                        echo "<td class='text-center'>".$this->Html->link("<span class='material-icons'>delete</span>",
                                 array("controller"=>"tools","action"=>"delete_core_gf_results", $exp_id,
                                     $completeness_job['CompletenessResults']['clade_txid'],
                                     $completeness_job['CompletenessResults']['label'],
@@ -287,6 +287,7 @@ echo $this->Html->script('https://cdn.datatables.net/buttons/1.5.6/js/buttons.ht
         });
         $(sub_form_id).submit(function (e) {
             console.log("Completeness job form was submitted! ");
+
             $(loading_div_id).css("display", "block");
             $(sub_btn_id).attr("disabled", true);
             $(display_div_id).empty();

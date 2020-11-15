@@ -916,8 +916,7 @@ class TrapidUtilsComponent extends Component{
     }
 
 
-  /* Core GF completeness */
-  // Tax source not used yet
+  // Tax source not used -- unlikely to ever be used within TRAPID?
   //    function create_shell_script_completeness($clade_tax_id, $exp_id, $label, $species_perc, $tax_source, $top_hits){
     function create_shell_script_completeness($clade_tax_id, $exp_id, $label, $species_perc, $top_hits, $tax_source, $db_type="plaza"){
         $base_scripts_location	= APP."scripts/";
@@ -939,10 +938,16 @@ class TrapidUtilsComponent extends Component{
         $fh				= fopen($shell_file,"w");
         fwrite($fh,"# Print starting date/time \ndate\n\n");
         fwrite($fh,"# Loading necessary modules\n");
+        fwrite($fh,"# Loading necessary modules\n");
         fwrite($fh,"# " . $db_type . "\n");
         foreach($necessary_modules as $nm){
             fwrite($fh,"module load ".$nm." \n");
         }
+        // Set environment variables used by the core GF completeness script: DB password & ETE NCBI taxonomy file
+        $completeness_ini_file = INI . "core_gf_completeness_settings.ini";
+        $completeness_ini_data = parse_ini_file($completeness_ini_file, true);
+        fwrite($fh,"\nexport DB_PWD='" . TRAPID_DB_PASSWORD . "'\n");
+        fwrite($fh,"export ETE_NCBI_DBFILE='" . $completeness_ini_data["core_gf"]["ete_ncbi_dbfile"] . "'\n");
         fwrite($fh,"\n# Launching python wrapper for core GF analysis from TRAPID, with correct parameters. \n");
         $program_location		= $base_scripts_location . "python/" . $wrapper_script;
         $parameters = array($clade_tax_id, $exp_id, "--label", $label, "--species_perc", $species_perc, "--top_hits", $top_hits, "--output_dir", $completeness_dir, "--trapid_db", TRAPID_DB_NAME);

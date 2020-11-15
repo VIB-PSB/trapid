@@ -2442,6 +2442,10 @@ function label_go_intersection($exp_id=null,$label=null){
 //        if($job_result != 0) {
 //            return "<p class='text-danger'>Error! Check chosen clade & parameters?</p>";
 //        }
+        // Quick fix for an issue with decimal places with jobs having `$species_perc` set to 1
+        if($species_perc == 1) {
+          $species_perc = number_format($species_perc, 1, '.', '');
+        }
         $this->redirect(array("controller"=>"tools", "action"=>"load_core_gf_completeness", $exp_id,  $clade_tax_id, $label, $tax_source, $species_perc, $top_hits));
     }
 
@@ -2523,12 +2527,8 @@ function label_go_intersection($exp_id=null,$label=null){
         parent::check_user_exp($exp_id);
         // Build query to delete core GF completeness analysis results
         $delete_query = "DELETE FROM `completeness_results` WHERE `experiment_id`='" . $exp_id . "' AND `label` = '" . $label .
-            "' AND `clade_txid` = '" . $clade_tax_id . "'";
+            "' AND `clade_txid` = '" . $clade_tax_id . "'" .
             " AND `used_method` = 'sp=" . $species_perc . ";ts=" . $tax_source . ";th=" . $top_hits . "';";
-        pr($delete_query);
-        pr($delete_query);
-        pr($delete_query);
-        pr($delete_query);
         // Execute it and redirect to core GF page
         $this->CompletenessResults->query($delete_query);
         $this->redirect(array("controller"=>"tools","action"=>"core_gf_completeness", $exp_id));
