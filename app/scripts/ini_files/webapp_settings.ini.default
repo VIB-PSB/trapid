@@ -1,4 +1,5 @@
 [Website]
+; Default page title
 default_title = "Default TRAPID title"
 
 ; TRAPID instance name for `tmp_path` and `tmp_url` needs to be the same (here `trapid_tmp`)
@@ -6,10 +7,11 @@ default_title = "Default TRAPID title"
 tmp_path = "/path/to/trapid_tmp/"
 tmp_url = "http://trapid.host.url/readwrite/trapid_tmp/"
 
-; Path to DIAMOND DBs and extra files used by TRAPID
+; Path to DIAMOND DBs and extra files used by TRAPID (historically named `blast_db_path`)
 [Blast_db]
 blast_db_path = "/path/to/blast_db/"
-blast_db_path_midas = "/path/ti/blast_db/"
 
-[Cluster]
+; User limits: maximum number of jobs running on the cluster for an experiment and maximum number of experiments
+[User_limits]
 max_cluster_jobs = 2
+max_user_experiments = 20

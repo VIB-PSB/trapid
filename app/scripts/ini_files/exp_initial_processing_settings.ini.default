@@ -2,6 +2,7 @@
 ; It is modified and copied at the root of the experiment tmp directory on initial processing start.
 ; Values that are modified upon initial processing submission are between brackets (`<>`).
 
+; TRAPID DB connection data
 [trapid_db]
 trapid_db_server = "db_server"
 trapid_db_name = "db_name"
@@ -9,6 +10,7 @@ trapid_db_port = 3306
 trapid_db_username = "username"
 trapid_db_password = "password"
 
+; Reference DB connection data
 [reference_db]
 reference_db_server = "db_server"
 reference_db_name = "<reference_db_name>"
@@ -17,32 +19,51 @@ reference_db_username = "username"
 reference_db_password = "password"
 
 [experiment]
+; Experiment identifier
 exp_id = "<exp_id>"
+; Experiment temporary processing directory (normally created in the `tmp_path` defined in `webapp_settings`)
 tmp_exp_dir = "<tmp_exp_path>"
 
 [initial_processing]
-base_script_dir = ""
+; Path to TRAPID's `app/scripts` directory
+base_script_dir = "/path/to/app/scripts"
+; GF type (only relevant with PLAZA reference databases)
 gf_type = "<gf_type>"
+; Number of top hits for GF assignment (legacy, should be set to `1`)
 num_top_hits = "<num_top_hits>"
+; The method to use to transfer functional annotations to transcripts (only relevant with PLAZA reference databases)
 func_annot = "<func_annot>"
+; eggNOG Taxonomic scope (only relevant with eggNOG reference database)
 tax_scope = "<tax_scope>"
+; Set to `1` if input sequences are *nucleotide* CDses, `0` otherwise
 use_cds = "<use_cds>"
+; Index of the translation table to use during the initial processing
 transl_table = "<transl_table_idx>"
-transl_tables_file = "/path/to/all_translation_tables.json"
+; Path to TRAPID translation table file (normally `app/scripts/cfg/all_translation_tables.json`)
+transl_tables_file = "/path/to/app/scripts/cfg/all_translation_tables.json"
 
+; Path of DIAMOND DBs and extra files used by TRAPID (historically named `blast_db_path`)
+; Reference database DIAMOND indices must be stored in a subdirectory named as the reference database.
 [sim_search]
 blast_db_dir = "/path/to/blast_db/"
 blast_db = "<blast_db>"
 e_value = "<e_value>"
 
+
 [tax_binning]
+; Set to `1` to perform taxonomic classification, `0` otherwise.
 perform_tax_binning = "<perform_tax_binning>"
-kaiju_parameters = "kaiju parameters string"
+; A string of parameters to append to Kaiju's command-line
+kaiju_parameters = "-a mem"
+; Path to `names.dmp` and `nodes.dmp` NCBI taxonomy files
 names_dmp_file = "/path/to/kaiju_files/names.dmp"
 nodes_dmp_file = "/path/to/kaiju_files/nodes.dmp"
+; Path to a directory containing Kaiju index (can be split).
 splitted_db_dir = "/path/to/kaiju_files/splitted_db/"
 
 [infernal]
-rfam_dir = "/path/to/rfam/"
+; Path to a directory containing Rfam `.cm` and `.clanin` files (CM collection and clan information, respectively)
+rfam_dir = "/path/to/rfam_data/"
+; Comma-separated list of Rfam clans to consider during initial processing. Set to 'None' if no clans were selected.
 rfam_clans = "<rfam_clans>"
 
