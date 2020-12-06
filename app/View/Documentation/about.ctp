@@ -38,4 +38,17 @@
         <p class="text-justify">If you wish to learn more, you may be interested by taking a look at the <a
                     href="http://bioinformatics.psb.ugent.be/cig/" class='linkout' target="about:blank">group's website</a>.</p>
     </section>
+
+    <section class="page-section">
+        <h2>TRAPID privacy policy</h2>
+        <section class="page-section-sm">
+            <p class='text-justify'>See <a href='https://en.wikipedia.org/wiki/General_Data_Protection_Regulation' target='_blank' class="linkout">Wikipedia</a> and the <a href='https://gdpr.eu/' target='_blank' class="linkout">website from the EU</a>
+                    for more information about what the General Data Protection Regulation (GDPR) is, and how it may affect you.
+            </p>
+            <p class="text-justify">TRAPID is a platform developed within <a href='https://www.ugent.be/en' target='_blank' class='linkout'>Ghent University</a> and <a href='http://www.vib.be/' target='_blank' class='linkout'>VIB</a>, aiming to assist the analysis and exploration of <em>de novo</em> transcriptomes. The below privacy policy explains how TRAPID uses the personal data we collect from you when you use the web application. Please click any topic to display the corresponding details. </p>
+        </section>
+        <section class="page-section-sm">
+            <?php echo $this->element("privacy_policy"); ?>
+        </section>
+    </section>
 </div>
