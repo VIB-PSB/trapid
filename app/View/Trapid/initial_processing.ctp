@@ -407,6 +407,8 @@ echo $this->Html->css('https://gitcdn.xyz/repo/selectize/selectize.js/master/dis
             form_elmt.reset();
             var blast_db_type =  $("input[name='blast_db_type']:checked").val();
             setBlastDbChoices(blast_db_type);
+            // Reset Rfam clans
+            $("#rfam-clans")[0].selectize.setValue(<?php echo json_encode($rfam_clans_default); ?>);
 
         }
 
