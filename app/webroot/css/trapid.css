@@ -2532,6 +2532,28 @@ p.go-graph-error {
 	margin-left: 15px;
 }
 
+
+/* Max width helper, used in 'change settings' and 'experiment access' forms */
+.mw-800 {
+	max-width: 800px;
+}
+
+label.required::after {
+	color: #e51c23;
+	content: " *";
+}
+
+
+label.optional::after {
+	color: #a6a6a6;
+	content: " optional";
+	font-size: 0.85em;
+}
+
+
+
+
+
 /* Lots of ugly borders: useful for debugging when things are not displayed as expected */
 /*
 

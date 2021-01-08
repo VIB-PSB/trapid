@@ -366,6 +366,9 @@ class TrapidController extends AppController{
      // $exp_id	= mysql_real_escape_string($exp_id);
      parent::check_user_exp($exp_id);
      $exp_info	= $this->Experiments->getDefaultInformation($exp_id);
+     //however, only the owner of the experiment (original creator) can change the access to the experiment
+     $is_owner = parent::is_owner($exp_id);
+     $this->set("is_owner", $is_owner);
      $this->set("exp_info",$exp_info);
      $this->set("exp_id",$exp_id);
      $this->TrapidUtils->checkPageAccess($exp_info['title'],$exp_info["process_state"],$this->process_states["finished"]);
@@ -377,20 +380,28 @@ class TrapidController extends AppController{
      $all_users_inv	= $this->TrapidUtils->indexArraySimple($all_users_,"Authentication","email","user_id");
      $this->set("all_users",$all_users);
 
-     if($_POST){
-       if(array_key_exists("new_share",$_POST)){
-	 $new_share	= preg_split("/[ \n]/",$_POST['new_share']);
-	 $selected	= array();
-	 foreach($new_share as $ns){
-	   $ns	= trim($ns);
-	   if(array_key_exists($ns,$all_users_inv)){
-	     $selected[$all_users_inv[$ns]] = $ns;
-	   }
-	 }
-	 $this->set("num_added",count($selected));
-	 foreach($selected as $k=>$v){
-	   $this->SharedExperiments->save(array("user_id"=>$k,"experiment_id"=>$exp_id));
-	 }
+     // Two possible cases: sharing the experiment with user(s) or revoking the access of a user
+     if($_POST && $is_owner && array_key_exists("exp_access_change", $_POST)) {
+       // Sharing experiment with new users
+       if($_POST["exp_access_change"] == "share" && array_key_exists("new_share", $_POST)) {
+         $new_share	= preg_split("/[ \n]/",$_POST['new_share']);
+         $selected	= array();
+         foreach($new_share as $ns){
+           $ns	= trim($ns);
+           if(array_key_exists($ns,$all_users_inv)){
+             $selected[$all_users_inv[$ns]] = $ns;
+           }
+         }
+         foreach($selected as $k=>$v){
+           $this->SharedExperiments->save(array("user_id"=>$k,"experiment_id"=>$exp_id));
+         }
+       }
+       if($_POST["exp_access_change"] == "revoke" && array_key_exists("revoke_email", $_POST)) {
+         $revoke_email = $_POST["revoke_email"];
+         if(array_key_exists($revoke_email, $all_users_inv)) {
+           $revoke_user_id = $all_users_inv[$revoke_email];
+           $this->SharedExperiments->deleteAll(array("user_id"=>$revoke_user_id, "experiment_id"=>$exp_id), false);
+         }
        }
      }
 
@@ -401,11 +412,6 @@ class TrapidController extends AppController{
      $shared_users["owner"][$exp_info['user_id']]	= $all_users[$exp_info['user_id']];
      foreach($shared_user_ids as $sui){$shared_users['shared'][$sui] = $all_users[$sui];}
      $this->set("shared_users",$shared_users);
-
-
-     //however, only the owner of the experiment (original creator) can change the access to the experiment
-     $is_owner 		= parent::is_owner($exp_id);
-     $this->set("is_owner",$is_owner);
 
      $this->set("active_header_item", "Settings");
      $this->set("title_for_layout", "Experiment access");
@@ -447,7 +453,7 @@ class TrapidController extends AppController{
       $this->redirect(array("controller"=>"trapid","action"=>"experiment",$exp_id));
     }
     $this->set("active_header_item", "Settings");
-    $this->set("title_for_layout", "Experiment settings");
+    $this->set("title_for_layout", "Change experiment settings");
   }
 
 
