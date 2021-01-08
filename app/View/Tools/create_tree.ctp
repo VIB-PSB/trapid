@@ -610,20 +610,20 @@ if(isset($previous_results) && $previous_results['msa']==true) {
                            &nbsp;<?php echo $this->element("help_tooltips/create_tooltip", array("tooltip_text"=>$tooltips['msatree_msa_program'], "tooltip_placement"=>"top")); ?>
                     <br>
                     <label class="radio-inline">
-                      <input type="radio" name="msa_program" id="msa_program_muscle" value="muscle" checked> MUSCLE
-                    </label>&nbsp;&nbsp;
-                    <label class="radio-inline">
-                      <input type="radio" name="msa_program" id="msa_program_mafft" value="mafft"> MAFFT
+                      <input type="radio" name="msa_program" id="msa_program_mafft" value="mafft" checked> MAFFT
                     </label>
+                    <label class="radio-inline">
+                      <input type="radio" name="msa_program" id="msa_program_muscle" value="muscle"> MUSCLE
+                    </label>&nbsp;&nbsp;
                       </div>
                       <div class="form-group">
                            <label for="posThreshold"><strong>MSA editing</strong></label>
                            &nbsp;<?php echo $this->element("help_tooltips/create_tooltip", array("tooltip_text"=>$tooltips['msatree_msa_editing'], "tooltip_placement"=>"top")); ?>
                     <select class="form-control" id="editing_mode" name="editing_mode">
-                        <option value="column" selected>Positions only</option>
+                        <option value="none" selected>No editing</option>
+                        <option value="column">Positions only</option>
                         <option value="row">Genes only</option>
                         <option value="column_row">Position and genes</option>
-                        <option value="none">No editing</option>
                     </select>
                       </div>
                     </div>
@@ -640,23 +640,23 @@ if(isset($previous_results) && $previous_results['msa']==true) {
                       <input type="radio" name="tree_program" id="tree_program_iqtree" value="iqtree"> IQ-TREE
                     </label>&nbsp;&nbsp;
                     <label class="radio-inline">
-                      <input type="radio" name="tree_program" id="tree_program_raxml" value="raxml"> RaxML
-                    </label>&nbsp;&nbsp;
-                    <label class="radio-inline">
                       <input type="radio" name="tree_program" id="tree_program_phyml" value="phyml"> PhyML
                     </label>
+                    <label class="radio-inline">
+                      <input type="radio" name="tree_program" id="tree_program_raxml" value="raxml"> RaxML
+                    </label>&nbsp;&nbsp;
                 </div>
                 <div class="form-group">
-                    <label for="nbIteration"><strong>Tree annotation</strong></label>
+                    <label for=""><strong>Tree annotation</strong></label>
                     &nbsp;<?php echo $this->element("help_tooltips/create_tooltip", array("tooltip_text"=>$tooltips['msatree_tree_annotation'], "tooltip_placement"=>"top")); ?>
                     <br>
                     <?php
-			$checked	= null;
+			$checked	= "checked";
 			if(isset($include_subsets) && $include_subsets){$checked = " checked='checked' ";}
 			echo "<label class=\"checkbox-inline\">\n";
 			echo "<input name='include_subsets' id='include_subsets' $checked type='checkbox' value='y'>Include subsets </label>&nbsp;&nbsp;\n";
-			$checked2	= " checked='checked' ";
-			if($checked){$checked2 = null;}
+			$checked2	= "checked";
+//			if($checked){$checked2 = null;}
             echo "<label class=\"checkbox-inline\">\n";
 			echo "<input name='include_meta_annotation' id='include_meta_annotation' $checked2 type='checkbox' value='y'>\n";
 			echo "Include meta-annotation\n";
@@ -732,19 +732,28 @@ if(isset($previous_results) && $previous_results['msa']==true) {
 		var foldersTree = gFld("", "");
 		foldersTree.treeID = "cladeSpeciesSelectionTree";
 		<?php
-		function plotTree($arr,$parent,$counter,$ast,$ac,$cok,$sel_clades,$sel_species,$phylo_profile){
+		function plotTree($arr,$parent,$counter,$ast,$ac,$cok,$cp, $sel_clades,$sel_species,$phylo_profile){
 		    foreach($arr as $k=>$v){
 			if(!(is_numeric($k)  && is_numeric($v))){
 				$aux	 = "aux".$counter++;
 				$num_total_species_clade	= count($ac[$k]);
 				$num_gf_species_clade		= count($cok[$k]);
+				$num_genes_clade = $cp[$k];
+//                foreach($sel_species as $sel){
+//                    echo "console.log('" . $k . "');";
+//                    echo "console.log('" . $v . "');";
+//                    $total_selected_genes+=$phylo_profile[$available_species_tax[$sel]['species']];
+//                }
 
 				if($num_gf_species_clade==0){
-				    $c_label = "<u>".$k."</u> (".$num_total_species_clade." species in total, <b>".$num_gf_species_clade."</b> in the gene family)";
+//				    $c_label = "<u>".$k."</u> (" . $num_total_species_clade." species in total, <b>".$num_gf_species_clade."</b> in the gene family &mdash; " . $num_genes_clade . " genes)";
+				    $c_label = "<u>".$k."</u> (" . $num_total_species_clade." species in total, <b>".$num_gf_species_clade."</b> in the gene family)";
 				    echo "generateCheckBoxLeaf(".$parent.",\"".$c_label."\",\"".$k."\",\"".$k."\",0,1);\n";
 				}
 				else{
-				    $c_label = "<u>".$k."</u> (".$num_total_species_clade." species in total, ".$num_gf_species_clade." in the gene family)";
+				    $genes_clade_label = $num_genes_clade . " gene";
+				    $genes_clade_label .= ($num_genes_clade > 1 ? 's': '');
+				    $c_label = "<u>".$k."</u> (" . $num_total_species_clade." species in total, ".$num_gf_species_clade." in the gene family &mdash; " . $genes_clade_label . ")";
     				    $selected_clade	= 0; if(array_key_exists($k,$sel_clades)){$selected_clade=1;}
 				    echo "var ".$aux." = generateCheckBoxClade(".$parent.",\"".$c_label."\",\"".$k."\",\"".$k."\",".$selected_clade.");\n";
 				    //now, based on content of '$v' variable, perform different functionality (subclades or leaves).
@@ -756,6 +765,7 @@ if(isset($previous_results) && $previous_results['msa']==true) {
 						    $spec_info	= $ast[$v2];
     						    //check on whether the species is present in the gene family, and whether the
 						    //species is selected by a previous run (or prev form submission).
+                            // If the species is represented in the GF, display its number of genes as well
 						    $num_genes	= 0;
 						    if(array_key_exists($spec_info['species'],$phylo_profile)){
 							$num_genes = $phylo_profile[$spec_info['species']];
@@ -764,15 +774,17 @@ if(isset($previous_results) && $previous_results['msa']==true) {
 							echo "generateCheckBoxLeaf(".$aux.",\"".$spec_info['common_name']."\",\"taxid_".$v2."\",\"".$v2."\",0,1);\n";
     						    }
     						    else{
+    						        $genes_label = $num_genes . " gene";
+                                    $genes_label .= ($num_genes > 1 ? 's': '');
     							$selected_species = 0; if(array_key_exists($v2,$sel_species)){$selected_species=1;}
-							echo "generateCheckBoxLeaf(".$aux.",\"".$spec_info['common_name']."\",\"taxid_".$v2."\",\"".$v2."\",".$selected_species.",0);\n";
+							echo "generateCheckBoxLeaf(".$aux.",\"".$spec_info['common_name']." (" . $genes_label . ")\",\"taxid_".$v2."\",\"".$v2."\",".$selected_species.",0);\n";
     						    }
 					    }
 					    else{
 						    if(!$has_called_child){
 							    $new_counter		= $counter."".$c++;
 							    $has_called_child	= true;
-							    plotTree($v,$aux,$new_counter,$ast,$ac,$cok,$sel_clades,$sel_species,$phylo_profile);
+							    plotTree($v,$aux,$new_counter,$ast,$ac,$cok,$cp, $sel_clades,$sel_species,$phylo_profile);
 						    }
 
 					    }
@@ -805,13 +817,12 @@ if(isset($previous_results) && $previous_results['msa']==true) {
 		if(isset($selected_clades)){$sel_clades=$selected_clades;}
 		if(isset($selected_species)){$sel_species=$selected_species;}
 
-		plotTree($full_tree,"foldersTree",0,$available_species_tax,$available_clades,$clades_ok_species,$sel_clades,$sel_species,$phylo_profile);
+		plotTree($full_tree,"foldersTree",0,$available_species_tax,$available_clades,$clades_ok_species,$clades_phylo,$sel_clades,$sel_species,$phylo_profile);
 
 
 		?>
 		//]]>
 		</script>
-
 
 		<table style="background-color:transparent;border:0px;">
 	   		<tr style="border:0px;"><td style="border:0px;">
@@ -1057,8 +1068,8 @@ if(isset($previous_results) && $previous_results['msa']==true) {
     </div><!-- end tab content wrapper -->
         </div>
         <div class="panel-footer">
-		<strong># Species: </strong><span id='num_species'><?php echo $total_selected_species;?></span> -
-		<strong># Genes: </strong><span id='num_genes'><?php echo $total_selected_genes; ?></span>
+		<strong># Species: </strong><span id='num_species'><?php echo $total_selected_species;?></span> &mdash;
+            <strong># Genes: </strong><span id='num_genes'><?php echo $total_selected_genes; ?></span>
         <span class="pull-right"><strong>Status: </strong>
 			<span id='status'>
 			<?php
