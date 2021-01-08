@@ -353,7 +353,7 @@ class TrapidController extends AppController{
     $this->set("exp_id", $exp_id);
 
     $log_info	= $this->ExperimentLog->find("all",array("conditions"=>array("experiment_id"=>$exp_id),
-							"order"=>array("ExperimentLog.id ASC")));
+							"order"=>array("ExperimentLog.date ASC")));
     $this->set("log_info",$log_info);
     $this->set("active_header_item", "Log");
     $this->set('title_for_layout', 'Log');

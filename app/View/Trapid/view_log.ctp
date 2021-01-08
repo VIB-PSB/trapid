@@ -11,8 +11,7 @@
 </div>
 
 
-<div class="well" style='font-family:monospace; font-size:88%;' id="exp-log-well">
-            <?php
+<div class="well" style='font-family:monospace; font-size:88%;' id="exp-log-well"><?php
             $colors = array(0 => "#000000", 1 => "#202020", 2 => "#404040", 3 => "#606060");
             foreach ($log_info as $li) {
                 $l = $li['ExperimentLog'];
