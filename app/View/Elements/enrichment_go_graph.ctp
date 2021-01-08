@@ -15,12 +15,12 @@
                     <option value="cellular_component">Cellular component</option>
                 </select>
             </div>
-            <!-- PVALUE FILTERING -->
+            <!-- CORRECTECT P-VALUE (Q-VALUE) FILTERING -->
             <div class='form-group'>
                 <strong>&nbsp; | &nbsp; Filtering
                     <?php echo $this->element("help_tooltips/create_tooltip", array("tooltip_text"=>$tooltips['go_enrichment_graph_filter'], "tooltip_placement"=>"top", "override_span_class"=>"glyphicon glyphicon-question-sign help-tooltip-icon-inline")); ?>
                     &nbsp;  </strong>
-                <label for='pvalue'>P-value  &#x2264; </label>
+                <label for='pvalue'>Q-value  &#x2264; </label>
                 <select class='form form-control input-sm' id='pvalue' name='pvalue' onchange="redrawHierarchy()">
                     <option value='0.05' selected='selected'>0.05</option>
                     <option value='0.01'>0.01</option>
@@ -116,7 +116,7 @@
 </div> <!-- end settings -->
 
 <div class="row" id="go-graph-container">
-    <div id='go-graph-viz' style='width:100%;height:780px;margin:0px;'></div>
+    <div id='go-graph-viz' style='width:100%;height:800px;margin:0px;'></div>
 </div>
 
 <!-- GO graph usage modal -->
@@ -134,7 +134,7 @@
                     <p class="text-justify">Each node has 3 different values (shown in a tooltip when hovering):
                     <ol>
                         <li>
-                            <strong>Corrected p-value:</strong> statistical value indicating the odds that the enrichment-fold happens by chance. The lower the p-value, the better.
+                            <strong>Q-value (corrected p-value):</strong> statistical value indicating the odds that the enrichment-fold happens by chance. The lower the q-value, the better.
                         </li>
                         <li>
                             <strong>Enrichment fold: </strong> the overrepresentation of the GO term in the subset, compared to the experiment's background frequency. For convenience, the log<sub>2</sub>-value of the enrichment folds is used. As sub, an ernichment fold of <code>1</code> corresponds to a two-fold enrichment.
@@ -150,7 +150,7 @@
                     <p class="text-justify">
                     <ul>
                         <li>
-                            Node size is scaled by the p-value of the enriched GO term: the more significant (thus the lower the p-value), the larger the node size.
+                            Node size is scaled by the q-value of the enriched GO term: the more significant (thus the lower the q-value), the larger the node size.
                         </li>
                         <li>
                             Node color is determined by the enrichment fold of the GO term. The color scale is set between green (highest) and red (lowest).
@@ -330,7 +330,7 @@
             var num_graph_gos = countGOterms(data, filter_subtype);
             // If it is more than the allowed max, show an error message and hide the graph
             if(num_graph_gos > max_graph_gos) {
-                const error_text = "<strong>Error:</strong> GO enrichment graph not shown. The number of enriched terms for this GO aspect is higher than the allowed maximum (" + max_graph_gos + "). <br>Using a lower p-value threshold should result in less enriched GO terms.";
+                const error_text = "<strong>Error:</strong> GO enrichment graph not shown. The number of enriched terms for this GO aspect is higher than the allowed maximum (" + max_graph_gos + "). <br>Using a lower q-value threshold should result in less enriched GO terms.";
                 $("#go-graph-viz").html("<p class='text-danger go-graph-error'>" + error_text + "</p>");
             }
             else {
@@ -426,7 +426,7 @@
                     linkUrl: goBaseUrl,
                     linkTarget: '_blank',
                     tooltipFields: {
-                        "P-value": function (n) {
+                        "Q-value": function (n) {
                             if (n.enricher) {
                                 return n.enricher.scores['p-val'].toExponential(3);
                             }

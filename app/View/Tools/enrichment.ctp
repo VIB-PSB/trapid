@@ -89,7 +89,7 @@
         }
         echo "</select>\n";
         echo "</dd>\n";
-        echo "<dt>P-value</dt>";
+        echo "<dt>Maximum q-value</dt>";
         echo "<dd>";
         echo $this->element("help_tooltips/create_tooltip", array("tooltip_text"=>$tooltips['enrichment_pvalue'], "tooltip_placement"=>"right"));
         echo "<select name='pvalue' style='width:80px;' class='form-control'>";

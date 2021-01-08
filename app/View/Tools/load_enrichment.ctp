@@ -180,7 +180,7 @@ else{
 
                 if ($n_results > 0) {
                     echo "<div style='max-width:98%; margin: 0 auto;'>";
-                    echo $this->element('charts/bar_go_enrichment', array("chart_title" => "GO enrichment results (" . $subset . ")", "chart_subtitle" => "GO aspect: " . $go_types_titles[$go_type], "enrichment_results" => $result, "descriptions" => $go_descriptions, "go_type" => $go_type, "go_terms" => $gos, "chart_div_id" => "go_enrichment_chart_" . $go_type, "linkout" => $this->Html->Url(array("controller" => "functional_annotation", "action" => "go", $exp_id))));
+                    echo $this->element('charts/bar_go_enrichment', array("chart_title" => "GO enrichment results (" . $subset . ")", "chart_subtitle" => "GO aspect: " . strtolower($go_types_titles[$go_type]), "enrichment_results" => $result, "descriptions" => $go_descriptions, "go_type" => $go_type, "go_terms" => $gos, "chart_div_id" => "go_enrichment_chart_" . $go_type, "linkout" => $this->Html->Url(array("controller" => "functional_annotation", "action" => "go", $exp_id))));
                     echo "</div>";
                 } else {
                     echo "<p class='text-justify'><strong>No GO enrichment chart to show for this aspect: no enriched GO term was found. </strong></p>";
@@ -295,7 +295,7 @@ else{
     echo "<th>GO term</th>";
     echo "<th>Description</th>";
     echo "<th>Enrichment (log<sub>2</sub>)</th>";
-    echo "<th>p-value</th>";
+    echo "<th>q-value</th>";
     echo "<th>Subset ratio</th>";
     echo "<th>Shown</th>";
     echo "</thead>\n";
@@ -425,7 +425,7 @@ else{
 		echo "<th>Protein domain</th>";
 		echo "<th>Description</th>";
 		echo "<th>Enrichment (log<sub>2</sub>)</th>";
-		echo "<th>P-value</th>";
+		echo "<th>q-value</th>";
 		echo "<th>Subset ratio</th>";
 		echo "<th style='width:4%'>Shown</th>";
 		echo "</tr>\n";
@@ -525,7 +525,7 @@ else{
         echo "<th>KO</th>";
         echo "<th>Description</th>";
         echo "<th>Enrichment (log<sub>2</sub>)</th>";
-        echo "<th>P-value</th>";
+        echo "<th>q-value</th>";
         echo "<th>Subset ratio</th>";
         echo "<th style='width:4%'>Shown</th>";
         echo "</tr>\n";

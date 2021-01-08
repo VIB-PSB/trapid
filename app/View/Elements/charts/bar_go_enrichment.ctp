@@ -39,7 +39,7 @@ var go_descriptions_<?php echo $go_type ?> = {
             },
             chart: {
                 zoomType: 'x',
-                plotBackgroundColor: "#e5e5e5"
+                plotBackgroundColor: "#ffffff"
             },
             title: {
                 text: '<?php echo $chart_title; ?>'
@@ -68,8 +68,8 @@ var go_descriptions_<?php echo $go_type ?> = {
                     ?>
                 ],
                 crosshair: true,
-                gridLineWidth: 1,
-                gridLineColor: "white",
+                gridLineWidth: 0,
+                gridLineColor: "#e5e5e5",
                 tickInterval: 1,
                 labels: {
                     rotation: -45,
@@ -81,34 +81,22 @@ var go_descriptions_<?php echo $go_type ?> = {
             }],
             yAxis: [{ // Primary yAxis
                 labels: {
-                    format: '{value}',
-                    style: {
-                        color: Highcharts.getOptions().colors[1]
-                    }
+                    format: '{value}'
                 },
-                title: {
-                    text: '-log<sub>10</sub>(p-value)',
-//                    style: {
-//                        color: Highcharts.getOptions().colors[1]
-//                    },
-                    useHTML: true
-                },
-                gridLineColor: "white",
-                gridLineWidth: 1
-            }, { // Secondary yAxis
                 title: {
                     text: 'log<sub>2</sub>(enrichment)',
-//                    style: {
-//                        color: "#F8766D"// Highcharts.getOptions().colors[0]
-//                    },
+                    useHTML: true
+                },
+                gridLineWidth: 1,
+                gridLineColor: "#e5e5e5"
+            }, { // Secondary yAxis
+                title: {
+                    text: '-log<sub>10</sub>(q-value)',
                     useHTML: true
                 },
                 labels: {
-                    format: '{value}',
- /*                   style: {
-                        color: Highcharts.getOptions().colors[0]
-                    }
- */               },
+                    format: '{value}'
+                },
                 opposite: true,
                 gridLineWidth: 0
             }],
@@ -140,7 +128,7 @@ var go_descriptions_<?php echo $go_type ?> = {
             series: [{
                 name: 'Enrichment',
                 type: 'column',
-                yAxis: 1,
+                yAxis: 0,
                 color: "#F8766D",
                 data: [
                     <?php
@@ -163,8 +151,9 @@ var go_descriptions_<?php echo $go_type ?> = {
                 ]
 
             }, {
-                name: 'P-value',
+                name: 'q-value',
                 type: 'spline',
+                yAxis: 1,
                 color: "#444444",
                 data: [
                     <?php
@@ -187,6 +176,5 @@ var go_descriptions_<?php echo $go_type ?> = {
                 ]
                 }
             ]
-//        });
     });
 </script>

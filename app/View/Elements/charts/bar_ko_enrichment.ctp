@@ -9,7 +9,7 @@
         });
     });
 
-// Set go term -> description dictionary
+// Set KO term -> description dictionary
 var ko_descriptions = {
     <?php
     // Get array keys and fetch last key
@@ -39,7 +39,7 @@ var ko_descriptions = {
         },
         chart: {
             zoomType: 'x',
-            plotBackgroundColor: "#e5e5e5"
+            plotBackgroundColor: "#ffffff"
         },
         title: {
             text: '<?php echo $chart_title; ?>'
@@ -68,8 +68,8 @@ var ko_descriptions = {
                 ?>
             ],
             crosshair: true,
-            gridLineWidth: 1,
-            gridLineColor: "white",
+            gridLineWidth: 0,
+            gridLineColor: "#e5e5e5",
             tickInterval: 1,
             labels: {
                 rotation: -45,
@@ -81,28 +81,22 @@ var ko_descriptions = {
         }],
         yAxis: [{ // Primary yAxis
             labels: {
-                format: '{value}',
-                style: {
-                    color: Highcharts.getOptions().colors[1]
-                }
+                format: '{value}'
             },
-            title: {
-                text: '-log<sub>10</sub>(p-value)',
-                useHTML: true
-            },
-            gridLineColor: "white",
-            gridLineWidth: 1
-        }, { // Secondary yAxis
             title: {
                 text: 'log<sub>2</sub>(enrichment)',
                 useHTML: true
             },
+            gridLineWidth: 1,
+            gridLineColor: "#e5e5e5"
+        }, { // Secondary yAxis
+            title: {
+                text: '-log<sub>10</sub>(q-value)',
+                useHTML: true
+            },
             labels: {
-                format: '{value}',
-                /*                   style: {
-                 color: Highcharts.getOptions().colors[0]
-                 }
-                 */               },
+                format: '{value}'
+            },
             opposite: true,
             gridLineWidth: 0
         }],
@@ -132,7 +126,7 @@ var ko_descriptions = {
         series: [{
             name: 'Enrichment',
             type: 'column',
-            yAxis: 1,
+            yAxis: 0,
             color: "#F8766D",
             data: [
                 <?php
@@ -155,8 +149,9 @@ var ko_descriptions = {
             ]
 
         }, {
-            name: 'P-value',
+            name: 'q-value',
             type: 'spline',
+            yAxis: 1,
             color: "#444444",
             data: [
                 <?php
@@ -179,7 +174,6 @@ var ko_descriptions = {
             ]
         }
         ]
-//        });
     });
 
 
