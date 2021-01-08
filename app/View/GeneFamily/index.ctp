@@ -62,28 +62,28 @@
 
 
                 if ($gene_family['GeneFamilies']['msa']) {
-                    echo "<td><span style='font-weight:bold;' class='text-success'>V</span></td>\n";
+                    echo "<td class='text-center'><span class='material-icons md-18 text-success'>check</span></td>";
                 } else {
-                    echo "<td><span style='font-weight:bold;' class='text-danger'>X</span></td>\n";
+                    echo "<td class='text-center'><span class='material-icons md-18 text-danger'>close</span></td>";
                 }
                 if ($gene_family['GeneFamilies']['tree']) {
-                    echo "<td><span style='font-weight:bold;' class='text-success'>V</span></td>\n";
+                    echo "<td class='text-center'><span class='material-icons md-18 text-success'>check</span></td>";
                 } else {
-                    echo "<td><span style='font-weight:bold;' class='text-danger'>X</span></td>\n";
+                    echo "<td class='text-center'><span class='material-icons md-18 text-danger'>close</span></td>";
                 }
                 echo "</tr>\n";
             }
             ?>
             </tbody>
         </table>
-        <div class='paging'>
-            <?php
-            echo $this->Paginator->prev('<< ' . __('previous'), array(), null, array('class' => 'disabled'));
-            echo "&nbsp;";
-            echo $this->Paginator->numbers();
-            echo "&nbsp;";
-            echo $this->Paginator->next(__('next') . ' >>', array(), null, array('class' => 'disabled'));
-            ?>
+        <div class="text-right">
+            <div class='pagination pagination-sm no-margin-top'>
+                <?php
+                echo $this->Paginator->prev(__('Previous'), array('tag'=>'li'), null, array('tag' => 'li','class' => 'disabled','disabledTag' => 'a'));
+                echo $this->Paginator->numbers(array('separator' => '','currentTag' => 'a', 'currentClass' => 'active','tag' => 'li','first' => 1));
+                echo $this->Paginator->next(__('Next'), array('tag' => 'li','currentClass' => 'disabled'), null, array('tag' => 'li','class' => 'disabled','disabledTag' => 'a'));
+                ?>
+            </div>
         </div>
 
     </div>
