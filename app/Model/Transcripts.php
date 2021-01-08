@@ -31,23 +31,6 @@ class Transcripts extends AppModel{
   }
 
 
-  function getRandomTranscriptsFrameDP($exp_id,$bad_gene_family,$count){
-    $result		= array();
-    if($count<=0){return $result;}
-    $max_iterations	= 100;	//prevent infinite loops
-    $query		= "SELECT `transcript_id`,`transcript_sequence` FROM `transcripts` WHERE `experiment_id`='".$exp_id."' AND `gf_id`!='".$bad_gene_family."' AND `putative_frameshift`='0' ORDER BY RAND() LIMIT ".$max_iterations;
-    $res		= $this->query($query);
-    for($i=0;$i< count($res) && count($result)<$count;$i++){
-      $r		= $res[$i]['transcripts'];
-      $transcript_id	= $r['transcript_id'];
-      $transcript_sequence	= $r['transcript_sequence'];
-      $result[$transcript_id] = $transcript_sequence;
-    }
-    return $result;
-  }
-
-
-
   //implemented because the "find" method uses too much memory to be effective
   function getColumnInfo($exp_id,$columns){
     $query	= "SELECT `transcript_id`";
