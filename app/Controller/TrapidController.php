@@ -171,6 +171,8 @@ class TrapidController extends AppController{
   function index(){
         $this->layout = "external";  // Layout for external pages (i.e. not in experiment)
         $this -> set('title_for_layout', 'Welcome');
+        $max_user_experiments = MAX_USER_EXPERIMENTS;
+        $this->set("max_user_experiments",$max_user_experiments);
       	$user_id	= $this->Cookie->read("user_id");
       	$email		= $this->Cookie->read("email");
         // $user_id  	= $this->Authentication->getDataSource()->value($user_id, 'string');
@@ -180,8 +182,8 @@ class TrapidController extends AppController{
         // Disable redirection as it can be confusing to have the home page disappearing?
         // if($user_data){$this->redirect(array("controller"=>"trapid","action"=>"experiments"));}
 
-       // Send a test email
-	   //mail("mibel@psb.ugent.be","test email","blablabla");
+      // Send a test email
+      // mail("frbuc@psb.ugent.be","test email","blablabla");
   }
 
 
@@ -194,7 +196,7 @@ class TrapidController extends AppController{
     // $exp_id	= mysql_real_escape_string($exp_id);
     parent::check_user_exp($exp_id);
     // pr($exp_info);
-    $num_transcripts = "N/A";  // Default value to display
+    $num_transcripts = "NA";  // Default value to display
     $exp_transcripts	= $this->Experiments->getTranscriptCount($exp_id);
     if($exp_transcripts){
       $num_transcripts = $exp_transcripts;
@@ -2793,7 +2795,7 @@ class TrapidController extends AppController{
 	$pass1 = $_POST['new_password1'];
 	$pass2 = $_POST['new_password2'];
 	if($pass1!=$pass2){$this->set("error","Passwords are not the same");return;}
-	if(strlen($pass1) < 5){$this->set("error","Passwords need to consist of 5 or more characters");return;}
+	if(strlen($pass1) < 8){$this->set("error","Passwords need to consist of 8 or more characters");return;}
 
 	//checks done, create hash-version of the new password
 	$hashed_pass	= hash("sha256",$pass1);
@@ -2871,7 +2873,7 @@ class TrapidController extends AppController{
           $this->set("error","Email-address already in use");return;
 	    }
         // Now, we can actually create a password and add the user to the database
-        $password	= $this->TrapidUtils->rand_str(8);
+        $password	= $this->TrapidUtils->create_password();
         $hashed_pass	= hash("sha256",$password);
         // `user_id` value set to NULL (setting it to an empty string, like before, would require to turn SQL strict mode off)
         // Reason: sql_mode is not the same on psbsql01 and psbsql03
@@ -2879,7 +2881,7 @@ class TrapidController extends AppController{
 					                "organization"=>$organization,"country"=>$country));
 	    // Send email to user with login information
         $this->TrapidUtils->send_registration_email($email,$password);
-        $this->set("message","Please use the authentication information send to you by email to login");
+        $this->set("message", "Please use the authentication information sent to you by email to login");
         $this->set("registration", false);
           return;
       }
@@ -2906,7 +2908,7 @@ class TrapidController extends AppController{
               $this->set("error","Email-address does not correspond to a TRAPID login. ");return;
           }
           // Generate new password
-          $password	= $this->TrapidUtils->rand_str(8);
+          $password	= $this->TrapidUtils->create_password();
           $hashed_pass	= hash("sha256", $password);
           // Store updated information in the DB
           $this->Authentication->updateAll(array("password"=>"'".$hashed_pass."'"),array("user_id"=>$user_id));

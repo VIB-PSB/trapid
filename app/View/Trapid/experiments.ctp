@@ -82,7 +82,7 @@
 				echo "<tr class='error_state'>";
 			    	echo "<td>".$e['title']."</td>";
 				echo "<td><span id='exp_count_".$e['experiment_id']."'>".$experiment['count']."</span></td>";
-				echo "<td>".$this->Html->link($e['process_state'],array("controller"=>"trapid","action"=>"change_status",$e['experiment_id']),array("style"=>"color:red;text-decoration:underline;"))."</td>";
+				echo "<td>".$this->Html->link($e['process_state'],array("controller"=>"trapid","action"=>"change_status",$e['experiment_id']),array("class"=>"text-danger"))."</td>";
 				echo "<td>".$e['last_edit_date']."</td>";
 				if($experiment['DataSources']['URL']){
 				    echo "<td>".$this->Html->link($experiment['DataSources']['name'],$experiment['DataSources']['URL'])."</td>";
@@ -91,10 +91,10 @@
 				    echo "<td>".$experiment['DataSources']['name']."</td>";
 			    	}
 				echo "<td>".$this->Html->link("View log",array("controller"=>"trapid","action"=>"view_log",$e['experiment_id']))."</td>\n";
-				if(count($experiment['experiment_jobs'])==0){echo "<td>NA</td>";}
+				if(count($experiment['experiment_jobs'])==0){echo "<td class='text-muted'>NA</td>";}
 				else{echo "<td>".$this->Html->link(count($experiment['experiment_jobs'])." jobs",array("controller"=>"trapid","action"=>"manage_jobs",$e['experiment_id']))."</td>";}
-				echo "<td class='text-center'> - </td>";
-				echo "<td class='text-center'> - </td>";
+				echo "<td class='text-center text-muted'> - </td>";
+				echo "<td class='text-center text-muted'> - </td>";
 			    	echo "</tr>\n";
 			}
 			else if ($e['process_state']=="loading_db"){
@@ -112,10 +112,10 @@
 				    echo "<td>".$experiment['DataSources']['name']."</td>";
 			    	}
 				echo "<td>".$this->Html->link("View log",array("controller"=>"trapid","action"=>"view_log",$e['experiment_id']))."</td>\n";
-				if(count($experiment['experiment_jobs'])==0){echo "<td>NA</td>";}
+				if(count($experiment['experiment_jobs'])==0){echo "<td class='text-muted'>NA</td>";}
 				else{echo "<td>".$this->Html->link(count($experiment['experiment_jobs'])." jobs",array("controller"=>"trapid","action"=>"manage_jobs",$e['experiment_id']))."</td>";}
-                echo "<td class='text-center'> - </td>";
-                echo "<td class='text-center'> - </td>";
+                echo "<td class='text-center text-muted'> - </td>";
+                echo "<td class='text-center text-muted'> - </td>";
 			    	echo "</tr>\n";
 			}
 			else if ($e['process_state']=="processing"){
@@ -123,7 +123,7 @@
 			    	echo "<td>".$e['title']."</td>";
 				//echo "<td>".$experiment['count']."</td>";
 				echo "<td><span id='exp_count_".$e['experiment_id']."'>".$experiment['count']."</span></td>";
-				echo "<td>".$this->Html->link($e['process_state'],array("controller"=>"trapid","action"=>"change_status",$e['experiment_id']),array("style"=>"color:blue;text-decoration:underline;"))."</td>";
+				echo "<td>".$this->Html->link($e['process_state'],array("controller"=>"trapid","action"=>"change_status",$e['experiment_id']))."</td>";
 				echo "<td>".$e['last_edit_date']."</td>";
 				if($experiment['DataSources']['URL']){
 				    echo "<td>".$this->Html->link($experiment['DataSources']['name'],$experiment['DataSources']['URL'])."</td>";
@@ -132,10 +132,10 @@
 				    echo "<td>".$experiment['DataSources']['name']."</td>";
 			    	}
 				echo "<td>".$this->Html->link("View log",array("controller"=>"trapid","action"=>"view_log",$e['experiment_id']))."</td>\n";
-				if(count($experiment['experiment_jobs'])==0){echo "<td>NA</td>";}
+				if(count($experiment['experiment_jobs'])==0){echo "<td class='text-muted'>NA</td>";}
 				else{echo "<td>".$this->Html->link(count($experiment['experiment_jobs'])." jobs",array("controller"=>"trapid","action"=>"manage_jobs",$e['experiment_id']))."</td>";}
-                echo "<td class='text-center'> - </td>";
-                echo "<td class='text-center'> - </td>";
+                echo "<td class='text-center text-muted'> - </td>";
+                echo "<td class='text-center text-muted'> - </td>";
 			    	echo "</tr>\n";
 			}
 			else{
@@ -152,7 +152,7 @@
 				    echo "<td>".$experiment['DataSources']['name']."</td>";
 			    }
 			    echo "<td>".$this->Html->link("View log",array("controller"=>"trapid","action"=>"view_log",$e['experiment_id']))."</td>\n";
-			    if(count($experiment['experiment_jobs'])==0){echo "<td>NA</td>";}
+			    if(count($experiment['experiment_jobs'])==0){echo "<td class='text-muted'>NA</td>";}
 				else{echo "<td>".$this->Html->link(count($experiment['experiment_jobs'])." jobs",array("controller"=>"trapid","action"=>"manage_jobs",$e['experiment_id']))."</td>";}
 			    echo "<td style=\"text-align:center;\">".$this->Html->link("<span class='material-icons text-info'>replay</span>",
 				    array("controller"=>"trapid","action"=>"empty_experiment",$e['experiment_id']),
@@ -233,7 +233,7 @@
                         // console.log(exp_trs);
                         // console.log(exps_trs[exp_id]);
                         // Check if transcript count matches the updated count (i.e. no change for `timeout_ms`)
-                        if((exp_trs === exps_trs[exp_id]) && (exps_trs[exp_id] !== "N/A")) {
+                        if((exp_trs === exps_trs[exp_id]) && (exps_trs[exp_id] !== "NA")) {
                             // Check if the user is doing something (new experiment creation modal is open)
                             // If it is not the case, refresh the page: at least one experiment (probably) finished loading
                             var exp_modal = document.getElementById("newExpModal");
@@ -276,10 +276,10 @@
             ?>
               <div class="form-group">
                 <label for=""><strong>Name</strong></label>
-                <input type="text" maxlength="50" class="form-control" id="experiment_name" name="experiment_name" placeholder="My experiment">
+                <input type="text" maxlength="50" class="form-control" id="experiment_name" name="experiment_name" placeholder="My experiment" required>
               </div>
               <div class="form-group">
-                <label for=""><strong>Description</strong></label>
+                <label for="experiment_description" class="optional"><strong>Description</strong></label>
 								<textarea rows="4" name="experiment_description" id="experiment_description" class="form-control" placeholder="Experiment description... "></textarea>
               </div>
               <div class="form-group">
@@ -292,7 +292,7 @@
 								?>
 								</select>
 <!--                <p class="help-block"><strong>Note:</strong> GO annotations are only available for the PLAZA reference database</p>-->
-                <p class="help-block" style="font-size: 88%;"><strong>Note:</strong> Protein domain annotations are only available for the PLAZA reference databases</p>
+                <p class="help-block" style="font-size: 88%;"><strong>Note:</strong> Protein domain annotations are only available for the PLAZA reference databases, and KO annotations for EggNOG 4.5.</p>
               </div>
 							<p class="text-center">
               <button type="submit" class="btn btn-primary">Create experiment</button></p>

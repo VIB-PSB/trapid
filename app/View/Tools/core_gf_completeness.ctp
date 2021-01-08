@@ -143,7 +143,7 @@ echo $this->Html->script('https://cdn.datatables.net/buttons/1.5.6/js/buttons.ht
                             <div class="row">
                                 <div class="col-md-6">
                                     <div class="form-group">
-                                        <label for="species-perc"><strong>Conservation %</strong></label>
+                                        <label for="species-perc"><strong>Conservation threshold</strong></label>
                                         <?php echo $this->element("help_tooltips/create_tooltip", array("tooltip_text"=>$tooltips['core_gf_species_perc'], "tooltip_placement"=>"top")); ?>
                                         <input class="form-control" id="species-perc" max="1" min="0.5"
                                                name="species-perc" step="0.01" value="0.9" required type="number">
@@ -193,8 +193,8 @@ echo $this->Html->script('https://cdn.datatables.net/buttons/1.5.6/js/buttons.ht
                     that experiment. </p>
                 <table class="table table-responsive table-striped table-hover table-bordered">
                     <thead>
+                    <th>Transcript selection</th>
                     <th>Phylogenetic clade</th>
-                    <th>Transcript subset</th>
                     <!--                    <th>Used taxonomy</th>-->
                     <th>Conservation threshold</th>
                     <th>Top hits</th>
@@ -213,12 +213,12 @@ echo $this->Html->script('https://cdn.datatables.net/buttons/1.5.6/js/buttons.ht
                         $top_hits = explode("=", $exp_method_str[2]);
                         $top_hits = $top_hits[1];
                         echo "<tr>";
-                        echo "<td>" . $completeness_job['CompletenessResults']['clade_name'] . " (" . $completeness_job['CompletenessResults']['clade_txid'] . ")</td>";
                         if ($completeness_job['CompletenessResults']['label'] == "None") {
                             echo "<td>All transcripts</td>";
                         } else {
                             echo "<td>" . $completeness_job['CompletenessResults']['label'] . "</td>";
                         }
+                        echo "<td>" . $completeness_job['CompletenessResults']['clade_name'] . " (" . $completeness_job['CompletenessResults']['clade_txid'] . ")</td>";
 //                        echo "<td>" . $tax_source ."</td>";
                         echo "<td>" . $species_perc ."</td>";
                         echo "<td>" . $top_hits ."</td>";

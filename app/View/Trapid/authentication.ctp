@@ -51,14 +51,15 @@ input[type="password"] {
 <div class="container">
 <!--    <form class="subdiv">-->
 	<?php
-	if(isset($error)){
-        echo "<div class=\"alert alert-warning alert-dismissible\" role=\"alert\">";
-        echo "<button type=\"button\" class=\"close\" data-dismiss=\"alert\" aria-label=\"Close\"><span aria-hidden=\"true\">&times;</span></button>";
-        echo "<strong>Error:</strong> ".$error;
-        echo"</div>";
-//	    echo "<span class='error'>".$error."</span><br/><br/>\n";
+    // Show bootstrap alert if there is an error or message
+	if(isset($error)) {
+	    $alert_content = "<strong>Error:</strong> " . $error;
+        echo  $this->element("bs_alert", array("alert_class"=>"alert-warning", "alert_content"=>$alert_content));
 	}
-	if(isset($message)){echo "<span class='message'>".$message."</span><br/><br/>\n";}
+	if(isset($message)) {
+	    $alert_content = "<strong>Information:</strong> " . $message;
+        echo  $this->element("bs_alert", array("alert_class"=>"alert-success", "alert_content"=>$alert_content));
+    }
 	?>
 
 	<?php if(isset($registration) && $registration):?>
@@ -76,15 +77,15 @@ input[type="password"] {
   <input type="hidden" name="registration" value="registration" />
   <div class="form-group">
     <label for="login"><strong>Email</strong></label>
-    <input type="email" class="form-control" name="login" id="login" placeholder="you@example.org">
+    <input type="email" class="form-control" name="login" id="login" placeholder="you@example.org" required>
   </div>
   <div class="form-group">
     <label for="organization"><strong>Organization</strong></label>
-    <input type="text" class="form-control" name="organization" id="organization" placeholder="Example University">
+    <input type="text" class="form-control" name="organization" id="organization" placeholder="Example University" required>
   </div>
   <div class="form-group">
     <label for="country"><strong>Country</strong></label>
-    <input type="text" class="form-control" name="country" id="country" placeholder="Example Country">
+    <input type="text" class="form-control" name="country" id="country" placeholder="Example Country" required>
   </div>
 <!--  <a style="margin-top:30px;" class="btn btn-lg btn-primary btn-block">Register</a>-->
   <button type="submit" style="margin-top:30px;" class="btn btn-lg btn-primary btn-block">Register</button>
@@ -139,7 +140,7 @@ input[type="password"] {
 
 	<?php else: ?>
     <div class="page-header" style="margin-top: 20px;">
-      <h1 class="text-primary">Login to TRAPID</h1>
+      <h1 class="text-primary">Log in to TRAPID</h1>
     </div>
     <div class="form-wrapper">
 	<?php
@@ -147,16 +148,16 @@ input[type="password"] {
 	?>
     <div class="form-group">
       <label for="login"><strong>Email</strong></label>
-      <input type="email" class="form-control" name="login" id="login" placeholder="you@example.org">
+      <input type="email" class="form-control" name="login" id="login" placeholder="you@example.org" required>
     </div>
     <div class="form-group">
       <label for="password"><strong>Password</strong></label>
-      <input type="password" class="form-control" name="password" id="password" placeholder="********">
+      <input type="password" class="form-control" name="password" id="password" placeholder="********" required>
         <p class="text-right text-muted" style="font-size: 88%; margin-top:5px;">
             <?php echo $this->Html->link("Forgot your password?",array("controller"=>"trapid","action"=>"authentication","password_recovery")); ?>
         </p>
     </div>
-    <button type="submit" style="margin-top:30px;" class="btn btn-lg btn-primary btn-block">Login</button>
+    <button type="submit" style="margin-top:30px;" class="btn btn-lg btn-primary btn-block">Log in</button>
     <br>
     <p class="text-justify text-muted">If you do not have an account, you can create one
       <?php
