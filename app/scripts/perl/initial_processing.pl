@@ -166,6 +166,10 @@ if($par{plaza_db_name} eq "db_trapid_ref_eggnog_test_02") {
 	my $emapper_exec = $emapper_cmd . " " . join(" ", @emapper_options);
 	print STDERR "[Message] Call EggNOG-mapper with command: " . $emapper_exec . "\n";
 	system($emapper_exec);
+	&update_log($par{"trapid_db_server"},$par{"trapid_db_name"},$par{"trapid_db_port"},
+		$par{"trapid_db_user"},$par{"trapid_db_password"},$par{"experiment"},
+		"eggnog_mapper","",3);
+
 	# Call post-processing script
 	my $emapper_postprocess_script = $par{"base_script_location"} . "python/process_emapper.py";
 	my $emapper_postprocess_cmd	= "python " . $emapper_postprocess_script . " " . $initial_processing_ini_file;

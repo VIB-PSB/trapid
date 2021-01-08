@@ -9,6 +9,8 @@ import os
 import sys
 import time
 
+from traceback import print_exc
+
 import MySQLdb as MS
 
 import common
@@ -371,38 +373,46 @@ def main():
     ref_db_data = common.get_db_connection_data(config, 'reference_db')
     exp_id = config['experiment']['exp_id']
 
-    # Clean TRAPID db (in case of previous results)
-    db_conn = common.db_connect(*trapid_db_data)
-    cleanup_db(db_conn, exp_id)
-    db_conn.close()
+    try:
+        # Clean TRAPID db (in case of previous results)
+        db_conn = common.db_connect(*trapid_db_data)
+        cleanup_db(db_conn, exp_id)
+        db_conn.close()
 
-    # Parse eggNOG-mapper's output file
-    emapper_output = os.path.join(config['experiment']['tmp_exp_dir'], "emapper_%s.emapper.annotations" % exp_id)
-    if not os.path.exists(emapper_output):
-        sys.stderr.write("Error: emapper output file (%s) not found!\n" % emapper_output)
-    emapper_results = parse_emapper_output(emapper_output)
+        # Parse eggNOG-mapper's output file
+        emapper_output = os.path.join(config['experiment']['tmp_exp_dir'], "emapper_%s.emapper.annotations" % exp_id)
+        if not os.path.exists(emapper_output):
+            sys.stderr.write("Error: emapper output file (%s) not found!\n" % emapper_output)
+        emapper_results = parse_emapper_output(emapper_output)
 
-    # Perform GF assignment
-    db_conn = common.db_connect(*trapid_db_data)
-    perform_gf_assignment(emapper_results, db_conn, exp_id)
-    db_conn.close()
+        # Perform GF assignment
+        db_conn = common.db_connect(*trapid_db_data)
+        perform_gf_assignment(emapper_results, db_conn, exp_id)
+        common.update_experiment_log(exp_id, "infer_genefamilies", "", 3, db_conn)
+        db_conn.close()
 
-    # Get GO data
-    db_conn = common.db_connect(*ref_db_data)
-    go_data = get_go_data(db_conn)
-    db_conn.close()
-    # Perform GO annotation
-    # Read RFAM GO data
-    rfam_go_file = os.path.join(config['experiment']['tmp_exp_dir'], "rfam_go_data.tsv")
-    rfam_transcript_gos = read_rfam_go_data(rfam_go_file)
-    db_conn = common.db_connect(*trapid_db_data)
-    perform_go_annotation(emapper_results, rfam_transcript_gos, db_conn, go_data, exp_id)
-    db_conn.close()
+        # Get GO data
+        db_conn = common.db_connect(*ref_db_data)
+        go_data = get_go_data(db_conn)
+        db_conn.close()
+        # Perform GO annotation
+        # Read RFAM GO data
+        rfam_go_file = os.path.join(config['experiment']['tmp_exp_dir'], "rfam_go_data.tsv")
+        rfam_transcript_gos = read_rfam_go_data(rfam_go_file)
+        db_conn = common.db_connect(*trapid_db_data)
+        perform_go_annotation(emapper_results, rfam_transcript_gos, db_conn, go_data, exp_id)
+        db_conn.close()
 
-    # Perform KO annotation
-    db_conn = common.db_connect(*trapid_db_data)
-    perform_ko_annotation(emapper_results, db_conn, exp_id)
-    db_conn.close()
+        # Perform KO annotation
+        db_conn = common.db_connect(*trapid_db_data)
+        perform_ko_annotation(emapper_results, db_conn, exp_id)
+        common.update_experiment_log(exp_id, "infer_functional_annotation", "", 3, db_conn)
+        db_conn.close()
+    # If any exception was raised, update the experiment's log, set status to 'error', and exit
+    except Exception:
+        print_exc()
+        common.stop_initial_processing_error(exp_id, trapid_db_data)
+
 
 
 if __name__ == '__main__':
