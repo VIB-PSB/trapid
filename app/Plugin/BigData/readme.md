@@ -42,6 +42,7 @@ If you are saving a row that already exists in the database, it will replace it 
 
 * Jarriett K. Robinson [jarriett (at) gmail.com] , http://github.com/jarriett
 * Modifications by J. Miller, http://github.com/jmillerdesign
+* Support for MySQL's `INSERT IGNORE` added by me. 
 
 ## License
 
