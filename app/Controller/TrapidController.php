@@ -647,6 +647,7 @@ class TrapidController extends AppController{
                   $tax_scope = $tax_scope_data['scope'];
               }
               $gf_ids = $this->GfData->find("all",array("conditions"=>array("gene_id"=>$gene_ids, "scope"=>$tax_scope)));
+              $this->set("tax_scope_data", $tax_scope_data);
           }
           else {
               $gf_ids = $this->GfData->find("all",array("conditions"=>array("gene_id"=>$gene_ids)));

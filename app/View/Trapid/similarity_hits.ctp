@@ -1,22 +1,24 @@
-<div>
     <div class="page-header">
         <h1 class="text-primary">Similarity hits</h1>
     </div>
     <div class="subdiv">
-        <?php // echo $this->element("trapid_experiment"); ?>
-
         <section class="page-section">
         <h3>Transcript overview</h3>
             <dl class="standard dl-horizontal">
                 <dt>Transcript id</dt>
                 <dd><?php echo $this->Html->link($transcript_info['transcript_id'], array("controller" => "trapid", "action" => "transcript", $exp_id, $transcript_info['transcript_id'])); ?></dd>
                 <dt>Gene family</dt>
-                <dd>
                     <?php
                     if ($transcript_info['gf_id'] == "") {
-                        echo "<span class='disabled'>Unavailable</span>\n";
+                        echo "<dd><span class='disabled'>Unavailable</span></dd>\n";
                     } else {
-                        echo $this->Html->link($transcript_info['gf_id'], array("controller" => "gene_family", "action" => "gene_family", $exp_id, $transcript_info['gf_id']));
+                        echo "<dd>" . $this->Html->link($transcript_info['gf_id'], array("controller" => "gene_family", "action" => "gene_family", $exp_id, $transcript_info['gf_id'])) . "</dd>";
+                        // If we are dealing with EggNOG data, display extra information (taxonomic scope)
+                        if($exp_info['ref_db_type'] == "eggnog") {
+                            echo "<dt>NOG taxonomic level</dt>";
+                            echo "<dd>"  . $tax_scope_data['name'] .  " <span class='label label-default'>" . $tax_scope_data['scope'] . "</span></dd>";
+
+                        }
                     }
                     ?>
                 </dd>
@@ -160,4 +162,3 @@
             </table>
         </section>
     </div>
-</div>
