@@ -2021,18 +2021,23 @@ class TrapidController extends AppController{
       // Non-coding RNA processing: RFAM clan selection
       $all_rfam_clans = array_keys($this->Configuration->getRfamClansMetadata());
       $rfam_clans = array();
-      foreach($_POST['rfam-clans'] as $clan) {
-          // Check if the (sanitized) clan accession exists in `configuration`. If not throw an error.
-          $clan_acc = filter_var($clan, FILTER_SANITIZE_STRING);  // No need to sanitize since selected clans are ocmpared to a list of valid clans already?
-          $clan_acc = $clan;
-          if(!in_array($clan_acc, $all_rfam_clans)) {
-              $this->set("error","Incorrect parameters: invalid RFAM clan selected - ". $clan_acc);
-              return;
+      if(isset($_POST['rfam-clans'])) {
+          foreach ($_POST['rfam-clans'] as $clan) {
+              // Check if the (sanitized) clan accession exists in `configuration`. If not throw an error.
+              $clan_acc = filter_var($clan, FILTER_SANITIZE_STRING);  // No need to sanitize since selected clans are compared to a list of valid clans already?
+              $clan_acc = $clan;
+              if (!in_array($clan_acc, $all_rfam_clans)) {
+                  $this->set("error", "Incorrect parameters: invalid RFAM clan selected - " . $clan_acc);
+                  return;
+              }
+              array_push($rfam_clans, $clan_acc);
           }
-          array_push($rfam_clans, $clan_acc);
+          // Create string with all selected RFAM clan accessions
+          $rfam_clans_str = implode(",", $rfam_clans);
       }
-      // Create string with all selected RFAM clan accessions
-      $rfam_clans_str = implode(",",$rfam_clans);
+      else {
+          $rfam_clans_str = "None";
+      }
 
       // pr($_POST);
       // return;
@@ -2090,7 +2095,7 @@ class TrapidController extends AppController{
         }
       $this->ExperimentLog->addAction($exp_id,"initial_processing_options","n_rfam_clans=".sizeof($rfam_clans), 2);
       // TODO: If too many clans are selected, the value will be too long for `parameters`! Solve that once prototype works.
-        if(sizeof($rfam_clans) <= 30){
+        if(sizeof($rfam_clans) <= 30 && $rfam_clans_str != "None"){
             $this->ExperimentLog->addAction($exp_id,"initial_processing_options","rfam_clans=".$rfam_clans_str, 2);
         }
       $this->ExperimentLog->addAction($exp_id,"initial_processing","start",1);

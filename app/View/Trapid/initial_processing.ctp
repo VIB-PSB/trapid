@@ -1,7 +1,9 @@
 <?php
 // Selectize JS + CSS
-echo $this->Html->script('https://gitcdn.xyz/repo/selectize/selectize.js/master/dist/js/standalone/selectize.min.js');
-echo $this->Html->css('https://gitcdn.xyz/repo/selectize/selectize.js/master/dist/css/selectize.default.css');
+echo $this->Html->script('selectize.min.js');
+echo $this->Html->css('selectize.paper.css');
+
+//echo $this->Html->css('selectize.default.css');
 ?>
     <div class="page-header">
         <h1 class="text-primary">Process transcripts</h1>
@@ -67,18 +69,19 @@ echo $this->Html->css('https://gitcdn.xyz/repo/selectize/selectize.js/master/dis
                 </div>
                 <div class="panel-body">
                     <div class="form-group">
-                        <label for="rfam-clans"><strong>RFAM clans</strong> (max. 10)</label>
+                        <label for="rfam-clans"><strong>Rfam clans</strong> (max. 10)</label>
                         <?php echo $this->element("help_tooltips/create_tooltip", array("tooltip_text"=>$tooltips['initial_processing_rfam_clans'], "tooltip_placement"=>"top")); ?>
-                        <label style="margin-right:5px;" class="label label-info pull-right">test</label>
+<!--                        <label style="margin-right:5px;" class="label label-info pull-right">test</label>-->
                         <br>
                         <select id="rfam-clans" name="rfam-clans[]" multiple size="10">
+                            <option value="">Select or search clans...</option>
                             <?php foreach($rfam_clans as $clan_acc=>$clan_data) {
                                 $selected_str = in_array($clan_acc, $rfam_clans_default) ? 'selected' : '';
                                 echo "<option value='" . $clan_acc . "' " . $selected_str . ">" . $clan_data["clan_id"] . " (" . $clan_data["clan_desc"]. ")</option>";
                             }
                             ?>
                         </select>
-                        <p class="help-block" style="font-size: 88%;"><strong>Nb:</strong> More information about RFAM clans can be found on the <a href="http://rfam.xfam.org/browse" class="linkout" target="_blank">RFAM website</a>.</p>
+                        <p class="help-block" style="font-size: 88%;"><strong>Nb:</strong> More information about Rfam clans can be found on the <a href="http://rfam.xfam.org/browse" class="linkout" target="_blank">Rfam website</a>.</p>
                     </div>
                 </div>
             </div>
@@ -108,7 +111,7 @@ echo $this->Html->css('https://gitcdn.xyz/repo/selectize/selectize.js/master/dis
                     </div>
                     <div class="form-group<?php if($tax_scope_data){echo " hidden";};?>">
                         <label for=""><strong>Functional annotation</strong></label>
-                        <?php echo $this->element("help_tooltips/create_tooltip", array("tooltip_text"=>$tooltips['initial_processing_annotation'], "tooltip_placement"=>"top")); ?>
+                        <?php echo $this->element("help_tooltips/create_tooltip", array("tooltip_text"=>$tooltips['initial_processing_annotation'], "tooltip_placement"=>"top", "use_html"=>"true")); ?>
                         <br>
                         <label class="radio-inline">
                             <input id="functional_annotation_besthit" name="functional_annotation" type="radio" value="besthit"> Best similarity hit  &nbsp;
@@ -148,7 +151,7 @@ echo $this->Html->css('https://gitcdn.xyz/repo/selectize/selectize.js/master/dis
                 </div>
                 <div class="panel-body">
                     <div class="form-group">
-                        <label for="tax-binning"><strong>Perform taxonomic binning</strong></label> &nbsp;<?php echo $this->element("help_tooltips/create_tooltip", array("tooltip_text"=>$tooltips['initial_processing_tax_binning'], "tooltip_placement"=>"top")); ?>
+                        <label for="tax-binning"><strong>Perform taxonomic classification</strong></label> &nbsp;<?php echo $this->element("help_tooltips/create_tooltip", array("tooltip_text"=>$tooltips['initial_processing_tax_binning'], "tooltip_placement"=>"top")); ?>
                         <span class="pull-right" style="margin-right:12%;"><input checked id="tax-binning" name="tax-binning" value="y" type="checkbox"></span>
                     </div>
 
@@ -166,7 +169,7 @@ echo $this->Html->css('https://gitcdn.xyz/repo/selectize/selectize.js/master/dis
                     <div class="form-group">
                         <label for="transl_table"><strong>Genetic code</strong> (ORF prediction)</label>
                         <?php echo $this->element("help_tooltips/create_tooltip", array("tooltip_text"=>$tooltips['initial_processing_transl_table'], "tooltip_placement"=>"top")); ?>
-                        <label style="margin-right:10px;" class="label label-info pull-right">test</label>
+                        <!-- <label style="margin-right:10px;" class="label label-info pull-right">test</label> -->
                         <select class="form-control" id='transl-table' name="transl_table">
                             <?php
                             foreach($transl_table_descs as $idx=>$desc){
