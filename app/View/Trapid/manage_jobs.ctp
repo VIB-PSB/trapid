@@ -39,6 +39,7 @@
             echo "<th class='text-center'><input type='checkbox' id='select-job-all'/></th>";
             echo "<th>Job id</th>";
             echo "<th>Date</th>";
+            echo "<th>Type</th>";
             echo "<th>Status</th>";
             echo "<th>Description</th>";
             echo "</tr>";
@@ -54,6 +55,7 @@
                 echo "<td class='text-center'><input type='checkbox' class='select-job' name='job_" . $job['job_id'] . "' $checked /></td>";
                 echo "<td>" . $job['job_id'] . "</td>";
                 echo "<td>" . $job['start_date'] . "</td>";
+                echo "<td>" . $job['job_type'] . "</td>";
                 echo "<td>" . $job['status'] . "</td>";
                 echo "<td>" . $job['comment'] . "</td>";
                 echo "</tr>\n";
