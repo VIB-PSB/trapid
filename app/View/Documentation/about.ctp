@@ -11,22 +11,15 @@
 
     <section class="page-section">
         <h2>Citing TRAPID</h2>
-        <p>In case you publish results generated using TRAPID, please cite this paper:</p>
-        <p class="text-justify">
-            <strong>TRAPID, an efficient online tool for the functional and comparative analysis of de novo RNA-Seq transcriptomes.</strong> <br>
-            Michiel Van Bel, Sebastian Proost, Christophe Van Neste, Dieter Deforce, Yves Van de Peer and Klaas Vandepoele<sup>*</sup> <br>
-            <em>Genome Biology, 14:R134, 2013</em>
-            <span class="pull-right">
-        <a target="_blank" href="https://genomebiology.biomedcentral.com/articles/10.1186/gb-2013-14-12-r134">
-          <span class="btn btn-primary btn-xs"><span class="glyphicon glyphicon-new-window"></span> Genome Biology</span>
-        </a>
-      </span>
-        </p>
+        <p class="text-justify">In case you publish results generated using TRAPID, please cite this paper:</p>
+
+        <?php echo $this->element("doc_paper",  array("title"=>"TRAPID 2.0: a web application for taxonomic and functional analysis of de novo transcriptomes", "authors"=>"Francois Bucchini, Andrea Del Cortona, Łukasz Kreft, Alexander Botzki, Michiel Van Bel, Klaas Vandepoele", "url"=>"https://doi.org/10.1101/2020.10.19.345835", "journal"=>"bioRxiv, October 22, 2020")); ?>
+
     </section>
 
     <section class="page-section">
         <h2>Authors</h2>
-        <p class="text-justify">This tool is being developed by François Bucchini, Michiel Van Bel, and Klaas Vandepoele.</p>
+        <p class="text-justify">This tool is developed and maintained by François Bucchini, Michiel Van Bel, and Klaas Vandepoele.</p>
     </section>
 
     <section class="page-section">

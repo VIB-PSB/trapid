@@ -13,7 +13,7 @@
                         TRAPID is an online tool for the fast and efficient processing of assembled RNA-Seq transcriptome data.
                         TRAPID offers high-throughput ORF detection, frameshift correction and includes a functional, comparative and phylogenetic toolbox.
                         Input sequences can be ESTs, full-length cDNAs or RNA-Seq transcriptome sequences. Additionally, coding sequence derived from an annotated genome can also be used.
-                        We offer four reference databases: for plants and green algae, the latest <a href="http://bioinformatics.psb.ugent.be/plaza/" alt="PLAZA link" target="_blank" class="linkout">PLAZA</a> databases (PLAZA dicots and monocots 4.5, pico-PLAZA 3), and for other eukaryotes (e.g. Alveolata, Amoebozoa, Euglenozoa, Fungi, Metazoa) or prokaryotes (Bacteria and Archaea) <a href="http://eggnog45.embl.de" alt="EggNOG 4.5 link" target="_blank" class="linkout">EggNOG version 4.5</a> is available.
+                        We offer four reference databases: for plants and green algae, the latest <a href="http://bioinformatics.psb.ugent.be/plaza/" alt="PLAZA link" target="_blank" class="linkout">PLAZA</a> databases (PLAZA dicots and monocots 4.5, pico-PLAZA 3), and for other eukaryotes (e.g. Alveolata, Amoebozoa, Euglenozoa, Fungi, Metazoa) or prokaryotes (Bacteria and Archaea) <a href="http://eggnog45.embl.de" alt="eggNOG 4.5 link" target="_blank" class="linkout">eggNOG version 4.5</a> is available.
                     </p>
                     <p class="text-justify">Once the initial processing has assigned functional annotations and gene families to the user-defined transcripts, evolutionary studies on gene families including the uploaded transcripts can be performed. Through a few simple operations, multiple sequence alignments and phylogenetic trees can be generated. </p>
                     <p class="text-justify">Although TRAPID hosts a wide range of reference genomes, it was not developed to process data from massive-scale meta -omic studies, as it can process 200,000 sequences maximum per experiment. Adding more transcripts is possible, but correct processing or website performance is not guaranteed in this case. </p>
@@ -42,13 +42,13 @@
                         <div class="doc-figure">
                             <?php echo $this->Html->image('tutorial/optimized/authentication_login.png', array('alt' => 'TRAPID login page', 'class'=>'img-responsive img-centered')); ?>
                             <p class="text-justify doc-figure-legend small">
-                                <strong>Figure 2: login form.</strong> Login using your e-mail address and the provided password.
+                                <strong>Figure 2: login form.</strong> Log in using your e-mail address and the provided password.
                             </p>
                         </div>
                     </div>
                     <div class="col-md-8">
                         <p class="text-justify">On the main page, click <code>Login</code> in the header (or click <a href="<?php echo $this->Html->Url(array("controller" => "trapid", "action" => "authentication", "login")); ?>" alt="Login link" target="_blank" class="linkout">here</a>).
-                            This will take you to a login form (Figure 2). Here, use the <strong>e-mail address</strong> used to register and the <strong>password</strong> sent by mail to login.
+                            This will take you to a login form (Figure 2). Here, use the <strong>e-mail address</strong> used to register and the <strong>password</strong> sent by mail to log in.
                         </p>
                     </div>
                 </div>
@@ -93,7 +93,7 @@
                                 <p class="text-justify">Clicking on the <code>add new experiment</code> button (<span class="glyphicon glyphicon-plus"></span> icon) opens the experiment creation window (Figure 4). </p>
                                 <p class="text-justify">To start, like shown in Figure 4, enter a name and a description for the experiment. For instance, <code>Tutorial 1</code> as a name and <code>Documentation tutorial 1 (Panicum)</code> as description.
                                     Select <code>PLAZA 4.5 monocots</code> as reference database, as PLAZA is the recommended database for plants and algae, and the 'monocots' version contains genomes from closely related species.
-                                    In case data from other lineages is analyzed, we recommend selecting EggNOG 4.5. Add the experiment by clicking <code>create experiment</code>. </p>
+                                    In case data from other lineages is analyzed, we recommend selecting eggNOG 4.5. Add the experiment by clicking <code>create experiment</code>. </p>
                             </div>
                         </div>
                         <div class="row">
@@ -236,10 +236,10 @@
                         <div class="col-md-8">
                             <p class="text-justify">Within a TRAPID experiment,  transcript subsets can be defined from any arbitrary list of transcript identifiers, for instance transcripts expressed in a specific condition or tissue, and used to perform subsequent within-transcriptome functional analyses. Subsets may either be uploaded as file or created interactively from the web application. By creating transcript subsets, several new analyses become available, such as comparison of functional annotation between different subsets, or functional enrichment analysis.</p>
                             <p class="text-justify">In this tutorial, we provide an example set of 33 Cell Cycle transcripts. The list can be downloaded from <a href='ftp://ftp.psb.ugent.be/pub/trapid/datasets/panicum/panicum_cell_cycle.lst'  download>TRAPID’s FTP</a>. To create a new transcript subset, click <code>Import data</code> (side menu). In the <code>Transcript subset</code> tab, click <code>Browse...</code> to select the downloaded file and enter a name for the susbset (e.g. <code>Cell_cycle</code>). Click <code>Import subset</code> to finish.</p>
-                            <p class="text-justify">Transcripts subsets can be inspected and deleted from the <code>Explore subsets</code> page (side menu).  To check if the cell cycle set is enriched for specific GO terms or Protein domains, click the <code>Subset enrichment</code> item in the side menu. On the next page, select a type of functional annotation for which to perform the analysis, a transcript subset, and a maximum corrected p-value threshold. For this tutorial, we selected <code>InterPro domains</code>, <code>Cell_cycle</code> and <code>0.005</code>. Click <code>Compute enrichment</code> to launch the analysis.</p>
+                            <p class="text-justify">Transcripts subsets can be inspected and deleted from the <code>Explore subsets</code> page (side menu).  To check if the cell cycle set is enriched for specific GO terms or Protein domains, click the <code>Subset enrichment</code> item in the side menu. On the next page, select a type of functional annotation for which to perform the analysis, a transcript subset, and a maximum q-value (corrected p-value) threshold. For this tutorial, we selected <code>InterPro domains</code>, <code>Cell_cycle</code> and <code>0.005</code>. Click <code>Compute enrichment</code> to launch the analysis.</p>
                             <p class="text-justify">Figure 12 shows the resulting page displaying for each of the enriched InterPro domains the enrichment fold, significance and a short description. Note that the InterPro domain identifiers are hyperlinks to pages containing more detailed information, and that results may also be explored as a table or downloaded.
                             </p>
-                            <p class="text-justify">It is optionally possible to precompute functional enrichments for all available types of functional annotation, subsets, and p-value thresholds, by clicking the <code>Run functional enrichment</code> button on the experiment overview page.</p>
+                            <p class="text-justify">It is optionally possible to precompute functional enrichments for all available types of functional annotation, subsets, and q-value thresholds, by clicking the <code>Run functional enrichment</code> button on the experiment overview page.</p>
                             <p class="text-justify">Read more about
                                 <?php echo $this->Html->link("subsets/labels", array("controller" => "documentation", "action" => "general", "#"=>"labels")); ?>
                                 and <?php echo $this->Html->link("functional enrichment", array("controller" => "documentation", "action" => "general", "#"=>"enrichment")); ?>

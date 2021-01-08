@@ -1,8 +1,7 @@
 <?php
 
 
-$trapid_ref = $this->element("doc_paper",  array("title"=>"TRAPID, an efficient online tool for the functional and comparative analysis of de novo RNA-Seq transcriptomes.", "authors"=>"Michiel Van Bel, Sebastian Proost, Christophe Van Neste, Dieter Deforce, Yves Van de Peer and Klaas Vandepoele", "url"=>"https://genomebiology.biomedcentral.com/articles/10.1186/gb-2013-14-12-r134", "journal"=>"Genome Biology, 14:R134, 2013"));
-
+$trapid_ref = $this->element("doc_paper",  array("title"=>"TRAPID 2.0: a web application for taxonomic and functional analysis of de novo transcriptomes", "authors"=>"Francois Bucchini, Andrea Del Cortona, Łukasz Kreft, Alexander Botzki, Michiel Van Bel, Klaas Vandepoele", "url"=>"https://doi.org/10.1101/2020.10.19.345835", "journal"=>"bioRxiv, October 22, 2020"));
 // FAQ content is defined here, as associative arrays (one per FAQ category).
 // The rest of the view parses this information to display the content.
 // array structure: array("element-id"=>array("q"=>"question", "a"=>"answer"))... Element ids must be unique!
@@ -35,7 +34,7 @@ $faq_io = array(
         "q"=>"How many sequences can I process at once?",
         "a"=>"TRAPID is able to process up to 200,000 transcripts within a single experiment. Adding more transcripts is possible, but correct processing or website performance is not guaranteed in this case."),
     "import-subset"=>array(
-        "q"=>"How can I upload transcript subset file?",
+        "q"=>"How can I upload a transcript subset file?",
         "a"=>"Within a TRAPID experiment, click <code>Import data</code> in the side menu. There, choose <code>Transcript subset</code>. You can then upload a file containing the list of transcript ids for the subset, and choose a name for the subset. Finish be clicking <code>Import subset</code>. "),
     "export-data"=>array(
         "q"=>"Can I export TRAPID's results in bulk?",

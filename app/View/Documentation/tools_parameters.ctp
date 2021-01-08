@@ -13,7 +13,7 @@
         <div class="col-md-9" id="tutorial-col">
             <section class="page-section" id="ref-dbs">
                 <h3>Reference databases</h3>
-                <p class="text-justify">The below table provides an overview of TRAPID 2.0 reference databases. The gene family count only includes homology-based families for PLAZA databases, and only orthologous groups at the root level for EggNOG 4.5. For extensive details about the reference databases (e.g. further information on gene family construction, list of included clades/species, ...), please refer to their own documentation. </p><br>
+                <p class="text-justify">The below table provides an overview of TRAPID 2.0 reference databases. The gene family count only includes homology-based families for PLAZA databases, and only orthologous groups at the root level for eggNOG 4.5. For extensive details about the reference databases (e.g. further information on gene family construction, list of included clades/species, ...), please refer to their own documentation. </p><br>
                 <style>
                     td,th {
                         text-align: center;
@@ -47,7 +47,7 @@
                             <td>3,065,012</td>
                             <td>1,563,555</td>
                             <td>705,020</td>
-                            <td>14,116,949</td>
+                            <td>9,646,196</td>
                         </tr>
                         <tr>
                             <td class="first-col"># Gene families</td>
@@ -75,7 +75,7 @@
                             <td>Tribe-MCL, integrative orthologs</td>
                             <td>Tribe-MCL, integrative orthologs</td>
                             <td>Tribe-MCL, integrative orthologs</td>
-                            <td>EggNOG</td>
+                            <td>eggNOG</td>
                         </tr>
                         </tbody>
                     </table>
@@ -84,7 +84,7 @@
             <section class="page-section" id="init-processing">
                 <h3>Initial processing</h3>
                 <?php
-                $init_processing_tools = array("diamond", "infernal", "kaiju", "ncbi_nr_prot", "ncbi_tax", "rfam");
+                $init_processing_tools = array("diamond", "infernal", "kaiju", "emapper", "ncbi_nr_prot", "ncbi_tax", "rfam");
                 foreach ($init_processing_tools as $tool) {
                     echo $this->element('doc_tools_parameters', array('tool_data'=>$tools_parameters_data[$tool]));
                 }

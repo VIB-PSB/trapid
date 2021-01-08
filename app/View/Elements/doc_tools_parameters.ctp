@@ -3,13 +3,21 @@
 
 <?php
     // Should we define this somewhere else than in the element?
-    $data_prefixes = array("ref_link"=>"Reference: ", "source_link"=>"Source: ", "web_link"=> "Website: ", "version"=>"Version: ", "parameters"=>"Parameters: ", "extra"=>"");
+    $data_prefixes = array("source_link"=>"Source: ", "web_link"=> "Website: ", "version"=>"Version: ", "parameters"=>"Parameters/command-line: ", "extra"=>"");
 ?>
 
 <h4><?php echo $tool_data['name']?></h4>
 
 <?php
-    $links_arr = array_intersect(array("ref_link", "source_link", "web_link"), array_keys($tool_data));
+    // Show reference if relevant
+    $ref_keys = ['ref_title', 'ref_authors', 'ref_url', 'ref_journal'];
+    if(sizeof(array_intersect($ref_keys, array_keys($tool_data))) == sizeof($ref_keys)) {
+        echo $this->element("doc_paper",
+            array("title"=>$tool_data['ref_title'], "authors"=>$tool_data['ref_authors'],
+                   "url"=>$tool_data['ref_url'], "journal"=>$tool_data['ref_journal']));
+    }
+
+    $links_arr = array_intersect(array("source_link", "web_link"), array_keys($tool_data));
     if(sizeof($links_arr) > 0) {
         echo "<p class='text-justify'>";
         foreach($links_arr as $k) {
