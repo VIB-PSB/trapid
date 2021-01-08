@@ -58,7 +58,78 @@ class TrapidUtilsComponent extends Component{
   }
 
 
-  function performExport($plaza_db,$email,$exp_id,$export_key,$filename,$filter=null){
+    /**
+     * Perform experiment data export: create export script, run it, compress exported file and return archive file path.
+     *
+     * @param $plaza_db TRAPID reference database
+     * @param $email experiment's owner email, used to append a hash to the export zip archive name
+     * @param $exp_id experiment identifier
+     * @param $export_key export key (parameter for 'ExportManager' Java program indicating the data type to export)
+     * @param $filename export file name
+     * @param null $filter export data filter that can either indicate columns to include in the export file (in the
+     * case of structural data export) or a transcript subset (in the case of sequence or subset export)
+     * @return string path of the export zip archive file
+     */
+  function performExport($plaza_db, $email, $exp_id, $export_key, $filename, $filter=null) {
+    $tmp_dir = TMP."experiment_data/".$exp_id."/";
+    $ext_dir = TMP_WEB."experiment_data/".$exp_id."/";
+    $base_scripts_location	= APP."scripts/";
+    $java_location	= $base_scripts_location . "java/";
+    // Translation table json file location is needed if exporting protein sequences
+    $transl_tables_file = $base_scripts_location . "cfg/all_translation_tables.json";
+    $salt = $exp_id;
+    $timestamp = date("Ymd_Gis", time());
+    $hash = hash("sha256",$email . $salt);
+    $internal_file = $tmp_dir . $filename;
+    // Give a meaningful file name to the zip archive
+    $zip_name = implode("_", [strtolower($export_key), $exp_id, $timestamp, substr($hash, 0, 14)]) . ".zip";
+    $internal_zip	= $tmp_dir . $zip_name;
+    $java_cmd = "java";
+    $java_program	= "transcript_pipeline.ExportManager";
+    $java_params	= array(TRAPID_DB_SERVER, $plaza_db, TRAPID_DB_USER, TRAPID_DB_PASSWORD,
+        TRAPID_DB_SERVER, TRAPID_DB_NAME, TRAPID_DB_USER, TRAPID_DB_PASSWORD, $transl_tables_file, $exp_id,
+        $export_key, $internal_file);
+    if($filter != null){
+        $java_params[] = $filter;
+    }
+    $export_basename = "export_data";
+    $shell_file	= $tmp_dir . $export_basename . ".sh";
+    $error_file = $tmp_dir . $export_basename . ".err";
+    $output_file = $tmp_dir . $export_basename . ".out";
+    // Command to remove previous export shell script and stderr/stdout files
+    $export_rm = implode(" ", ["rm -f", $shell_file, $error_file, $output_file]);
+    // Zip archives to remove (pattern for 'rm' command) when a new zip archive is generated
+    $zip_rm	= $tmp_dir . "*_" . substr($hash, 0, 14) . ".zip";
+
+    // Create export shell script
+    shell_exec($export_rm);
+    $fh = fopen($shell_file,"w");
+    fwrite($fh,"#!/bin/bash \n");
+    fwrite($fh,"module load java\n\n");
+   //fwrite($fh,"java -cp ".$java_location.".:".$java_location."..:".$java_location."mysql.jar ".$java_program." ".implode(" ",$java_params)."\n");
+    fwrite($fh,$java_cmd . " -cp ".$java_location.".:".$java_location."..:".$java_location."lib/* ".$java_program." ".implode(" ",$java_params). "\n");
+    fclose($fh);
+    shell_exec("chmod a+x " . $shell_file);
+
+    // Run export shell script on the web cluster
+    $cluster_cmd = ". /etc/profile.d/settings.sh && qsub -q short -sync y -e " . $error_file . " -o " . $output_file . " " . $shell_file;
+    $cluster_output = shell_exec($cluster_cmd);
+    // pr("Output:\n" . $cluster_output);
+
+    // Zip result file and cleanup previous export files
+    // Now export files are generated with different names. Should every zip archive be removed?
+	shell_exec("rm -f " . $zip_rm);
+    shell_exec("zip -j ".$internal_zip." ".$internal_file);
+    shell_exec("rm -f ".$internal_file);
+    $result	= $ext_dir.$zip_name;
+    return $result;
+  }
+
+
+  // Former export function, running locally
+  // 2020-12-29: users reported the file export was not working anymore and is replaced by a function that runs the java
+  // export code on the web cluster.
+  function performExportLocal($plaza_db, $email, $exp_id, $export_key, $filename, $filter=null) {
     $tmp_dir		= TMP."experiment_data/".$exp_id."/";
     $ext_dir		= TMP_WEB."experiment_data/".$exp_id."/";
     $salt  		= $exp_id;
@@ -103,7 +174,7 @@ class TrapidUtilsComponent extends Component{
     shell_exec("chmod a+x ".$shell_file);
     $output = shell_exec("sh ".$shell_file);
 
-    pr($output);
+    // pr($output);
 
     //zip result file and cleanup
     // if(file_exists($internal_zip)){
@@ -346,7 +417,9 @@ class TrapidUtilsComponent extends Component{
   // If the fraction of running jobs is more than `$full`, status of the queue is set to 'full'
   function check_cluster_status($busy=0.5, $full=1.0, $queues = ["long", "medium", "short"]){
     $cluster_status = [];
-    $qhost_cmd = ". /opt/sge/default/common/settings.sh && qhost -q";
+    // aaa
+//    $qhost_cmd = ". /opt/sge/default/common/settings.sh && qhost -q";
+    $qhost_cmd = ". /etc/profile.d/settings.sh && qhost -q";
     $qhost_out = [];
     $exit_status = 0;
     exec($qhost_cmd, $qhost_out, $exit_status);
@@ -491,8 +564,9 @@ class TrapidUtilsComponent extends Component{
 	fwrite($fh,"#!/bin/bash \n");
 //	 fwrite($fh,". /etc/profile.d/settings.sh\n");
     // Update settings (tanith webcluster workshop)
-	fwrite($fh,". /opt/sge/default/common/settings.sh\n");
-	fwrite($fh,"qstat $* \n");
+//	fwrite($fh,". /opt/sge/default/common/settings.sh\n");
+    fwrite($fh,". /etc/profile.d/settings.sh\n");
+    fwrite($fh,"qstat $* \n");
 	fclose($fh);
 	shell_exec("chmod a+x ".$qstat_file);
 	return $qstat_file;
@@ -506,7 +580,8 @@ class TrapidUtilsComponent extends Component{
 	fwrite($fh,"#!/bin/bash \n");
 //     fwrite($fh,". /etc/profile.d/settings.sh\n");
     // Update settings (tanith webcluster workshop)
-    fwrite($fh,". /opt/sge/default/common/settings.sh\n");
+//    fwrite($fh,". /opt/sge/default/common/settings.sh\n");
+    fwrite($fh,". /etc/profile.d/settings.sh\n");
 	fwrite($fh,"qdel $* \n");
 	fclose($fh);
 	shell_exec("chmod a+x ".$qdel_file);
@@ -523,7 +598,8 @@ class TrapidUtilsComponent extends Component{
 	    fwrite($fh,"#!/bin/bash \n");
 //         fwrite($fh,". /etc/profile.d/settings.sh\n");
         // Update settings (tanith webcluster workshop)
-        fwrite($fh,". /opt/sge/default/common/settings.sh\n");
+        fwrite($fh,". /etc/profile.d/settings.sh\n");
+//        fwrite($fh,". /opt/sge/default/common/settings.sh\n");
 	    fwrite($fh,"qsub $* \n");
 	    fclose($fh);
 	    shell_exec("chmod a+x ".$qsub_file);
@@ -544,7 +620,8 @@ class TrapidUtilsComponent extends Component{
 	    fwrite($fh,"#!/bin/bash \n");
 //         fwrite($fh,". /etc/profile.d/settings.sh\n");
         // Update settings (tanith webcluster workshop)
-        fwrite($fh,". /opt/sge/default/common/settings.sh\n");
+//        fwrite($fh,". /opt/sge/default/common/settings.sh\n");
+        fwrite($fh,". /etc/profile.d/settings.sh\n");
 	    fwrite($fh,"qsub $* \n");
 	    fclose($fh);
 	    shell_exec("chmod a+x ".$qsub_file);
@@ -559,7 +636,7 @@ class TrapidUtilsComponent extends Component{
     $tmp_dir		= TMP."experiment_data/";
     $shell_script	= $tmp_dir."cleanup_".$year."_".$month.".sh";
     $perl_script	= APP."scripts/perl/monthly_cleanup.pl";
-    $necessary_modules	= array("perl");
+    $necessary_modules	= array("perl/x86_64/5.14.1");
     $params		= array(
 				TRAPID_DB_SERVER,TRAPID_DB_NAME,TRAPID_DB_PORT,TRAPID_DB_USER,TRAPID_DB_PASSWORD,
       				TMP."experiment_data",$year,$month,$cleanup_warning,$cleanup_delete
@@ -624,9 +701,18 @@ class TrapidUtilsComponent extends Component{
     $inc_met = 0; if($include_meta){$inc_met=1;}
     $base_scripts_location	= APP."scripts/";
     $tmp_dir			= TMP."experiment_data/".$exp_id."/";
-    $necessary_modules		= array("perl", "python/x86_64/2.7.14");
-    $necessary_modules[]	= $msa_program;
-    $necessary_modules[]	= $tree_program;
+    $necessary_modules		= array("perl/x86_64/5.14.1", "python/x86_64/2.7.14");
+    // Add modules for MSA/tree program -- program versions are consistent with PLAZA 4.5
+    $msa_tree_modules = array(
+        "muscle" => "muscle/x86_64/3.8.31",
+        "mafft" => "mafft/x86_64/7.187",
+        "phyml" => "phyml/x86_64/20150219",
+        "fasttree" => "fasttree/x86_64/2.1.7",
+        "raxml" => "raxml/x86_64/8.2.8",
+        "iqtree" => "iqtree/x86_64/1.7.0b7"
+    );
+    $necessary_modules[]	= $msa_tree_modules[$msa_program];
+    $necessary_modules[]	= $msa_tree_modules[$tree_program];
 
     //create actual shell script file
     $shell_file			= $tmp_dir."create_tree_".$gf_id.".sh";
@@ -668,7 +754,7 @@ class TrapidUtilsComponent extends Component{
   function create_shell_script_msa($exp_id,$gf_id,$msa_program){
     $base_scripts_location = APP . "scripts/";
     $tmp_dir = TMP . "experiment_data/" . $exp_id . "/";
-    $necessary_modules = array("perl", "python/x86_64/2.7.14");
+    $necessary_modules = array("perl/x86_64/5.14.1", "python/x86_64/2.7.14");
     $necessary_modules[]	= $msa_program;
 
     // Create actual shell script file
@@ -816,8 +902,8 @@ class TrapidUtilsComponent extends Component{
         // Read base ini file
         $initial_processing_ini_file = INI . "exp_initial_processing_settings.ini";
         $initial_processing_ini_data = parse_ini_file($initial_processing_ini_file, true);
-        pr($initial_processing_ini_data);
-        pr(array($plaza_db, $blast_db, $gf_type, $num_top_hits, $evalue, $func_annot, $tax_binning, $tax_scope));
+//        pr($initial_processing_ini_data);
+//        pr(array($plaza_db, $blast_db, $gf_type, $num_top_hits, $evalue, $func_annot, $tax_binning, $tax_scope));
         // Replace values with experiment-specific values
         $initial_processing_ini_data["experiment"]["tmp_exp_dir"] = $tmp_dir;
         $initial_processing_ini_data["experiment"]["exp_id"] = $exp_id;
@@ -984,6 +1070,7 @@ class TrapidUtilsComponent extends Component{
 
 
     // Generate a random character string
+    // Added symbols to improve passwords generated with this function
     function rand_str($length = 32, $chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890'){
 	$chars_length = (strlen($chars) - 1);     		// Length of character list
 	$string = $chars{rand(0, $chars_length)};    	// Start our string
@@ -995,18 +1082,70 @@ class TrapidUtilsComponent extends Component{
     }
 
 
-    function send_registration_email($email,$password,$password_update=false){
+    function create_password($base_length = 14, $suffix_length = 2, $chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890', $symbols=',.?!:;/*_-+=#$%@&()[]{}') {
+      $chars_length = (strlen($chars) - 1);     		// Length of character list
+      $symbols_length = (strlen($symbols) - 1);     		// Length of character list
+      $string = $chars{rand(0, $chars_length)};    	// Start our string
+      for ($i = 1; $i < $base_length; $i = strlen($string)){   // Generate random string with alphanumeric characters
+          $r = $chars{rand(0, $chars_length)};            // Grab a random character from our list
+          if ($r != $string{$i - 1}) $string .=  $r;      // Make sure the same two characters don't appear next to each other
+      }
+      // Append suffix with symbols
+      for ($i = 0; $i < $suffix_length; $i++){   // Generate random string with alphanumeric characters
+          $r = $symbols{rand(0, $symbols_length)};            // Grab a random character from our list
+          $string .=  $r;      // Make sure the same two characters don't appear next to each other
+      }
+      return $string;
+    }
+
+
+    // Ensure parameters passed to this functions are sanitized (e.g. result of `find()`)
+    function send_registration_email($email, $password, $password_update=false){
+      $trapid_admins = array("frbuc@psb.vib-ugent.be", "mibel@psb.ugent.be", "klpoe@psb.ugent.be");
       $subject = "TRAPID authentication information";
-      $message 	        	= "Welcome to TRAPID 2.0, the web resource for rapid analysis of transcriptome data.\nHere is the required authentication information.\n\nUser email-address: ".$email."\nPassword: ".$password."\n\nThank you for using TRAPID 2.0.";
+      $message = "Welcome to TRAPID 2.0, the web resource for rapid analysis of transcriptome data.\nHere is the required authentication information.\n\nUser email address: ".$email."\nPassword: ".$password."\n\nThank you for using TRAPID 2.0.";
       if($password_update){
           $subject = "TRAPID password change";
-	      $message		= "The password for your TRAPID account has been changed.\n\nThe new password is: ".$password."\n\nYou can change it at anytime: log into TRAPID and select 'Account > Change password'.\n\nThank you for using the TRAPID system\n";
+	      $message		= "The password for your TRAPID account has been changed.\n\nThe new password is: ".$password."\n\nYou can change it at anytime: log in to TRAPID and select 'Account > Change password'.\n\nThank you for using the TRAPID 2.0.\n";
+      }
+
+      $Email = new CakeEmail();
+      $Email->config(
+          array(
+              'transport' => 'Smtp',
+              'from' => array('no-reply@psb.ugent.be' => 'TRAPID'),
+              'host' => 'smtp.psb.ugent.be',
+              'log' => false
+          )
+      );
+      $Email->to($email)
+          ->subject($subject)
+          ->send($message);
+
+      // Send email to administrators to be warned when a new user is added
+      // Run `reset()` before?
+      if(!$password_update){
+          $Email->to($trapid_admins)
+              ->subject("TRAPID new user")
+              ->send("New user added to TRAPID system\n\nUser login: " . $email);
+      }
+    }
+
+    // Note: 2021-01-04: we now use CakeEmail to send out registration emails. It seems to fix the issues we experienced
+    // since the psbprox1 UGent move...
+    // Ensure parameters passed to this functions are sanitized (e.g. result of `find()`)
+    function send_registration_email_old($email,$password,$password_update=false){
+      $subject = "TRAPID authentication information";
+      $message 	        	= "Welcome to TRAPID 2.0, the web resource for rapid analysis of transcriptome data.\nHere is the required authentication information.\n\nUser email address: ".$email."\nPassword: ".$password."\n\nThank you for using TRAPID 2.0.";
+      if($password_update){
+          $subject = "TRAPID password change";
+	      $message		= "The password for your TRAPID account has been changed.\n\nThe new password is: ".$password."\n\nYou can change it at anytime: log into TRAPID and select 'Account > Change password'.\n\nThank you for using the TRAPID 2.0.\n";
       }
       $this->Email->to 			= $email;
       $this->Email->subject		= $subject;
       $this->Email->replyTo		= "no-reply@psb.ugent.be";
-      $this->Email->from 		= "TRAPID webmaster <no-reply@psb.ugent.be>";
-      $this->Email->additionalParams	= "-fno-reply@psb.ugent.be";
+      $this->Email->from 		= "TRAPID <no-reply@psb.ugent.be>";
+//      $this->Email->additionalParams	= "-fno-reply@psb.ugent.be";
       $this->Email->send($message);
       $this->Email->reset();
 
@@ -1017,8 +1156,8 @@ class TrapidUtilsComponent extends Component{
     	  $this->Email->subject		= "TRAPID new user";
     	  $this->Email->replyTo		= "no-reply@psb.ugent.be";
     	  $this->Email->from 		= "TRAPID webmaster <no-reply@psb.ugent.be>";
-    	  $this->Email->additionalParams	= "-fno-reply@psb.ugent.be";
-    	  $this->Email->send("New user added to TRAPID system\n\nUser-login: ".$email);
+    	  // $this->Email->additionalParams	= "-fno-reply@psb.ugent.be";
+    	  $this->Email->send("New user added to TRAPID system\n\nUser login: ".$email);
     	  $this->Email->reset();
       }
     }
