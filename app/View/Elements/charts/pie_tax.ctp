@@ -20,6 +20,7 @@ if(!isset($legend_tax_str)) {
                 enabled:false
             },
             chart: {
+                backgroundColor: null,
                 plotBorderWidth: null,
                 plotShadow: false,
                 type: 'pie'
@@ -79,7 +80,10 @@ if(!isset($legend_tax_str)) {
                         echo "{";
                         echo "name: '".$value[0]."', ";
                         if($value[0] == "Other"){
-                            echo "color: '#aaaaaa', ";
+                            echo "color: '#e5e5e5', ";
+                        }
+                        if($value[0] == "Unclassified") {
+                            echo "color: '#bcbcbc', ";
                         }
                         echo "y: ".$value[1];
                         if($key != $last_key) {

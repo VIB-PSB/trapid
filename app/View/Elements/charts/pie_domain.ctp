@@ -5,13 +5,15 @@
 <script type='text/javascript' defer="defer">
     $(function () {
         Highcharts.setOptions({
-            colors: ["#F8766D", "#A3A500", "#00BF7D", "#00B0F6", "#E76BF3"]
+            colors: ["#F8766D", "#00BF7D", "#00B0F6", "#E76BF3", "#A3A500"]
+//            colors: ["#F8766D", "#A3A500", "#00BF7D", "#00B0F6", "#E76BF3"]
         });
         var myChart = Highcharts.chart('<?php echo $chart_div_id; ?>', {
             credits: {
                 enabled: false
             },
             chart: {
+                backgroundColor: null,
                 plotBorderWidth: null,
                 plotShadow: false,
                 type: 'pie'
@@ -62,7 +64,7 @@
                     foreach ($chart_data as $key=>$value) {
                         echo "{ "."name: '".$value[0]."', ";
                         if($value[0] == "Unclassified"){
-                            echo "color: '#595959', ";
+                            echo "color: '#bcbcbc', ";
                         }
                         echo "y: ".$value[1];
                         if($key != $last_key) {

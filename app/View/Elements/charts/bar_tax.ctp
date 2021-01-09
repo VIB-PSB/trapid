@@ -5,6 +5,9 @@
 <script type='text/javascript' defer="defer">
     $(function () {
         Highcharts.setOptions({
+            lang: {
+                numericSymbols: null
+            },
             colors: ['#4662a0', '#aadb87', '#da495b', '#66edc6', '#fde5a5', '#66ceed', '#fdb7a5', '#7ea45d', '#eace6b',
                 '#7cb5ec', '#90ed7d', '#f7a35c', '#8085e9', '#f15c80', '#e4d354', '#2b908f', '#f45b5b', '#91e8e1']
         });
@@ -13,6 +16,7 @@
                     enabled:false
                 },
                 chart: {
+                    backgroundColor: null,
                     plotBorderWidth: null,
                     plotShadow: false,
                     type: 'column'
@@ -43,12 +47,17 @@
         yAxis: {
             maxPadding: 0,
                 endOnTick: false,
-                title: { text: '# Transcripts (log scale)' },
+                title: {
+                    text: '# Transcripts (log<sub>10</sub> scale)',
+                    useHTML: true
+                },
+/*
             labels: {
                 style: {
                     color: '#bbb'
                 }
             },
+*/
             type: 'logarithmic'
 
         },
@@ -98,7 +107,10 @@
                 echo "{";
                 echo "data: [{x: ".$key.", "."y: ".$value[1]."}], ";
                 if($value[0] == "Other"){
-                    echo "color: '#aaaaaa', ";
+                    echo "color: '#e5e5e5', ";
+                }
+                if($value[0] == "Unclassified") {
+                    echo "color: '#bcbcbc', ";
                 }
                 echo "name: '".$value[0]."'";
                 if($key != $last_key) {

@@ -3,10 +3,8 @@
 // Highcharts
 echo $this->Html->script('https://code.highcharts.com/highcharts.js');
 echo $this->Html->script('https://code.highcharts.com/modules/exporting.js');
-// D3
-echo $this->Html->script('d3-3.5.6.min.js');
-// UniPept's visualizations
-echo $this->Html->script('https://rawgit.com/unipept/unipept-visualizations/master/dist/unipept-visualizations.min.js');
+// D3 and UniPept's visualizations
+echo $this->Html->script(array('d3-3.5.6.min.js', 'unipept-visualizations.min.js'));
 ?>
 
 <style>
@@ -18,7 +16,7 @@ echo $this->Html->script('https://rawgit.com/unipept/unipept-visualizations/mast
 </style>
 
 <div class="page-header">
-    <h1 class="text-primary">Transcripts taxonomic binning</h1>
+    <h1 class="text-primary">Transcripts taxonomic classification</h1>
 </div>
 <!--<p class="lead text-justify">Explore taxonomic binning results with different visualization! </p>-->
 <p class="text-justify"><strong>Usage:</strong> use the tabs to switch from one type of visualization to the other.
@@ -29,13 +27,14 @@ Hold the <kbd>CTRL</kbd> key down and click on phylogenetic clades using any of 
     <div class="col-lg-9">
         <?php echo $this->Form->create(false, array("url"=>array("controller" => "tools", "action" => "create_tax_subset/" . $exp_id), "type" => "post", "default"=>"false", "id"=>"create-subset-form", "class"=>"form-inline", "name"=>"create-subset-form")); ?>
             <div class="form-group">
-                <input class="form-control" placeholder="Subset name... " maxlength="20" name="subset-name" id="subset-name" type="text" required>
+                <input class="form-control" placeholder="Subset name... " maxlength="50" name="subset-name" id="subset-name" type="text" required>
                 <?php echo $this->element("help_tooltips/create_tooltip", array("tooltip_text"=>$tooltip_text_subset_name, "tooltip_placement"=>"top", "override_span_class"=>"glyphicon glyphicon-question-sign")); ?>
             </div> &nbsp;
             <input type="submit" class="btn btn-xs btn-primary" id="create-subset" disabled value="Define new subset"/>
             | <a id="reset-tax-list">Reset selected clades</a>
         <?php echo $this->Form->end(); ?>
     </div>
+    <div class="pull-right">
     <div class="pull-right">
             <div id="loading" style="display:none;">
         <p class="text-center text-mute">
@@ -52,10 +51,10 @@ Hold the <kbd>CTRL</kbd> key down and click on phylogenetic clades using any of 
 <!-- Tabs  -->
 <div id="content">
     <ul class="nav nav-tabs nav-justified" id="tabs" data-tabs="tabs">
-        <li class="active"><a href="#krona" data-toggle="tab">Krona</a></li>
-        <li><a href="#tree-view" data-toggle="tab">Tree</a></li>
-        <li><a href="#piecharts" data-toggle="tab">Pie</a></li>
-        <li><a href="#barcharts" data-toggle="tab">Bar</a></li>
+        <li class="active"><a href="#krona" data-toggle="tab">Krona chart</a></li>
+        <li><a href="#tree-view" data-toggle="tab">Tree viewer</a></li>
+        <li><a href="#piecharts" data-toggle="tab">Sample composition (pie)</a></li>
+        <li><a href="#barcharts" data-toggle="tab">Sample composistion (bar)</a></li>
         <!--<li><a href="#raw-data" data-toggle="tab">Raw data</a></li>-->
     </ul>
     <div class="tab-content">
