@@ -49,6 +49,7 @@ function middle_filter(){
     disable_everything();
     calculate_current_flow();
     fill_in_dropdown();
+    fade_dropdown();
     enable_everything();
 }
 
@@ -91,6 +92,17 @@ function fill_in_dropdown(){
     }
     $(dropdown_id).val(choice);
 }
+
+
+function fade_dropdown() {
+
+    const dropdown_elmt  = document.getElementById(dropdown_id.substring(1));  // Get element id without leading '#'
+    dropdown_elmt.classList.remove('fading');
+    // Triggering reflow is necessary to reload the animation
+    void dropdown_elmt.offsetWidth;
+    dropdown_elmt.classList.add('fading');
+}
+
 
 
 // `checked_labels` contains the names of all checked labels, per column
@@ -176,6 +188,8 @@ function checkbox_changed(event,col){
 
     calculate_current_flow();
     fill_in_dropdown();
+    fade_dropdown();
+
 
     enable_everything();
 }
@@ -485,9 +499,10 @@ function draw_sankey() {
     tipNode.html(function(d) {
         var tooltipContent = d3.select(this).select("hovertext").text();
         var html = tooltipContent;
-        html += "<br><span class='text-justify d3-tip-footer'>Drag to move and click to view.</span>";
+        html += "<br><span class='text-justify d3-tip-footer'>Drag to move, click to highlight, double-click to view.</span>";
         return html;
     });
+
 
 
     // Based on http://www.d3noob.org/2013/02/formatting-data-for-sankey-diagrams-in.html
@@ -525,6 +540,7 @@ function draw_sankey() {
                           //original_flow:flow[col][d]};
      });
 
+
     var sankey = d3.sankey()
         .size([width, height])
         .nodeWidth(15)
@@ -534,6 +550,7 @@ function draw_sankey() {
         .layout(32);
 
     var path = sankey.link();
+
 
     var link = svg.append("g").selectAll(".link")
         .data(graph.links)

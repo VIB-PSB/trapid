@@ -170,7 +170,7 @@ function draw_sankey() {
     tipNode.html(function(d) {
         var tooltipContent = d3.select(this).select("hovertext").text();
         var html = tooltipContent;
-        html += "<br><span class='text-justify d3-tip-footer'>Drag to move and click to view.</span>";
+        html += "<br><span class='text-justify d3-tip-footer'>Drag to move, click to highlight, double-click to view.</span>";
         return html;
     });
 

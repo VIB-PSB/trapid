@@ -31,8 +31,10 @@
                     ///////////////// Middle refinement /////////////////
 
                     echo $this->Form->create(false, array('id'=> 'middle_refine_form','class'=> 'refine_box'));
-                    echo $this->Form->input('type: ', array('options' => array('All', 'BP', 'MF', 'CC'), 'id' =>'type','onchange' => 'middle_filter()'));
-                    echo $this->Form->input('p value: ', array('options' => array(), 'id' => 'pvalue','onchange' => 'middle_filter()'));
+//                    echo $this->Form->input('type: ', array('options' => array('All', 'BP', 'MF', 'CC'), 'id' =>'type','onchange' => 'middle_filter()'));
+                    echo $this->Form->input('type: ', array('options' => array('BP', 'MF', 'CC'), 'id' =>'type','onchange' => 'middle_filter()'));
+                    echo $this->Form->input('q-value: ', array('options' => array(), 'id' => 'pvalue','onchange' => 'middle_filter()'));
+                    // TRAPID currently computes and reports positive enrichment only, so this form option should be hidden
                     echo $this->Form->input('Enrichment: ', array('options' => array('positive', 'negative'), 'id' => 'enrichment','onchange' => 'middle_filter()'));
                     echo $this->Form->input(' show hidden', array('type' => 'checkbox', 'id' => 'hidden','onchange' => 'middle_filter()'));
                     echo $this->Form->input(' normalize links', array('type' => 'checkbox', 'id' => 'normalize'));
@@ -60,7 +62,7 @@
 
             <div class="panel-footer">
                 <div class="text-right"> <strong>Export as: </strong>
-                    <button id="export_sankey_png" class="btn btn-default btn-xs" title="Export Sankey diagram (PNG)">PNG</button> <!-- TODO! -->
+                    <button id="export_sankey_png" class="btn btn-default btn-xs" title="Export Sankey diagram (PNG)">PNG</button>
                     <button id="export_sankey_svg" class="btn btn-default btn-xs" title="Export Sankey diagram (SVG)">SVG</button> |
                     <button type="submit" class="btn btn-primary btn-sm" onclick="draw_sankey()" title="Redraw Sankey diagram">
                         <span class="glyphicon glyphicon-repeat"></span> Redraw</button>
@@ -93,8 +95,8 @@
 
 	echo $this->Html->css('sankey');
 	echo $this->Html->script(array('d3-3.5.6.min', 'd3-tip', 'sankey', 'sankey_enriched2'));
-    echo $this->Html->script(array('https://cdn.rawgit.com/eligrey/canvas-toBlob.js/f1a01896135ab378aa5c0118eadd81da55e698d8/canvas-toBlob.js',
-        'https://cdn.rawgit.com/eligrey/FileSaver.js/e9d941381475b5df8b7d7691013401e171014e89/FileSaver.min.js'));
+    echo $this->Html->script(array('https://cdn.jsdelivr.net/gh/eligrey/canvas-toBlob.js@f1a01896135ab378aa5c0118eadd81da55e698d8/canvas-toBlob.js',
+        'https://cdn.jsdelivr.net/gh/eligrey/FileSaver.js@v2.0.4/dist/FileSaver.min.js'));
 
 
 
@@ -103,7 +105,7 @@
 </section>
 
 <script type="text/javascript">
-
+    /* Export code based on this block: http://bl.ocks.org/Rokotyan/0556f8facbaf344507cdc45dc3622177 */
     // Set-up export buttons
     var export_base_name = "Sankey_Diagram_<?php echo str_replace(' ', '_', $col_names[0]) . '_' .  str_replace(' ', '_', $col_names[1]) . '_' .  str_replace(' ', '_', $col_names[2]);?>";
     // PNG

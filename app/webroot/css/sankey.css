@@ -1,5 +1,5 @@
 #sankey{
-  overflow:auto
+  overflow:auto;
 }
 
 #right_refine_form {
@@ -52,6 +52,16 @@
   font-size: 88%;
   justify-content: space-between;
   /*justify-content: space-between;*/
+}
+
+
+#middle_min.fading, #right_min.fading {
+    animation: background-fade 0.8s 1;
+}
+
+@keyframes background-fade {
+    from { background-color: #ffecd0; }
+    to { background-color: initial; }
 }
 
 /*

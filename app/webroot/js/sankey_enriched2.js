@@ -57,6 +57,7 @@ var col_classes = ['left_col','right_col'];
  */
 
 $(document).ready(function () {
+    hide_enrichment_direction();
     if(!GO){hide_type();}
     process_data();
     add_checkboxes();
@@ -93,6 +94,16 @@ function calculate_good_width(){
 
 ////////// Behaviour of the refine button and fields ////////////
 
+function hide_enrichment_direction(){
+    /* If not working with GO terms, we want to hide the `Type` select element */
+    // Parent because otherwise the label stays visible.
+    $(enrichment_id).parent().addClass("hidden");
+
+    // We also want to hide the `Show hidden` checkbox because it is only useful with GO terms
+    // $(hidden_id).parent().addClass("hidden");
+}
+
+
 function hide_type(){
     /* If not working with GO terms, we want to hide the `Type` select element */
     // Parent because otherwise the label stays visible.
@@ -123,6 +134,16 @@ function fill_in_dropdown(){
     }
 
     $(dropdown_id).val(minimum_size);
+}
+
+
+function fade_dropdown() {
+
+    const dropdown_elmt  = document.getElementById(dropdown_id.split("#")[1]);  // Get element id
+    dropdown_elmt.classList.remove('fading');
+    // Triggering reflow is necessary to reload the animation
+    void dropdown_elmt.offsetWidth;
+    dropdown_elmt.classList.add('fading');
 }
 
 
@@ -236,6 +257,7 @@ function middle_filter(){
 function update_middle_nodes(){
     calculate_current_flow();
     fill_in_dropdown();
+    fade_dropdown();
 }
 
 /* Enabling and disabeling all inputs during computations out of fear of race conditions and other bad things */

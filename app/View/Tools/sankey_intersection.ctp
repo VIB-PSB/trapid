@@ -89,11 +89,9 @@ echo '</script>';
 
 echo $this->Html->css('sankey');
 echo $this->Html->script(array('d3-3.5.6.min', 'd3-tip', 'sankey','sankey_intersection'));
-echo $this->Html->script(array('https://cdn.rawgit.com/eligrey/canvas-toBlob.js/f1a01896135ab378aa5c0118eadd81da55e698d8/canvas-toBlob.js',
-    'https://cdn.rawgit.com/eligrey/FileSaver.js/e9d941381475b5df8b7d7691013401e171014e89/FileSaver.min.js'));
-
+echo $this->Html->script(array('https://cdn.jsdelivr.net/gh/eligrey/canvas-toBlob.js@f1a01896135ab378aa5c0118eadd81da55e698d8/canvas-toBlob.js',
+    'https://cdn.jsdelivr.net/gh/eligrey/FileSaver.js@v2.0.4/dist/FileSaver.min.js'));
 ?>
-<script type="text/javascript" src="https://cdn.rawgit.com/Caged/d3-tip/896d387c653b4d73cea9cdd0740aa8794754417a/index.js"></script>
 
 </div> <!-- end Sankey graph -->
 </section>
@@ -101,6 +99,7 @@ echo $this->Html->script(array('https://cdn.rawgit.com/eligrey/canvas-toBlob.js/
 
 <script type="text/javascript">
 
+    /* Export code based on this block: http://bl.ocks.org/Rokotyan/0556f8facbaf344507cdc45dc3622177 */
     // Set-up export buttons
     var export_base_name = "Sankey_Diagram_<?php echo str_replace(' ', '_', $col_names[0]) . '_' .  str_replace(' ', '_', $col_names[1]);?>";
     // PNG
@@ -221,3 +220,4 @@ echo $this->Html->script(array('https://cdn.rawgit.com/eligrey/canvas-toBlob.js/
         image.src = imgsrc;
     }
 </script>
+<?php // echo $this->element('sql_dump');  // Dump all MySQL queries (debug) ?>
