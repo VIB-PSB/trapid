@@ -26,65 +26,50 @@
         ?>
     </title>
     <?php
-	// echo $html->charset()."\n"; // Duplicated above?
-	// echo $this->Html->css(array('bootstrap-3.3.7'))."\n";
-//	 echo $this->Html->css(array('bootstrap-3.3.7', 'trapid'))."\n";
 	echo $this->Html->css(array('bootstrap_paper', 'trapid'))."\n";
-	// echo $this->Html->css(array('trapid'))."\n";
     ?>
   <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
-  <link rel="stylesheet" href="https://cdn.datatables.net/1.10.13/css/jquery.dataTables.min.css">
+<!--  <link rel="stylesheet" href="https://cdn.datatables.net/1.10.13/css/jquery.dataTables.min.css">-->
   <!-- Favicon (if we do not want to keep the PSB bioinformatics one) -->
   <link rel="icon" href="<?php echo $this->webroot.'favicon.ico';?>" type="image/x-icon" />
-  <script src="https://cdn.datatables.net/1.10.13/js/jquery.dataTables.min.js"></script>
+<!--  <script src="https://cdn.datatables.net/1.10.13/js/jquery.dataTables.min.js"></script>-->
 </head>
-<body>
+<body class="external">
     <?php
-        // Insert external website navbar
+        // Insert external website navbar and content
         echo $this->element('navbar_website');
+        echo $this->fetch('content');
     ?>
-    <?php echo $this->fetch('content'); ?>
-	<!--<br/>
-	<div style="float:right;width:105px;background-color:#B5EAAA;border:1px solid #A0C544;font-size:10px;padding:3px;margin-right:5px;">
-	    Powered by <a href='http://bioinformatics.psb.ugent.be/plaza/'>PLAZA</a>
-	</div>
-	<div style="clear:both;font-size:8px;margin-bottom:-5px;">&nbsp;</div>
-	-->
 
     <!-- Footer -->
-<!--    <footer style="padding:10px; font-size:90%;">-->
-<!--        <div class="container">-->
-<!--            <hr>-->
-<!--            <p class="text-muted">Remarks, suggestions or questions? Please contact the-->
-<!--                --><?php //echo $this->Html->link("Project leader",array("controller"=>"documentation","action"=>"about")); ?><!-- &nbsp; &nbsp;</p>-->
-<!--        </div>-->
-<!--    </footer>-->
+    <footer class="footer">
+    <div class="container">
+        <span class="text-muted">Powered by the <a href="http://bioinformatics.psb.ugent.be/cnb" target="_blank">CNB group</a> at <a href="https://psb.ugent.be/" target="_blank">VIB-UGent<span class="hidden-xs"> Center for Plant Systems Biology</span></a>.</span>
+        <span class="text-muted pull-right">&COPY; 2021 TRAPID</span>
+    </div>
+    </footer>
     <!-- End footer -->
 
-<!--    <div id="footer">-->
-<!-- 	<p style="font-size: 10px; color: #000000; text-align:center;">-->
-<!--	    &nbsp; &nbsp;-->
-<!--	    <br/>-->
-<!--	</p>-->
-    </div>
 
 <!-- Global site tag (gtag.js) - Google Analytics -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=UA-38245034-1"></script>
 <script type="text/javascript">
+    // Google analytics
     window.dataLayer = window.dataLayer || [];
     function gtag(){dataLayer.push(arguments);}
     gtag('js', new Date());
-
     gtag('config', 'UA-38245034-1');
-</script>
-<script type="text/javascript">
+
     // A small utility function that enable to add the 'active' class on navigation bar items if they contain a string
-    // TODO: find something cool to add 'active' class to navbar <li> elements. Maybe from CakePHP instead?
+    var header_item_text = "<?php echo (isset($active_header_item) ? $active_header_item : ''); ?>";
     function activeItem(itemText) {
         // Add active class to menu item containing 'itemText'
         $('.navbar-nav li').filter(function() { return $.text([this]).indexOf(itemText) > -1; }).addClass('active');
     }
-    activeItem();
+
+    if(header_item_text !== '') {
+        activeItem(header_item_text);
+    }
 
     // Cookie acceptance JS
     (function(){

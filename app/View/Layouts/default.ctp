@@ -10,12 +10,9 @@
     <meta name="viewport" content="width=device-width, user-scalable=no">
     <meta http-equiv="Content-Style-Type" content="text/css">
     <?php
+    // TODO: only import what is actually used from bootstrap + use minified version
     // Note: we use a legacy version of jQuery because version >=3.0 breaks the GO enrichment graph tooltips (tipsy)
     echo $this->Html->script(array('jquery-2.2.4.min', 'bootstrap-3.3.7.min', 'datatables.min'));
-//     echo $this->Html->script(array('scriptaculous'));
-//     TODO: only import what is actually used from bootstrap + use minified version
-//     echo $this->Html->script(array('swfobject', 'bootstrap-3.3.7'));
-//     echo $this->Html->script(array('swfobject', 'bootstrap-3.3.7'));
     ?>
     <title>
         <?php
@@ -31,17 +28,12 @@
     // echo $html->charset()."\n"; // Duplicated above?
     // echo $this->Html->css(array('bootstrap-3.3.7'))."\n";
     //	 echo $this->Html->css(array('bootstrap-3.3.7', 'trapid'))."\n";
-    echo $this->Html->css(array('bootstrap_paper', 'trapid')) . "\n";
-    // echo $this->Html->css(array('trapid'))."\n";
+    echo $this->Html->css(array('bootstrap_paper', 'datatables.min', 'trapid')) . "\n";
     ?>
     <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
-    <link rel="stylesheet" href="https://cdn.datatables.net/1.10.13/css/jquery.dataTables.min.css">
     <!-- Favicon (if we do not want to keep the PSB bioinformatics one) -->
     <link rel="icon" href="<?php echo $this->webroot . 'favicon.ico'; ?>" type="image/x-icon"/>
-    <script src="https://cdn.datatables.net/1.10.13/js/jquery.dataTables.min.js"></script>
-<!--    <script src="https://cdn.datatables.net/buttons/1.5.6/js/dataTables.buttons.min.js"></script>-->
 </head>
-<!--<body style="margin-top:50px;">-->
 <body>
 <?php echo $this->element('navbar_experiment', array("exp_id" => $exp_id, "exp_info" => $exp_info)); ?>
 <!-- Page content -->
@@ -53,23 +45,6 @@
     <div class="side-content preload">
         <div class="container-fluid">
             <?php echo $this->fetch('content'); ?>
-            <!--<br/>
-            <div style="float:right;width:105px;background-color:#B5EAAA;border:1px solid #A0C544;font-size:10px;padding:3px;margin-right:5px;">
-                Powered by <a href='http://bioinformatics.psb.ugent.be/plaza/'>PLAZA</a>
-            </div>
-            <div style="clear:both;font-size:8px;margin-bottom:-5px;">&nbsp;</div>
-            -->
-
-            <!-- Footer -->
-            <!--    <footer style="padding:10px; font-size:90%;">-->
-            <!--        <div class="container">-->
-            <!--            <hr>-->
-            <!--            <p class="text-muted">Remarks, suggestions or questions? Please contact the-->
-            <!--                -->
-            <?php //echo $this->Html->link("Project leader",array("controller"=>"documentation","action"=>"about")); ?><!-- &nbsp; &nbsp;</p>-->
-            <!--        </div>-->
-            <!--    </footer>-->
-            <!-- End footer -->
 
             <!--    <div id="footer">-->
             <!-- 	<p style="font-size: 10px; color: #000000; text-align:center;">-->
@@ -82,15 +57,14 @@
 <!-- Global site tag (gtag.js) - Google Analytics -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=UA-38245034-1"></script>
 <script type="text/javascript">
+    // Google analytics
     window.dataLayer = window.dataLayer || [];
     function gtag(){dataLayer.push(arguments);}
     gtag('js', new Date());
-
     gtag('config', 'UA-38245034-1');
-</script>
 
-<script type="text/javascript">
-    // TODO: find something better to add 'active' class to header/sidebar <li> elements. Maybe from CakePHP instead?
+    // Set 'active' class on header/sidebar <li> elements
+    // TODO: check if it makes more sense to do it server-side?
     var header_item_text = "<?php echo (isset($active_header_item) ? $active_header_item : ''); ?>";
     var sidebar_item_text = "<?php echo (isset($active_sidebar_item) ? $active_sidebar_item : ''); ?>";
     // console.log(header_item_text.toString());  // Debug/test
@@ -130,6 +104,5 @@
         $sidebar.toggleClass('sidebar-stacked', $(window).width() >= 768);
     });
 </script>
-
 </body>
 </html>
