@@ -39,13 +39,24 @@
             ?>
             </tbody>
         </table>
-        <div class='paging'>
+<!--        <div class='paging'>-->
             <?php
-            echo $this->Paginator->prev('<< ' . __('previous'), array(), null, array('class' => 'disabled'));
-            echo "&nbsp;";
-            echo $this->Paginator->numbers();
-            echo "&nbsp;";
-            echo $this->Paginator->next(__('next') . ' >>', array(), null, array('class' => 'disabled'));
+//            echo $this->Paginator->prev('<< ' . __('previous'), array(), null, array('class' => 'disabled'));
+//            echo "&nbsp;";
+//            echo $this->Paginator->numbers();
+//            echo "&nbsp;";
+//            echo $this->Paginator->next(__('next') . ' >>', array(), null, array('class' => 'disabled'));
+            ?>
+<!--        </div>-->
+
+    <div class="text-right">
+        <div class='pagination pagination-sm no-margin-top'>
+            <?php
+            echo $this->Paginator->prev(__('Previous'), array('tag'=>'li'), null, array('tag' => 'li','class' => 'disabled','disabledTag' => 'a'));
+            echo $this->Paginator->numbers(array('separator' => '','currentTag' => 'a', 'currentClass' => 'active','tag' => 'li','first' => 1));
+            echo $this->Paginator->next(__('Next'), array('tag' => 'li','currentClass' => 'disabled'), null, array('tag' => 'li','class' => 'disabled','disabledTag' => 'a'));
             ?>
         </div>
+    </div>
+
 </section>
