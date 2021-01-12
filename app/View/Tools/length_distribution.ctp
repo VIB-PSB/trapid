@@ -112,10 +112,10 @@ echo $this->Html->script('https://code.highcharts.com/modules/exporting.js');
         </div><!--
         --><div id="chart-col" class="col-md-9 vcenter">
             <div id="loading" class="hidden">
-                <p class="text-center">
-                    <?php echo $this->Html->image('ajax-loader.gif'); ?><br>
+                <div class="text-center">
+                    <div class="ajax-spinner"></div><br>
                     Loading... Please wait.
-                </p>
+                </div>
             </div>
             <div id="chart-container"></div>
         </div>

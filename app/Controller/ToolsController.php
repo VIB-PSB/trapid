@@ -1443,7 +1443,7 @@ class ToolsController extends AppController{
     $this->set("exp_id", $exp_id);
 
     //Binning information
-    $range_bins = [5, 200];
+    $range_bins = [5, 100];
     $valid_sequence_types = ["transcript", "orf"];
     $num_bins = 30;
     $this->set("default_bins", $num_bins);

@@ -1,5 +1,5 @@
 <!-- Barchart div -->
-<div class="hc" id="<?php echo $chart_div_id; ?>" style="width:100%; height:480px;"></div>
+<div class="hc hc-length-distribution" id="<?php echo $chart_div_id; ?>"></div>
 <?php
     $min_url_str = "/min_transcript_length/";
     $max_url_str = "/max_transcript_length/";
@@ -16,8 +16,10 @@
             enabled:false
         },
         chart: {
+            backgroundColor: null,
             zoomType: 'x',
-            plotBackgroundColor: "#e5e5e5"
+            // plotBackgroundColor: "#e5e5e5"
+            plotBackgroundColor: "#ffffff"
         },
         title: {
             text: '<?php echo $chart_title; ?>'
@@ -43,7 +45,8 @@
             ],
             crosshair: true,
             gridLineWidth: 1,
-            gridLineColor: "white",
+            // gridLineColor: "white",
+            gridLineColor: "#e5e5e5",
             tickInterval: 1,
             title: {
                 text: 'Sequence nucleotide length'
@@ -94,7 +97,7 @@
             layout: 'vertical',
             x: 0,
             useHTML:true,
-            backgroundColor: (Highcharts.theme && Highcharts.theme.legendBackgroundColor) || '#FFFFFF'
+            backgroundColor:  'transparent' // (Highcharts.theme && Highcharts.theme.legendBackgroundColor) || '#FFFFFF'
         },
         series: [
             <?php
@@ -121,7 +124,19 @@
         plotOptions: {
             series: {
                 stacking: '<?php echo $stacking_str; ?>'
+            },
+            column: {
+                pointPadding: 0,
+                borderWidth: 0,
+                groupPadding: 0,
+                shadow: false
+            }// ,
+/*
+            column: {
+                pointPadding: 0,
+                borderWidth: 0
             }
+*/
         }
 
     });
