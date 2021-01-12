@@ -13,7 +13,7 @@ class ExperimentStats extends AppModel{
     // Return them as associative array.
     function getFuncAnnotStats($exp_id, $fa_type) {
         $possible_types = ['go', 'ipr', 'ko'];
-        $stat_types = array("go"=>["trs_go", "n_go"], "ipr"=>["trs_pr", "n_ipr"], "ko"=>["trs_ko", "n_ko"]);
+        $stat_types = array("go"=>["trs_go", "n_go"], "ipr"=>["trs_ipr", "n_ipr"], "ko"=>["trs_ko", "n_ko"]);
         $stat_keys = array("go"=>["num_transcript_go", "num_go"], "ipr"=>["num_transcript_interpro", "num_interpro"], "ko"=>["num_transcript_ko", "num_ko"]);
         if(!in_array($fa_type, $possible_types)) {
             return null;

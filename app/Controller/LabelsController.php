@@ -1,5 +1,4 @@
 <?php
-App::uses('Sanitize', 'Utility');
 /*
  * General controller class for the trapid functionality
  */
@@ -7,7 +6,7 @@ class LabelsController extends AppController{
   var $name		= "Labels";
   var $helpers		= array("Html", "Form");  // ,"Javascript","Ajax");
   var $uses		= array("Authentication","Experiments", "ExperimentJobs", "ExperimentLog", "Configuration","Transcripts","AnnotSources","Annotation",
-				"PlazaConfiguration","GeneFamilies","ExtendedGo","KoTerms","ProteinMotifs", "GoParents", "GfData", "HelpTooltips",
+				"GeneFamilies","ExtendedGo","KoTerms","ProteinMotifs", "GoParents", "GfData", "HelpTooltips",
 				"TranscriptsGo","TranscriptsInterpro", "TranscriptsKo","TranscriptsLabels");
 
   var $components	= array("Cookie","TrapidUtils","Statistics", "Session");

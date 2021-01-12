@@ -1,5 +1,4 @@
 <?php
-App::uses('Sanitize', 'Utility');
 App::import('Vendor', 'Fpdf', array('file' => 'fpdf/fpdf.php'));
 
 /*
@@ -437,7 +436,7 @@ class ToolsController extends AppController{
     $this->set("MAX_GENES",$MAX_GENES_MSA_TREE);
 
     // List valid options
-    $tree_programs	= array("fasttree"=>"FastTree", "iqtree"=>"IQ-TREE", "phyml"=>"PhyML");
+    $tree_programs	= array("fasttree"=>"FastTree", "iqtree"=>"IQ-TREE", "phyml"=>"PhyML", "raxml"=>"RaxML");
     $this->set("tree_programs",$tree_programs);
     $tree_program	= "fasttree";
     $this->set("tree_program",$tree_program);
@@ -610,7 +609,7 @@ class ToolsController extends AppController{
           $this->ExperimentLog->addAction($exp_id,"create_tree","incl_subsets=".(int)$include_subsets,2);
       }
       $this->ExperimentLog->addAction($exp_id,"create_" . $job_type . "_start",$gf_id,1);
-      $this->set("run_pipeline",true);
+      $this->set("run_pipeline", true);
       return;
 
       /*
@@ -629,7 +628,6 @@ class ToolsController extends AppController{
 
 
   function compare_ratios_chart($exp_id=null,$type=null){
-    // $exp_id	= mysql_real_escape_string($exp_id);
     parent::check_user_exp($exp_id);
     $exp_info	= $this->Experiments->getDefaultInformation($exp_id);
     $this->TrapidUtils->checkPageAccess($exp_info['title'],$exp_info["process_state"],$this->process_states["finished"]);
@@ -1414,10 +1412,6 @@ class ToolsController extends AppController{
 
 
 
-
-
-
-
   function orf_statistics($exp_id=null){
     // $exp_id	= mysql_real_escape_string($exp_id);
     parent::check_user_exp($exp_id);
@@ -1978,7 +1972,7 @@ class ToolsController extends AppController{
     $gf_prefix = $exp_id . "_";
 
     $urls = array(urldecode(Router::url(array("controller"=>"labels","action"=>"view",$exp_id,$place_holder))),
-        urldecode(Router::url(array("controller"=>"functional_annotation","action"=>"interpro",$exp_id,$place_holder))),
+        urldecode(Router::url(array("controller"=>"functional_annotation","action"=>"ko",$exp_id,$place_holder))),
         urldecode(Router::url(array("controller"=>"gene_family","action"=>"gene_family",$exp_id, $gf_prefix . $place_holder)))
     );
     $this->set('enriched_gos',$enriched_kos);
@@ -2141,7 +2135,7 @@ function label_go_intersection($exp_id=null,$label=null){
         $tooltip_text_subset_name = $this->HelpTooltips->getTooltipText("tax_binning_subset_name");
         $this->set("tooltip_text_subset_name", $tooltip_text_subset_name);
         $this->set("active_sidebar_item", "Tax");
-        $this -> set('title_for_layout', 'Taxonomic binning');
+        $this -> set('title_for_layout', 'Taxonomic classification');
     }
 
 
@@ -2189,6 +2183,7 @@ function label_go_intersection($exp_id=null,$label=null){
     function get_treeview_json($exp_id=null){
         // Check privileges to access current experiment's data
         parent::check_user_exp($exp_id);
+        $this->response->type('json');
         try {
             $json_web_path = TMP_WEB."experiment_data/".$exp_id."/kaiju/kaiju_merged.to_treeview.json";
             $json_string = implode("", file($json_web_path));

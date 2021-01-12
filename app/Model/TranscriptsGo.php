@@ -1,6 +1,6 @@
 <?php
   /*
-  * This model represents protein motfifs (i.e. InterPro domains) information associated to the transcripts
+  * This model represents protein motifs (i.e. InterPro domains) information associated to the transcripts
    */
 
 class TranscriptsGo extends AppModel{

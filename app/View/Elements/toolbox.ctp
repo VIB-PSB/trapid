@@ -1,6 +1,6 @@
 <div class="panel panel-default" style="max-width:700px;">
     <div class="panel-heading">
-        <h3 class="panel-title">Toolbox</h3>
+        Toolbox
     </div>
     <div class="panel-body">
     <?php

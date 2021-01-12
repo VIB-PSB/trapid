@@ -170,6 +170,7 @@ class TrapidController extends AppController{
    */
   function index(){
         $this->layout = "external";  // Layout for external pages (i.e. not in experiment)
+        $this->set("active_header_item", "Home");
         $this -> set('title_for_layout', 'Welcome');
         $max_user_experiments = MAX_USER_EXPERIMENTS;
         $this->set("max_user_experiments",$max_user_experiments);
@@ -242,7 +243,7 @@ class TrapidController extends AppController{
             $available_sources[] = $data_source;
         }
     }
-    
+
     $this->set("available_sources",$available_sources);
 
     //retrieve current user experiments.
@@ -994,12 +995,11 @@ class TrapidController extends AppController{
     $exp_id		= $parameters[0];
     parent::check_user_exp($exp_id);
     $exp_info	= $this->Experiments->getDefaultInformation($exp_id);
-
-      $this->TrapidUtils->checkPageAccess($exp_info['title'],$exp_info["process_state"],$this->process_states["default"]);
+    $this->TrapidUtils->checkPageAccess($exp_info['title'],$exp_info["process_state"],$this->process_states["default"]);
     $this->set("exp_info",$exp_info);
     $this->set("exp_id",$exp_id);
 
-    // pr($parameters);
+      // pr($parameters);
     for($i=0;$i<count($parameters);$i++){
       $value	= $parameters[$i];
       if($value=="go" && $i<(count($parameters)-1)){
@@ -1117,7 +1117,7 @@ class TrapidController extends AppController{
 //          pr($this->request->data);
 
           // Sanitize subset name and check validity
-          $subset_name = filter_var($this->request->data['subset-add-select'], FILTER_SANITIZE_STRING);
+          $subset_name = filter_var($this->request->data['subset-add-select'], FILTER_SANITIZE_STRING);  // TODO: use a more strignent filter
           // Strip + replace blank spaces by underscores
           $subset_name = preg_replace('/\s+/', '_', trim($subset_name));
           if(empty($subset_name)){
@@ -1312,7 +1312,7 @@ class TrapidController extends AppController{
     // Reference DB gene identifier
     else if($st=="gene"){
       // okay, this becomes complicated based on the type of reference database / GF.
-      // GF type (PLAZA databses):
+      // GF type (PLAZA databases):
       //  * If iORTHO, we do a query on the gf_content row of the table gene families (not optimal)
       //  * If HOM, we do a query on the associated PLAZA database. This should be a relatively fast query, from which we can further on
       //    deduct the associated gene family.
@@ -1520,8 +1520,8 @@ class TrapidController extends AppController{
         // header('Content-type: application/json; charset=utf-8');
         $this->autoRender = false;
         $this->response->type('json');
-        $limit_results = 60;  // Retrieve only this amount of results ('LIKE' query)
-        $show_results =  15;  // Display only this amount of results (most similar to the query `$search_str`)
+        $limit_results = 60;  // Retrieve only this amount of results ('LIKE' clause in query)
+        $show_results =  15;  // Display only this amount of results (the most similar to the query `$search_str`)
         $min_length = 3;  // Minimum length of search string to search, will return nothing if less than that.
         $allowed_types = ["transcript", "gene", "gf", "rf", "go", "interpro", "ko", "meta_annotation"];
 
@@ -1800,7 +1800,7 @@ class TrapidController extends AppController{
 
             $output   = array();
             $command  = "sh $qsub_file -q medium -o $qsub_out -e $qsub_err $shell_file";
-            exec($command,$output);
+            exec($command, $output);
             $job_id	= $this->TrapidUtils->getClusterJobId($output);
 
             //indicate int the database the new job-id
@@ -1930,7 +1930,7 @@ class TrapidController extends AppController{
       $this->set("default_sim_search_clade", $default_sim_search_clade);
 
       if($_POST){
-        pr($_POST);
+//        pr($_POST);
 //        return;
 
       // Parameter checking.
@@ -2528,7 +2528,7 @@ class TrapidController extends AppController{
   }
 
 
-  function export_data($exp_id=null){
+  function export_data($exp_id=null) {
 
     // Configure::write("debug",2);
     // $exp_id	= mysql_real_escape_string($exp_id);
@@ -2572,7 +2572,7 @@ class TrapidController extends AppController{
 	$file_path	= $this->TrapidUtils->performExport($plaza_database,$user_id,$exp_id,"STRUCTURAL","structural_data_exp".$exp_id.".txt",$columns_string);
 	$this->set("file_path",$file_path);
     $this->redirect($file_path);
-          return;
+    return;
       }
       else if($export_type=="sequence"){
 
@@ -2789,6 +2789,7 @@ class TrapidController extends AppController{
   function change_password(){
     Configure::write("debug",2);
     $this->layout = "external";  // Layout for external pages (i.e. not in experiment)
+    $this->set("active_header_item", "Account");
     $this -> set('title_for_layout', "Change password");
 
     $user_id		= parent::check_user();
@@ -2821,7 +2822,7 @@ class TrapidController extends AppController{
    * Authentication: registration and login
    */
   function authentication($registration=null){
-    // Configure::write("debug",2);
+     Configure::write("debug",3);
     $this->layout = "external";  // Layout for external pages (i.e. not in experiment)
     $this -> set('title_for_layout', "Authentication");
 

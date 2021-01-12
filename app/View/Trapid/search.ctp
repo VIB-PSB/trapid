@@ -20,7 +20,7 @@
                     <thead>
                     <tr>
                         <th style="width:14%">GO term</th>
-                        <th style="width:8%">GO type</th>
+                        <th style="width:8%">GO aspect</th>
                         <th style="width:70%">GO description</th>
                         <th style="width:8%">#transcripts</th>
                     </tr>
@@ -180,13 +180,13 @@
                 <tbody>
                 <?php
                 $i = 0;
-                foreach ($transcripts_info as $interpro => $data) {
+                foreach ($transcripts_info as $ko => $data) {
                     $class = null;
                     if ($i++ % 2 == 0) {
                         $class = " class='altrow' ";
                     }
                     echo "<tr $class>";
-                    echo "<td>" . $this->Html->link($interpro, array("controller" => "functional_annotation", "action" => "interpro", $exp_id, $interpro)) . "</td>";
+                    echo "<td>" . $this->Html->link($ko, array("controller" => "functional_annotation", "action" => "ko", $exp_id, $ko)) . "</td>";
                     echo "<td>" . $data['desc'] . "</td>";
                     echo "<td>" . $data['count'] . "</td>";
                     echo "</tr>\n";

@@ -121,6 +121,15 @@ if(!defined('MAX_CLUSTER_JOBS')){
     define('MAX_CLUSTER_JOBS', $webapp_settings_ini_data['max_cluster_jobs']);
 }
 
+/*
+ * Maximum number of TRAPID experiments allowed per user
+ */
+if(!defined('MAX_USER_EXPERIMENTS')){
+    define('MAX_USER_EXPERIMENTS', $webapp_settings_ini_data['max_user_experiments']);
+}
+
+
+
 
 /**
  * The absolute path to the "cake" directory, WITHOUT a trailing DS.

@@ -26,13 +26,13 @@
                   class="glyphicon glyphicon-user"></span> Account <span class="caret"></span></a>
             <ul class="dropdown-menu" role="menu">
               <li><?php echo $this->Html->link("Change password", array("controller"=>"trapid","action"=>"change_password")); ?></li>
-              <li><?php echo $this->Html->link("Logout", array("controller"=>"trapid","action"=>"log_off")); ?></li>
+              <li><?php echo $this->Html->link("Log out", array("controller"=>"trapid","action"=>"log_off")); ?></li>
             </ul>
         </li>
       <?php else : ?>
         <form class="navbar-form navbar-left">
           <div class="form-group">
-            <?php 	echo $this->Html->link("Login",array("controller"=>"trapid","action"=>"authentication"), array("class"=>"btn btn-link"));
+            <?php 	echo $this->Html->link("Log in",array("controller"=>"trapid","action"=>"authentication"), array("class"=>"btn btn-link"));
                     echo "&nbsp;";
                     echo $this->Html->link("Register",array("controller"=>"trapid","action"=>"authentication","registration"), array("class"=>"btn btn-default"));
             ?>

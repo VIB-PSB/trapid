@@ -28,7 +28,6 @@ if(isset($subset_error) || isset($subset_message)) {
 <div class="page-header">
     <h1 class="text-primary">Import data</h1>
 </div>
-
 <!--Tabs-->
 <ul class="nav nav-tabs nav-justified" id="tabs" data-tabs="tabs">
     <?php if ($enable_transcript_upload && !$active_subset_tab):?>
@@ -69,7 +68,7 @@ if(isset($subset_error) || isset($subset_message)) {
         <section class="page-section">
             <p class="text-justify">Transcript files can be uploaded from your machine or from a URL. Maximum allowed file-size is 32 Mb. If your file is larger, compress the file (using <code>zip</code> or <code>gzip</code>) and
                 upload the compressed file.</p>
-            <p class="text-justify">Input data must be formatted as multi-fasta file(s), with each transcript identifier's length <strong>not exceeding 50
+            <p class="text-justify">Input data must be formatted as multi-fasta file(s), with each transcript identifier's length <strong>not exceeding 100
                     characters</strong>. For example: </p>
             <div class="well fixed-width-text well-sm"a>
                 >transcript_identifier1<br>AAGCTAGAGATCTCGAGAGAGAGAGCTAGAGCTAGC...<br>>transcript_identifier2<br>AAGCTAGAGAGCTCTAGGAATCGAC...<br>[...]

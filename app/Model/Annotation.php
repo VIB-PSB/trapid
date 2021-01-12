@@ -10,8 +10,8 @@ class Annotation extends AppModel{
 
 
   function getSequencesGo($go_term){
-    // $query 		= "SELECT `gene_id` FROM `gene_go` WHERE `go`='".$go_term."' ";
-    $query 		= "SELECT `gene_id` FROM `gene_go` WHERE `name`='".$go_term."' ";
+     $query 		= "SELECT `gene_id` FROM `gene_go` WHERE `go`='".$go_term."' ";
+//    $query 		= "SELECT `gene_id` FROM `gene_go` WHERE `name`='".$go_term."' ";
     $res		= $this->query($query);
     $gene_ids		= array();
     foreach($res as $r){$gene_ids[] = $r['gene_go']['gene_id'];}

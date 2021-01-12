@@ -8,11 +8,11 @@
             </section>
     <div class="row">
         <div class="col-md-9 col-sm-8">
-            <section class="page-section">
+            <section class="page-section-xs">
                 <h2>TRAPID features</h2>
                 <p class="text-justify">TRAPID 2.0 currently offers the following features:</p>
                   <ul>
-                      <li>Allow each user to have up to 20 different working sets, each allowing up to a 200,000 putative transcripts</li>
+                      <li>Allow each user to have up to <?php echo $max_user_experiments; ?> different working sets, each allowing up to a 200,000 putative transcripts</li>
                       <li>Allow the user to select a reference database of choice; currently >2,000 genomes are available through PLAZA and EggNOG version 4.5</li>
                       <li>Homology-supported ORF finding supporting non-canonical genetic codes</li>
                       <li>Infer taxonomic classification of transcript sequences</li>
@@ -20,7 +20,7 @@
                       <li>Assign each transcript to a reference gene family or orthologous group.</li>
                       <li>Transfer functional annotation based on homology/orthology information for each transcript</li>
                       <li>Perform gene family-based analyses such as multiple sequence alignments and phylogenetic tree construction</li>
-                      <li>Perform functional GO enrichment analysis of subsets</li>
+                      <li>Perform functional enrichment analysis of subsets</li>
                       <li>Extensive editing and export capabilities</li>
                       <li>Free of charge for academic use</li>
                   </ul>
@@ -30,7 +30,7 @@
         <div class="col-md-3 col-sm-4 hidden-xs">
             <div style="height:100px;">
                 <section class="page-section">
-                    <a class="twitter-timeline" data-lang="en" data-height="500px" data-theme="light" data-link-color="#0c84e4" href="https://twitter.com/trapid_genomics?ref_src=twsrc%5Etfw">Loading tweets...</a> <script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>                </div>
+                    <a class="twitter-timeline" data-dnt="true" data-lang="en" data-height="500px" data-theme="light" data-link-color="#0c84e4" href="https://twitter.com/trapid_genomics?ref_src=twsrc%5Etfw">Loading tweets...</a> <script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>                </div>
                 </section>
             </div>
     </div>

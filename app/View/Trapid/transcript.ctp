@@ -108,7 +108,7 @@
                                     }
                                 }
                                 else {
-                                    $n_show = 4; // Number of first/last clades to show.
+                                    $n_show = 4;  // Number of first/last clades to show.
                                     $first_clades = array_slice($transcript_lineage, 0, $n_show);
                                     $last_clades = array_slice($transcript_lineage, -$n_show, $n_show);
                                     $intermediate_clades = array_slice($transcript_lineage, $n_show, sizeof($transcript_lineage) - $n_show);

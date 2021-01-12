@@ -1,5 +1,4 @@
 <?php
-App::uses('Sanitize', 'Utility');
 /*
  * General controller class for the trapid functionality
  */
@@ -136,7 +135,7 @@ class FunctionalAnnotationController extends AppController{
     // $exp_id	= mysql_real_escape_string($exp_id);
     parent::check_user_exp($exp_id);
     $exp_info	= $this->Experiments->getDefaultInformation($exp_id);
-    // Disable linkout if we use eggnog (they do not have dedicated pages to functional annotations).
+    // Disable linkout if we use eggnog: there is no dedicated pages for functional annotations.
     // Not clean but will do for the workshop
     if(strpos($exp_info['used_plaza_database'], "eggnog") !== false) {
         $exp_info['allow_linkout'] = 0;
