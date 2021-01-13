@@ -53,14 +53,18 @@
 		}
 	}
 
-	//pr($data_venn_reduced);
+	// pr($data_venn_reduced);
 
-	//ok, now use the reduced data to actually construct the JSON object, used to 
+	//ok, now use the reduced data to actually construct the JSON object, used to
 	$data_directive	= array(2=>array("A"=>0,"B"=>0,"AB"=>0),
 				3=>array("A"=>0,"B"=>0,"C"=>0,"AB"=>0,"AC"=>0,"BC"=>0,"ABC"=>0),
 				4=>array("A"=>0,"B"=>0,"C"=>0,"D"=>0,"AB"=>0,"AC"=>0,"AD"=>0,"BC"=>0,"BD"=>0,"CD"=>0,"ABC"=>0,"ABD"=>0,"ACD"=>0,"BCD"=>0,"ABCD"=>0)
 				);
-	$data_venn_js["venn"]["data"] = $data_directive[$fc_count];	
+	$data_venn_js["venn"]["data"] = array();
+	// Only set if more than 1 subset are defined
+	if($fc_count > 1) {
+        $data_venn_js["venn"]["data"] = $data_directive[$fc_count];
+    }
 
 	foreach($data_venn_reduced as $intersection=>$count){	
 		$labels			= explode(";;;",$intersection);
