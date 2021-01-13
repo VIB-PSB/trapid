@@ -2495,10 +2495,7 @@ function label_go_intersection($exp_id=null,$label=null){
             $linkout_prefix = null;
         }
         // Check if we are working with EggNOG reference database (to get proper linkouts)
-        $db_type = "plaza";
-        if(strpos($exp_info["used_plaza_database"], "eggnog") !== false){
-            $db_type = "eggnog";
-        }
+        $db_type = $exp_info['ref_db_type'];
         // Finally, set all variables used in the view
         $this->set("exp_id", $exp_id);
         $this->set("label", $label);
