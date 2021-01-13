@@ -154,10 +154,11 @@ class FunctionalAnnotationController extends AppController{
     $this->set("go_info",$go_information["ExtendedGo"]);
     $this->set("num_transcripts",$num_transcripts);
 
-    // Pagination should be handled by jQuery DataTables
+    // TODO: These tables (incl. pagination) should be handled by jQuery DataTables.
+    // For now keep relying on CakePHP
     // TODO: reread how the information is formatted/displayed and try to optimize (same for IPR)
-     $transcripts_p		= $this->paginate("TranscriptsGo",array("experiment_id"=>$exp_id,"name"=>$go, "type"=>"go"));
-    $transcripts_p		= $this->TranscriptsGo->find("all", array("fields"=>array("transcript_id"), "conditions"=>array("experiment_id"=>$exp_id, "type"=>"go", "name"=>$go)));
+    $transcripts_p		= $this->paginate("TranscriptsGo",array("experiment_id"=>$exp_id,"name"=>$go, "type"=>"go"));
+    // $transcripts_p		= $this->TranscriptsGo->find("all", array("fields"=>array("transcript_id"), "conditions"=>array("experiment_id"=>$exp_id, "type"=>"go", "name"=>$go)));
     $transcript_ids	= $this->TrapidUtils->reduceArray($transcripts_p,"TranscriptsGo","transcript_id");
     $transcripts	= $this->Transcripts->find("all",array("conditions"=>array("experiment_id"=>$exp_id,"transcript_id"=>$transcript_ids)));
 
@@ -227,9 +228,10 @@ class FunctionalAnnotationController extends AppController{
     $this->set("interpro_info",$interpro_info['ProteinMotifs']);
     $this->set("num_transcripts",$num_transcripts);
 
-    // Pagination should be handled by jQuery DataTables
-     $transcripts_p	= $this->paginate("TranscriptsInterpro",array("experiment_id"=>$exp_id, "type"=>"ipr", "name"=>$interpro));
-    $transcripts_p	= $this->TranscriptsInterpro->find("all",array("fields"=>array("transcript_id"), "conditions"=>array("experiment_id"=>$exp_id, "type"=>"ipr", "name"=>$interpro)));
+    // TODO: These tables (incl. pagination) should be handled by jQuery DataTables.
+    // For now keep relying on CakePHP
+    $transcripts_p	= $this->paginate("TranscriptsInterpro",array("experiment_id"=>$exp_id, "type"=>"ipr", "name"=>$interpro));
+    // $transcripts_p	= $this->TranscriptsInterpro->find("all",array("fields"=>array("transcript_id"), "conditions"=>array("experiment_id"=>$exp_id, "type"=>"ipr", "name"=>$interpro)));
     $transcript_ids	= $this->TrapidUtils->reduceArray($transcripts_p,"TranscriptsInterpro","transcript_id");
     $transcripts	= $this->Transcripts->find("all",array("conditions"=>array("experiment_id"=>$exp_id,"transcript_id"=>$transcript_ids)));
 
@@ -443,7 +445,7 @@ class FunctionalAnnotationController extends AppController{
 
       // Get (paginated) transcripts annotated with the same KO term
       $transcripts_p = $this->paginate("TranscriptsKo", array("experiment_id"=>$exp_id, "type"=>"ko", "name"=>$ko));
-      $transcripts_p = $this->TranscriptsKo->find("all",array("fields"=>array("transcript_id"), "conditions"=>array("experiment_id"=>$exp_id, "type"=>"ko", "name"=>$ko)));
+      // $transcripts_p = $this->TranscriptsKo->find("all",array("fields"=>array("transcript_id"), "conditions"=>array("experiment_id"=>$exp_id, "type"=>"ko", "name"=>$ko)));
       $transcript_ids = $this->TrapidUtils->reduceArray($transcripts_p,"TranscriptsKo","transcript_id");
       $transcripts = $this->Transcripts->find("all",array("conditions"=>array("experiment_id"=>$exp_id,"transcript_id"=>$transcript_ids)));
 
