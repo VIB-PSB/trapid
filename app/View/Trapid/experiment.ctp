@@ -18,37 +18,6 @@
 
 <?php if(isset($admin)) : ?>
 <!-- Sidebar options div -->
-<div id="sidebar-stuff" style="border: gray 2px dashed; background-color: white;">
-    <h3>Sidebar tools
-        <small><a onclick="$('#sidebar-stuff').css({'display':'none'});" style="cursor: pointer;">Click to hide</a>
-        </small>
-    </h3>
-    <div class="pull-right">
-        <button id="toggle-shadow" class="btn btn-sm btn-primary">Toggle shadow</button>
-        <button class="sidebar-toggle btn btn-default btn-sm">Toggle sidebar</button>
-    </div>
-    <p>
-        <label for="sidebar-position">Postion</label>
-        <select id="sidebar-position" name="sidebar-position">
-<!--            <option value="">Default</option>-->
-            <option value="sidebar-fixed-left">Float on left</option>
-            <option value="sidebar-fixed-right">Float on right</option>
-            <option value="sidebar-stacked" selected>Fixed on left</option>
-        </select>
-        <label for="sidebar-theme">Colors</label>
-        <select id="sidebar-theme" name="sidebar-theme">
-            <option value="sidebar-default">Default</option>
-            <option value="sidebar-inverse">Inverse</option>
-            <option value="sidebar-colored" selected>Colored</option>
-            <option value="sidebar-colored-inverse">Colored-Inverse</option>
-        </select>
-        <!--            <label for="sidebar-header">Sidebar header cover</label>-->
-        <!--            <select id="sidebar-header" name="sidebar-header">-->
-        <!--                <option value="header-cover">Image cover</option>-->
-        <!--                <option value="">Color cover</option>-->
-        <!--            </select>-->
-    </p>
-</div>
 <!--    --><?php //pr($standard_experiment_info); ?>
 
 <?php endif; ?>
@@ -60,7 +29,7 @@
 </div>
 
 <script type="text/javascript">
-    $(document).ready(function () {
+//    $(document).ready(function () {
 //        console.log("GONNA PROCESS!");
 //        $('#transcriptsTable').dataTable({
 //            "bServerSide": true,
@@ -68,7 +37,7 @@
 //            "sAjaxSource": "http://bioinformatics.psb.ugent.be/testix/trapid_frbuc/trapid/ajaxData"
 //        });
 //        console.log("PROCESSED!");
-    });
+//    });
     // Not working for security reasons
 //    $(document).ready(function () {
 //        var table = $('#example').DataTable({
@@ -96,13 +65,22 @@
 <section class="page-section-sm">
 <div class='row'>
     <div class='col-lg-12'>
-        <div class="panel panel-primary">
-            <!-- Default panel contents -->
-            <div class="panel-heading"><h3 class="panel-title">Experiment information</h3></div>
+        <div class="panel panel-slim panel-primary">
+            <div class="panel-heading">
+                Experiment information
+            </div>
             <!-- List group -->
             <ul class="list-group">
                 <li class="list-group-item">
-                    <strong>Description:</strong> <?php echo $standard_experiment_info['Experiments']['description']; ?>
+                    <strong>Description:</strong>
+                    <?php
+                        if($standard_experiment_info['Experiments']['description']) {
+                            echo $standard_experiment_info['Experiments']['description'];
+                        }
+                        else {
+                            echo "<span class='text-muted'>No description available</span>";
+                        }
+                    ?>
                 </li>
                 <li class="list-group-item"><strong>Processing
                         status:</strong> <?php echo $standard_experiment_info['Experiments']['process_state']; ?></li>
@@ -111,7 +89,7 @@
                         family count: </strong><?php echo $transcript_experiment_info[0][0]['gf_count']; ?></li>
                 <li class="list-group-item"><strong>Data source:</strong> <?php
                     if ($datasource_info['URL']) {
-                        echo $this->Html->link($datasource_info['name'], $datasource_info['URL'], array('target' => '_blank'));
+                        echo $this->Html->link($datasource_info['name'], $datasource_info['URL'], array('target' => '_blank', 'class'=>'linkout'));
                     } else {
                         echo $datasource_info['name'];
                     }
@@ -432,7 +410,7 @@
     <!--                        </table>-->
     <div class="subdiv">
 
-        <div style="float:left;width:1010px;">
+        <div style="float:left;">
             <h2>Experiment information</h2>
             <div class="subdiv well">
                 <div style="float:left;width:500px;">
@@ -749,4 +727,4 @@
 </div>
 
 
-<?php // echo $this->element('sql_dump');  // Dump all MySQL queries (debug) ?>
+<?php //echo $this->element('sql_dump');  // Dump all MySQL queries (debug) ?>
