@@ -31,7 +31,7 @@
                         </div>
                     </div>
                     <div class="col-md-8">
-                        <p class="text-justify">Before you can use TRAPID, you need to register for an account. For academics this is free of charge.
+                        <p class="text-justify">Before you can use TRAPID, you need to register for an account. For academics, this is free of charge.
                             First, click on <code>Register</code> in the header (or click <a href="<?php echo $this->Html->Url(array("controller" => "trapid", "action" => "authentication", "register")); ?>" alt="Register link" target="_blank" class="linkout">here</a>).
                             On the next page, fill in the required information and click on the <code>Register</code> button (Figure 1). Make sure to provide a valid e-mail address as your login credentials will be sent immediately at this address.
                         </p>
@@ -57,7 +57,7 @@
             <hr>
             <section class="page-section" id="tutorial-1">
                 <h3>Tutorial 1:  <em>Panicum</em> transcriptome functional annotation</h3>
-                <p class="text-justify">In this tutorial you'll learn how to functionally annotate and analyze the transcriptome of <a href="https://www.ncbi.nlm.nih.gov/Taxonomy/Browser/wwwtax.cgi?id=206008" title="View in NCBI taxonomy" target="_blank" class="linkout"><em>Panicum hallii</em></a> (Meyer <i>et al</i>. 2012, Transcriptome analysis and gene expression atlas for <i>Panicum hallii</i> var. filipes, a diploid model for biofuel research.).
+                <p class="text-justify">In this tutorial, you'll learn how to functionally annotate and analyze the transcriptome of <a href="https://www.ncbi.nlm.nih.gov/Taxonomy/Browser/wwwtax.cgi?id=206008" title="View in NCBI taxonomy" target="_blank" class="linkout"><em>Panicum hallii</em></a> (Meyer <i>et al</i>. 2012, Transcriptome analysis and gene expression atlas for <i>Panicum hallii</i> var. filipes, a diploid model for biofuel research.).
                     The dataset can be obtained from the <a target="_blank" class="linkout" href="ftp://ftp.psb.ugent.be/pub/trapid/datasets/panicum/">TRAPID FTP</a>. </p><br>
                 <section class="page-section-sm" id="tutorial-1-upload">
                     <h4>Part 1: uploading and processing the data</h4>
@@ -160,7 +160,7 @@
                             <p class="text-justify">On the next page, you have to specify how transcripts should be processed by TRAPID. For this tutorial, select the settings as shown in Figure 8 (default settings except for the taxonomic classification that was disabled). More details on these settings can be found in the
                             <?php echo $this->Html->link("general documentation", array("controller" => "documentation", "action" => "general", "#"=>"initial-processing")); ?>.
 
-                                Finish by clicking <code>Run initial processing</code>. Depending on the size of the dataset, the selected settings, and the load on our servers, this can take up to several hours. For this tutorial, it should take around one hour after starting. In the meantime the experiment will be in <code>processing</code> state and cannot be accessed, except for the experiment's job management and log pages. <strong>An e-mail will be sent upon completion</strong>. </p>
+                                Finish by clicking <code>Run initial processing</code>. Depending on the size of the dataset, the selected settings, and the load on our servers, this can take up to several hours. For this tutorial, it should take around one hour after starting. In the meantime, the experiment will be in <code>processing</code> state and cannot be accessed, except for the experiment's job management and log pages. <strong>An e-mail will be sent upon completion</strong>. </p>
                         <p class="text-justify">Once the initial processing has finished, all sequences will be included in gene/RNA families and be  annotated (when possible). Additionally, as transcript data often includes truncated sequences or sequences with indels, potentially problematic sequences are flagged. </p>
                         </div>
                    </div>
@@ -179,8 +179,8 @@
                         </div>
                         <div class="col-md-8">
                             <p class="text-justify">Once the initial processing has finished, go to the experiment overview page. More options are now accessible from the side menu, and the table at the bottom of the page lists your sequences with their assigned gene family, predicted functional annotation, and meta-annotation. Click the <code>Statistics</code> > <code>General statistics</code> item in the side menu.</p>
-                            <p class="text-justify">The following page will show a broad range of statistics that reveal the quality of the input dataset, how many sequences were assigned to gene for RNA families and how many were functionally annotated (Figure 9). The other page available under <code>Statistics</code>, <code>Sequence length distribution</code>, displays the length distribution of the experiment's transcript and predicted ORF sequences. </p>
-                            <p class="text-justify">Gene families (which group protein-coding genes derived from a common ancestor) and RNA families (which group homologues of known non-coding RNAs) are available from the side menu, under <code>Browse gene families</code> and <code>Browse RNA families</code>, respectively.</p>
+                            <p class="text-justify">The following page will show a broad range of statistics that reveal the quality of the input dataset, how many sequences were assigned to gene or RNA families, and how many were functionally annotated (Figure 9). The other page available under <code>Statistics</code>, <code>Sequence length distribution</code>, displays the length distribution of the experiment's transcript and predicted ORF sequences. </p>
+                            <p class="text-justify">Gene families (which group protein-coding genes derived from a common ancestor) and RNA families (which group homologs of known non-coding RNAs) are available from the side menu, under <code>Browse gene families</code> and <code>Browse RNA families</code>, respectively.</p>
                             <p class="text-justify">Relevant families can be found using the search function of the experiment header. For instance, by selecting <code>GO term</code>, relevant GO identifiers or descriptions labels can be searched, and the associated sequences retrieved.</p>
 
                         </div>
@@ -208,7 +208,7 @@
                         <div class="col-md-4">
                             <div class="doc-figure">
                                 <?php echo $this->Html->image('tutorial/optimized/phylogenetic_tree.png', array('alt' => 'Gene family phylogenetic tree', 'class'=>'img-responsive img-centered')); ?>
-                                <p class="text-justify doc-figure-legend small"><strong>Figure 11: phylogenetic tree.</strong> Interactive tree viewer (PhyD3) showing the phylogenetic tree of <code>contig01069</code> and its homologues. Transcript meta-annotation and subset information  are also displayed, depicted next to the transcript identifiers as colored squares and circles, respectively.
+                                <p class="text-justify doc-figure-legend small"><strong>Figure 11: phylogenetic tree.</strong> Interactive tree viewer (PhyD3) showing the phylogenetic tree of <code>contig01069</code> and its homologs. Transcript meta-annotation and subset information  are also displayed, depicted next to the transcript identifiers as colored squares and circles, respectively.
                                 </p>
                             </div>
                         </div>
@@ -234,8 +234,8 @@
                             </div>
                         </div>
                         <div class="col-md-8">
-                            <p class="text-justify">Within a TRAPID experiment,  transcript subsets can be defined from any arbitrary list of transcript identifiers, for instance transcripts expressed in a specific condition or tissue, and used to perform subsequent within-transcriptome functional analyses. Subsets may either be uploaded as file or created interactively from the web application. By creating transcript subsets, several new analyses become available, such as comparison of functional annotation between different subsets, or functional enrichment analysis.</p>
-                            <p class="text-justify">In this tutorial, we provide an example set of 33 Cell Cycle transcripts. The list can be downloaded from <a href='ftp://ftp.psb.ugent.be/pub/trapid/datasets/panicum/panicum_cell_cycle.lst'  download>TRAPID’s FTP</a>. To create a new transcript subset, click <code>Import data</code> (side menu). In the <code>Transcript subset</code> tab, click <code>Browse...</code> to select the downloaded file and enter a name for the susbset (e.g. <code>Cell_cycle</code>). Click <code>Import subset</code> to finish.</p>
+                            <p class="text-justify">Within a TRAPID experiment,  transcript subsets can be defined from any arbitrary list of transcript identifiers, for instance transcripts expressed in a specific condition or tissue, and used to perform subsequent within-transcriptome functional analyses. Subsets may either be uploaded as a file or created interactively from the web application. By creating transcript subsets, several new analyses become available, such as comparison of functional annotation between different subsets, or functional enrichment analysis.</p>
+                            <p class="text-justify">In this tutorial, we provide an example set of 33 Cell Cycle transcripts. The list can be downloaded from <a href='ftp://ftp.psb.ugent.be/pub/trapid/datasets/panicum/panicum_cell_cycle.lst'  download>TRAPID’s FTP</a>. To create a new transcript subset, click <code>Import data</code> (side menu). In the <code>Transcript subset</code> tab, click <code>Browse...</code> to select the downloaded file and enter a name for the subset (e.g. <code>Cell_cycle</code>). Click <code>Import subset</code> to finish.</p>
                             <p class="text-justify">Transcripts subsets can be inspected and deleted from the <code>Explore subsets</code> page (side menu).  To check if the cell cycle set is enriched for specific GO terms or Protein domains, click the <code>Subset enrichment</code> item in the side menu. On the next page, select a type of functional annotation for which to perform the analysis, a transcript subset, and a maximum q-value (corrected p-value) threshold. For this tutorial, we selected <code>InterPro domains</code>, <code>Cell_cycle</code> and <code>0.005</code>. Click <code>Compute enrichment</code> to launch the analysis.</p>
                             <p class="text-justify">Figure 12 shows the resulting page displaying for each of the enriched InterPro domains the enrichment fold, significance and a short description. Note that the InterPro domain identifiers are hyperlinks to pages containing more detailed information, and that results may also be explored as a table or downloaded.
                             </p>
@@ -253,7 +253,7 @@
                 <h3>Tutorial 2: examining gene space completeness</h3>
                 <section class="page-section-sm">
                     <p class='text-justify'>
-                        <strong>For this second tutorial we'll continue using the TRAPID experiment created previously. Please make sure that the initial processing has been perfomed before following this tutorial. </strong></p>
+                        <strong>For this second tutorial, we'll continue using the TRAPID experiment created previously. Please make sure that the initial processing has been performed before following this tutorial. </strong></p>
 
                     <p class='text-justify'>
                         TRAPID enables users to assess and examine the gene space completeness of transcriptomes by checking the presence of <strong>core gene families</strong> (‘core GFs’), leveraging the GF assignment step of the initial processing.
@@ -293,7 +293,7 @@
                     <div class="col-md-8">
 
                         <p class='text-justify'>After completion of the job, you should now be able to see the result panel (or an error message), composed of three tabs: summary, represented GFs table, and missing GFs table. The summary consists of a bar chart depicting the number of represented and missing core gene families, the completeness score and additional analysis metrics. The represented and missing core gene families, and their associated functional data, can be further investigated using the dedicated tables. It is also possible to export the tables to flat files. </p>
-                        <p class='text-justify'>Finally, you can select different clades or setting and re-run the analysis for the same dataset. If you reload the core GF completeness page, the 'previous analyses' tab will be active and list all previous core GF completeness results (Figure 14). </p>
+                        <p class='text-justify'>Finally, you can select different clades or settings and re-run the analysis for the same dataset. If you reload the core GF completeness page, the 'previous analyses' tab will be active and list all previous core GF completeness results (Figure 14). </p>
 
                     </div>
                 </div>

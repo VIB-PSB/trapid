@@ -32,6 +32,8 @@ class DocumentationController extends AppController{
 
 
   function faq(){
+      $max_user_experiments = MAX_USER_EXPERIMENTS;
+      $this->set("max_user_experiments",$max_user_experiments);
       $this->set("active_header_item", "Documentation");
       $this -> set('title_for_layout', 'Frequently Asked Questions');
   }
