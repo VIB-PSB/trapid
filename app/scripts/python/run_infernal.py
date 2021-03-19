@@ -579,7 +579,7 @@ def get_exp_cm_clans(exp_id, tmp_exp_dir):
     rfam_clans_file = os.path.join(tmp_exp_dir, "Rfam_%s.clanin" % exp_id)
     with open(rfam_clans_file, 'r') as in_file:
         for line in in_file:
-            splitted = line.split('\t')
+            splitted = line.strip().split('\t')
             clan_acc = splitted[0]
             for cm_id in splitted[1:]:
                 cm_clans[cm_id] = clan_acc
