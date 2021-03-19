@@ -6,6 +6,11 @@ class TranscriptsTax extends AppModel {
     var $name	= 'TranscriptsTax';
     var $useTable = 'transcripts_tax';
 
+
+    public $virtualFields = array(
+        'tax_results' => 'UNCOMPRESS(TranscriptsTax.tax_results)'
+    );
+
     /* Get unique tax ids, associated transcripts and lineages from `transcripts_tax` table */
     function getSummaryAndLineages($exp_id) {
         $tax_array = array();  // Array that will store result sand be returned

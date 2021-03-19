@@ -1658,7 +1658,6 @@ a.linkout:after {
 	box-shadow: none;
 }
 
-
 .unavailable {
 	cursor: not-allowed !important;
 	color: #888888;
@@ -2182,7 +2181,8 @@ nav .navbar-nav .navbar-form {
 
 .tax-lineage {
 	padding: 0px 0px;
-	margin-bottom: 23px;
+	/*margin-bottom: 23px;*/
+	margin-bottom: 0px;
 	list-style: none;
 	/*background-color: #f5f5f5;*/
 	/*border-radius: 3px;*/

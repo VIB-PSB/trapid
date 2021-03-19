@@ -945,24 +945,31 @@ class TrapidController extends AppController{
     // Get taxonomic classification information (only if this step was performed during initial processing)
     if($exp_info['perform_tax_binning'] == 1) {
         $unclassified_str = "Unclassified";
-        $transcript_txid = $this->TranscriptsTax->find("first", array("conditions"=>array("experiment_id"=>$exp_id, "transcript_id"=>$transcript_id), "fields"=>"txid"));
-        $transcript_txid = $transcript_txid['TranscriptsTax']['txid'];
+        $transcript_txdata = $this->TranscriptsTax->find("first", array("conditions"=>array("experiment_id"=>$exp_id, "transcript_id"=>$transcript_id), "fields"=>array("txid", "tax_results")));
+        $transcript_txid = $transcript_txdata['TranscriptsTax']['txid'];
         $transcript_lineage = [];
-        // If the transcript was unclassified, set name of clade to 'Unclassified'
+        // If the transcript was unclassified, set name of clade to 'Unclassified' and score to 0.
         if($transcript_txid == 0) {
             $transcript_txname = $unclassified_str;
+            $transcript_txscore = 0;
         }
-        // Otherwise retrieve taxonomy data from `full_taxonomy`
+        // Otherwise retrieve taxonomy data from `full_taxonomy` and parse `tax_results` string to extract Kaiju score.
         else {
             $txdata = $this->FullTaxonomy->find("first", array("fields"=>array("scname", "tax"), "conditions"=>array("txid"=>$transcript_txid)));
             $transcript_txname = $txdata["FullTaxonomy"]["scname"];
             $transcript_lineage = array_reverse(explode("; ", $txdata["FullTaxonomy"]["tax"]));
             array_pop($transcript_lineage);
+            $txscore_re = '/^score=([0-9]+)/m';
+            preg_match($txscore_re,  $transcript_txdata['TranscriptsTax']['tax_results'], $txscore_match);
+            $transcript_txscore = $txscore_match[1];
         }
         $this->set("transcript_txid", $transcript_txid);
         $this->set("transcript_txname", $transcript_txname);
+        $this->set("transcript_txscore", $transcript_txscore);
         $this->set("transcript_lineage", $transcript_lineage);
     }
+
+
 
     // Check whether the number of jobs in the queue for this experiment has not been reached.
     $current_job_number = $this->ExperimentJobs->getNumJobs($exp_id);

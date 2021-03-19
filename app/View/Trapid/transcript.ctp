@@ -129,6 +129,15 @@
                             ?>
                         </div>
                     </div>
+                    <div class="row">
+                        <div class="col-md-2 col-xs-4 transcript-attr">Score</div>
+                        <div class="col-md-10 col-xs-8">
+                            <?php
+                            echo $transcript_txscore . " &nbsp;&nbsp;";
+                            echo $this->element("help_tooltips/create_tooltip", array("tooltip_text"=>$tooltips["transcript_txscore"], "tooltip_placement"=>"right", "override_span_class"=>"glyphicon glyphicon-question-sign"));
+                            ?>
+                        </div>
+                    </div>
 
                     <?php else: ?>
                     <p class="text-justify text-muted">No taxonomic classification was performed during initial processing. </p>
