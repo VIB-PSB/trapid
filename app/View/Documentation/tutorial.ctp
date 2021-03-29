@@ -13,7 +13,7 @@
                         TRAPID is an online tool for the fast and efficient processing of assembled RNA-Seq transcriptome data.
                         TRAPID offers high-throughput ORF detection, frameshift correction and includes a functional, comparative and phylogenetic toolbox.
                         Input sequences can be ESTs, full-length cDNAs or RNA-Seq transcriptome sequences. Additionally, coding sequence derived from an annotated genome can also be used.
-                        We offer four reference databases: for plants and green algae, the latest <a href="http://bioinformatics.psb.ugent.be/plaza/" alt="PLAZA link" target="_blank" class="linkout">PLAZA</a> databases (PLAZA dicots and monocots 4.5, pico-PLAZA 3), and for other eukaryotes (e.g. Alveolata, Amoebozoa, Euglenozoa, Fungi, Metazoa) or prokaryotes (Bacteria and Archaea) <a href="http://eggnog45.embl.de" alt="eggNOG 4.5 link" target="_blank" class="linkout">eggNOG version 4.5</a> is available.
+                        We offer four reference databases: for plants and green algae, the latest <a href="http://bioinformatics.psb.ugent.be/plaza/" alt="PLAZA link" target="_blank" class="linkout">PLAZA</a> databases (PLAZA dicots and monocots 4.5, pico-PLAZA 3.0, PLAZA diatoms 1.0), and for other eukaryotes (e.g. Alveolata, Amoebozoa, Euglenozoa, Fungi, Metazoa) or prokaryotes (Bacteria and Archaea) <a href="http://eggnog45.embl.de" alt="eggNOG 4.5 link" target="_blank" class="linkout">eggNOG version 4.5</a> is available.
                     </p>
                     <p class="text-justify">Once the initial processing has assigned functional annotations and gene families to the user-defined transcripts, evolutionary studies on gene families including the uploaded transcripts can be performed. Through a few simple operations, multiple sequence alignments and phylogenetic trees can be generated. </p>
                     <p class="text-justify">Although TRAPID hosts a wide range of reference genomes, it was not developed to process data from massive-scale meta -omic studies, as it can process 200,000 sequences maximum per experiment. Adding more transcripts is possible, but correct processing or website performance is not guaranteed in this case. </p>
@@ -92,8 +92,11 @@
                             <div class="col-md-8">
                                 <p class="text-justify">Clicking on the <code>add new experiment</code> button (<span class="glyphicon glyphicon-plus"></span> icon) opens the experiment creation window (Figure 4). </p>
                                 <p class="text-justify">To start, like shown in Figure 4, enter a name and a description for the experiment. For instance, <code>Tutorial 1</code> as a name and <code>Documentation tutorial 1 (Panicum)</code> as description.
-                                    Select <code>PLAZA 4.5 monocots</code> as reference database, as PLAZA is the recommended database for plants and algae, and the 'monocots' version contains genomes from closely related species.
-                                    In case data from other lineages is analyzed, we recommend selecting eggNOG 4.5. Add the experiment by clicking <code>create experiment</code>. </p>
+                                    Select <code>PLAZA 4.5 monocots</code> as reference database, as PLAZA is the recommended database for plants and microbial photosynthetic eukaryotes, and the 'monocots' version contains genomes from closely related species.
+                                    In case data from other lineages is analyzed, we recommend selecting eggNOG 4.5. An overview of the available reference databases can be found on the
+                                    <?php echo $this->Html->link("tools & parameters", array("controller" => "documentation", "action" => "tools_parameters", "#"=>"ref-dbs")); ?> documentation page.
+                                </p>
+                                    <p class="text-justify">Add the experiment by clicking <code>create experiment</code>. </p>
                             </div>
                         </div>
                         <div class="row">

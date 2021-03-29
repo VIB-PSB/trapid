@@ -139,7 +139,7 @@ function create_export_example($elmt_id, $example_data){
                             </strong>
                             <ul>
                                 <li><code>Gene Family Type</code>: for PLAZA reference databases (PLAZA 4.5 monocots/dicots, pico-PLAZA
-                                    3), this is <samp>Gene families</samp> (TribeMCL clusters) or <samp>Integrative
+                                    3.0, PLAZA diatoms 1.0), this is <samp>Gene families</samp> (TribeMCL clusters) or <samp>Integrative
                                         Orthology</samp>. The latter may be selected only in case a single species was selected as Database Type. For eggNOG, only <samp>Gene families</samp> can be selected (which corresponds to eggNOG ortholog groups).
                                 </li>
                                 <li><code>Functional annotation</code> (only for PLAZA reference databases): the strategy used for functional annotation to be transferred from gene family to transcript. In general, <samp>Gene families</samp> is the most conservative approach
@@ -397,7 +397,7 @@ function create_export_example($elmt_id, $example_data){
                     <div class="col-md-8">
                         <p class="text-justify">
                         Taxonomic classification results can be explored by the user through multiple interactive visualizations. To access the taxonomic classification results, click <code>Taxonomic classification</code> in the side menu, within a TRAPID experiment. If this step was not performed during the initial processing, this page is not accessible. </p>
-                        <p class="text-justify">The Krona radial chart, visible in Figure 5, and the tree viewer enable an in-depth examination of the results. in contrast, the sample composition bar and pie charts (Figure 6) provide a quick overview of the results, depicting the domain-level composition and the ten most represented clades at adjustable taxonomic ranks.
+                        <p class="text-justify">The Krona radial chart, visible in Figure 5, and the tree viewer enable an in-depth examination of the results. In contrast, the sample composition bar and pie charts (Figure 6) provide a quick overview of the results, depicting the domain-level composition and the ten most represented clades at adjustable taxonomic ranks.
                     </div>
                 </div>
                 <div class="row">

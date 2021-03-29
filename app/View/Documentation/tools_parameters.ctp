@@ -13,7 +13,11 @@
         <div class="col-md-9" id="tutorial-col">
             <section class="page-section" id="ref-dbs">
                 <h3>Reference databases</h3>
-                <p class="text-justify">The below table provides an overview of TRAPID 2.0 reference databases. The gene family count only includes homology-based families for PLAZA databases, and only orthologous groups at the root level for eggNOG 4.5. For extensive details about the reference databases (e.g. further information on gene family construction, list of included clades/species, ...), please refer to their own documentation. </p><br>
+                <p class="text-justify">The below table provides an overview of TRAPID 2.0's reference databases. Gene counts only include protein-coding genes.
+                    The available reference database encompass protein sequences, functional annotation, and GF information for 115 archaea, 1,678 bacteria, and 326 eukaryotes (88 of which exclusively in PLAZA).</p>
+                <p class="text-justify">
+                    For extensive details about the reference databases (e.g. further information on gene family construction, list of included clades/species, ...), please refer to their own documentation.
+                </p><br>
                 <style>
                     td,th {
                         text-align: center;
@@ -25,60 +29,60 @@
                         width: 15%;
                     }
                 </style>
-                <table class="table table-hover table-striped" style="font-size: 90%;">
-                    <thead>
-                        <tr>
-                            <th class="first-col"></th>
-                            <?php foreach(['db_trapid_ref_plaza_dicots_04_5_test', 'db_trapid_ref_plaza_monocots_04_5_test', 'db_trapid_ref_plaza_pico_03_test', 'db_trapid_ref_eggnog_test_02'] as $ref_db): ?>
-                            <th><a href="<?php echo $ref_db_data[$ref_db]['url']; ?>" target="_blank" class="linkout"><?php echo $ref_db_data[$ref_db]['name']; ?></a></th>
-                            <?php endforeach;?>
-                        </tr>
-                        </thead>
-                        <tbody>
-                        <tr>
-                            <td class="first-col"># Species</td>
-                            <td>55</td>
-                            <td>39</td>
-                            <td>39</td>
-                            <td>2,031</td>
-                        </tr>
-                        <tr>
-                            <td class="first-col"># Genes</td>
-                            <td>3,065,012</td>
-                            <td>1,563,555</td>
-                            <td>705,020</td>
-                            <td>9,646,196</td>
-                        </tr>
-                        <tr>
-                            <td class="first-col"># Gene families</td>
-                            <td>208,456</td>
-                            <td>213,318</td>
-                            <td>127,718</td>
-                            <td>190,803</td>
-                        </tr>
-                        <tr>
-                            <td class="first-col">Taxonomic focus</td>
-                            <td>Dicot plants</td>
-                            <td>Monocot plants</td>
-                            <td>Microbial photosynthetic eukaryotes</td>
-                            <td>Archaea, Bacteria, Eukaryotes</td>
-                        </tr>
-                        <tr>
-                            <td class="first-col">Functional annotation</td>
-                            <td>GO, InterPro</td>
-                            <td>GO, InterPro</td>
-                            <td>GO, InterPro</td>
-                            <td>GO, KO</td>
-                        </tr>
-                        <tr>
-                            <td class="first-col">Gene family construction</td>
-                            <td>Tribe-MCL, integrative orthologs</td>
-                            <td>Tribe-MCL, integrative orthologs</td>
-                            <td>Tribe-MCL, integrative orthologs</td>
-                            <td>eggNOG</td>
-                        </tr>
-                        </tbody>
+                <div class="table-responsive">
+                    <table class="table table-hover table-striped" style="font-size: 85%;">
+                        <thead>
+                            <tr>
+                                <th class="first-col"></th>
+                                <?php foreach(['db_trapid_ref_plaza_dicots_04_5_test', 'db_trapid_ref_plaza_monocots_04_5_test', 'db_trapid_ref_plaza_pico_03_test', 'db_trapid_ref_plaza_diatoms_01_test', 'db_trapid_ref_eggnog_test_02'] as $ref_db): ?>
+                                <th><a href="<?php echo $ref_db_data[$ref_db]['url']; ?>" target="_blank"><?php echo $ref_db_data[$ref_db]['name']; ?></a></th>
+                                <?php endforeach;?>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <tr>
+                                <td class="first-col"># Species</td>
+                                <td>55</td>
+                                <td>39</td>
+                                <td>39</td>
+                                <td>26</td>
+                                <td>2,031</td>
+                            </tr>
+                            <tr>
+                                <td class="first-col"># Genes</td>
+                                <td>1,833,029</td>
+                                <td>1,497,121</td>
+                                <td>572,836</td>
+                                <td>503,959</td>
+                                <td>9,646,196</td>
+                            </tr>
+                            <tr>
+                                <td class="first-col">Taxonomic focus</td>
+                                <td>Dicot plants</td>
+                                <td>Monocot plants</td>
+                                <td>Microbial photosynthetic eukaryotes</td>
+                                <td>Diatoms</td>
+                                <td>Archaea, Bacteria, Eukaryotes</td>
+                            </tr>
+                            <tr>
+                                <td class="first-col">Functional annotation</td>
+                                <td>GO, InterPro</td>
+                                <td>GO, InterPro</td>
+                                <td>GO, InterPro</td>
+                                <td>GO, InterPro</td>
+                                <td>GO, KO</td>
+                            </tr>
+                            <tr>
+                                <td class="first-col">Gene family construction</td>
+                                <td>Tribe-MCL, integrative orthologs</td>
+                                <td>Tribe-MCL, integrative orthologs</td>
+                                <td>Tribe-MCL, integrative orthologs</td>
+                                <td>Tribe-MCL, integrative orthologs</td>
+                                <td>eggNOG</td>
+                            </tr>
+                            </tbody>
                     </table>
+                </div>
             </section>
             <hr>
             <section class="page-section" id="init-processing">
