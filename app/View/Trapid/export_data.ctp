@@ -70,7 +70,12 @@
                 <div style="float:left;margin-right: 20px;">
                     <?php echo $this->Form->create(false, array("url" => array("controller" => "trapid", "action" => "export_data", $exp_id), "type" => "post")); ?>
                     <input type="hidden" name="export_type" value="tax"/>
-                    <button class="btn btn-default" type="submit"<?php echo $unfinished; ?>><span class="glyphicon glyphicon-download-alt"></span> Transcripts tax. classification</button>
+                    <?php if($exp_info['perform_tax_binning'] == 1): ?>
+                        <button class="btn btn-default" type="submit"<?php echo $unfinished; ?>><span class="glyphicon glyphicon-download-alt"></span> Transcripts tax. classification</button>
+                    <?php else: ?>
+                        <button class="btn btn-default" type="submit" disabled><span class="glyphicon glyphicon-download-alt"></span> Transcripts tax. classification</button>
+                        <span class="text-muted small">No taxonomic classification performed during initial processing.</span>
+                    <?php endif; ?>
                     </form>
                 </div>
         </div>
