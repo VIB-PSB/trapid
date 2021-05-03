@@ -3010,17 +3010,12 @@ class TrapidController extends AppController{
    *
    * The 'beforeFilter' method is executed BEFORE each method, and as such ensures that the necessary
    * identification through cookies is done.
+   *
+   * Cookie settings can be adjusted in `app/scripts/ini_files/webapp_settings.ini`.
+   *
    */
   function beforeFilter(){
     parent::beforeFilter();
-    /* $this->set("title" ,WEBSITE_TITLE);
-    $this->Cookie->name		= "trapid_cookie";
-    $this->Cookie->time		= "7200";
-    $this->Cookie->path		= "/webtools/trapid/";
-    $this->Cookie->domain	= "bioinformatics.psb.ugent.be";
-    $this->Cookie->key		= "JsjdKO09DJfdfjODWSkdW89Sd";
-    $this->Cookie->secure	= false;
-    */
   }
 
 

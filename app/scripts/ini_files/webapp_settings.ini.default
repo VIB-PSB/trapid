@@ -15,3 +15,12 @@ blast_db_path = "/path/to/blast_db/"
 [User_limits]
 max_cluster_jobs = 2
 max_user_experiments = 20
+
+; Authentication cookie settings
+[Auth_cookies]
+cookie_name = "trapid_cookie"
+cookie_time = 7200
+cookie_domain = "trapid.host.url"
+cookie_path = "/trapid_path/"
+cookie_key = "A_long_random_difficult_to_guess_string"
+cookie_secure = 0

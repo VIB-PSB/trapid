@@ -119,6 +119,7 @@ if(!defined('BLAST_DB_DIR_MIDAS')){
  */
 if(!defined('MAX_CLUSTER_JOBS')){
     define('MAX_CLUSTER_JOBS', $webapp_settings_ini_data['max_cluster_jobs']);
+//    print_r($webapp_settings_ini_data);
 }
 
 /*
@@ -129,6 +130,18 @@ if(!defined('MAX_USER_EXPERIMENTS')){
 }
 
 
+/*
+ * Authentication cookie settings
+ */
+if(!defined('COOKIE_NAME')) {define('COOKIE_NAME', $webapp_settings_ini_data['cookie_name']);}
+if(!defined('COOKIE_TIME')) {define('COOKIE_TIME', $webapp_settings_ini_data['cookie_time']);}
+if(!defined('COOKIE_DOMAIN')) {define('COOKIE_DOMAIN', $webapp_settings_ini_data['cookie_domain']);}
+if(!defined('COOKIE_PATH')) {define('COOKIE_PATH', $webapp_settings_ini_data['cookie_path']);}
+if(!defined('COOKIE_KEY')) {define('COOKIE_KEY', $webapp_settings_ini_data['cookie_key']);}
+if(!defined('COOKIE_SECURE')) {define('COOKIE_SECURE', (bool) $webapp_settings_ini_data['cookie_secure']);}
+
+
+ini_set('memory_limit', '1024M');  // Hack-ish?
 
 
 /**

@@ -61,18 +61,18 @@ class AppController extends Controller {
    *
    * The 'beforeFilter' method is executed BEFORE each method, and as such ensures that the necessary
    * identification through cookies is done.
+   *
+   * For more information about cookie setup: https://book.cakephp.org/2/en/core-libraries/components/cookie.html
    */
   function beforeFilter(){
     parent::beforeFilter();
     $this->set("title", WEBSITE_TITLE);
-    $this->Cookie->name		= "trapid_cookie";
-    // TODO: Modify cookie expiration time + path before switching to production
-    $this->Cookie->time		= "20000";//should become 7200 after debugging
-    // $this->Cookie->path		= "/webtools/trapid/";
-    $this->Cookie->path         = "/testix/trapid_frbuc/";
-    $this->Cookie->domain	= "bioinformatics.psb.ugent.be";
-    $this->Cookie->key		= "JsjdKO09DJfdfjODWSkdW89Sd";
-    $this->Cookie->secure	= false;
+    $this->Cookie->name = COOKIE_NAME;
+    $this->Cookie->time = COOKIE_TIME;
+    $this->Cookie->domain = COOKIE_DOMAIN;
+    $this->Cookie->path = COOKIE_PATH;
+    $this->Cookie->key = COOKIE_KEY;
+    $this->Cookie->secure = COOKIE_SECURE;
   }
 
 

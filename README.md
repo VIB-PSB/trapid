@@ -78,7 +78,7 @@ SQL schemes and example data for the required databases can be found here: ftp:/
 
 1. Install all the programs listed in the `Software requirements` section.
 2. Create the TRAPID and the reference database (here corresponding to eggNOG 4.5), and use the SQL dumps to create and populate the tables. 
-    * `trapid_db_dump.sql` : TRAPID database. Note that the value in `db_name` (`data_sources` table) must match the name given to the reference database. 
+    * `trapid_db_dump.sql`: TRAPID database. Note that the value in `db_name` (`data_sources` table) must match the name given to the reference database. 
     * `reference_db_eggnog_dump.sql`: reference database (eggNOG 4.5 data).
     * Create database account(s) used to access the databases. 
 3. Create or download necessary files/resources: 
@@ -89,4 +89,4 @@ SQL schemes and example data for the required databases can be found here: ftp:/
 5. Change configuration: 
     * Create and edit all necessary INI files in the `app/scripts/ini_files`, starting from the available templates (`*.default`, to rename as `*.ini`). 
     * Change the database configuration in `app/config/database.php`. 
-6. Edit the `.htaccess` file in the root directory and the cookie settings in `app/Controller/AppController.php` as appropriate.
+6. Edit the `.htaccess` file in the root directory as appropriate.
