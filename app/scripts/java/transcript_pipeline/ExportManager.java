@@ -102,6 +102,7 @@ public class ExportManager {
 		}
 		catch(Exception exc){
 			exc.printStackTrace();
+			System.exit(1);
 		}
 	}
 
@@ -228,14 +229,17 @@ public class ExportManager {
 		while(set.next()){
 			String transcript_id		= set.getString("transcript_id");
 			String orf_sequence			= set.getString("orf_sequence");
-			writer.write(">"+transcript_id+"\n");
-			writer.write(orf_sequence+"\n");
+			// Ignore null ORF sequences. Another solution would be to edit the query to add a clause and not retrieve them at all.
+			if(orf_sequence != null) {
+                writer.write(">"+transcript_id+"\n");
+                writer.write(orf_sequence+"\n");
+			}
 		}
 		stmt.close();
 		writer.close();
 	}
 
-    // To update (alternative start codons)!
+    // TODO: update (alternative start codons)!
 	public void exportAASequences(Connection conn, String transl_tables_file, String exp_id,String output_file, String filter) throws Exception{
         // Read translation tables data from json file
         String transl_tables_str = "";
@@ -265,10 +269,13 @@ public class ExportManager {
 			String transcript_id		= set.getString("transcript_id");
             String transl_table		= set.getString("transl_table");
 			String orf_sequence			= set.getString("orf_sequence");
-			// String aa_sequence			= this.translateSequence(orf_sequence, map);
-			String aa_sequence			= this.translateSequenceAltGenCode(orf_sequence, all_transl_tables, transl_table);
-			writer.write(">"+transcript_id+"\n");  // Should translation table information be added?
-			writer.write(aa_sequence+"\n");
+            // Ignore null ORF sequences. Another solution would be to edit the query to add a clause and not retrieve them at all.
+            if(orf_sequence != null) {
+                // String aa_sequence			= this.translateSequence(orf_sequence, map);
+                String aa_sequence			= this.translateSequenceAltGenCode(orf_sequence, all_transl_tables, transl_table);
+                writer.write(">"+transcript_id+"\n");  // Should translation table information be added?
+                writer.write(aa_sequence+"\n");
+			}
 		}
 		stmt.close();
 		writer.close();
@@ -732,7 +739,7 @@ public class ExportManager {
     // `cds_sequence`: CDS sequence string to translate
     // `all_transl_tables`: translation table data from JSON object
     // `transl_table`: translation table index to use to translate the cds sequence
-	private String translateSequenceAltGenCode(String cds_sequence, JSONObject all_transl_tables, String transl_table)throws Exception{
+	private String translateSequenceAltGenCode(String cds_sequence, JSONObject all_transl_tables, String transl_table) throws Exception{
         // System.out.println(transl_table);  // Print used translation table (debug)
         // Retrieve codon->AA mapping from `all_transl_tables`
         JSONObject transl_table_lookup = all_transl_tables.getJSONObject(transl_table).getJSONObject("table");

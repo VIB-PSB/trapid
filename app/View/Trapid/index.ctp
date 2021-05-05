@@ -28,10 +28,34 @@
             </section>
         </div>
         <div class="col-md-3 col-sm-4 hidden-xs">
-            <div style="height:100px;">
-                <section class="page-section">
-                    <a class="twitter-timeline" data-dnt="true" data-lang="en" data-height="500px" data-theme="light" data-link-color="#0c84e4" href="https://twitter.com/trapid_genomics?ref_src=twsrc%5Etfw">Loading tweets...</a> <script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>                </div>
-                </section>
+            <div style="height:27px;"></div>
+            <ul class="nav nav-tabs nav-justified" id="tabs" data-tabs="tabs">
+                <li class="active"><a href="#news" data-toggle="tab">News</a></li>
+                <li><a href="#twitter-feed" data-toggle="tab">Twitter feed</a></li>
+                <!--<li><a href="#raw-data" data-toggle="tab">Raw data</a></li>-->
+            </ul>
+            <div class="tab-content">
+                <div id="news" class="tab-pane active"><br>
+                    <p class="text-justify small">
+                        <strong>2021-05-05:</strong> fixed a bug causing some protein sequence export files to be truncated (due to transcripts having no predicted ORF sequence).
+                    </p>
+                    <hr>
+                    <p class="text-justify small">
+                        <strong>2021-04-22:</strong> fixed a bug that was causing an incorrect number of transcripts to be selected when creating subsets from the taxonomic classification visualizations.
+                    </p>
+                    <hr>
+                    <p class="text-justify small">
+                        <strong>2021-03-23:</strong> a new reference database is available, <a href="https://bioinformatics.psb.ugent.be/plaza/versions/plaza_diatoms_01/" class="linkout" target="_blank">PLAZA diatoms 1.0</a>!
+                    </p>
+                    <hr>
+                </div>
+                <div id="twitter-feed" class="tab-pane">
+                    <div style="height:100px;">
+                        <section class="page-section">
+                            <a class="twitter-timeline" data-dnt="true" data-lang="en" data-height="500px" data-theme="light" data-link-color="#0c84e4" href="https://twitter.com/trapid_genomics?ref_src=twsrc%5Etfw">Loading tweets...</a> <script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
+                        </section>
+                    </div>
+                </div>
             </div>
     </div>
 </div>

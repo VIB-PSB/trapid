@@ -16,8 +16,16 @@
         <?php echo $this->Html->link("documentation", array("controller" => "documentation", "action" => "general", "#"=>"data-export")); ?>.
     </p>
     <p class="text-justify"><strong>Note: </strong> exported files are generated on-the-fly and can take a while (up to ~1 minute) to be created.</p>
-    <!-- Navigation tabs -->
+    <!-- Boot strap alert (if export failed) -->
+    <?php if(isset($export_failed) && ($export_failed === true)): ?>
     <br>
+    <p class="text-justify text-danger">
+        <strong>Error: an error occurred while exporting data.</strong> If this keeps happening and you feel what you did should not have resulted in such an error, please
+        <?php echo $this->Html->link("contact us", array("controller"=>"documentation","action"=>"contact")); ?>.
+    </p>
+    <?php endif; ?>
+    <br>
+    <!-- Navigation tabs -->
     <ul class="nav nav-tabs nav-justified" id="tabs" data-tabs="tabs">
         <li class="active"><a href="#structural-data" data-toggle="tab">Structural data</a></li>
         <li><a href="#tax-data" data-toggle="tab">Taxonomic classification</a></li>

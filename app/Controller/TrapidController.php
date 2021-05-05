@@ -2535,163 +2535,198 @@ class TrapidController extends AppController{
   }
 
 
-  function export_data($exp_id=null) {
+    /**
+     *
+     * Export experiment data. Export is performed via POST request in which the export type is specified by the
+     * `export_type` variable. The export file is created with the `performExport` function of the TrapidUtils component.
+     *
+     * @param null $exp_id the experiment id.
+     */
+    function export_data($exp_id=null) {
+        // Maximum time allowed for an export job
+        $max_timeout = 210;
+        // Configure::write("debug",2);
+        parent::check_user_exp($exp_id);
+        $exp_info	= $this->Experiments->getDefaultInformation($exp_id);
+        $plaza_database	= $exp_info['used_plaza_database'];
+        $this->TrapidUtils->checkPageAccess($exp_info['title'],$exp_info["process_state"],$this->process_states["default"]);
+        $this->set("exp_info",$exp_info);
+        $this->set("exp_id",$exp_id);
+        $this->set("active_sidebar_item", "Export data");
+        $this -> set('title_for_layout', "Export data");
 
-    // Configure::write("debug",2);
-    // $exp_id	= mysql_real_escape_string($exp_id);
-    parent::check_user_exp($exp_id);
-    $exp_info	= $this->Experiments->getDefaultInformation($exp_id);
-    $plaza_database	= $exp_info['used_plaza_database'];
-    $this->TrapidUtils->checkPageAccess($exp_info['title'],$exp_info["process_state"],$this->process_states["default"]);
-    $this->set("exp_info",$exp_info);
-    $this->set("exp_id",$exp_id);
-    $this->set("active_sidebar_item", "Export data");
-    $this -> set('title_for_layout', "Export data");
-
-      $structural_export = array("transcript_id"=>"Transcript identifier","frame_info"=>"Frame information","frameshift_info"=>"Frameshift information","orf"=>"ORF information","meta_annotation"=>"Meta annotation");
-    $structural_export_cols = array(	"transcript_id"=>array("transcript_id"),
-					"frame_info"=>array("detected_frame","detected_strand","full_frame_info"),
+        $structural_export = array("transcript_id"=>"Transcript identifier","frame_info"=>"Frame information","frameshift_info"=>"Frameshift information","orf"=>"ORF information","meta_annotation"=>"Meta annotation");
+        $structural_export_cols = array(	"transcript_id"=>array("transcript_id"),
+            "frame_info"=>array("detected_frame","detected_strand","full_frame_info"),
 //					"frameshift_info"=>array("putative_frameshift","is_frame_corrected"),
-					"frameshift_info"=>array("putative_frameshift"),
-					"orf"=>array("orf_start","orf_stop","orf_contains_start_codon","orf_contains_stop_codon"),
-					"meta_annotation"=>array("meta_annotation","meta_annotation_score")
-					);
-    $this->set("structural_export",$structural_export);
+            "frameshift_info"=>array("putative_frameshift"),
+            "orf"=>array("orf_start","orf_stop","orf_contains_start_codon","orf_contains_stop_codon"),
+            "meta_annotation"=>array("meta_annotation","meta_annotation_score")
+        );
+        $this->set("structural_export",$structural_export);
 
-    $available_subsets		= $this->TranscriptsLabels->getLabels($exp_id);
-    $this->set("available_subsets",$available_subsets);
+        $available_subsets		= $this->TranscriptsLabels->getLabels($exp_id);
+        $this->set("available_subsets", $available_subsets);
 
-    if($_POST){
-      // pr($_POST);
-      set_time_limit(180);
-      $timestamp = date('Ymd_his');
-      $user_id		= $this->Cookie->read("email");
-      if(!array_key_exists("export_type",$_POST)){return;}
-      $export_type	= $_POST["export_type"];
-      $this->set("export_type",$export_type);
-      if($export_type=="structural"){
-	//get columns for export
-	$columns	= array();
-	foreach($_POST as $k=>$v){
-	  if(array_key_exists($k,$structural_export_cols)){foreach($structural_export_cols[$k] as $col){$columns[]=$col;}}
-	}
+        // Perform export
+        if($_POST){
+            // pr($_POST);
+            set_time_limit($max_timeout);
+            $timestamp = date('Ymd_his');
+            $user_id		= $this->Cookie->read("email");
+            if(!array_key_exists("export_type",$_POST)){return;}
+            $export_type	= $_POST["export_type"];
+            $this->set("export_type",$export_type);
+            if($export_type=="structural"){
+                //get columns for export
+                $columns	= array();
+                foreach($_POST as $k=>$v){
+                    if(array_key_exists($k,$structural_export_cols)){foreach($structural_export_cols[$k] as $col){$columns[]=$col;}}
+                }
 
-	$columns_string	= implode(',',$columns);
-	$file_path	= $this->TrapidUtils->performExport($plaza_database,$user_id,$exp_id,"STRUCTURAL","structural_data_exp".$exp_id.".txt",$columns_string);
-	$this->set("file_path",$file_path);
-    $this->redirect($file_path);
-    return;
-      }
-      else if($export_type=="sequence"){
+                $columns_string	= implode(',',$columns);
+                $file_path	= $this->TrapidUtils->performExport($plaza_database,$user_id,$exp_id,"STRUCTURAL","structural_data_exp".$exp_id.".txt",$columns_string);
+                if(is_null($file_path)) {
+                    $this->set("export_failed", true);
+                    return;
+                }
+                $this->set("file_path",$file_path);
+                $this->redirect($file_path);
+                return;
+            }
+            else if($export_type=="sequence"){
 
-	if(!array_key_exists("sequence_type",$_POST)){return;}
-	$sequence_type	= $_POST['sequence_type'];
-	$subset_label = null;
-	$outfile_suffix = "_exp" . $exp_id;
-	// ok check?
-	if(array_key_exists("subset_label",$_POST) && !empty($_POST['subset_label'])) {
-        $subset_label = filter_var($_POST['subset_label'], FILTER_SANITIZE_STRING);
-        $outfile_suffix = $outfile_suffix . "_" . $subset_label;
+                if(!array_key_exists("sequence_type",$_POST)){return;}
+                $sequence_type	= $_POST['sequence_type'];
+                $subset_label = null;
+                $outfile_suffix = "_exp" . $exp_id;
+                // ok check?
+                if(array_key_exists("subset_label",$_POST) && !empty($_POST['subset_label'])) {
+                    $subset_label = filter_var($_POST['subset_label'], FILTER_SANITIZE_STRING);
+                    $outfile_suffix = $outfile_suffix . "_" . $subset_label;
+                }
+                $file_path	= null;
+                if($sequence_type=="original"){
+                    $file_path = $this->TrapidUtils->performExport($plaza_database,$user_id,$exp_id,"SEQ_TRANSCRIPT","transcripts" . $outfile_suffix . ".fasta", $subset_label);
+                }
+                else if($sequence_type=="orf"){
+                    $file_path = $this->TrapidUtils->performExport($plaza_database,$user_id,$exp_id,"SEQ_ORF","orfs" . $outfile_suffix . ".fasta", $subset_label);
+                }
+                else if($sequence_type=="aa"){
+                    $file_path = $this->TrapidUtils->performExport($plaza_database,$user_id,$exp_id,"SEQ_AA","proteins" . $outfile_suffix . ".fasta", $subset_label);
+                }
+                if(is_null($file_path)) {
+                    $this->set("export_failed", true);
+                    return;
+                }
+                $this->set("file_path",$file_path);
+                $this->redirect($file_path);
+                return;
+            }
+
+            else if($export_type=="tax"){
+                $file_path = $this->TrapidUtils->performExport($plaza_database,$user_id,$exp_id,"TAX_CLASSIFICATION","transcripts_tax_exp".$exp_id.".txt");
+                if(is_null($file_path)) {
+                    $this->set("export_failed", true);
+                    return;
+                }
+                $this->set("file_path",$file_path);
+                $this->redirect($file_path);
+                return;
+            }
+            else if($export_type=="gf"){
+                if(!array_key_exists("gf_type",$_POST)){return;}
+                $gf_type	= $_POST['gf_type'];
+                $file_path	= null;
+                if($gf_type=="transcript"){
+                    $file_path = $this->TrapidUtils->performExport($plaza_database,$user_id,$exp_id,"TRANSCRIPT_GF","transcripts_gf_exp".$exp_id.".txt");
+                }
+                else if($gf_type=="phylo"){
+                    $file_path = $this->TrapidUtils->performExport($plaza_database,$user_id,$exp_id,"GF_TRANSCRIPT","gf_transcripts_exp".$exp_id.".txt");
+                }
+                else if($gf_type=="reference"){
+                    $file_path = $this->TrapidUtils->performExport($plaza_database,$user_id,$exp_id,"GF_REFERENCE","gf_reference_exp".$exp_id.".txt");
+                }
+                if(is_null($file_path)) {
+                    $this->set("export_failed", true);
+                    return;
+                }
+                $this->set("file_path",$file_path);
+                $this->redirect($file_path);
+                return;
+            }
+
+            else if($export_type=="rf"){
+                if(!array_key_exists("rf_type", $_POST)){
+                    return;
+                }
+                $rf_type	= $_POST['rf_type'];
+                $file_path	= null;
+                if($rf_type=="transcript"){
+                    $file_path = $this->TrapidUtils->performExport($plaza_database,$user_id,$exp_id,"TRANSCRIPT_RF","transcripts_rf_exp".$exp_id.".txt");
+                }
+                else if($rf_type=="rf"){
+                    $file_path = $this->TrapidUtils->performExport($plaza_database,$user_id,$exp_id,"RF_TRANSCRIPT","rf_transcripts_exp".$exp_id.".txt");
+                }
+                if(is_null($file_path)) {
+                    $this->set("export_failed", true);
+                    return;
+                }
+                $this->set("file_path", $file_path);
+                $this->redirect($file_path);
+                return;
+            }
+
+
+            else if($export_type=="go" || $export_type=="interpro" || $export_type=="ko"){
+                if(!array_key_exists("functional_type",$_POST)){return;}
+                $functional_type	= $_POST['functional_type'];
+                $file_path		= null;
+                if($functional_type=="transcript_go"){
+                    $file_path = $this->TrapidUtils->performExport($plaza_database,$user_id,$exp_id,"TRANSCRIPT_GO","transcripts_go_exp".$exp_id.".txt");
+                }
+                else if($functional_type=="meta_go"){
+                    $file_path = $this->TrapidUtils->performExport($plaza_database,$user_id,$exp_id,"GO_TRANSCRIPT","go_transcripts_exp".$exp_id.".txt");
+                }
+                else if($functional_type=="transcript_ipr"){
+                    $file_path = $this->TrapidUtils->performExport($plaza_database,$user_id,$exp_id,"TRANSCRIPT_INTERPRO","transcripts_interpro_exp".$exp_id.".txt");
+                }
+                else if($functional_type=="meta_ipr"){
+                    $file_path = $this->TrapidUtils->performExport($plaza_database,$user_id,$exp_id,"INTERPRO_TRANSCRIPT","interpro_transcripts_exp".$exp_id.".txt");
+                }
+                else if($functional_type=="transcript_ko"){
+                    $file_path = $this->TrapidUtils->performExport($plaza_database,$user_id,$exp_id,"TRANSCRIPT_KO","transcripts_ko_exp".$exp_id.".txt");
+                }
+                else if($functional_type=="meta_ko"){
+                    $file_path = $this->TrapidUtils->performExport($plaza_database,$user_id,$exp_id,"KO_TRANSCRIPT","ko_transcripts_exp".$exp_id.".txt");
+                }
+                if(is_null($file_path)) {
+                    $this->set("export_failed", true);
+                    return;
+                }
+                $this->set("file_path",$file_path);
+                $this->redirect($file_path);
+                return;
+            }
+            else if($export_type=="subsets"){
+                if(!array_key_exists("subset_label",$_POST)){return;}
+                $subset_label		= filter_var($_POST['subset_label'], FILTER_SANITIZE_STRING);
+                if(!array_key_exists($subset_label,$available_subsets)){return;}
+                $file_path = $this->TrapidUtils->performExport($plaza_database,$user_id,$exp_id,"TRANSCRIPT_LABEL",$subset_label."_transcripts_exp".$exp_id.".txt",$subset_label);
+                //pr($file_path);
+                if(is_null($file_path)) {
+                    $this->set("export_failed", true);
+                    return;
+                }
+                $this->set("file_path",$file_path);
+                $this->redirect($file_path);
+            }
+            else{
+                return;
+            }
+        }
+
     }
-	$file_path	= null;
-	if($sequence_type=="original"){
-	  $file_path = $this->TrapidUtils->performExport($plaza_database,$user_id,$exp_id,"SEQ_TRANSCRIPT","transcripts" . $outfile_suffix . ".fasta", $subset_label);
-	}
-	else if($sequence_type=="orf"){
-	 $file_path = $this->TrapidUtils->performExport($plaza_database,$user_id,$exp_id,"SEQ_ORF","orfs" . $outfile_suffix . ".fasta", $subset_label);
-	}
-	else if($sequence_type=="aa"){
-	 $file_path = $this->TrapidUtils->performExport($plaza_database,$user_id,$exp_id,"SEQ_AA","proteins" . $outfile_suffix . ".fasta", $subset_label);
-	}
-	$this->set("file_path",$file_path);
-    $this->redirect($file_path);
-          return;
-      }
-
-    else if($export_type=="tax"){
-	$file_path = $this->TrapidUtils->performExport($plaza_database,$user_id,$exp_id,"TAX_CLASSIFICATION","transcripts_tax_exp".$exp_id.".txt");
-	$this->set("file_path",$file_path);
-    $this->redirect($file_path);
-          return;
-      }
-      else if($export_type=="gf"){
-	if(!array_key_exists("gf_type",$_POST)){return;}
-	$gf_type	= $_POST['gf_type'];
-	$file_path	= null;
-	if($gf_type=="transcript"){
-	  $file_path = $this->TrapidUtils->performExport($plaza_database,$user_id,$exp_id,"TRANSCRIPT_GF","transcripts_gf_exp".$exp_id.".txt");
-	}
-	else if($gf_type=="phylo"){
-	  $file_path = $this->TrapidUtils->performExport($plaza_database,$user_id,$exp_id,"GF_TRANSCRIPT","gf_transcripts_exp".$exp_id.".txt");
-	}
-	else if($gf_type=="reference"){
-	  $file_path = $this->TrapidUtils->performExport($plaza_database,$user_id,$exp_id,"GF_REFERENCE","gf_reference_exp".$exp_id.".txt");
-	}
-
-	$this->set("file_path",$file_path);
-    $this->redirect($file_path);
-          return;
-      }
-
-      else if($export_type=="rf"){
-          if(!array_key_exists("rf_type", $_POST)){
-              return;
-          }
-          $rf_type	= $_POST['rf_type'];
-          $file_path	= null;
-          if($rf_type=="transcript"){
-              $file_path = $this->TrapidUtils->performExport($plaza_database,$user_id,$exp_id,"TRANSCRIPT_RF","transcripts_rf_exp".$exp_id.".txt");
-          }
-          else if($rf_type=="rf"){
-              $file_path = $this->TrapidUtils->performExport($plaza_database,$user_id,$exp_id,"RF_TRANSCRIPT","rf_transcripts_exp".$exp_id.".txt");
-          }
-          $this->set("file_path", $file_path);
-          $this->redirect($file_path);
-          return;
-      }
-
-
-      else if($export_type=="go" || $export_type=="interpro" || $export_type=="ko"){
-	if(!array_key_exists("functional_type",$_POST)){return;}
-	$functional_type	= $_POST['functional_type'];
- 	$file_path		= null;
-	if($functional_type=="transcript_go"){
-	  $file_path = $this->TrapidUtils->performExport($plaza_database,$user_id,$exp_id,"TRANSCRIPT_GO","transcripts_go_exp".$exp_id.".txt");
-	}
-	else if($functional_type=="meta_go"){
-	  $file_path = $this->TrapidUtils->performExport($plaza_database,$user_id,$exp_id,"GO_TRANSCRIPT","go_transcripts_exp".$exp_id.".txt");
-	}
-	else if($functional_type=="transcript_ipr"){
-	 $file_path = $this->TrapidUtils->performExport($plaza_database,$user_id,$exp_id,"TRANSCRIPT_INTERPRO","transcripts_interpro_exp".$exp_id.".txt");
-	}
-	else if($functional_type=="meta_ipr"){
-	 $file_path = $this->TrapidUtils->performExport($plaza_database,$user_id,$exp_id,"INTERPRO_TRANSCRIPT","interpro_transcripts_exp".$exp_id.".txt");
-	}
-	else if($functional_type=="transcript_ko"){
-	 $file_path = $this->TrapidUtils->performExport($plaza_database,$user_id,$exp_id,"TRANSCRIPT_KO","transcripts_ko_exp".$exp_id.".txt");
-	}
-	else if($functional_type=="meta_ko"){
-	 $file_path = $this->TrapidUtils->performExport($plaza_database,$user_id,$exp_id,"KO_TRANSCRIPT","ko_transcripts_exp".$exp_id.".txt");
-	}
-	$this->set("file_path",$file_path);
-    $this->redirect($file_path);
-    return;
-      }
-      else if($export_type=="subsets"){
-	if(!array_key_exists("subset_label",$_POST)){return;}
-	$subset_label		= filter_var($_POST['subset_label'], FILTER_SANITIZE_STRING);
-	if(!array_key_exists($subset_label,$available_subsets)){return;}
-        $file_path = $this->TrapidUtils->performExport($plaza_database,$user_id,$exp_id,"TRANSCRIPT_LABEL",$subset_label."_transcripts_exp".$exp_id.".txt",$subset_label);
-	//pr($file_path);
-	$this->set("file_path",$file_path);
-    $this->redirect($file_path);
-      }
-      else{
-	return;
-      }
-    }
-
-  }
 
 
 

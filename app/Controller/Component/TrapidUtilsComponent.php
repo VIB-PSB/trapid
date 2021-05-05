@@ -68,7 +68,7 @@ class TrapidUtilsComponent extends Component{
      * @param $filename export file name
      * @param null $filter export data filter that can either indicate columns to include in the export file (in the
      * case of structural data export) or a transcript subset (in the case of sequence or subset export)
-     * @return string path of the export zip archive file
+     * @return string path of the export zip archive file, set to null if an error was encountered.
      */
   function performExport($plaza_db, $email, $exp_id, $export_key, $filename, $filter=null) {
     $tmp_dir = TMP."experiment_data/".$exp_id."/";
@@ -83,38 +83,52 @@ class TrapidUtilsComponent extends Component{
     $internal_file = $tmp_dir . $filename;
     // Give a meaningful file name to the zip archive
     $zip_name = implode("_", [strtolower($export_key), $exp_id, $timestamp, substr($hash, 0, 14)]) . ".zip";
-    $internal_zip	= $tmp_dir . $zip_name;
+    $internal_zip = $tmp_dir . $zip_name;
     $java_cmd = "java";
-    $java_program	= "transcript_pipeline.ExportManager";
-    $java_params	= array(TRAPID_DB_SERVER, $plaza_db, TRAPID_DB_USER, TRAPID_DB_PASSWORD,
+    $java_program = "transcript_pipeline.ExportManager";
+    $java_params = array(TRAPID_DB_SERVER, $plaza_db, TRAPID_DB_USER, TRAPID_DB_PASSWORD,
         TRAPID_DB_SERVER, TRAPID_DB_NAME, TRAPID_DB_USER, TRAPID_DB_PASSWORD, $transl_tables_file, $exp_id,
         $export_key, $internal_file);
     if($filter != null){
         $java_params[] = $filter;
     }
     $export_basename = "export_data";
-    $shell_file	= $tmp_dir . $export_basename . ".sh";
+    $shell_file = $tmp_dir . $export_basename . ".sh";
     $error_file = $tmp_dir . $export_basename . ".err";
     $output_file = $tmp_dir . $export_basename . ".out";
     // Command to remove previous export shell script and stderr/stdout files
     $export_rm = implode(" ", ["rm -f", $shell_file, $error_file, $output_file]);
     // Zip archives to remove (pattern for 'rm' command) when a new zip archive is generated
-    $zip_rm	= $tmp_dir . "*_" . substr($hash, 0, 14) . ".zip";
+    $zip_rm = $tmp_dir . "*_" . substr($hash, 0, 14) . ".zip";
 
     // Create export shell script
     shell_exec($export_rm);
     $fh = fopen($shell_file,"w");
     fwrite($fh,"#!/bin/bash \n");
     fwrite($fh,"module load java\n\n");
+    fwrite($fh,"hostname\n");
+    fwrite($fh,"date\n");
    //fwrite($fh,"java -cp ".$java_location.".:".$java_location."..:".$java_location."mysql.jar ".$java_program." ".implode(" ",$java_params)."\n");
     fwrite($fh,$java_cmd . " -cp ".$java_location.".:".$java_location."..:".$java_location."lib/* ".$java_program." ".implode(" ",$java_params). "\n");
+    fwrite($fh, "if [ $? -eq 0 ]\nthen\necho \"Export finished successfully\"\ndate\nexit 0\n");
+    fwrite($fh, "else\necho \"Export finished with an error\"\ndate\nexit 1\n");
+    fwrite($fh, "fi\n");
     fclose($fh);
     shell_exec("chmod a+x " . $shell_file);
 
     // Run export shell script on the web cluster
-    $cluster_cmd = ". /etc/profile.d/settings.sh && qsub -q short -sync y -e " . $error_file . " -o " . $output_file . " " . $shell_file;
-    $cluster_output = shell_exec($cluster_cmd);
-    // pr("Output:\n" . $cluster_output);
+    // 2021-05-05: switched to medium queue (instead of short) to allow export jobs to run longer
+    $cluster_cmd = ". /etc/profile.d/settings.sh && qsub -q medium -sync y -e " . $error_file . " -o " . $output_file . " " . $shell_file;
+    // $cluster_output = shell_exec($cluster_cmd);
+    $cluster_output = null;
+    $cluster_exit_status = 0;
+    exec($cluster_cmd, $cluster_output, $cluster_exit_status);
+    // pr($cluster_output);
+    // pr($cluster_exit_status);
+    // If the job finished with an exit status other than zero, return `null`
+    if($cluster_exit_status != 0) {
+      return null;
+    }
 
     // Zip result file and cleanup previous export files
     // Now export files are generated with different names. Should every zip archive be removed?
