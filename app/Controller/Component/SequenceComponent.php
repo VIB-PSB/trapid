@@ -3,45 +3,84 @@ App::uses("Component", "Controller");
 class SequenceComponent extends Component{
 
 
-  // This function does not deal with start codons properly! This should be changed!
-  function translate_multicds_php($dna_sequences, $transl_table=1){
-      // Read translation tables
-      $transl_tables_file = new File(SCRIPTS . "cfg/all_translation_tables.json");
-      $json = $transl_tables_file->read(true, 'r');
-      $transl_tables = json_decode($json, true);
-      $lookup = $transl_tables[$transl_table]['table'];
-      $start_codons = $transl_tables[$transl_table]['start_codons'];
-      $result	= array();
-      foreach($dna_sequences as $transcript_id=>$dna_sequence){
-	  $res	= "";
-	  for($i=0;$i<strlen($dna_sequence);$i+=3){
-          $start	= $i;
-          $stop	= $i+3; if($stop>=strlen($dna_sequence)){$stop = strlen($dna_sequence)-1;}
-          $codon	= substr($dna_sequence,$start,($stop-$start));
-          if(array_key_exists($codon,$lookup)){$res=$res."".$lookup[$codon];}
-          else{
-              $codon	= substr($dna_sequence,$start,2);
-              if(array_key_exists($codon,$lookup)){$res=$res."".$lookup[$codon];}
-              else{$res=$res."X";}
-          }
+  // This function does not deal with alternate start codons properly! This should be changed!
+
+    /**
+     * Translate an array of (ORF) DNA sequences into amino-acid using a selected genetic code.
+     *
+     * @param $dna_sequences associative array of ORF sequences to translate, using transcript ids as keys
+     * @param int $transl_table translation table index, set to `1` (standard genetic code) by default
+     * @return array associative array with translated transcript sequences, using transcript ids as keys
+     */
+    function translate_multicds_php($dna_sequences, $transl_table=1){
+        // Read translation tables
+        $transl_tables_file = new File(SCRIPTS . "cfg/all_translation_tables.json");
+        $json = $transl_tables_file->read(true, 'r');
+        $transl_tables = json_decode($json, true);
+        $lookup = $transl_tables[$transl_table]['table'];
+        // Get start codons: currently unused
+        $start_codons = $transl_tables[$transl_table]['start_codons'];
+        $result = array();
+        foreach($dna_sequences as $transcript_id=>$dna_sequence) {
+            $res = "";
+            for($i = 0; $i < strlen($dna_sequence); $i += 3) {
+                $start = $i;
+                $stop = $i + 3;
+                // I think this block was causing the display bug: the last codon of the current sequence would miss
+                // one character (because it would slice the sequence string until the `length - 1`-th character).
+                // If the codon is then not a four-fold degenerate, then it would become `X` (later replaced by `*`).
+                // If the codon is a stop codon, the issue is also invisible (`X` replaced by `*`)
+                // if($stop >= strlen($dna_sequence)) {
+                //     $stop = strlen($dna_sequence) - 1;
+                // }
+                if($stop > strlen($dna_sequence)) {
+                    $stop = strlen($dna_sequence);
+                }
+                $codon = substr($dna_sequence, $start, ($stop - $start));
+                // pr($start . " - " . $stop . ": " . $codon);
+                // pr(strlen($dna_sequence));
+                // Codon is in translation table and is not a four-fold degenerate
+                if(array_key_exists($codon, $lookup)) {
+                    $res = $res . "" . $lookup[$codon];
+                }
+                else {
+                    $codon = substr($dna_sequence, $start,2);
+                    // Codon is in translation table and is not a four-fold degenerate
+                    if(array_key_exists($codon,$lookup)) {
+                        $res = $res . "" . $lookup[$codon];
+                    }
+                    // Codon not found, append `X`
+                    else {
+                        $res = $res . "X";
+                    }
+                }
+            }
+            // pr($res);
+            $onemin = substr($res, 0, strlen($res) - 1);
+            $last = substr($res, strlen($res) - 1);
+            $final_res = $res;
+            if($last == 'X') {
+                $final_res = $onemin . "*";
+            }
+            $result[$transcript_id] = $final_res;
+        }
+        return $result;
     }
-	$onemin	= substr($res,0,strlen($res)-1);
-	$last	= substr($res,strlen($res)-1);
-	$final_res	= $res;
-	if($last=='X'){$final_res = $onemin."*";}	
-	$result[$transcript_id]	= $final_res;
-    }			
-    return $result;
-  }
 
 
-
-  function translate_cds_php($dna_sequence, $transl_table=1){
-    $tmp	= array("tmp"=>$dna_sequence);
-    $result	= $this->translate_multicds_php($tmp, $transl_table);
-    $res	= $result['tmp'];
-    return $res;			
-  }
+    /**
+     * Translate a single DNA sequence into amino-acid using a selected genetic code.
+     *
+     * @param $dna_sequence DNA sequence string to translate
+     * @param int $transl_table translation table index, set to `1` (standard genetic code) by default.
+     * @return mixed translated sequence string
+     */
+    function translate_cds_php($dna_sequence, $transl_table=1) {
+        $tmp = array("tmp"=>$dna_sequence);
+        $result = $this->translate_multicds_php($tmp, $transl_table);
+        $res = $result['tmp'];
+        return $res;
+    }
 
 
   function get_all_blast_dbs($annot_source_handle){

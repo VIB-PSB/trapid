@@ -37,11 +37,15 @@
             <div class="tab-content">
                 <div id="news" class="tab-pane active"><br>
                     <p class="text-justify small">
+                        <strong>2021-05-19:</strong> fixed protein minor sequence display bug on transcript page.
+                    </p>
+                    <hr>
+                    <p class="text-justify small">
                         <strong>2021-05-05:</strong> fixed a bug causing some protein sequence export files to be truncated (due to transcripts having no predicted ORF sequence).
                     </p>
                     <hr>
                     <p class="text-justify small">
-                        <strong>2021-04-22:</strong> fixed a bug that was causing an incorrect number of transcripts to be selected when creating subsets from the taxonomic classification visualizations.
+                        <strong>2021-04-22:</strong> fixed a bug that was causing an incorrect number of transcripts to be selected when creating subsets from the taxonomic classification visualizations, and some full taxon paths to not be printed in exported files.
                     </p>
                     <hr>
                     <p class="text-justify small">
