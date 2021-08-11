@@ -1,7 +1,8 @@
 <?php
 
 
-$trapid_ref = $this->element("doc_paper",  array("title"=>"TRAPID 2.0: a web application for taxonomic and functional analysis of de novo transcriptomes", "authors"=>"Francois Bucchini, Andrea Del Cortona, Łukasz Kreft, Alexander Botzki, Michiel Van Bel, Klaas Vandepoele", "url"=>"https://doi.org/10.1101/2020.10.19.345835", "journal"=>"bioRxiv, October 22, 2020"));
+$trapid_ref = $this->element("doc_paper", array("title" => "TRAPID 2.0: a web application for taxonomic and functional analysis of <em>de novo</em> transcriptomes", "authors" => "Francois Bucchini, Andrea Del Cortona, Łukasz Kreft, Alexander Botzki, Michiel Van Bel, Klaas Vandepoele", "url" => "https://doi.org/10.1093/nar/gkab565", "journal" => "Nucleic Acids Research, 01 July, 2021"));
+
 // FAQ content is defined here, as associative arrays (one per FAQ category).
 // The rest of the view parses this information to display the content.
 // array structure: array("element-id"=>array("q"=>"question", "a"=>"answer"))... Element ids must be unique!

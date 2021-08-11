@@ -6,14 +6,14 @@
         <h2>Licensing</h2>
         <p class="text-justify">The TRAPID platform is currently only freely accessible for academic use.
             If you have a commercial interest in the platform, or would like to use TRAPID for commercial purposes,
-            please contact <a href='http://bioinformatics.psb.ugent.be/cig/' target="_blank">Klaas Vandepoele</a>.
+            please contact <a href='http://bioinformatics.psb.ugent.be/cnb/people' target="_blank" class="linkout">Klaas Vandepoele</a>.
     </section>
 
     <section class="page-section">
         <h2>Citing TRAPID</h2>
         <p class="text-justify">In case you publish results generated using TRAPID, please cite this paper:</p>
 
-        <?php echo $this->element("doc_paper",  array("title"=>"TRAPID 2.0: a web application for taxonomic and functional analysis of de novo transcriptomes", "authors"=>"Francois Bucchini, Andrea Del Cortona, Łukasz Kreft, Alexander Botzki, Michiel Van Bel, Klaas Vandepoele", "url"=>"https://doi.org/10.1101/2020.10.19.345835", "journal"=>"bioRxiv, October 22, 2020")); ?>
+        <?php echo $this->element("doc_paper",  array("title"=>"TRAPID 2.0: a web application for taxonomic and functional analysis of <em>de novo</em> transcriptomes", "authors"=>"Francois Bucchini, Andrea Del Cortona, Łukasz Kreft, Alexander Botzki, Michiel Van Bel, Klaas Vandepoele", "url"=>"https://doi.org/10.1093/nar/gkab565", "journal"=>"Nucleic Acids Research, 01 July, 2021")); ?>
 
     </section>
 
@@ -29,7 +29,7 @@
             using data integration, comparative sequence & expression analysis, and network biology, in plants, green algae and diatoms.
         </p>
         <p class="text-justify">If you wish to learn more, you may be interested by taking a look at the <a
-                    href="http://bioinformatics.psb.ugent.be/cig/" class='linkout' target="about:blank">group's website</a>.</p>
+                    href="http://bioinformatics.psb.ugent.be/cnb/" class='linkout' target="about:blank">group's website</a>.</p>
     </section>
 
     <section class="page-section">
