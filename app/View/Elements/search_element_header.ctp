@@ -49,7 +49,7 @@ if(isset($exp_info)){
             }
             ?>
         </select>
-        <input type="text" id="search-term" placeholder="Search this experiment..." maxlength='700' name='search_value' autocomplete="off" value="<?php echo $sv;?>">
+        <input type="text" id="search-term" placeholder="Search this experiment..." maxlength='700' name='search_value' autocomplete="off" value="<?php echo $sv;?>" required>
         <span id="search-clear" class="glyphicon glyphicon-remove hidden"></span>
         <div id="search-suggestions" class="autocomplete-items"></div>
         <button type="submit" id="search-button">
@@ -120,7 +120,7 @@ if(isset($exp_info)){
 
      // Function to actually populate the search suggestion results from the lookup.
      var populateOptions = function (options, search_type) {
-          console.log(options);
+         // console.log(options);
          var toKeep = [];
          options.forEach(function (item, index) {
              // Depending on search type, format search suggestion items differently
@@ -148,7 +148,7 @@ if(isset($exp_info)){
          });
          // console.log(toKeep);  // Debug
          // Create suggestion rows and set results
-         var html_str = toKeep.map(x=>"<div data-value='" + x['dv'] + "' class='row-fluid row-suggestion'>" + x['label'] + "</div>").join('');
+         var html_str = toKeep.map(x=>'<div data-value="' + x['dv'] + '" class="row-fluid row-suggestion">' + x['label'] + '</div>').join('');
          search_suggestions_elmt.innerHTML = html_str;
 
      };
