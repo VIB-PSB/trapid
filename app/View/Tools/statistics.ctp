@@ -95,7 +95,7 @@
 
     <div class="panel panel-default">
         <div class="panel-heading">
-            <h3 class="panel-title">Taxonomic classification information</h3>
+            <h3 class="panel-title">Taxonomic classification information (Kaiju)</h3>
         </div>
         <div class="panel-body">
         <?php if($exp_info['perform_tax_binning'] == 1): ?>
@@ -118,7 +118,7 @@
 
     <div class="panel panel-default">
         <div class="panel-heading">
-            <h3 class="panel-title">Similarity search information</h3>
+            <h3 class="panel-title">Similarity search information (DIAMOND)</h3>
         </div>
         <div class="panel-body">
             <p class="text-justify">Best similarity search hit for each transcript. By default, only the top 20 species are shown. If there are more, click the <code>Show all</code> link to display all species.</p>

@@ -7,7 +7,7 @@
               <p class="text-justify">Through a highly optimized processing pipeline the TRAPID system offers functional and comparative analyses for transcriptome data sets. TRAPID is highly competitive with respect to other existing solutions with regards to both speed and quality.</p>
             </section>
     <div class="row">
-        <div class="col-md-9 col-sm-8">
+        <div class="col-md-9 col-sm-8 col-xs-12">
             <section class="page-section-xs">
                 <h2>TRAPID features</h2>
                 <p class="text-justify">TRAPID 2.0 currently offers the following features:</p>
@@ -27,15 +27,15 @@
               <p class="text-justify">More information about these features and a comprehensive overview of the TRAPID capabilities can be found in the 			<?php echo $this->Html->link("documentation",array("controller"=>"documentation","action"=>"general")); ?>. </p>
             </section>
         </div>
-        <div class="col-md-3 col-sm-4 hidden-xs">
+        <div class="col-md-3 col-sm-4 col-xs-12">
             <div style="height:27px;"></div>
             <ul class="nav nav-tabs nav-justified" id="tabs" data-tabs="tabs">
-                <li class="active"><a href="#news" data-toggle="tab">News</a></li>
+                <li class="active"><a href="#news-feed" data-toggle="tab">News</a></li>
                 <li><a href="#twitter-feed" data-toggle="tab">Twitter feed</a></li>
                 <!--<li><a href="#raw-data" data-toggle="tab">Raw data</a></li>-->
             </ul>
             <div class="tab-content">
-                <div id="news" class="tab-pane active"><br>
+                <div id="news-feed" class="tab-pane active">
                     <p class="text-justify small">
                         <strong>2021-05-19:</strong> fixed protein minor sequence display bug on transcript page.
                     </p>

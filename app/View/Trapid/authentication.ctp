@@ -115,7 +115,7 @@ input[type="password"] {
         <h1 class="text-primary">Password recovery</h1>
     </div>
         <?php if(!isset($sent_reset_email)) :?>
-<p class="text-justify">Forgot your account's password? Enter your email address and we'll send you a new one.</p>
+<p class="text-justify">Forgot your account's password? Enter your email address to reset it. </p>
 
         <div class="form-wrapper">
             <?php

@@ -2551,7 +2551,13 @@ label.optional::after {
 	font-size: 0.85em;
 }
 
-
+/* Homepage */
+#news-feed {
+	padding-top: 15px;
+	padding-right: 10px;
+	max-height: 450px;
+	overflow-y: auto;
+}
 
 
 
