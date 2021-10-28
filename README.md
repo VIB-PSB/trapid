@@ -72,7 +72,7 @@ This repository contains the web application and the data processing code (see `
 1. The TRAPID database, that stores experiment data (e.g. transcripts, functional annotation, taxonomy, gene/RNA families, ...), taxonomy data, and other configuration data. 
 2. A reference database (or more), that stores biological sequences,  functional annotation, and gene family information for a set of reference species. The reference database is used throughout the web application as well as during the initial processing phase to derive gene family and functional annotations for the processed transcripts (in the case of eggNOG, eggNOG-mapper is used for these two last steps instead). 
 
-SQL schemes and example data for the required databases can be found here: ftp://ftp.psb.ugent.be/pub/trapid/src/trapid_02_db_examples.tar.gz (TRAPID FTP).
+SQL schemes and example data for the required databases can be found [here](https://ftp.psb.ugent.be/pub/trapid/src/trapid_02_db_examples.tar.gz) (TRAPID FTP).
 
 ### Installation steps 
 
@@ -84,7 +84,7 @@ SQL schemes and example data for the required databases can be found here: ftp:/
 3. Create or download necessary files/resources: 
     * DIAMOND indices, based on the `annotation` table of the reference database. 
     * Kaiju index and accompanying NCBI taxonomy data.
-    * Rfam [library of CMs](ftp://ftp.ebi.ac.uk/pub/databases/Rfam/14.1/Rfam.cm.gz) and [clan information](ftp://ftp.ebi.ac.uk/pub/databases/Rfam/14.1/Rfam.clanin) files (links for version 14.1). 
+    * Rfam [library of CMs](https://ftp.ebi.ac.uk/pub/databases/Rfam/14.1/Rfam.cm.gz) and [clan information](https://ftp.ebi.ac.uk/pub/databases/Rfam/14.1/Rfam.clanin) files (links for version 14.1). 
 4. Clone or download the repository. 
 5. Change configuration: 
     * Create and edit all necessary INI files in the `app/scripts/ini_files`, starting from the available templates (`*.default`, to rename as `*.ini`). 

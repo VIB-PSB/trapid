@@ -34,7 +34,7 @@ function create_export_example($elmt_id, $example_data){
                         addition, we provide step-by-step tutorials
                         <?php echo $this->Html->link("here", array("controller" => "documentation", "action" => "tutorial")); ?>, to guide non-experts through the different steps of processing a
                         complete transcriptome using TRAPID.</p>
-                    <p class="text-justify">Sample data, including a <em>Panicum</em> transcriptome (from <a href="https://onlinelibrary.wiley.com/doi/abs/10.1111/j.1365-313X.2012.04938.x" target="_blank" class="linkout">Meyer et al., 2012</a>) and several microbial eukaryote transcriptomes from the MMETSP (<a href="https://dx.doi.org/10.1371%2Fjournal.pbio.1001889" target="_blank" class="linkout">Keeling et al., 2014</a>) can be found on <a href="ftp://ftp.psb.ugent.be/pub/trapid" target="_blank" class="linkout">TRAPID's public FTP</a>. </p>
+                    <p class="text-justify">Sample data, including a <em>Panicum</em> transcriptome (from <a href="https://onlinelibrary.wiley.com/doi/abs/10.1111/j.1365-313X.2012.04938.x" target="_blank" class="linkout">Meyer et al., 2012</a>) and several microbial eukaryote transcriptomes from the MMETSP (<a href="https://dx.doi.org/10.1371%2Fjournal.pbio.1001889" target="_blank" class="linkout">Keeling et al., 2014</a>) can be found on <a href="https://ftp.psb.ugent.be/pub/trapid" target="_blank" class="linkout">TRAPID's public FTP</a>. </p>
                 </section>
                 <section class="page-section-sm">
                 <h4 id="requirements">Software requirements</h4>

@@ -38,7 +38,7 @@
 			<span class='doctopspan'>Step-by-step examples of how to use the TRAPID platform</span>
 		</dd>
 		<dt>
-			<a href="ftp://ftp.psb.ugent.be/pub/trapid">FTP Server</a>
+			<a href="https://ftp.psb.ugent.be/pub/trapid">FTP Server</a>
 		</dt>
 		<dd>
 			FTP server containing a multitude of example files.
