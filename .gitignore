@@ -2,3 +2,4 @@
 *.class
 *.pyc
 *.ini
+.idea
