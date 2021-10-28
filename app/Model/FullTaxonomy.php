@@ -7,9 +7,6 @@ class FullTaxonomy extends AppModel
 {
     var $name = "FullTaxonomy";
     var $useTable = "full_taxonomy";
-    // var $useDbConfig 	= "db_trapid_02"; // This value does not exist in config...
-    // Changed on 2016-01-03 (`full_taxonomy` table now in the main TRAPID database)
-    // var $useDbConfig 	= "db_trapid_01_taxonomy";
 
 
     function findClades($species_array)
