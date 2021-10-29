@@ -2,8 +2,8 @@
     // TODO: host highcahrts locally
     echo $this->Html->script(
         array(
-            'https://code.highcharts.com/highcharts.js',
-            'https://code.highcharts.com/modules/exporting.js',
+            'https://code.highcharts.com/8.0/highcharts.js',
+            'https://code.highcharts.com/8.0/modules/exporting.js',
             'dagre.js',
             'd3-3.5.6.min.js',
             'd3/d3-color.v1.min.js',
