@@ -3,3 +3,4 @@
 *.pyc
 *.ini
 .idea
+app/webroot/favicon.ico
