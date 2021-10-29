@@ -28,6 +28,12 @@ class ProteinMotifs extends AppModel{
   }
 
 
+  // Check if a `$ipr_id` string could be valid InterPro identifier (based on a pattern only, not checking the database)
+  function isValidIprIdPattern($ipr_id) {
+  // A string composed of `IPR` + 6 digits is considered to be a valid ID
+    $ipr_pattern = "/^IPR[0-9]{6}$/i";
+    return (bool) preg_match($ipr_pattern, $ipr_id);
+  }
 
 }
 ?>

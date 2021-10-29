@@ -23,4 +23,11 @@ class KoTerms extends AppModel {
         return $result;
     }
 
+    // Check if a `$ko_id` string could be valid KO identifier (based on a pattern only, not checking the database)
+    function isValidKoIdPattern($ko_id) {
+        // A string composed of `K` + 5 digits is considered to be a valid ID
+        $ko_pattern = "/^K[0-9]{5}$/i";
+        return (bool) preg_match($ko_pattern, $ko_id);
+    }
+
 }

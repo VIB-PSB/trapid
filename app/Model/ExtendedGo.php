@@ -65,5 +65,13 @@ class ExtendedGo extends AppModel{
         return $result;
     }
 
+
+    // Check if a `$go_id` string could be valid GO identifier (based on a pattern only, not checking the database)
+    function isValidGoIdPattern($go_id) {
+        // A string composed of `GO:` + 7 digits is considered to be a valid ID
+        $go_pattern = "/^GO:[0-9]{7}$/i";
+        return (bool) preg_match($go_pattern, $go_id);
+    }
+
 }
 ?>
