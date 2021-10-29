@@ -25,12 +25,6 @@ class DocumentationController extends AppController{
   }
 
 
-  /* TODO: delete as this page is unused */
-  function quickstart(){
-      $this -> set('title_for_layout', 'Quick start');
-  }
-
-
   function faq(){
       $max_user_experiments = MAX_USER_EXPERIMENTS;
       $this->set("max_user_experiments",$max_user_experiments);
