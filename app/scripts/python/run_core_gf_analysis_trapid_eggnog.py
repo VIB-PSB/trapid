@@ -7,7 +7,7 @@ with EggNOG as reference database. This script is the one used within TRAPID 2.
 
 # TODO: have precomputed core GF files and check if it corresponds to the parameters currently used.
 # Note: From the `all_gfs` dictionary we can get pretty much everything we want and export it to the TRAPID database.
-# Note: is it really needed to export GF weight to TRAPID datatabase? It can be found easily (n_species/n_genes)
+# Note: is it really needed to export GF weight to TRAPID database? It can be found easily (n_species/n_genes)
 
 
 import argparse

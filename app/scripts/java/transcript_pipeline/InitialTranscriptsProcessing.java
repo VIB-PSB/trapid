@@ -2560,7 +2560,7 @@ public class InitialTranscriptsProcessing {
 						longestHasStopCodon 	= currentHasStopCodon;
 					}
 					currentAA 				= new StringBuffer();
-					currentORF 				= new StringBuffer();;
+					currentORF 				= new StringBuffer();
 					currentStart 			= 0;
 					currentStop 			= 0;
 					currentHasStartCodon 	= false;
