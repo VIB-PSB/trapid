@@ -1284,232 +1284,298 @@ class TrapidController extends AppController{
    ******************************************************************************************************
    */
 
-  // TODO: replace raw queries?
-  // TODO: modify error messages when searching functional annotation identifiers (minor).
-  // Note:  when searching functional annotation identifiers, only results with the exact match are displayed.
-  // Should we try to have consistent behaviour between id/descs (i.e. retrieve all labels matching the desc)?
-  function search($exp_id=null){
-    parent::check_user_exp($exp_id);
-    $exp_info	= $this->Experiments->getDefaultInformation($exp_id);
-    //	pr($exp_info);
-    $this -> set('title_for_layout', 'Search results');
+    // TODO: replace raw queries?
+    // TODO: modify error messages when searching functional annotation identifiers (minor).
+    // TODO: handle non-reachable break statements.
+    // TODO: redirect directly to functional annotation page when using exact ids?
+    // Note:  when searching functional annotation identifiers, only results with the exact match are displayed.
+    // Should we try to have consistent behaviour between id/descs (i.e. retrieve all labels matching the desc)?
+    /**
+     *
+     * Process a user's search and display results depending on the selected search data type ('search_type') and search
+     * query ('search_value'), both passed as the parameters of a POST request.
+     *
+     * @param null $exp_id the experiment id.
+     */
+    function search($exp_id=null) {
+        parent::check_user_exp($exp_id);
+        $exp_info = $this->Experiments->getDefaultInformation($exp_id);
+        //	pr($exp_info); // Debug
+        $this->TrapidUtils->checkPageAccess($exp_info['title'], $exp_info["process_state"], $this->process_states["default"]);
+        $this->set("exp_info", $exp_info);
+        $this->set("exp_id", $exp_id);
+        $this -> set('title_for_layout', 'Search results');
 
-    $this->TrapidUtils->checkPageAccess($exp_info['title'],$exp_info["process_state"],$this->process_states["default"]);
-    $this->set("exp_info",$exp_info);
-    $this->set("exp_id",$exp_id);
-    if(!$_POST){$this->redirect(array("controller"=>"trapid","action"=>"experiment",$exp_id));}
-    if(!array_key_exists("search_type",$_POST) || !array_key_exists("search_value",$_POST)){$this->redirect(array("controller"=>"trapid","action"=>"experiment",$exp_id));}
-    $st	= trim($_POST['search_type']); // `$st` is checked against valid types
-    // Unclean! But should provide temporary relief before all the requests below are replaced...
-    $sv = str_replace("'", "", $this->Transcripts->getDataSource()->value(trim($_POST['search_value']), 'string'));
-
-    $this->set("search_type", $st);
-    $this->set("search_value", $sv);
-    if(strlen($sv)==0){$this->set("search_result","bad_search");return;}
-
-
-    // Perform search depending on user-selected search type (`$st`) and return results
-    // Transcript sequence
-    if($st=="transcript"){
-      $transcripts_info	= $this->Transcripts->find("count",array("conditions"=>array("experiment_id"=>$exp_id,"transcript_id"=>$sv)));
-      if(!$transcripts_info){$this->set("search_result","bad_search");return;}
-      else{$this->redirect(array("controller"=>"trapid","action"=>"transcript",$exp_id,urlencode($sv)));}
-    }
-
-    // Reference DB gene identifier
-    else if($st=="gene"){
-      // okay, this becomes complicated based on the type of reference database / GF.
-      // GF type (PLAZA databases):
-      //  * If iORTHO, we do a query on the gf_content row of the table gene families (not optimal)
-      //  * If HOM, we do a query on the associated PLAZA database. This should be a relatively fast query, from which we can further on
-      //    deduct the associated gene family.
-      // If the used reference database is EggNOG, we need to check all GF the ref. gene belongs to
-      $db_type = "plaza";
-      if(strpos($exp_info["used_plaza_database"], "eggnog") !== false){
-          $db_type = "eggnog";
-      }
-      $this->set("db_type", $db_type);  // move?
-      // EggNOG reference database: potentially multiple GFs to handle for a single gene ID (tax. scope)
-      if($db_type == "eggnog") {
-          // Find gene. If there is no corresponding gene in `annotation`, return an error
-          $genes = $this->Annotation->find("first",array("conditions"=>array("gene_id"=>$sv)));
-          if(!$genes){$this->set("search_result","bad_search");return;}
-          $gene_id	= $genes['Annotation']['gene_id'];
-          // Get associated GF information from reference DB
-          $gene_family_data	= $this->GfData->find("all", array("fields"=>"gf_id", "conditions"=>array("gene_id"=>$gene_id)));
-          // If no GF is associated to the provided gene identifier, return an error
-          if(!$gene_family_data){$this->set("search_result","bad_search");return;}
-          // Find matching GF data in TRAPID experiment
-          $gf_ids = array_map(function($x) {return $x['GfData']['gf_id'];}, $gene_family_data);
-          $gf_info	= $this->GeneFamilies->find("all",array("conditions"=>array("experiment_id"=>$exp_id,"plaza_gf_id"=>$gf_ids),"fields"=>array("gf_id","plaza_gf_id","num_transcripts")));
-          // If nothing corresponds, return an error
-          if(!$gf_info) {
-              $this->set("search_result", "bad_search");
-              return;
-          }
-          $this->set("search_result","gene");
-          $this->set("gf_info",$gf_info);
-          return;
-      }
-      // PLAZA reference database (default)
-      else {
-          // iORTHO GF
-          if($exp_info['genefamily_type'] == "IORTHO"){
-              $gf_info	= $this->GeneFamilies->findByGene($exp_id,$sv);
-              if(!$gf_info){$this->set("search_result","bad_search");return;}
-              $this->set("search_result","gene");
-              $this->set("gf_info",$gf_info);
-              return;
-          }
-          else if($exp_info['genefamily_type'] == 'HOM'){
-              // Find gene. If there is no corresponding gene in `annotation`, return an error
-              $genes		= $this->Annotation->find("first",array("conditions"=>array("gene_id"=>$sv)));
-              if(!$genes){$this->set("search_result","bad_search");return;}
-              $gene_id	= $genes['Annotation']['gene_id'];
-              // Get associated GF information from reference DB
-              $gene_family_data = $this->GfData->find("first", array("fields"=>"gf_id", "conditions"=>array("gene_id"=>$gene_id, "gf_id LIKE"=>$exp_info['gf_prefix']."%")));
-              // If no GF is associated to the provided gene identifier, return an error
-              if(!$gene_family_data){$this->set("search_result","bad_search");return;}
-              // Find matching GF data in TRAPID experiment
-              $gf_id = $gene_family_data['GfData']['gf_id'];
-              $gf_info	= $this->GeneFamilies->find("first",array("conditions"=>array("experiment_id"=>$exp_id,"plaza_gf_id"=>$gf_id),"fields"=>array("gf_id","plaza_gf_id","num_transcripts")));
-              // If nothing corresponds, return an error
-              if(!$gf_info) {
-                  $this->set("search_result", "bad_search");
-                  return;
-              }
-              $gf_info	= $gf_info['GeneFamilies'];
-              $this->set("search_result","gene");
-              $this->set("gf_info",$gf_info);
-              return;
-          }
-          else{
-              $this->redirect("/");
-          }
-      }
-    }
-
-    // Gene family
-    else if($st=="gf"){
-      $transcripts_info = $this->GeneFamilies->find("count",array("conditions"=>array("experiment_id"=>$exp_id,"gf_id LIKE '%" . $sv . "%'")));
-      if(!$transcripts_info){$this->set("search_result","bad_search");return;}
-      else {
-          // Find first match matching GF query .. Why not display all the matches instead?
-          $gf = $this->GeneFamilies->find("first", array("conditions"=>array("experiment_id"=>$exp_id,"gf_id LIKE '%" . $sv . "%'")));
-          $gf_id = $gf['GeneFamilies']['gf_id'];
-          pr($gf_id);
-//          return;
-          $this->redirect(array("controller"=>"gene_family","action"=>"gene_family",$exp_id, urlencode($gf_id)));
-      }
-    }
-
-    // GO term
-    else if($st=="go"){
-      //check on length of search value.
-      if(strlen($sv) < 3){$this->set("search_result","bad_search");$this->set("error","Description should be 3 characters or more");return;}
-      // If the query is a valid GO term identifier, perform search using this ID
-      // A string composed of `GO:` + 5 digits is considered to be a valid ID
-      $go_id = "/^GO:[0-9]{7}$/i";
-      if(preg_match($go_id, $sv)){
-          $go_terms = $this->ExtendedGo->find("all",array("conditions"=>array("name"=>$sv, "type"=>"go")));
-      }
-      // Otherwise, it is a description: find all GO term IDs matching it
-      else {
-        $go_terms = $this->ExtendedGo->find("all",array("conditions"=>array("`ExtendedGo.desc` LIKE '%$sv%'", "type"=>"go")));
-      }
-      if(!$go_terms){$this->set("search_result","bad_search");$this->set("error","Unknown GO description");return;}
-      $go_terms = $this->TrapidUtils->indexArrayMulti($go_terms,"ExtendedGo","name", array("desc","info"));
-      // Ok, now find possible associated transcripts
-      $transcripts_info = $this->TranscriptsGo->findTranscriptsFromGo($exp_id, $go_terms);
-      if(!$transcripts_info){$this->set("search_result","bad_search");return;}
-      $this->set("transcripts_info",$transcripts_info);
-      $this->set("search_result","go");
-      return;
-    }
-
-    // InterPro domain
-    else if($st=="interpro"){
-      //check on length of search value
-      if(strlen($sv) < 3){$this->set("search_result","bad_search");$this->set("error","Description should be 3 characters or more");return;}
-
-      // If the query is a valid InterPro identifier, perform search using this ID
-      // A string composed of `IPR` + 6 digits is considered to be a valid ID
-        $ipr_id = "/^IPR[0-9]{6}$/i";
-        if(preg_match($ipr_id, $sv)){
-            // $this->set("is_identifier", true);
-            $ipr_terms = $this->ProteinMotifs->find("all",array("conditions"=>array("name"=>$sv, "type"=>"interpro")));
+        if(!$_POST) {
+            $this->redirect(array("controller"=>"trapid", "action"=>"experiment", $exp_id));
         }
-        // Otherwise, it is a description: find all InterPro IDs matching it
-        else {
-            $ipr_terms = $this->ProteinMotifs->find("all",array("conditions"=>array("`ProteinMotifs.desc` LIKE '%$sv%' ", "type"=>"interpro")));
+        if(!array_key_exists("search_type", $_POST) || !array_key_exists("search_value", $_POST)) {
+            $this->redirect(array("controller"=>"trapid", "action"=>"experiment", $exp_id));
         }
+        // Get search type. `$st` is checked against valid types. If it's not valid, redirect to the experiment overview.
+        $st	= trim($_POST['search_type']);
+        // Get search value and sanitize it
+        // Should provide temporary relief before all the requests below are replaced
+        // Useless if using `find()`, but there could be some raw SQL left
+        $sv = filter_var(trim($_POST['search_value']),
+            FILTER_SANITIZE_STRING, FILTER_FLAG_NO_ENCODE_QUOTES);
 
-      if(!$ipr_terms){$this->set("search_result","bad_search");$this->set("error","Unknown InterPro description");return;}
-      // $ipr_terms = $this->TrapidUtils->indexArraySimple($ipr_terms,"ProteinMotifs","motif_id","desc");
-      $ipr_terms = $this->TrapidUtils->indexArraySimple($ipr_terms,"ProteinMotifs","name","desc");
-      //ok, now find possibe associated transcripts
-      $transcripts_info = $this->TranscriptsInterpro->findTranscriptsFromInterpro($exp_id,$ipr_terms);
-      if(!$transcripts_info){$this->set("search_result","bad_search");return;}
-      $this->set("transcripts_info",$transcripts_info);
-      $this->set("search_result","interpro");
-      return;
-    }
-
-
-    // KO term
-    else if($st=='ko') {
-        //check on length of search value
-        if(strlen($sv) < 3){$this->set("search_result","bad_search");$this->set("error","Description should be 3 characters or more");return;}
-        // If the query is a valid KO term identifier, perform search using this ID
-        // A string composed of `K` + 5 digits is considered to be a valid ID
-        $ko_id = "/^K[0-9]{5}$/i";
-        if(preg_match($ko_id, $sv)){
-            $ko_terms = $this->KoTerms->find("all",array("conditions"=>array("name"=>$sv, "type"=>"ko")));
-        }
-        // Otherwise, it is a description: find all KO term IDs matching it
-        else {
-            $ko_terms = $this->KoTerms->find("all",array("conditions"=>array("desc LIKE"=>"%$sv%", "type"=>"ko")));
-        }
-
-        if(!$ko_terms){$this->set("search_result","bad_search");$this->set("error","Unknown KO term description");return;}
-        $ko_terms = $this->TrapidUtils->indexArraySimple($ko_terms, "KoTerms","name","desc");
-        //ok, now find possibe associated transcripts
-        $transcripts_info = $this->TranscriptsKo->findTranscriptsFromKo($exp_id,$ko_terms);
-        if(!$transcripts_info){$this->set("search_result","bad_search");return;}
-        $this->set("transcripts_info",$transcripts_info);
-        $this->set("search_result", "ko");
-        return;
-    }
-
-
-    // Meta-annotation
-    else if($st=="meta_annotation"){
-        if(!($sv=="No Information" || $sv=="Partial" || $sv=="Full Length" || $sv=="Quasi Full Length")){
-            $this->set("search_result","bad_search");
-            return;
-        }
-        $this->redirect(array("controller"=>"trapid","action"=>"transcript_selection",$exp_id,"meta_annotation",urlencode($sv)));
-    }
-
-
-    // RNA family
-    else if($st=='rf') {
-        $transcripts_info = $this->RnaFamilies->find("count", array("conditions" => array("experiment_id" => $exp_id, "rf_id LIKE '%" . $sv . "%'")));
-        if (!$transcripts_info) {
+        $this->set("search_type", $st);
+        $this->set("search_value", $sv);
+        if(strlen($sv) == 0) {
             $this->set("search_result", "bad_search");
             return;
-        } else {
-            $rf = $this->RnaFamilies->find("first", array("conditions" => array("experiment_id" => $exp_id, "rf_id LIKE '%" . $sv . "%'")));
-            $rf_id = $rf['RnaFamilies']['rf_id'];
-            $this->redirect(array("controller" => "rna_family", "action" => "rna_family", $exp_id, urlencode($rf_id)));
+        }
+
+        // Perform search depending on user-selected search type (`$st`) and return results
+        switch ($st) {
+            // Transcript sequence
+            case "transcript":
+                $transcripts_info = $this->Transcripts->find("count", array("conditions" => array("experiment_id" => $exp_id, "transcript_id" => $sv)));
+                if (!$transcripts_info) {
+                    $this->set("search_result", "bad_search");
+                    return;
+                }
+                else{
+                    $this->redirect(array("controller" => "trapid", "action" => "transcript", $exp_id, urlencode($sv)));
+                }
+                break;
+
+            // Reference DB gene identifier
+            case "gene":
+                // okay, this becomes complicated based on the type of reference database / GF.
+                // If the used reference database is EggNOG, we need to check all GFs the ref. gene belongs to.
+                // If it is a PLAZA database, the two GF types need to be handled:
+                //  * If iORTHO, we do a query on the gf_content row of the table gene families (not optimal)
+                //  * If HOM, we do a query on the associated PLAZA database. This should be a relatively fast query,
+                // from which we can further on deduct the associated gene family.
+                $db_type = $exp_info['ref_db_type'];
+                $this->set("db_type", $db_type);  // move?
+                // EggNOG reference database: potentially multiple GFs to handle for a single gene ID (tax. scope)
+                if ($db_type == "eggnog") {
+                    // Find gene. If there is no corresponding gene in `annotation`, return an error
+                    $genes = $this->Annotation->find("first", array("conditions" => array("gene_id" => $sv)));
+                    if (!$genes) {
+                        $this->set("search_result", "bad_search");
+                        return;
+                    }
+                    $gene_id = $genes['Annotation']['gene_id'];
+                    // Get associated GF information from reference DB
+                    $gene_family_data = $this->GfData->find("all", array("fields" => "gf_id", "conditions" => array("gene_id" => $gene_id)));
+                    // If no GF is associated to the provided gene identifier, return an error
+                    if (!$gene_family_data) {
+                        $this->set("search_result", "bad_search");
+                        return;
+                    }
+                    // Find matching GF data in TRAPID experiment
+                    $gf_ids = array_map(function ($x) {
+                        return $x['GfData']['gf_id'];
+                    }, $gene_family_data);
+                    $gf_info = $this->GeneFamilies->find("all", array("conditions" => array("experiment_id" => $exp_id, "plaza_gf_id" => $gf_ids), "fields" => array("gf_id", "plaza_gf_id", "num_transcripts")));
+                    // If nothing corresponds, return an error
+                    if (!$gf_info) {
+                        $this->set("search_result", "bad_search");
+                        return;
+                    }
+                    $this->set("search_result", "gene");
+                    $this->set("gf_info", $gf_info);
+                    return;
+                }
+                // PLAZA reference database (default)
+                else {
+                    // iORTHO GF
+                    if ($exp_info['genefamily_type'] == "IORTHO") {
+                        // TODO: check the method used to retrieve data (returns only one GF?)
+                        $gf_info = $this->GeneFamilies->findByGene($exp_id, $sv);
+                        if (!$gf_info) {
+                            $this->set("search_result", "bad_search");
+                            return;
+                        }
+                        $this->set("search_result", "gene");
+                        $this->set("gf_info", $gf_info);
+                        return;
+                    }
+                    else if ($exp_info['genefamily_type'] == 'HOM') {
+                        // Find gene. If there is no corresponding gene in `annotation`, return an error
+                        $genes = $this->Annotation->find("first", array("conditions" => array("gene_id" => $sv)));
+                        if (!$genes) {
+                            $this->set("search_result", "bad_search");
+                            return;
+                        }
+                        $gene_id = $genes['Annotation']['gene_id'];
+                        // Get associated GF information from reference DB
+                        $gene_family_data = $this->GfData->find("first", array("fields" => "gf_id", "conditions" => array("gene_id" => $gene_id, "gf_id LIKE" => $exp_info['gf_prefix'] . "%")));
+                        // If no GF is associated to the provided gene identifier, return an error
+                        if (!$gene_family_data) {
+                            $this->set("search_result", "bad_search");
+                            return;
+                        }
+                        // Find matching GF data in TRAPID experiment
+                        $gf_id = $gene_family_data['GfData']['gf_id'];
+                        $gf_info = $this->GeneFamilies->find("first", array("conditions" => array("experiment_id" => $exp_id, "plaza_gf_id" => $gf_id), "fields" => array("gf_id", "plaza_gf_id", "num_transcripts")));
+                        // If nothing corresponds, return an error
+                        if (!$gf_info) {
+                            $this->set("search_result", "bad_search");
+                            return;
+                        }
+                        $gf_info = $gf_info['GeneFamilies'];
+                        $this->set("search_result", "gene");
+                        $this->set("gf_info", $gf_info);
+                        return;
+                    }
+                    else {
+                        $this->redirect("/");
+                    }
+                }
+                break;
+
+            // Gene family
+            case "gf":
+                $transcripts_info = $this->GeneFamilies->find("count", array("conditions" => array("experiment_id" => $exp_id, "gf_id LIKE" => "%$sv%")));
+                if (!$transcripts_info) {
+                    $this->set("search_result", "bad_search");
+                    return;
+                }
+                else {
+                    // Find first result matching GF query .. Why not display all the matches instead?
+                    $gf = $this->GeneFamilies->find("first", array("conditions" => array("experiment_id" => $exp_id, "gf_id LIKE" => "%$sv%")));
+                    $gf_id = $gf['GeneFamilies']['gf_id'];
+                    // pr($gf_id);
+                    // return;
+                    $this->redirect(array("controller" => "gene_family", "action" => "gene_family", $exp_id, urlencode($gf_id)));
+                }
+                break;
+
+            // GO term
+            case "go":
+               // check on length of search value.
+                if (strlen($sv) < 3) {
+                    $this->set("search_result", "bad_search");
+                    $this->set("error", "GO term query should be 3 characters or more");
+                    return;
+                }
+                // If the query is a valid GO term identifier, perform search using this ID
+                if ($this->ExtendedGo->isValidGoIdPattern($sv)) {
+                    $go_terms = $this->ExtendedGo->find("all", array("conditions" => array("name" => $sv, "type" => "go")));
+                }
+                // Otherwise, it is a description: first check if it is an exact description (e.g. from search suggestions),
+                // or find all GO term IDs matching the search string.
+                else {
+                    $go_terms = $this->ExtendedGo->find("all", array("conditions" => array("desc LIKE" => "%$sv%", "type" => "go")));
+                }
+                if (!$go_terms) {
+                    $this->set("search_result", "bad_search");
+                    $this->set("error", "Unknown GO description");
+                    return;
+                }
+                $go_terms = $this->TrapidUtils->indexArrayMulti($go_terms, "ExtendedGo", "name", array("desc", "info"));
+                // Find possible associated transcripts
+                $transcripts_info = $this->TranscriptsGo->findTranscriptsFromGo($exp_id, $go_terms);
+                if (!$transcripts_info) {
+                    $this->set("search_result", "bad_search");
+                    return;
+                }
+                $this->set("transcripts_info", $transcripts_info);
+                $this->set("search_result", "go");
+                break;
+
+            // InterPro domain
+            case "interpro":
+                // check on length of search value
+                if (strlen($sv) < 3) {
+                    $this->set("search_result", "bad_search");
+                    $this->set("error", "Protein domain query should be 3 characters or more");
+                    return;
+                }
+
+                // If the query is a valid InterPro identifier, perform search using this ID
+                if ($this->ProteinMotifs->isValidIprIdPattern($sv)) {
+                    // $this->set("is_identifier", true);
+                    $ipr_terms = $this->ProteinMotifs->find("all", array("conditions" => array("name" => $sv, "type" => "interpro")));
+                }
+                // Otherwise, it is a description: find all InterPro IDs matching it
+                else {
+                    $ipr_terms = $this->ProteinMotifs->find("all", array("conditions" => array("desc LIKE" => "%$sv%", "type" => "interpro")));
+                }
+
+                if (!$ipr_terms) {
+                    $this->set("search_result", "bad_search");
+                    $this->set("error", "Unknown InterPro description");
+                    return;
+                }
+                $ipr_terms = $this->TrapidUtils->indexArraySimple($ipr_terms, "ProteinMotifs", "name", "desc");
+                // Find possible associated transcripts
+                $transcripts_info = $this->TranscriptsInterpro->findTranscriptsFromInterpro($exp_id, $ipr_terms);
+                if (!$transcripts_info) {
+                    $this->set("search_result", "bad_search");
+                    return;
+                }
+                $this->set("transcripts_info", $transcripts_info);
+                $this->set("search_result", "interpro");
+                break;
+
+            // KO term
+            case "ko":
+                // Check on length of search value
+                if (strlen($sv) < 3) {
+                    $this->set("search_result", "bad_search");
+                    $this->set("error", "KO term query should be 3 characters or more");
+                    return;
+                }
+                // If the query is a valid KO term identifier, perform search using this ID
+                if ($this->KoTerms->isValidKoIdPattern($sv)) {
+                    $ko_terms = $this->KoTerms->find("all", array("conditions" => array("name" => $sv, "type" => "ko")));
+                } // Otherwise, it is a description: find all KO term IDs matching it
+                else {
+                    $ko_terms = $this->KoTerms->find("all", array("conditions" => array("desc LIKE" => "%$sv%", "type" => "ko")));
+                }
+
+                if (!$ko_terms) {
+                    $this->set("search_result", "bad_search");
+                    $this->set("error", "Unknown KO term description");
+                    return;
+                }
+                $ko_terms = $this->TrapidUtils->indexArraySimple($ko_terms, "KoTerms", "name", "desc");
+                // Find possible associated transcripts
+                $transcripts_info = $this->TranscriptsKo->findTranscriptsFromKo($exp_id, $ko_terms);
+                if (!$transcripts_info) {
+                    $this->set("search_result", "bad_search");
+                    return;
+                }
+                $this->set("transcripts_info", $transcripts_info);
+                $this->set("search_result", "ko");
+                break;
+
+            // Meta-annotation
+            case "meta_annotation":
+                if (!in_array(strtolower($sv), ["no information", "partial", "quasi full length", "full Length"])) {
+                    $this->set("search_result", "bad_search");
+                    return;
+                }
+                $clean_sv = ucwords(strtolower($sv));  // Title case transform for cleaner result display
+                $this->redirect(array("controller" => "trapid", "action" => "transcript_selection", $exp_id, "meta_annotation", urlencode($clean_sv)));
+                break;
+
+            // RNA family
+            case "rf":
+                $transcripts_info = $this->RnaFamilies->find("count", array("conditions" => array("experiment_id" => $exp_id, "rf_id LIKE" => "%$sv%")));
+                if (!$transcripts_info) {
+                    $this->set("search_result", "bad_search");
+                    return;
+                }
+                else {
+                    $rf = $this->RnaFamilies->find("first", array("conditions" => array("experiment_id" => $exp_id, "rf_id LIKE" => "%$sv%")));
+                    $rf_id = $rf['RnaFamilies']['rf_id'];
+                    $this->redirect(array("controller" => "rna_family", "action" => "rna_family", $exp_id, urlencode($rf_id)));
+                }
+                break;
+
+            // Invalid search type `$st`
+            default:
+                $this->redirect(array("controller" => "trapid", "action" => "experiment", $exp_id));
+                break;
         }
     }
-
-    // Invalid search type `$st`
-    else{
-      $this->redirect(array("controller"=>"trapid","action"=>"experiment",$exp_id));
-    }
-  }
 
 
     /*
@@ -1538,7 +1604,7 @@ class TrapidController extends AppController{
         if(!in_array($search_type, $allowed_types)){return;}
         if(strlen($search_str) < $min_length){return;}
 
-        $search_str = filter_var($search_str, FILTER_SANITIZE_STRING);  // Useless if using `find()`?
+        $search_str = filter_var($search_str, FILTER_SANITIZE_STRING, FILTER_FLAG_NO_ENCODE_QUOTES);  // Useless if using `find()`?
         $search_str = str_replace("__", ":", $search_str);
         $search_str = strtolower($search_str);
         $suggestions = [];
@@ -1746,7 +1812,7 @@ class TrapidController extends AppController{
 
 
 
-    /*******************************************************************************************************
+   /*******************************************************************************************************
    *
    *  DATA PROCESSING
    *
