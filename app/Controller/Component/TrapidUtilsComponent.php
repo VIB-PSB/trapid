@@ -1145,36 +1145,4 @@ class TrapidUtilsComponent extends Component{
       }
     }
 
-    // Note: 2021-01-04: we now use CakeEmail to send out registration emails. It seems to fix the issues we experienced
-    // since the psbprox1 UGent move...
-    // Ensure parameters passed to this functions are sanitized (e.g. result of `find()`)
-    function send_registration_email_old($email,$password,$password_update=false){
-      $subject = "TRAPID authentication information";
-      $message 	        	= "Welcome to TRAPID 2.0, the web resource for rapid analysis of transcriptome data.\nHere is the required authentication information.\n\nUser email address: ".$email."\nPassword: ".$password."\n\nThank you for using TRAPID 2.0.";
-      if($password_update){
-          $subject = "TRAPID password change";
-	      $message		= "The password for your TRAPID account has been changed.\n\nThe new password is: ".$password."\n\nYou can change it at anytime: log into TRAPID and select 'Account > Change password'.\n\nThank you for using the TRAPID 2.0.\n";
-      }
-      $this->Email->to 			= $email;
-      $this->Email->subject		= $subject;
-      $this->Email->replyTo		= "no-reply@psb.ugent.be";
-      $this->Email->from 		= "TRAPID <no-reply@psb.ugent.be>";
-//      $this->Email->additionalParams	= "-fno-reply@psb.ugent.be";
-      $this->Email->send($message);
-      $this->Email->reset();
-
-      // Send email to administrators to be warned when a new user is added
-      if(!$password_update){
-     	  $this->Email->reset();
-    	  $this->Email->to		= array("frbuc@psb.vib-ugent.be","mibel@psb.ugent.be","klpoe@psb.ugent.be");
-    	  $this->Email->subject		= "TRAPID new user";
-    	  $this->Email->replyTo		= "no-reply@psb.ugent.be";
-    	  $this->Email->from 		= "TRAPID webmaster <no-reply@psb.ugent.be>";
-    	  // $this->Email->additionalParams	= "-fno-reply@psb.ugent.be";
-    	  $this->Email->send("New user added to TRAPID system\n\nUser login: ".$email);
-    	  $this->Email->reset();
-      }
-    }
-
 }
-?>
