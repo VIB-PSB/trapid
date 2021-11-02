@@ -1,10 +1,9 @@
 <?php
 
 class DocumentationController extends AppController {
-    var $name = "Documentation";
-    var $helpers = array("Html", "Form");
-    var $uses = array("Configuration", "DataSources");
     var $layout = "external";  // Layout for external pages (i.e. not in experiment)
+    var $name = "Documentation";
+    var $uses = array("Configuration", "DataSources");
 
     function index() {
         $this->set("active_header_item", "Documentation");

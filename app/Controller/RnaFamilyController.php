@@ -6,15 +6,8 @@ App::uses('Sanitize', 'Utility');
  */
 
 class RnaFamilyController extends AppController {
+    var $components = array("TrapidUtils");
     var $name = "RnaFamily";
-    var $helpers = array("Html");
-    var $uses = array("Annotation", "AnnotSources", "Authentication", "Configuration", "Experiments", "ExtendedGo",
-        "GfData", "GoParents", "HelpTooltips", "KoTerms", "ProteinMotifs", "RnaFamilies", "Transcripts", "TranscriptsGo",
-        "TranscriptsInterpro", "TranscriptsKo", "TranscriptsLabels"
-    );
-
-    var $components = array("Cookie", "TrapidUtils");
-
     var $paginate = array(
         "RnaFamilies" =>
             array(
@@ -25,10 +18,15 @@ class RnaFamilyController extends AppController {
                 )
             )
     );
+    var $uses = array("Annotation", "AnnotSources", "Authentication", "Configuration", "Experiments", "ExtendedGo",
+        "GfData", "GoParents", "HelpTooltips", "KoTerms", "ProteinMotifs", "RnaFamilies", "Transcripts", "TranscriptsGo",
+        "TranscriptsInterpro", "TranscriptsKo", "TranscriptsLabels"
+    );
 
 
     // Paginated table with Rfam families, with Cake sorting allowed
     function index($exp_id = null) {
+
         if (!$exp_id) {
             $this->redirect(array("controller" => "trapid", "action" => "experiments"));
         }
