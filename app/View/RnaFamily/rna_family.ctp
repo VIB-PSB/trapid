@@ -1,7 +1,7 @@
 <?php
 // Selectize JS + CSS
 echo $this->Html->script('selectize.min.js');
-echo $this->Html->css('https://cdn.jsdelivr.net/gh/Syone/selectize-bootswatch@master/css/selectize.paper.css');
+echo $this->Html->css('selectize.paper.css');
 ?>
 
     <div class="page-header">
