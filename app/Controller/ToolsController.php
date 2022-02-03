@@ -1603,165 +1603,220 @@ class ToolsController extends AppController{
             $avg_transcript_length = $seq_len_data;
         }
         echo $avg_transcript_length;
-  }
-
-
-    function statistics($exp_id=null, $pdf='0'){
-    // $exp_id	= mysql_real_escape_string($exp_id);
-    parent::check_user_exp($exp_id);
-    $this -> set('title_for_layout', "General statistics");
-    $exp_info	= $this->Experiments->getDefaultInformation($exp_id);
-    $this->TrapidUtils->checkPageAccess($exp_info['title'],$exp_info["process_state"],$this->process_states["default"]);
-    $this->set("exp_info",$exp_info);
-    $this->set("exp_id",$exp_id);
-
-    //all species names
-    $all_species	= $this->AnnotSources->getSpeciesCommonNames();
-    $this->set("all_species",$all_species);
-
-    //get transcript information
-    $num_transcripts	= $this->Transcripts->find("count",array("conditions"=>array("experiment_id"=>$exp_id)));
-    // $seq_stats		= $this->Transcripts->getSequenceStats($exp_id);
-    $num_orfs	= $this->Transcripts->getOrfCount($exp_id);
-    $num_start_codons	= $this->Transcripts->find("count",array("conditions"=>array("experiment_id"=>$exp_id,"orf_contains_start_codon"=>1)));
-    $num_stop_codons	= $this->Transcripts->find("count",array("conditions"=>array("experiment_id"=>$exp_id,"orf_contains_stop_codon"=>1)));
-    $num_putative_fs	= $this->Transcripts->find("count",array("conditions"=>array("experiment_id"=>$exp_id,"putative_frameshift"=>1)));
-    $num_correct_fs	= $this->Transcripts->find("count",array("conditions"=>array("experiment_id"=>$exp_id,"is_frame_corrected"=>1)));
-    $meta_annot_fulllength	= $this->Transcripts->find("count",array("conditions"=>array("experiment_id"=>$exp_id,"meta_annotation"=>"Full Length")));
-    $meta_annot_quasi	= $this->Transcripts->find("count",array("conditions"=>array("experiment_id"=>$exp_id,"meta_annotation"=>"Quasi Full Length")));
-    $meta_annot_partial	= $this->Transcripts->find("count",array("conditions"=>array("experiment_id"=>$exp_id,"meta_annotation"=>"Partial")));
-    $meta_annot_noinfo	= $this->Transcripts->find("count",array("conditions"=>array("experiment_id"=>$exp_id,"meta_annotation"=>"No Information")));
-
-    $this->set("num_transcripts",$num_transcripts);
-    // $this->set("seq_stats",$seq_stats);
-    $this->set("num_orfs",$num_orfs);
-    $this->set("num_start_codons",$num_start_codons);
-    $this->set("num_stop_codons",$num_stop_codons);
-    $this->set("num_putative_fs",$num_putative_fs);
-    $this->set("num_correct_fs",$num_correct_fs);
-    $this->set("meta_annot_fulllength",$meta_annot_fulllength);
-    $this->set("meta_annot_quasi",$meta_annot_quasi);
-    $this->set("meta_annot_partial",$meta_annot_partial);
-    $this->set("meta_annot_noinfo",$meta_annot_noinfo);
-
-
-    //get gene family information
-    $num_gf		= $this->GeneFamilies->find("count",array("conditions"=>array("experiment_id"=>$exp_id)));
-    $num_transcript_gf	= $this->Transcripts->find("count",array("conditions"=>array("experiment_id"=>$exp_id,"not"=>array("gf_id"=>null))));
-    $biggest_gf	= $this->GeneFamilies->find("first",array("conditions"=>array("experiment_id"=>$exp_id),"order"=>array("num_transcripts DESC")));
-    $biggest_gf_res	= array("gf_id"=>$biggest_gf['GeneFamilies']['gf_id'],"num_transcripts"=>$biggest_gf['GeneFamilies']['num_transcripts']);
-    $single_copy	= $this->GeneFamilies->find("count",array("conditions"=>array("experiment_id"=>$exp_id,"num_transcripts"=>1)));
-
-    $this->set("num_gf",$num_gf);
-    $this->set("num_transcript_gf",$num_transcript_gf);
-    $this->set("biggest_gf",$biggest_gf_res);
-    $this->set("single_copy",$single_copy);
-
-    // Get RNA family information
-    $num_rf = $this->RnaFamilies->find("count", array("conditions"=>array("experiment_id"=>$exp_id)));
-    $num_transcript_rf = $this->Transcripts->find("count", array("conditions"=>array("experiment_id"=>$exp_id, "not"=>array("rf_ids"=>null))));
-    $biggest_rf = $this->RnaFamilies->find("first", array("conditions"=>array("experiment_id"=>$exp_id),"order"=>array("num_transcripts DESC")));
-    if(!$biggest_rf) {
-        $biggest_rf_res = array("rf_id"=>"N/A","num_transcripts"=>0);
-    }
-    else {
-        $biggest_rf_res = array("rf_id"=>$biggest_rf['RnaFamilies']['rf_id'],"num_transcripts"=>$biggest_rf['RnaFamilies']['num_transcripts']);
     }
 
-    $this->set("num_rf",$num_rf);
-    $this->set("num_transcript_rf",$num_transcript_rf);
-    $this->set("biggest_rf",$biggest_rf_res);
+
+    function statistics($exp_id = null) {
+        // Generate a percentage string for two numerical values
+        function percent_str($value, $total, $digits=1) {
+            return " (" . round($value / $total * 100, $digits) . "%)";
+        }
+
+        // $exp_id	= mysql_real_escape_string($exp_id);
+        parent::check_user_exp($exp_id);
+        $this->set('title_for_layout', "General statistics");
+        $exp_info = $this->Experiments->getDefaultInformation($exp_id);
+        $this->TrapidUtils->checkPageAccess($exp_info['title'], $exp_info["process_state"], $this->process_states["default"]);
+        $this->set("exp_info", $exp_info);
+        $this->set("exp_id", $exp_id);
+
+        //all species names
+        $all_species = $this->AnnotSources->getSpeciesCommonNames();
+        $this->set("all_species", $all_species);
+
+        //get transcript information
+        $num_transcripts = $this->Transcripts->find("count", array("conditions" => array("experiment_id" => $exp_id)));
+        // $seq_stats		= $this->Transcripts->getSequenceStats($exp_id);
+        $num_orfs = $this->Transcripts->getOrfCount($exp_id);
+        $num_start_codons = $this->Transcripts->find("count", array("conditions" => array("experiment_id" => $exp_id, "orf_contains_start_codon" => 1)));
+        $num_stop_codons = $this->Transcripts->find("count", array("conditions" => array("experiment_id" => $exp_id, "orf_contains_stop_codon" => 1)));
+        $num_putative_fs = $this->Transcripts->find("count", array("conditions" => array("experiment_id" => $exp_id, "putative_frameshift" => 1)));
+        $num_correct_fs = $this->Transcripts->find("count", array("conditions" => array("experiment_id" => $exp_id, "is_frame_corrected" => 1)));
+        $meta_annot_fulllength = $this->Transcripts->find("count", array("conditions" => array("experiment_id" => $exp_id, "meta_annotation" => "Full Length")));
+        $meta_annot_quasi = $this->Transcripts->find("count", array("conditions" => array("experiment_id" => $exp_id, "meta_annotation" => "Quasi Full Length")));
+        $meta_annot_partial = $this->Transcripts->find("count", array("conditions" => array("experiment_id" => $exp_id, "meta_annotation" => "Partial")));
+        $meta_annot_noinfo = $this->Transcripts->find("count", array("conditions" => array("experiment_id" => $exp_id, "meta_annotation" => "No Information")));
+
+        $this->set("num_transcripts", $num_transcripts);
+        // $this->set("seq_stats",$seq_stats);
+        $this->set("num_orfs", $num_orfs);
+        $this->set("num_start_codons", $num_start_codons);
+        $this->set("num_stop_codons", $num_stop_codons);
+        $this->set("num_putative_fs", $num_putative_fs);
+        $this->set("num_correct_fs", $num_correct_fs);
+        $this->set("meta_annot_fulllength", $meta_annot_fulllength);
+        $this->set("meta_annot_quasi", $meta_annot_quasi);
+        $this->set("meta_annot_partial", $meta_annot_partial);
+        $this->set("meta_annot_noinfo", $meta_annot_noinfo);
 
 
-    // Get high-level tax. classification information (if this step was performed)
-      if($exp_info['perform_tax_binning'] == 1) {
-          // Number of unclassified transcripts
-          $num_unclassified_trs = $this->TranscriptsTax->find("count", array("conditions"=>array("experiment_id"=>$exp_id, "txid"=>"0")));
-          // Number of classified transcripts
-          $num_classified_trs = $this->TranscriptsTax->find("count", array("conditions"=>array("experiment_id"=>$exp_id, "not"=>array("txid"=>"0"))));
-          // Superkingdom-level tax. classification summary
-          $top_tax_domain = $this->read_top_tax_data($exp_id=$exp_id, $tax_rank="domain");
-          $this->set("num_unclassified_trs", $num_unclassified_trs);
-          $this->set("num_classified_trs", $num_classified_trs);
-          $this->set("top_tax_domain", $top_tax_domain);
-      }
+        //get gene family information
+        $num_gf = $this->GeneFamilies->find("count", array("conditions" => array("experiment_id" => $exp_id)));
+        $num_transcript_gf = $this->Transcripts->find("count", array("conditions" => array("experiment_id" => $exp_id, "not" => array("gf_id" => null))));
+        $biggest_gf = $this->GeneFamilies->find("first", array("conditions" => array("experiment_id" => $exp_id), "order" => array("num_transcripts DESC")));
+        $biggest_gf_res = array("gf_id" => $biggest_gf['GeneFamilies']['gf_id'], "num_transcripts" => $biggest_gf['GeneFamilies']['num_transcripts']);
+        $single_copy = $this->GeneFamilies->find("count", array("conditions" => array("experiment_id" => $exp_id, "num_transcripts" => 1)));
 
-    //get functional data information
-    $go_stats = $this->ExperimentStats->getFuncAnnotStats($exp_id, "go");
+        $this->set("num_gf", $num_gf);
+        $this->set("num_transcript_gf", $num_transcript_gf);
+        $this->set("biggest_gf", $biggest_gf_res);
+        $this->set("single_copy", $single_copy);
+
+        // Get RNA family information
+        $num_rf = $this->RnaFamilies->find("count", array("conditions" => array("experiment_id" => $exp_id)));
+        $num_transcript_rf = $this->Transcripts->find("count", array("conditions" => array("experiment_id" => $exp_id, "not" => array("rf_ids" => null))));
+        $biggest_rf = $this->RnaFamilies->find("first", array("conditions" => array("experiment_id" => $exp_id), "order" => array("num_transcripts DESC")));
+        if (!$biggest_rf) {
+            $biggest_rf_res = array("rf_id" => "N/A", "num_transcripts" => 0);
+        }
+        else {
+            $biggest_rf_res = array("rf_id" => $biggest_rf['RnaFamilies']['rf_id'], "num_transcripts" => $biggest_rf['RnaFamilies']['num_transcripts']);
+        }
+
+        $this->set("num_rf", $num_rf);
+        $this->set("num_transcript_rf", $num_transcript_rf);
+        $this->set("biggest_rf", $biggest_rf_res);
+
+
+        // Get high-level tax. classification information (if this step was performed)
+        $tax_classification_data = [];
+        if ($exp_info['perform_tax_binning'] == 1) {
+            // Number of unclassified transcripts
+            $num_unclassified_trs = $this->TranscriptsTax->find("count", array("conditions" => array("experiment_id" => $exp_id, "txid" => "0")));
+            // Number of classified transcripts
+            $num_classified_trs = $this->TranscriptsTax->find("count", array("conditions" => array("experiment_id" => $exp_id, "not" => array("txid" => "0"))));
+            // Superkingdom-level tax. classification summary
+            $top_tax_domain = $this->read_top_tax_data($exp_id = $exp_id, $tax_rank = "domain");
+            $this->set("num_unclassified_trs", $num_unclassified_trs);
+            $this->set("num_classified_trs", $num_classified_trs);
+            $this->set("top_tax_domain", $top_tax_domain);
+            $tax_classification_data[] = ["#Classified", $num_classified_trs . percent_str($num_classified_trs, $num_transcripts)];
+            $tax_classification_data[] = ["#Unclassified", $num_unclassified_trs . percent_str($num_unclassified_trs, $num_transcripts)];
+            foreach($top_tax_domain as $top_tax) {
+                if($top_tax[0] != "Unclassified") {
+                    // TODO: trim in read_top_tax_data() directly?
+                    $top_tax_trs = trim($top_tax[1]);
+                    $tax_classification_data[] = ["#" . $top_tax[0], $top_tax_trs . percent_str($top_tax_trs, $num_transcripts)];
+                }
+            }
+        }
+
+        //get functional data information
+        $go_stats = $this->ExperimentStats->getFuncAnnotStats($exp_id, "go");
 
 //    debug($go_stats);
-    $this->set("num_go",$go_stats['num_go']);
-    $this->set("num_transcript_go",$go_stats['num_transcript_go']);
-    $interpro_stats	= $this->ExperimentStats->getFuncAnnotStats($exp_id, "ipr");
-    $this->set("num_interpro",$interpro_stats['num_interpro']);
-    $this->set("num_transcript_interpro",$interpro_stats['num_transcript_interpro']);
-    $ko_stats	= $this->ExperimentStats->getFuncAnnotStats($exp_id, "ko");
-    $this->set("num_ko",$ko_stats['num_ko']);
-    $this->set("num_transcript_ko",$ko_stats['num_transcript_ko']);
+        $this->set("num_go", $go_stats['num_go']);
+        $this->set("num_transcript_go", $go_stats['num_transcript_go']);
+        $interpro_stats = $this->ExperimentStats->getFuncAnnotStats($exp_id, "ipr");
+        $this->set("num_interpro", $interpro_stats['num_interpro']);
+        $this->set("num_transcript_interpro", $interpro_stats['num_transcript_interpro']);
+        $ko_stats = $this->ExperimentStats->getFuncAnnotStats($exp_id, "ko");
+        $this->set("num_ko", $ko_stats['num_ko']);
+        $this->set("num_transcript_ko", $ko_stats['num_transcript_ko']);
+        $funct_annot_data = [];
+        if (in_array("go", $exp_info['function_types'])) {
+            $funct_annot_data[] = ["#Transcripts with GO", $go_stats['num_transcript_go'] . percent_str($go_stats['num_transcript_go'], $num_transcripts)];
+        }
+        if (in_array("interpro", $exp_info['function_types'])) {
+            $funct_annot_data[] = ["#Transcripts with Protein Domain", $interpro_stats['num_transcript_interpro'] . percent_str($interpro_stats['num_transcript_interpro'], $num_transcripts)];
+        }
+        if (in_array("ko", $exp_info['function_types'])) {
+            $funct_annot_data = ["#Transcripts with KO", $ko_stats['num_transcript_ko'] . percent_str($ko_stats['num_transcript_ko'], $num_transcripts)];
+        }
 
-    // PDF output
-    // Values that were retrieved via AJAX calls need to be retrrieved prior to generating the PDF output
-    if($_POST || $pdf=='1'){
-      if($pdf=='1' || (array_key_exists("export_type",$_POST) && $_POST['export_type']=="pdf")){
-	$this->set("pdf_view",1);
-	$this->layout	= "fpdf";
+        /* Store all stats to use as content for the PDF version of the general statistics.
+           This data is loaded as a JS variable in the view and used to generate the pdf version of the report.
+           It is clearly redundant with the data displayed on the page, but already represents an improvement compared
+           to the server-side solution used before (which reloaded all statistics).
+           Note: the average transcript and ORF lengths are retrieved asynchronously. To display them in the PDF version
+           of the statistics, we indicate where these values should be present using placeholders formatted as
+           `###<metric>###`. Once retrieved, the placeholders are replaced by the metric values.
+        */
+        $simsearch_split = explode(";",$exp_info['hit_results']);
+        $simsearch_data = [];
+        $tmp = array();
+        $sum = 0;
+        foreach($simsearch_split as $s) {
+            $k = explode("=",$s);
+            $tmp[$k[0]] = $k[1];
+            $sum += $k[1];
+        }
+        arsort($tmp);
+        foreach($tmp as $k=>$v) {
+            $simsearch_data[] = [$all_species[$k], $v . percent_str($v, $sum)];
+        }
 
-	// Retrieve average transcript/orf length
-    $seq_stats		= $this->Transcripts->getSequenceStats($exp_id);
+        $pdf_sections = [
+            [
+                "title"=>"Experiment information",
+                "data"=>[
+                    ["Title", $exp_info["title"]],
+                    ["Description", $exp_info["description"]],
+                    ["Reference database", $exp_info["datasource"]],
+                    ["Similarity search database", $exp_info["used_blast_database"]],
+                    ["Creation date", $exp_info["creation_date"]. " (last edit: " . $exp_info["last_edit_date"] . ")"]
+                ]
+            ],
+            [
+                "title"=>"Transcript information",
+                "data"=>[
+                    ["#Transcripts", $num_transcripts],
+                    ["Average transcript length", "###avg_trs_length###"],
+                    ["#Transcripts with ORF", $num_orfs],
+                    ["Average ORF length", "###avg_orf_length###"],
+                    ["#ORFs with start codon", $num_start_codons . percent_str($num_start_codons, $num_transcripts)],
+                    ["#ORFs with stop codon", $num_stop_codons . percent_str($num_stop_codons, $num_transcripts)],
+                    ["#Transcripts with putative frameshift", $num_putative_fs . percent_str($num_putative_fs, $num_transcripts)]
+                ]
+            ],
+            [
+                "title"=>"Meta annotation information",
+                "data"=>[
+                ["#Full-length", $meta_annot_fulllength . percent_str($meta_annot_fulllength, $num_transcripts)],
+                ["#Quasi full-length", $meta_annot_quasi . percent_str($meta_annot_quasi, $num_transcripts)],
+                ["#Partial", $meta_annot_partial . percent_str($meta_annot_partial,$num_transcripts)],
+                ["#No information", $meta_annot_noinfo . percent_str($meta_annot_noinfo, $num_transcripts)]
+                ]
+            ],
+            [
+                "title"=>"Taxonomic classification information (Kaiju)",
+                "data"=>$tax_classification_data
+            ],
+            [
+                "title"=>"Similarity search information (DIAMOND)",
+                "data"=>$simsearch_data
+            ],
+            [
+                "title"=>"Gene family information",
+                "data"=>[
+                    ["#Gene families", $num_gf],
+                    ["#Transcripts in GF", $num_transcript_gf . percent_str($num_transcript_gf, $num_transcripts)]
+                ]
+            ],
+            [
+                "title"=>"RNA family information",
+                "data"=>[
+                    ["#RNA families", $num_rf],
+                    ["#Transcripts in RF", $num_transcript_rf . percent_str($num_transcript_rf, $num_transcripts)]
+                ]
+            ],
+            [
+                "title"=>"Functional annotation information",
+                "data"=>$funct_annot_data
+            ]
+        ];
+        $this->set("pdf_sections", $pdf_sections);
+    }
 
-    $pdf_transcript_info	= array(
-        "#Transcripts"=>$num_transcripts,
-        "Average transcript length"=>$seq_stats['transcript']." basepairs",
-        "#Transcripts with ORF"=>$num_orfs,
-        "Average ORF length"=>$seq_stats['orf']." basepairs",
-        "#ORFs with start codon"=>$num_start_codons." (".round(100*$num_start_codons/$num_transcripts,1)."%)",
-        "#ORFs with stop codon"=>$num_stop_codons." (".round(100*$num_stop_codons/$num_transcripts,1)."%)",
-        "#Transcripts with putative frameshift"=>$num_putative_fs." (".round(100*$num_putative_fs/$num_transcripts,1)."%)"
-    );
 
-//	$pdf_frameshift_info	= array(
-//		        "#Transcripts with putative frameshift"=>$num_putative_fs." (".round(100*$num_putative_fs/$num_transcripts,1)."%)",
-//			"#Transcripts with corrected frameshift"=>$num_correct_fs." (".round(100*$num_correct_fs/$num_transcripts,1)."%)"
-//					);
-
-	$pdf_meta_info		= array(
-	        "#Meta annotation full-length"=>$meta_annot_fulllength." (".round(100*$meta_annot_fulllength/$num_transcripts,1)."%)",
-	        "#Meta annotation quasi full-length"=>$meta_annot_quasi." (".round(100*$meta_annot_quasi/$num_transcripts,1)."%)",
-	       	"#Meta annotation partial"=>$meta_annot_partial." (".round(100*$meta_annot_partial/$num_transcripts,1)."%)",
-   		"#Meta annotation no information"=>$meta_annot_noinfo." (".round(100*$meta_annot_noinfo/$num_transcripts,1)."%)",
-				);
-
-	$pdf_gf_info		= array(
-			 "#Gene families"=>$num_gf,
-			 "#Transcripts in GF"=>$num_transcript_gf." (".round(100*$num_transcript_gf/$num_transcripts,1)."%)"
-				);
-
-	$pdf_rf_info		= array(
-			 "#RNA families"=>$num_rf,
-			 "#Transcripts in RF"=>$num_transcript_rf." (".round(100*$num_transcript_rf/$num_transcripts,1)."%)"
-				);
-
-	$pdf_func_info		= array(
-	   "#Transcripts with GO"=>$go_stats['num_transcript_go']." (".round(100*$go_stats['num_transcript_go']/$num_transcripts,1)."%)",
-	   "#Transcripts with Protein Domain"=>$interpro_stats['num_transcript_interpro']." (".round(100*$interpro_stats['num_transcript_interpro']/$num_transcripts,1)."%)",
-	   "#Transcripts with KO"=>$ko_stats['num_transcript_ko']." (".round(100*$ko_stats['num_transcript_ko']/$num_transcripts,1)."%)",
-				);
-
-
-	$this->set("pdf_transcript_info",$pdf_transcript_info);
-//	$this->set("pdf_frameshift_info",$pdf_frameshift_info);
-	$this->set("pdf_meta_info",$pdf_meta_info);
-	$this->set("pdf_gf_info",$pdf_gf_info);
-	$this->set("pdf_rf_info", $pdf_rf_info);
-	$this->set("pdf_func_info",$pdf_func_info);
-
-//	$this->render();
-
-          $this->set('fpdf', new FPDF('P','mm','A4'));
-          $this->set('pdf_file_name', "TRAPID_statistics_". $exp_id .".pdf");
-          $this->set('data', 'Hello, PDF world');
-          $this->render('statistics');
-      }
+    /* Check experiment + get general experiment information */
+    function general_set_up($exp_id = null) {
+        // $exp_id	= mysql_real_escape_string($exp_id);
+        parent::check_user_exp($exp_id);
+        $exp_info = $this->Experiments->getDefaultInformation($exp_id);
+        $this->TrapidUtils->checkPageAccess($exp_info['title'], $exp_info["process_state"], $this->process_states["default"]);
+        $this->set("exp_info", $exp_info);
+        $this->set("exp_id", $exp_id);
     }
 
 
