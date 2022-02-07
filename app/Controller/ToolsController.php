@@ -1721,7 +1721,7 @@ class ToolsController extends AppController{
             $funct_annot_data[] = ["#Transcripts with Protein Domain", $interpro_stats['num_transcript_interpro'] . percent_str($interpro_stats['num_transcript_interpro'], $num_transcripts)];
         }
         if (in_array("ko", $exp_info['function_types'])) {
-            $funct_annot_data = ["#Transcripts with KO", $ko_stats['num_transcript_ko'] . percent_str($ko_stats['num_transcript_ko'], $num_transcripts)];
+            $funct_annot_data[] = ["#Transcripts with KO", $ko_stats['num_transcript_ko'] . percent_str($ko_stats['num_transcript_ko'], $num_transcripts)];
         }
 
         /* Store all stats to use as content for the PDF version of the general statistics.
