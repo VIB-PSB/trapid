@@ -31,6 +31,7 @@ def parse_arguments():
         formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     cmd_parser.add_argument('ini_file_initial', type=str,
                             help='Initial processing configuration file (generated upon initial processing start)')
+    cmd_parser.add_argument('-k', '--keep_tmp', action='store_true', default=False, help='Keep temporary files')
     cmd_args = cmd_parser.parse_args()
     return cmd_args
 
@@ -94,15 +95,6 @@ def create_infernal_files(exp_id, tmp_exp_dir, rfam_dir, exp_clans, trapid_db_da
         out_file.write('\n'.join(sorted(list(exp_cms))) + '\n')
     # Create `cm` file using Infernal's `cmfetch` command
     run_cmfetch(exp_id, tmp_exp_dir, rfam_dir)
-    # with open(os.path.join(tmp_exp_dir, rfam_cm_file), "w") as out_file:
-    #     for model in sorted(list(exp_cms)):
-    #         for model_type in ["infernal", "hmmer"]:
-    #             cm_name = "{cm_id}_{cm_type}.cm".format(cm_id=model, cm_type=model_type)
-    #             cm_file = os.path.join(rfam_dir, individual_cms, cm_name)
-    #             cm_lines = []
-    #             with open(cm_file, "r") as in_file:
-    #                 cm_lines = [line for line in in_file]
-    #             out_file.write(''.join(cm_lines))
 
 
 def get_infernal_z_value(exp_id, trapid_db_data):
@@ -586,21 +578,26 @@ def get_exp_cm_clans(exp_id, tmp_exp_dir):
     return cm_clans
 
 
-# def run_cmpress(exp_id, tmp_exp_dir):
-#     """Call `cmpress` (to run before Infernal).
-#
-#     :param exp_id: TRAPID experiment id
-#     :param tmp_exp_dir: experiment directory
-#
-#     """
-#     cmd_str = "cmpress -F {rfam_cm_file}"
-#     # Get path of experiment directory and Rfam CM file to use for `cmpress` call
-#     rfam_cm_file = os.path.join(tmp_exp_dir, "Rfam_%s.cm" % exp_id)
-#     # Format cmd string and run!
-#     formatted_cmd = cmd_str.format(rfam_cm_file=rfam_cm_file)
-#     sys.stderr.write("[Message] Call `cmpress` with command: '%s'.\n" % formatted_cmd)
-#     job = subprocess.Popen(formatted_cmd, shell=True)
-#     job.communicate()
+def delete_tmp_files(exp_id, tmp_exp_dir):
+    """Delete experiment's Infernal temporary processing files.
+
+    :param exp_id: TRAPID experiment id
+    :param tmp_exp_dir: experiment directory
+
+    """
+    sys.stderr.write("[Message] Removing temporary files...\n")
+    tmp_files = [
+        os.path.join(tmp_exp_dir, "Rfam_%s.clanin" % exp_id),
+        os.path.join(tmp_exp_dir, "Rfam_%s.cm" % exp_id),
+        os.path.join(tmp_exp_dir, "infernal_%s.cmsearch" % exp_id)
+        # We could also remove the unfiltered tabulated output
+        # os.path.join(tmp_exp_dir, "infernal_%s.tblout" % exp_id)
+    ]
+    for file in tmp_files:
+        if os.path.exists(file):
+            os.remove(file)
+        else:
+            sys.stderr.write("[Warning] File does not exist: '%s'\n" % file)
 
 
 def main():
@@ -629,7 +626,6 @@ def main():
         common.update_experiment_log(exp_id, 'start_nc_rna_search', 'Infernal', 2, db_connection)
         db_connection.close()
         create_infernal_files(exp_id, tmp_exp_dir, rfam_dir, exp_clans, trapid_db_data)
-        # run_cmpress(exp_id=exp_id, tmp_exp_dir=tmp_exp_dir)
         total_m_nts = get_infernal_z_value(exp_id, trapid_db_data)
         infernal_tblout = run_infernal(exp_id, tmp_exp_dir, total_m_nts)
         # Filter Infernal tabulated output (keep best non-ovelrapping matches)
@@ -651,6 +647,9 @@ def main():
         go_data = get_go_data(reference_db_data)
         # perform_go_annotation(exp_id, infernal_results, rfam_go, go_data, tmp_exp_dir)
         perform_go_annotation(exp_id, filtered_infernal_results, rfam_go, go_data, tmp_exp_dir)
+        # Delete temporary files
+        if not cmd_args.keep_tmp:
+            delete_tmp_files(exp_id, tmp_exp_dir)
         # That's it for now
         db_connection = common.db_connect(*trapid_db_data)
         common.update_experiment_log(exp_id, 'stop_nc_rna_search', 'Infernal', 2, db_connection)
