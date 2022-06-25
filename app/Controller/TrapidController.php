@@ -1,6 +1,6 @@
 <?php
 /*
- * General controller class for the trapid functionality
+ * General controller class for the TRAPID functionality
  */
 class TrapidController extends AppController{
   var $name		= "Trapid";
@@ -9,7 +9,7 @@ class TrapidController extends AppController{
   var $uses	= array('Authentication', 'AnnotSources', 'Annotation', 'CleanupDate', 'CleanupExperiments',
                     'Configuration', 'DataSources', 'DataUploads', 'DeletedExperiments', 'ExperimentJobs', 'ExperimentLog', 'Experiments', 'ExperimentStats',
                     'ExtendedGo', 'FunctionalEnrichments', 'FullTaxonomy', 'GeneFamilies', 'GfData', 'GoParents', 'HelpTooltips', 'KoTerms',
-                    'ProteinMotifs', 'SharedExperiments', 'Similarities', 'Transcripts', 'TranscriptsGo',
+                    'News', 'ProteinMotifs', 'SharedExperiments', 'Similarities', 'Transcripts', 'TranscriptsGo',
                     'TranscriptsInterpro', 'TranscriptsLabels', 'TranscriptsKo', 'TranscriptsPagination', 'TranscriptsTax',
                     'RnaSimilarities', 'RnaFamilies'
                     );
@@ -173,8 +173,13 @@ class TrapidController extends AppController{
         $this->set("active_header_item", "Home");
         $this -> set('title_for_layout', 'Welcome');
         $max_user_experiments = MAX_USER_EXPERIMENTS;
-        $this->set("max_user_experiments",$max_user_experiments);
-      	$user_id	= $this->Cookie->read("user_id");
+        $this->set("max_user_experiments", $max_user_experiments);
+        $news_items = $this->News->find('all', array(
+            "conditions"=>array("is_visible"=>"y"),
+            "order"=>array('News.date DESC'))
+        );
+        $this->set('news_items', $news_items);
+        $user_id	= $this->Cookie->read("user_id");
       	$email		= $this->Cookie->read("email");
         // $user_id  	= $this->Authentication->getDataSource()->value($user_id, 'string');
         // $email		= $this->Authentication->getDataSource()->value($email, 'string');

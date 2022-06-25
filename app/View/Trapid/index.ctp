@@ -36,22 +36,18 @@
             </ul>
             <div class="tab-content">
                 <div id="news-feed" class="tab-pane active">
-                    <p class="text-justify small">
-                        <strong>2021-05-19:</strong> fixed protein minor sequence display bug on transcript page.
-                    </p>
-                    <hr>
-                    <p class="text-justify small">
-                        <strong>2021-05-05:</strong> fixed a bug causing some protein sequence export files to be truncated (due to transcripts having no predicted ORF sequence).
-                    </p>
-                    <hr>
-                    <p class="text-justify small">
-                        <strong>2021-04-22:</strong> fixed a bug that was causing an incorrect number of transcripts to be selected when creating subsets from the taxonomic classification visualizations, and some full taxon paths to not be printed in exported files.
-                    </p>
-                    <hr>
-                    <p class="text-justify small">
-                        <strong>2021-03-23:</strong> a new reference database is available, <a href="https://bioinformatics.psb.ugent.be/plaza/versions/plaza_diatoms_01/" class="linkout" target="_blank">PLAZA diatoms 1.0</a>!
-                    </p>
-                    <hr>
+                    <?php if (empty($news_items)): ?>
+                        <p class="text-muted"><em>No news items to display.</em></p>
+                    <?php else:
+                        foreach ($news_items as $news_item) {
+                            $news_item_date = date_create($news_item['News']['date']);
+                            echo "<p class=\"text-justify small\">\n";
+                            echo "<strong>" . date_format($news_item_date, "Y-m-d") . ":</strong> ";
+                            echo $news_item['News']['content'] . "\n";
+                            echo "</p>\n<hr>\n";
+                        }
+                    endif;
+                    ?>
                 </div>
                 <div id="twitter-feed" class="tab-pane">
                     <div style="height:100px;">
