@@ -2,7 +2,7 @@
 App::uses("Component", "Controller");
 class TrapidUtilsComponent extends Component{
 
-  var $components	= array("Email","Cookie","Session");
+  var $components	= array("Email", "Cookie","Session");
   var $controller;
 
   function startup(Controller $c){
@@ -970,7 +970,7 @@ class TrapidUtilsComponent extends Component{
         // kaiju needs to be loaded, and I will write my extra scripts in python 2.7
         // 2017-12-15: add diamond to the module list (time to switch form RapSearch2 to DIAMOND).
         // $necessary_modules	= array("perl","java","framedp",  "python/x86_64/2.7.2", "kaiju");
-        $necessary_modules = array("KronaTools/x86_64/2.7", "java", "python/x86_64/2.7.2", "gcc", "kaiju", "diamond", "infernal/x86_64/1.1.2", "perl/x86_64/5.14.1");
+        $necessary_modules = array("KronaTools/x86_64/2.7", "java", "python/x86_64/2.7.2", "gcc", "kaiju/x86_64/1.7.3", "diamond/x86_64/0.9.18", "infernal/x86_64/1.1.2", "perl/x86_64/5.14.1");
         // Create shell file
         $shell_file	= $tmp_dir . "initial_processing_" . $exp_id . ".sh";
         $fh	= fopen($shell_file,"w");
@@ -1113,7 +1113,7 @@ class TrapidUtilsComponent extends Component{
     }
 
 
-    // Ensure parameters passed to this functions are sanitized (e.g. result of `find()`)
+    // Ensure parameters passed to this function are sanitized (e.g. result of `find()`)
     function send_registration_email($email, $password, $password_update=false){
       $trapid_admins = array("frbuc@psb.vib-ugent.be", "mibel@psb.ugent.be", "klpoe@psb.ugent.be");
       $subject = "TRAPID authentication information";
@@ -1144,5 +1144,4 @@ class TrapidUtilsComponent extends Component{
               ->send("New user added to TRAPID system\n\nUser login: " . $email);
       }
     }
-
 }
