@@ -2,7 +2,7 @@
   /*
    * This model represents info on the transcripts
    */
-class TranscriptsPagination extends AppModel{
+class TranscriptsPagination extends AppModel {
 
   var $name	= 'TranscriptsPagination';
   var $useTable = 'transcripts';
@@ -184,6 +184,3 @@ class TranscriptsPagination extends AppModel{
 
 
 }
-
-
-?>

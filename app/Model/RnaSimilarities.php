@@ -1,10 +1,8 @@
 <?php
 
-class RnaSimilarities extends AppModel{
+class RnaSimilarities extends AppModel {
   var $name	= "RnaSimilarities";
   var $useTable = "rna_similarities";
 
 
 }
-
-?>

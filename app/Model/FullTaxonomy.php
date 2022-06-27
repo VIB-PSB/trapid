@@ -155,5 +155,3 @@ class FullTaxonomy extends AppModel
         return $returnArr;
     }
 }
-
-?>

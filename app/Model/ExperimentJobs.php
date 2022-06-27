@@ -4,7 +4,7 @@
    * Actions can read and write to this table, providing an action, and the necessary parameters.
    */
 
-class ExperimentJobs extends AppModel{
+class ExperimentJobs extends AppModel {
 
   var $name	= "ExperimentJobs";
   var $useTable = "experiment_jobs";
@@ -48,9 +48,4 @@ class ExperimentJobs extends AppModel{
     return $this->getJobs($exp_id);
   }
 
-
-
 }
-
-
-?>

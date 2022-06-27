@@ -32,5 +32,4 @@ class TranscriptsKo extends AppModel {
         return $result;
     }
 
-
 }

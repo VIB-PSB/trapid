@@ -1,8 +1,8 @@
 <?php
   /*
-   * This model represents Gene Ontology information associated to the transcripts
+   * This model represents Protein domain / InterPro information associated to the transcripts
    */
-class TranscriptsInterpro extends AppModel{
+class TranscriptsInterpro extends AppModel {
 
   var $name	= 'TranscriptsInterpro';
   var $useTable = 'transcripts_annotation';
@@ -51,6 +51,3 @@ class TranscriptsInterpro extends AppModel{
 
 
 }
-
-
-?>

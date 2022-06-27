@@ -5,13 +5,10 @@
    */
 
 
-class SharedExperiments extends AppModel{
+class SharedExperiments extends AppModel {
   var $name	= 'SharedExperiments';
   var $useTable	= 'shared_experiments'; 
 
 
 
 }
-
-
-?>

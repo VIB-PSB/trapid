@@ -30,6 +30,5 @@ class TranscriptsTax extends AppModel {
         return($tax_array);
     }
 
-
-
 }
+

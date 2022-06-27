@@ -4,16 +4,8 @@
    * and to regulate their access rights.
    */
 
-class Authentication extends AppModel{
+class Authentication extends AppModel {
   var $name	= 'Authentication';
   var $useTable	= 'authentication';
   var $validate = array("email"=>array("rule"=>array("email")));
-
-
-
-
-
 }
-
-
-?>

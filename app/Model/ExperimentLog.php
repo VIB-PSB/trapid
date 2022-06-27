@@ -5,7 +5,7 @@
    * Actions can read and write to this table, providing an action, and the necessary parameters.
    */
 
-class ExperimentLog extends AppModel{
+class ExperimentLog extends AppModel {
 
   var $name	= "ExperimentLog";
   var $useTable = "experiment_log";
@@ -20,6 +20,3 @@ class ExperimentLog extends AppModel{
 
 
 }
-
-
-?>

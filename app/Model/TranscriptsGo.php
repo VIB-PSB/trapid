@@ -3,7 +3,7 @@
   * This model represents protein motifs (i.e. InterPro domains) information associated to the transcripts
    */
 
-class TranscriptsGo extends AppModel{
+class TranscriptsGo extends AppModel {
 
   var $name	= 'TranscriptsGo';
   var $useTable = 'transcripts_annotation';
@@ -102,9 +102,5 @@ class TranscriptsGo extends AppModel{
     return $result;
   }
 
-
-
 }
 
-
-?>

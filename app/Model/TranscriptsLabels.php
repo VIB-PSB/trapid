@@ -2,7 +2,7 @@
   /*
    * This model represents info on the transcripts
    */
-class TranscriptsLabels extends AppModel{
+class TranscriptsLabels extends AppModel {
 
   // The 'BigData' behavior is used to used for subset creation/update (to insert large amounts of data by chunks).
   public $actsAs = array('BigData.BigData');
@@ -128,7 +128,3 @@ class TranscriptsLabels extends AppModel{
         return $counter;
     }
 }
-
-
-
-?>

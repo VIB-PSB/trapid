@@ -2,7 +2,7 @@
   /*
    * This model represents info on the transcripts
    */
-class GeneFamilies extends AppModel{
+class GeneFamilies extends AppModel {
 
   var $name	= 'GeneFamilies';
   var $useTable = 'gene_families';
@@ -62,6 +62,3 @@ class GeneFamilies extends AppModel{
 
 
 }
-
-
-?>

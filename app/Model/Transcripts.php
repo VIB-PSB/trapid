@@ -4,7 +4,7 @@
    */
 
    // Queries updated to reflect changes made to the db for TRAPID 2.0
-class Transcripts extends AppModel{
+class Transcripts extends AppModel {
 
   var $name	= 'Transcripts';
   var $useTable = 'transcripts';
@@ -425,6 +425,3 @@ class Transcripts extends AppModel{
 //    }
 
 }
-
-
-?>

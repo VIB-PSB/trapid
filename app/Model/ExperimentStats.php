@@ -3,7 +3,7 @@
  * A model that represents statistics associated to an experiment, as displayed on the 'general statistics' page
  */
 
-class ExperimentStats extends AppModel{
+class ExperimentStats extends AppModel {
 
     var $name	= "ExperimentStats";
     var $useTable = "experiment_stats";

@@ -3,7 +3,7 @@
    * This model represents the necessary functionality to authenticate users,
    * and to regulate their access rights.
    */
-class Experiments extends AppModel{
+class Experiments extends AppModel {
 
 //  var $name	= 'Experiments';
 //  var $useTable = 'experiments';
@@ -119,6 +119,3 @@ class Experiments extends AppModel{
     }
 
 }
-
-
-?>

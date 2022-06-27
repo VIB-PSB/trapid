@@ -1,14 +1,10 @@
 <?php
   /*
    */
-class ProteinMotifs extends AppModel{
+class ProteinMotifs extends AppModel {
   var $name		= "ProteinMotifs";
   // var $useTable		= "protein_motifs";
-  // var $useDbConfig 	= "db_plaza_public_02_5";
   var $useTable		= "functional_data";
-  // var $useDbConfig 	= "db_trapid_ref_plaza_monocots_03_test";
-
-
 
 
   function retrieveInterproInformation($interpro_ids){
@@ -36,4 +32,3 @@ class ProteinMotifs extends AppModel{
   }
 
 }
-?>

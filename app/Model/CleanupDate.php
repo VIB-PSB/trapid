@@ -5,11 +5,10 @@
    * Actions can read and write to this table, providing an action, and the necessary parameters.
    */
 
-class CleanupDate extends AppModel{
+class CleanupDate extends AppModel {
 
   var $name	= "CleanupDate";
   var $useTable = "cleanup_date";
-	
 
 
   function checkDateStatus($year,$month){	   
@@ -26,8 +25,4 @@ class CleanupDate extends AppModel{
       
   }
 
-
 }
-
-
-?>

@@ -5,7 +5,7 @@
 
 // Queries updated to reflect changes on the DB Structure for TRAPID v2
 
-class FunctionalEnrichments extends AppModel{
+class FunctionalEnrichments extends AppModel {
 
   var $name	= 'FunctionalEnrichments';
   var $useTable = 'functional_enrichments';
@@ -162,5 +162,3 @@ function getSankeyEnrichmentResults($exp_id, $type){
 
 }
 
-
-?>

@@ -1,10 +1,8 @@
 <?php
 
-class Similarities extends AppModel{
+class Similarities extends AppModel {
   var $name	= "Similarities";
   var $useTable = "similarities";
 
 
 }
-
-?>

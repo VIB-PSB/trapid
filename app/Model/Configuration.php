@@ -12,7 +12,7 @@ class Configuration extends AppModel {
     var $useTable = 'configuration';
 
 
-    // Retrieve RFAM clans metadata (id + description) from the database, and return them as array
+    // Retrieve Rfam clans metadata (id + description) from the database, and return them as an array
     function getRfamClansMetadata() {
         $clans_metadata = array();
         // Retrieve data from DB (`configuration` table)
@@ -66,4 +66,3 @@ class Configuration extends AppModel {
     }
 
 }
-?>

@@ -1,12 +1,9 @@
 <?php
   /*
    */
-class Annotation extends AppModel{
+class Annotation extends AppModel {
   var $name		= "Annotation";
   var $useTable		= "annotation";
-  // var $useDbConfig 	= "db_plaza_public_02_5";
-  // var $useDbConfig 	= "db_trapid_ref_plaza_monocots_03_test";
-
 
 
   function getSequencesGo($go_term){
@@ -131,4 +128,3 @@ class Annotation extends AppModel{
 
 
 }
-?>

@@ -1,7 +1,7 @@
 <?php
   /*
    */
-class GfData extends AppModel{
+class GfData extends AppModel {
   var $name		= "GfData";
   var $useTable		= "gf_data";
   // var $useDbConfig 	= "db_plaza_public_02_5";
@@ -181,4 +181,3 @@ class GfData extends AppModel{
         return $func_data;
     }
 }
-?>
