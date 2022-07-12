@@ -2246,8 +2246,6 @@ class TrapidController extends AppController{
 
     //give an overview of the content of the directory, so the user doesn't upload the same file twice
     //$uploaded_files = $this->TrapidUtils->readDir($upload_dir);
-    // `Model::findAll` was removed in CakePHP 1.3
-    // $uploaded_files = $this->DataUploads->findAll(array("user_id"=>$exp_info['user_id'],"experiment_id"=>$exp_id));
     $uploaded_files = $this->DataUploads->find('all', array('conditions' => array("user_id"=>$exp_info['user_id'],"experiment_id"=>$exp_id)));
     $this->set("uploaded_files",$uploaded_files);
     $uploaded_files_index = $this->TrapidUtils->indexArrayMulti($uploaded_files,"DataUploads","id",

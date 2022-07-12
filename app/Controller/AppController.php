@@ -188,21 +188,19 @@ class AppController extends Controller {
      * have to change the configuration based on the experiment.
      */
     function changeDbConfigs($exp_id) {
-        //first of all, get the associated non-trapid database for the experiment.
-        $non_trapid_db = $this->Experiments->find("first", array(
+        // Get the experiment's reference database (historically 'plaza' database, hence the field name).
+        $exp_ref_db = $this->Experiments->find("first", array(
             "conditions" => array("experiment_id" => $exp_id), "fields" => "used_plaza_database")
         );
-        $non_trapid_db = $non_trapid_db['Experiments']['used_plaza_database'];
-        //set new useDBConfigs for models
-        $this->AnnotSources->useDbConfig = $non_trapid_db;
-        $this->Annotation->useDbConfig = $non_trapid_db;
-        $this->ExtendedGo->useDbConfig = $non_trapid_db;
-        $this->GoParents->useDbConfig = $non_trapid_db;
-        $this->ProteinMotifs->useDbConfig = $non_trapid_db;
-        $this->GfData->useDbConfig = $non_trapid_db;
-        $this->KoTerms->useDbConfig = $non_trapid_db;
-        //is equal to setDataSource($non_trapid_db);
-        return;
+        $exp_ref_db = $exp_ref_db['Experiments']['used_plaza_database'];
+        // Set new `useDBConfig` for models
+        $this->AnnotSources->useDbConfig = $exp_ref_db;
+        $this->Annotation->useDbConfig = $exp_ref_db;
+        $this->ExtendedGo->useDbConfig = $exp_ref_db;
+        $this->GoParents->useDbConfig = $exp_ref_db;
+        $this->ProteinMotifs->useDbConfig = $exp_ref_db;
+        $this->GfData->useDbConfig = $exp_ref_db;
+        $this->KoTerms->useDbConfig = $exp_ref_db;
     }
 
 }
