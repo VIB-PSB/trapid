@@ -1,5 +1,8 @@
 <?php
 
-class DataSources extends AppModel {
+/*
+ * Data sources (reference database information) model.
+ */
 
+class DataSources extends AppModel {
 }

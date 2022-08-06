@@ -7,5 +7,5 @@
 
 class Authentication extends AppModel {
     var $useTable = 'authentication';
-    var $validate = array("email" => array("rule" => array("email")));
+    var $validate = ['email' => ['rule' => ['email']]];
 }
