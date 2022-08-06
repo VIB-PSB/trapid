@@ -1,14 +1,8 @@
 <?php
-  /**
-   * This model represents the necessary functionality to authenticate users,
-   * and to regulate their access rights.
-   */
 
+/*
+ * This model represents TRAPID experiments that are shared between multiple users of the platform.
+ */
 
 class SharedExperiments extends AppModel {
-  var $name	= 'SharedExperiments';
-  var $useTable	= 'shared_experiments'; 
-
-
-
 }

@@ -6,5 +6,4 @@
  */
 
 class RnaSimilarities extends AppModel {
-
 }

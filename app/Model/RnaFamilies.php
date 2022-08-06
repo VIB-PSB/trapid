@@ -5,5 +5,4 @@
  */
 
 class RnaFamilies extends AppModel {
-
 }
