@@ -4,9 +4,6 @@
  */
 
 class ExperimentJobs extends AppModel {
-    var $name = 'ExperimentJobs';
-    var $useTable = 'experiment_jobs';
-
     function addJob($exp_id, $job_id, $type = 'long', $comment = '') {
         $query =
             "INSERT INTO `experiment_jobs`(`experiment_id`,`job_id`,`job_type`,`start_date`,`comment`) VALUES ('" .
