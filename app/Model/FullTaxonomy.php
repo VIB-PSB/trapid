@@ -1,47 +1,41 @@
 <?php
 
 /*
+ * Represents NCBI taxonomy as present in `full_taxonomy` table.
  */
 
-class FullTaxonomy extends AppModel
-{
-    var $name = "FullTaxonomy";
-    var $useTable = "full_taxonomy";
+class FullTaxonomy extends AppModel {
+    var $useTable = 'full_taxonomy';
 
-
-    function findClades($species_array)
-    {
-        $result = array();
+    function findClades($species_array) {
+        $result = [];
         if (count($species_array) == 0) {
             return $result;
         }
 
-        $tax_data = array();
+        $tax_data = [];
         $species_string = "('" . implode("','", $species_array) . "')";
         $query = "SELECT * FROM `full_taxonomy` WHERE `txid` IN $species_string ORDER BY `tax` ASC";
         $res = $this->query($query);
-        $clade_to_species = array();
-        $parents_to_child_clade = array();
-        //$clade_descriptions		= array();
+        $clade_to_species = [];
+        $parents_to_child_clade = [];
 
         foreach ($res as $r) {
             $tid = $r['full_taxonomy']['txid'];
             $scname = $r['full_taxonomy']['scname'];
             $tax_string = $r['full_taxonomy']['tax'];
-            // $tax_split = explode(";", $tax_string);
-            // In the new DB structure, the order of the full taxonomy is reversed.
-            // So a quick fix to get this model working is to reverse the order of the retrieved array
-            $tax_split = array_reverse(explode(";", $tax_string));
+            // Note: reverse array because clades are stored from most specific to most general.
+            $tax_split = array_reverse(explode(';', $tax_string));
 
             for ($i = 0; $i < count($tax_split); $i++) {
                 $ts = trim($tax_split[$i]);
                 if (!array_key_exists($ts, $clade_to_species)) {
-                    $clade_to_species[$ts] = array();
+                    $clade_to_species[$ts] = [];
                 }
                 $clade_to_species[$ts][] = $tid;
 
                 if (!array_key_exists($ts, $parents_to_child_clade)) {
-                    $parents_to_child_clade[$ts] = array();
+                    $parents_to_child_clade[$ts] = [];
                 }
                 for ($j = $i + 1; $j < count($tax_split); $j++) {
                     $child_clade = trim($tax_split[$j]);
@@ -71,11 +65,10 @@ class FullTaxonomy extends AppModel
             }
         }
 
-
         //ok, now create better parent-to-child clade representation.
-        $final_parents_to_child_clade = array();
+        $final_parents_to_child_clade = [];
         foreach ($result as $clade => $species) {
-            $child_clades = array();
+            $child_clades = [];
             foreach ($parents_to_child_clade[$clade] as $child_clade) {
                 if (array_key_exists($child_clade, $result)) {
                     $child_clades[] = $child_clade;
@@ -87,9 +80,8 @@ class FullTaxonomy extends AppModel
         //pr($parents_to_child_clade);
         //pr($final_parents_to_child_clade);
 
-
         //query the database, and get the full string representation for this top clade
-        $temp = array();
+        $temp = [];
         foreach ($res as $r) {
             $txid = $r['full_taxonomy']['txid'];
             $scname = $r['full_taxonomy']['scname'];
@@ -97,33 +89,33 @@ class FullTaxonomy extends AppModel
             // $tax_split = explode(";", $tax_string);
             // In the new DB structure, the order of the full taxonomy is reversed.
             // So a quick fix to get this model working is to reverse the order of the retrieved array
-            $tax_split = array_reverse(explode(";", $tax_string));
-            $local_tmp = "";
+            $tax_split = array_reverse(explode(';', $tax_string));
+            $local_tmp = '';
             for ($i = 0; $i < count($tax_split); $i++) {
                 $ts = trim($tax_split[$i]);
                 if (array_key_exists($ts, $final_parents_to_child_clade)) {
-                    $local_tmp = $local_tmp . "" . $ts . ";";
+                    $local_tmp = $local_tmp . '' . $ts . ';';
                 }
             }
-            $temp[] = $local_tmp . "" . $txid;
+            $temp[] = $local_tmp . '' . $txid;
         }
-        //pr($temp);
-        //pr($clade_to_species);
-        $full_tree = $this->explodeTree($temp, ";");
+        $full_tree = $this->explodeTree($temp, ';');
 
-        $final_result = array("parent_child_clades" => $final_parents_to_child_clade, "clade_species_tax" => $result, "full_tree" => $full_tree);
+        $final_result = [
+            'parent_child_clades' => $final_parents_to_child_clade,
+            'clade_species_tax' => $result,
+            'full_tree' => $full_tree
+        ];
         return $final_result;
     }
 
-
-    function explodeTree($array, $delimiter = '_')
-    {
+    function explodeTree($array, $delimiter = '_') {
         if (!is_array($array)) {
             return false;
         }
         $splitRE = '/' . preg_quote($delimiter, '/') . '/';
 
-        $returnArr = array();
+        $returnArr = [];
         $i = 0;
         foreach ($array as $val) {
             // Get parent parts and the current leaf
@@ -136,9 +128,9 @@ class FullTaxonomy extends AppModel
             $parentArr = &$returnArr;
             foreach ($parts as $part) {
                 if (!isset($parentArr[$part])) {
-                    $parentArr[$part] = array();
+                    $parentArr[$part] = [];
                 } elseif (!is_array($parentArr[$part])) {
-                    $parentArr[$part] = array();
+                    $parentArr[$part] = [];
                 }
                 $parentArr = &$parentArr[$part];
             }
@@ -147,7 +139,7 @@ class FullTaxonomy extends AppModel
                 if (is_numeric($leafPart)) {
                     $parentArr[] = $leafPart;
                 } else {
-                    $parentArr[$leafPart] = array();
+                    $parentArr[$leafPart] = [];
                 }
             }
             $i++;
