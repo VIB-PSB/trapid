@@ -17,7 +17,7 @@ class TranscriptsInterpro extends AppModel {
             $transcripts_string .
             ' GROUP BY `name` ORDER BY `count` DESC';
         // Trapid db structure update
-        // $query	= "SELECT `interpro`,COUNT(`transcript_id`) as `count` FROM `transcripts_interpro` WHERE `experiment_id`='".$exp_id."' AND `transcript_id` IN ".$transcripts_string." GROUP BY `interpro` ORDER BY `count` DESC";
+        // $query = "SELECT `interpro`,COUNT(`transcript_id`) as `count` FROM `transcripts_interpro` WHERE `experiment_id`='".$exp_id."' AND `transcript_id` IN ".$transcripts_string." GROUP BY `interpro` ORDER BY `count` DESC";
         $res = $this->query($query);
         foreach ($res as $r) {
             $go = $r['transcripts_annotation']['name'];

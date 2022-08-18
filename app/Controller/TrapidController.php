@@ -216,7 +216,9 @@ class TrapidController extends AppController{
    * Displays experiment information for a given user
    */
   function experiments(){
-    // Configure::write("debug",2);
+
+
+      // Configure::write("debug",2);
     $this->layout = "external";  // Layout for external pages (i.e. not in experiment)
     $this->set("active_header_item", "Experiments");
     $this -> set('title_for_layout', 'Experiments overview');
@@ -610,6 +612,7 @@ class TrapidController extends AppController{
     if(!$transcript_info){$this->redirect(array("controller"=>"trapid","action"=>"experiment",$exp_id));}
     $this->set("transcript_info",$transcript_info['Transcripts']);
     //get the similarity search hits for this transcript
+    // TODO: use virtual field
     $similarity_hits   = $this->Similarities->find("first",array("fields"=>array("UNCOMPRESS(similarity_data) as sim_data"), "conditions"=>array("experiment_id"=>$exp_id,"transcript_id"=>$transcript_id)));
     // $similarity_hits	= explode(";",$similarity_hits['Similarities']['similarity_data']);
     $similarity_hits	= explode(";",$similarity_hits[0]['sim_data']);
@@ -2359,7 +2362,7 @@ class TrapidController extends AppController{
 	$job_id	= $this->TrapidUtils->getClusterJobId($output);
 
 	//indicate in the database the new job-id
-	$this->ExperimentJobs->addJob($exp_id,$job_id,"short","database_upload");
+	$this->ExperimentJobs->addJob($exp_id,$job_id,"medium","database_upload");
 
     	//indicate in the database that the current experiment is "busy", and should as such not be accesible.
         $this->Experiments->updateAll(array("process_state"=>"'loading_db'","last_edit_date"=>"'".date("Y-m-d H:i:s")."'"),
@@ -3050,7 +3053,7 @@ class TrapidController extends AppController{
 	      if(!$user_data){$this->set("error","Wrong email/password");return;}
 	      $this->Cookie->write("user_id", $user_data['Authentication']['user_id']);
 	      $this->Cookie->write("email", $user_data['Authentication']['email']);
-          $this->cleanup_experiments();
+//          $this->cleanup_experiments();
           $this->redirect(array("controller"=>"trapid","action"=>"experiments"));
         }
         else{
@@ -3094,7 +3097,7 @@ class TrapidController extends AppController{
 	$command  	= "sh $qsub_file -q medium -o $output_file -e $error_file $shell_script ";
 	//pr($command);
         $output		= array();
-        exec($command,$output);
+//        exec($command,$output);
 	//pr($output);
       }
      }
