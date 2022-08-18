@@ -314,21 +314,6 @@ class GeneFamilyController extends AppController {
         $this->layout = "";
     }
 
-
-    function species_selection($exp_id = null) {
-        if (!$exp_id) {
-            $this->redirect(array("controller" => "trapid", "action" => "experiments"));
-        }
-        // $exp_id	= mysql_real_escape_string($exp_id);
-        parent::check_user_exp($exp_id);
-        $exp_info = $this->Experiments->getDefaultInformation($exp_id);
-
-        // Retrieve species from associated database
-        $all_species = $this->AnnotSources->find("all");
-        $this->set("all_species", $all_species);
-    }
-
-
     function gene_family($exp_id = null, $gf_id = null) {
         // Data for gene family must be present in tables 'transcripts','gene_families'
         if (!$exp_id || !$gf_id) {
