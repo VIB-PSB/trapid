@@ -1,7 +1,22 @@
 {
-    "braceStyle": "1tbs",
     "printWidth": 120,
-    "singleQuote": true,
+    "tabWidth": 4,
     "useTabs": false,
-    "tabWidth": 4
+    "overrides": [
+        {
+            "files": "*.php",
+            "options": {
+                "braceStyle": "1tbs",
+                "singleQuote": true,
+                "phpVersion": "7.2",
+                "trailingCommaPHP": false
+            }
+        },
+        {
+            "files": "*.java",
+            "options": {
+                "trailingComma": "none"
+            }
+        }
+    ]
 }
