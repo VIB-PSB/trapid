@@ -728,14 +728,12 @@ public class InitialTranscriptsProcessing {
     public void printGfMapping(Map<String, GeneFamilyAssignment> data, GF_TYPE gf_type) {
         if (gf_type == GF_TYPE.HOM) {
             for (String transcript_id : data.keySet()) {
-                //if(transcript_id.equals("AT4G21750") || transcript_id.equals("AT4G04890"))
                 System.out.println(
                     transcript_id + "\t" + data.get(transcript_id).gf_id + "\t" + data.get(transcript_id).gf_size
                 );
             }
         } else if (gf_type == GF_TYPE.IORTHO) {
             for (String transcript_id : data.keySet()) {
-                //if(transcript_id.equals("AT4G21750") || transcript_id.equals("AT4G04890"))
                 System.out.println(
                     transcript_id + "\t" + data.get(transcript_id).gf_id + "\t" + data.get(transcript_id).gf_size
                 );
@@ -993,8 +991,6 @@ public class InitialTranscriptsProcessing {
 
     /**
      * Funtion to perform intitial ORF prediction based on detected frame
-     *
-     *
      */
     public void performInitialORFPrediction(
         Connection db_connection,
@@ -1320,28 +1316,7 @@ public class InitialTranscriptsProcessing {
                 new_data.add(data.get(i));
             }
             return this.getLengthAnalysis(gf_id, new_data, false);
-            /*
-			int min_outlier				= average-3*std_dev;
-			int max_outlier				= average+3*std_dev;
-			List<Integer> new_data		= new ArrayList<Integer>();
-			for(int d:data){
-				if(d>min_outlier && d<max_outlier){
-					new_data.add(d);
-				}
-			}
-			if(new_data.size()>=MIN_GF_SIZE_META){
-				return this.getLengthAnalysis(gf_id,new_data, false);
-			}
-			else{
-				LengthAnalysis la		= new LengthAnalysis(average,std_dev);
-				return la;
-			}
-			*/
         } else {
-            /*
-			if(std_dev==0){
-				System.out.println("No outlier removal : "+gf_id+"\t"+data.toString());
-			}*/
             LengthAnalysis la = new LengthAnalysis(average, std_dev);
             return la;
         }
@@ -1358,19 +1333,11 @@ public class InitialTranscriptsProcessing {
             this.average = avg;
             this.std_deviation = std_dev;
         }
-        /*public LengthAnalysis(int min,int max,int avg,int std_dev){
-			this.min	= min;
-			this.max	= max;
-			this.average	= avg;
-			this.std_deviation	= std_dev;
-		}*/
     }
 
-    /*--------------------------------------------------------------------------------------------*/
-    /*--------------------------------------------------------------------------------------------*/
+    /*----------------------------------------------*/
     /* Assigning GOs and InterPros to Transcripts 	*/
-    /*--------------------------------------------------------------------------------------------*/
-    /*--------------------------------------------------------------------------------------------*/
+    /*----------------------------------------------*/
 
     /**
      * Assign GO terms to each transcript, based on the best similarity hit. Return hashmap with this assignment.
@@ -1490,7 +1457,6 @@ public class InitialTranscriptsProcessing {
             GeneFamilyAssignment gas = transcript2gf.get(gf2transcripts.get(gf_id).get(0));
 
             //PART 0: RETRIEVE PLAZA GENE CONTENT FOR THE GENE FAMILY
-            //---------------------------------------------------------
             Set<String> genes = null;
             //dependent on type of gene family, get genes from DB or from storage
             if (gf_type == GF_TYPE.HOM) {
@@ -1506,7 +1472,6 @@ public class InitialTranscriptsProcessing {
             }
 
             //PART 1: GO ANNOTATION
-            //-------------------------------------------
             //mapping of GO terms to genes! Better than genes to GO, because we actually need
             //the GO terms. The genes are just for counting.
             Map<String, Set<String>> go_genes = new HashMap<String, Set<String>>();
@@ -1724,7 +1689,6 @@ public class InitialTranscriptsProcessing {
             GeneFamilyAssignment gas = transcript2gf.get(gf2transcripts.get(gf_id).get(0));
 
             //PART 0: RETRIEVE PLAZA GENE CONTENT FOR THE GENE FAMILY
-            //---------------------------------------------------------
             Set<String> genes = null;
             //dependent on type of gene family, get genes from DB or from storage
             if (gf_type == GF_TYPE.HOM) {
@@ -1740,7 +1704,6 @@ public class InitialTranscriptsProcessing {
             }
 
             //PART 2 : INTERPRO ANNOTATION
-            //-------------------------------------------------------------
             //mapping of interpro domains to genes. The genes are just for counting
             //okay, now retrieve the GO data for these genes.
             Map<String, Set<String>> interpro_genes = new HashMap<String, Set<String>>();
@@ -1825,11 +1788,9 @@ public class InitialTranscriptsProcessing {
         return transcript_interpro;
     }
 
-    /*--------------------------------------------------------------------------------------------*/
-    /*--------------------------------------------------------------------------------------------*/
-    /* Storing GO's and InterPros to Transcripts 	*/
-    /*--------------------------------------------------------------------------------------------*/
-    /*--------------------------------------------------------------------------------------------*/
+    /*----------------------------------------------*/
+    /* Storing GOs and InterPros to Transcripts 	*/
+    /*----------------------------------------------*/
 
     /**
      * Store all the transcript - GO associations, that were detected
@@ -1971,14 +1932,9 @@ public class InitialTranscriptsProcessing {
         timing("Clearing InterPro local cache data structures", t61, t62, 2);
     }
 
-    /*--------------------------------------------------------------------------------------------*/
-    /*--------------------------------------------------------------------------------------------*/
-    /*--------------------------------------------------------------------------------------------*/
-    /*--------------------------------------------------------------------------------------------*/
-
     /**
      * Method (derived from GO enrichment) to reduce the number of GO terms visible to the user.
-     * Usefull, because otherwise entire GO graphs are displayed to the user, which isn't informative anymore.
+     * Useful, because otherwise entire GO graphs are displayed to the user, which isn't informative anymore.
      * Basically, hide parental GO terms, but still include the child GO terms.
      *
      * @param selected_gos Set of GO terms that are associated with a given gene family (and as such with the transcripts)
