@@ -230,39 +230,6 @@ class GeneFamilyController extends AppController {
     }
 
 
-    // TODO: consider deleting this function
-    function orf_lengths($exp_id = null, $gf_id = null) {
-        if (!$exp_id || !$gf_id) {
-            $this->redirect(array("controller" => "trapid", "action" => "experiments"));
-        }
-        // $exp_id	= mysql_real_escape_string($exp_id);
-        parent::check_user_exp($exp_id);
-        $exp_info = $this->Experiments->getDefaultInformation($exp_id);
-        $this->set("exp_info", $exp_info);
-        $this->set("exp_id", $exp_id);
-
-        // Check whether the gene family is valid.
-        $gf_id = filter_var($gf_id, FILTER_SANITIZE_STRING);
-        $gf_info = $this->GeneFamilies->find("first", array("conditions" => array("experiment_id" => $exp_id, "gf_id" => $gf_id)));
-        // Failsafe
-        if (!$gf_info) {
-            $this->redirect(array("controller" => "trapid", "action" => "experiment", $exp_id));
-        }
-        $transcripts = $this->Transcripts->find("all", array("conditions" => array("experiment_id" => $exp_id, "gf_id" => $gf_id)));
-        if ($gf_info['GeneFamilies']['num_transcripts'] != count($transcripts)) {
-            $this->normalizeGfInfo($exp_id, $gf_id, count($transcripts));
-            $gf_info['GeneFamilies']['num_transcripts'] = count($transcripts);
-        }
-        $this->set("gf_info", $gf_info['GeneFamilies']);
-        $this->set("transcripts", $transcripts);
-        // Retrieve gene_ ids for the gene family.
-        $gf_content = $this->getGfContent($exp_id, $gf_id, $gf_info['GeneFamilies']['plaza_gf_id'], $exp_info['genefamily_type']);
-        // Get gene_sizes for this gene family content
-        $gene_sizes = $this->Annotation->getGeneSizes($gf_content);
-        $this->set("gene_sizes", $gene_sizes);
-    }
-
-
     function getGfContent($exp_id, $gf_id, $plaza_gf_id, $gf_type) {
         $result = array();
         if ($gf_type == "HOM") {
