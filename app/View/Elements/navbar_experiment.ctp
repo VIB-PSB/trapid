@@ -133,7 +133,11 @@ $link_text = array(
     <!-- Sidebar header -->
     <div class="sidebar-header">
         <a class="sidebar-brand" href="<?php echo $this->Html->Url(array("controller" => "trapid", "action" => "experiments")); ?>">TRAPID
-            <label class="label label-beta">dev</label>
+            <?php
+            if (IS_DEV_ENVIRONMENT) {
+                echo '<label class="label label-beta">dev</label>';
+            }
+            ?>
         </a>
         <!-- Sidebar brand image -->
         <!--        <div class="sidebar-image">-->
@@ -228,13 +232,12 @@ $link_text = array(
         <?php if($exp_info['label_count'] == 0): ?>
             <?php
             foreach (["subsets", "enrichment", "sankey", "compare_subsets"] as $link_id) {
-                echo "<li class=\"sidebar-text sidebar-disabled\">"  . $link_text[$link_id][0] . "</li>\n";
             }
         ?>
         <?php else: ?>
             <?php echo "<li><a href='"  . $link_text["subsets"][1] . "'>" . $link_text["subsets"][0] . "</a></li>\n"; ?>
                     <?php echo "<li><a href='"  . $link_text["enrichment"][1] . "'>" . $link_text["enrichment"][0] . "</a></li>\n"; ?>
-
+            <?php if($exp_info['enrichment_state'] == 'finished'): ?>
             <li class="dropdown">
                 <a class="ripple-effect dropdown-toggle" href="#" data-toggle="dropdown">
                     <?php echo $link_text["sankey"][0];?><b class="caret"></b>
@@ -248,6 +251,9 @@ $link_text = array(
                     ?>
                 </ul>
             </li>
+                <?php else: ?>
+                    <li class="sidebar-text sidebar-disabled"><?php echo $link_text['sankey'][0] ?></li>
+                <?php endif; ?>
 
         <?php if($exp_info['label_count'] > 1): ?>
         <li>

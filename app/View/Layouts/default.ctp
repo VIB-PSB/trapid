@@ -25,14 +25,14 @@
         ?>
     </title>
     <?php
-    // echo $html->charset()."\n"; // Duplicated above?
-    // echo $this->Html->css(array('bootstrap-3.3.7'))."\n";
-    //	 echo $this->Html->css(array('bootstrap-3.3.7', 'trapid'))."\n";
     echo $this->Html->css(array('bootstrap_paper', 'datatables.min', 'trapid')) . "\n";
     ?>
     <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
     <!-- Favicon (if we do not want to keep the PSB bioinformatics one) -->
-    <link rel="icon" href="<?php echo $this->webroot . 'favicon.ico'; ?>" type="image/x-icon"/>
+    <?php
+    $favicon_name = IS_DEV_ENVIRONMENT ? 'favicon.dev.ico' : 'favicon.ico';
+    ?>
+    <link rel="icon" href="<?php echo $this->webroot . $favicon_name; ?>" type="image/x-icon"/>
 </head>
 <body>
 <?php echo $this->element('navbar_experiment', array("exp_id" => $exp_id, "exp_info" => $exp_info)); ?>
@@ -45,12 +45,6 @@
     <div class="side-content preload">
         <div class="container-fluid">
             <?php echo $this->fetch('content'); ?>
-
-            <!--    <div id="footer">-->
-            <!-- 	<p style="font-size: 10px; color: #000000; text-align:center;">-->
-            <!--	    &nbsp; &nbsp;-->
-            <!--	    <br/>-->
-            <!--	</p>-->
         </div>
     </div>
 </div>
@@ -67,16 +61,14 @@
     // TODO: check if it makes more sense to do it server-side?
     var header_item_text = "<?php echo (isset($active_header_item) ? $active_header_item : ''); ?>";
     var sidebar_item_text = "<?php echo (isset($active_sidebar_item) ? $active_sidebar_item : ''); ?>";
-    // console.log(header_item_text.toString());  // Debug/test
-    // console.log(sidebar_item_text.toString());  // Debug/test
     function activeHeaderItem(itemText) {
-        // Add active class to menu item containing 'itemText'
+        // Add active class to header menu item containing 'itemText'
         $('.header-bar .navbar-nav li').filter(function () {
             return $.text([this]).indexOf(itemText) > -1;
         }).addClass('active');
     }
     function activeSidebarItem(itemText) {
-        // Add active class to menu item containing 'itemText'
+        // Add active class to sidebar menu item containing 'itemText'
         $('.sidebar-nav li').filter(function () {
             return $.text([this]).indexOf(itemText) > -1;
         }).addClass('active');

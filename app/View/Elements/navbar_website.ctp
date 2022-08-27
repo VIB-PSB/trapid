@@ -7,8 +7,12 @@
         <span class="icon-bar"></span>
         <span class="icon-bar"></span>
       </button>
-        <a class="navbar-brand" href="#" style="position:relative;">TRAPID
-<!--      <label class="label label-beta">dev</label>-->
+        <a class="navbar-brand" href="#">TRAPID
+          <?php
+              if (IS_DEV_ENVIRONMENT) {
+                  echo '<label class="label label-beta">dev</label>';
+              }
+          ?>
         </a>
     </div>
     <div class="collapse navbar-collapse" id="main-navbar-collapse">

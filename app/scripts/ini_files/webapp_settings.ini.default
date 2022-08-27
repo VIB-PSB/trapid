@@ -1,6 +1,7 @@
 [Website]
 ; Default page title
 default_title = "Default TRAPID title"
+is_dev_environment = true
 
 ; TRAPID instance name for `tmp_path` and `tmp_url` needs to be the same (here `trapid_tmp`)
 [Tmp]

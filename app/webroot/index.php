@@ -64,8 +64,8 @@ if(!defined('INI')){ define('INI',SCRIPTS.'ini_files'.DS); }
 // Define and read configuration files
 if(!defined('DATABASE_SETTINGS_INI_FILE')){define('DATABASE_SETTINGS_INI_FILE',INI."database_settings.ini");}
 if(!defined('WEBAPP_SETTINGS_INI_FILE')){define('WEBAPP_SETTINGS_INI_FILE',INI."webapp_settings.ini");}
-$db_settings_ini_data = parse_ini_file(DATABASE_SETTINGS_INI_FILE);
-$webapp_settings_ini_data = parse_ini_file(WEBAPP_SETTINGS_INI_FILE);
+$db_settings_ini_data = parse_ini_file(DATABASE_SETTINGS_INI_FILE, false, INI_SCANNER_TYPED);
+$webapp_settings_ini_data = parse_ini_file(WEBAPP_SETTINGS_INI_FILE, false, INI_SCANNER_TYPED);
 
 // Use parsed data to set global variables used within TRAPID
 
@@ -74,6 +74,13 @@ $webapp_settings_ini_data = parse_ini_file(WEBAPP_SETTINGS_INI_FILE);
  */
 if(!defined('WEBSITE_TITLE')){
     define('WEBSITE_TITLE', $webapp_settings_ini_data['default_title']);
+}
+
+/**
+ * Whether the current instance should be considered to be a development environment
+ */
+if(!defined('IS_DEV_ENVIRONMENT')){
+    define('IS_DEV_ENVIRONMENT', $webapp_settings_ini_data['is_dev_environment']);
 }
 
 /**
@@ -106,11 +113,9 @@ if(!defined('PLAZA_DB_PASSWORD')) {define('PLAZA_DB_PASSWORD', $db_settings_ini_
  */
 if(!defined('BLAST_DB_DIR')){
     define('BLAST_DB_DIR', $webapp_settings_ini_data['blast_db_path']);
-    // define('BLAST_DB_DIR','/www/blastdb/biocomp/moderated/trapid/');
 }
 if(!defined('BLAST_DB_DIR_MIDAS')){
     define('BLAST_DB_DIR_MIDAS', $webapp_settings_ini_data['blast_db_path_midas']);
-    // define('BLAST_DB_DIR_MIDAS','/blastdb/webdb/moderated/trapid/');
 }
 
 /*
@@ -119,7 +124,6 @@ if(!defined('BLAST_DB_DIR_MIDAS')){
  */
 if(!defined('MAX_CLUSTER_JOBS')){
     define('MAX_CLUSTER_JOBS', $webapp_settings_ini_data['max_cluster_jobs']);
-//    print_r($webapp_settings_ini_data);
 }
 
 /*
@@ -140,8 +144,8 @@ if(!defined('COOKIE_PATH')) {define('COOKIE_PATH', $webapp_settings_ini_data['co
 if(!defined('COOKIE_KEY')) {define('COOKIE_KEY', $webapp_settings_ini_data['cookie_key']);}
 if(!defined('COOKIE_SECURE')) {define('COOKIE_SECURE', (bool) $webapp_settings_ini_data['cookie_secure']);}
 
-
-ini_set('memory_limit', '1024M');  // Hack-ish?
+// Increase memory limit: hack-ish?
+ini_set('memory_limit', '1024M');
 
 
 /**

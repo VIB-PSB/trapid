@@ -29,10 +29,11 @@
 	echo $this->Html->css(array('bootstrap_paper', 'trapid'))."\n";
     ?>
   <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
-<!--  <link rel="stylesheet" href="https://cdn.datatables.net/1.10.13/css/jquery.dataTables.min.css">-->
   <!-- Favicon (if we do not want to keep the PSB bioinformatics one) -->
-  <link rel="icon" href="<?php echo $this->webroot.'favicon.ico';?>" type="image/x-icon" />
-<!--  <script src="https://cdn.datatables.net/1.10.13/js/jquery.dataTables.min.js"></script>-->
+  <?php
+  $favicon_name = IS_DEV_ENVIRONMENT ? 'favicon.dev.ico' : 'favicon.ico';
+  ?>
+  <link rel="icon" href="<?php echo $this->webroot . $favicon_name; ?>" type="image/x-icon" />
 </head>
 <body class="external">
     <?php
@@ -45,7 +46,7 @@
     <footer class="footer">
     <div class="container">
         <span class="text-muted">Powered by the <a href="http://bioinformatics.psb.ugent.be/cnb" target="_blank">CNB group</a> at <a href="https://psb.ugent.be/" target="_blank">VIB-UGent<span class="hidden-xs"> Center for Plant Systems Biology</span></a>.</span>
-        <span class="text-muted pull-right">&COPY; 2021 TRAPID</span>
+        <span class="text-muted pull-right">&COPY; 2022 TRAPID</span>
     </div>
     </footer>
     <!-- End footer -->
