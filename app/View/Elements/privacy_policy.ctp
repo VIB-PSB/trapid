@@ -102,7 +102,7 @@
                 </p>
                 <p class='text-justify'>
                     If you make a request, we have one month to respond to you.<br/>
-                    If you would like to exercise any of these rights, please <?=$this->Html->link("contact us by email",array("controller"=>"pages","action"=>"contact"));?>.
+                    If you would like to exercise any of these rights, please <?=$this->Html->link("contact us by email",array("controller"=>"documentation","action"=>"contact"));?>.
                 </p>
                 <p class='text-justify'>
                     You also have the right to file a complaint with the Belgian Data Protection Authority in case you would be of the opinion that we fail to respect your personal data protection rights.

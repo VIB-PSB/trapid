@@ -1,3 +1,3 @@
 <?php
-echo "Deleting experiment";
+echo 'Deleting experiment';
 ?>

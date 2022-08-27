@@ -573,30 +573,6 @@ class TrapidController extends AppController{
   }
 
 
-
-
-  function change_transcript_gf($exp_id=null,$transcript_id=null){
-    if(!$exp_id || !$transcript_id){$this->redirect(array("controller"=>"trapid","action"=>"experiments"));}
-    // $exp_id	= mysql_real_escape_string($exp_id); // No need to cehck since there is a `find()` in `check_user_exp()`?
-    parent::check_user_exp($exp_id);
-    $exp_info	= $this->Experiments->getDefaultInformation($exp_id);
-    $this->set("exp_info",$exp_info);
-    $this->set("exp_id",$exp_id);
-    $this->TrapidUtils->checkPageAccess($exp_info['title'],$exp_info["process_state"],$this->process_states["default"]);
-
-    //check whether transcript is valid
-    // $transcript_id 	= mysql_real_escape_string($transcript_id);
-    $transcript_info    = $this->Transcripts->find("first",array("conditions"=>array("experiment_id"=>$exp_id,"transcript_id"=>$transcript_id)));
-    //pr($transcript_info);
-    if(!$transcript_info){$this->redirect(array("controller"=>"trapid","action"=>"experiment",$exp_id));}
-
-    $this->set("transcript_info",$transcript_info);
-
-  }
-
-
-
-
   function similarity_hits($exp_id=null,$transcript_id=null){
     Configure::write("debug",2);
     if(!$exp_id || !$transcript_id){$this->redirect(array("controller"=>"trapid","action"=>"experiments"));}

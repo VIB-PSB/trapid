@@ -1,15 +1,8 @@
 <script>
     // Enable Bootstrap tooltips
-    $(function () {
+    $(function() {
         $('[data-toggle="tooltip"]').tooltip({
-        <?php
-            if(isset($container)) {
-                echo "container: \"" . $container . "\"";
-            }
-            else {
-                echo "container: 'body'";
-            }
-            ?>
+            <?php echo isset($container) ? "container: \"" . $container . "\"" : "container: 'body'"; ?>
         });
     });
 </script>
