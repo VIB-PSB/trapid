@@ -38,7 +38,7 @@
 <body class="external">
     <?php
         // Insert external website navbar and content
-        echo $this->element('navbar_website');
+        echo $this->element('header_website');
         echo $this->fetch('content');
     ?>
 
