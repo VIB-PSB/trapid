@@ -13,12 +13,12 @@
     <?php
     // TODO: only import what is actually used from bootstrap + use minified version
     // Note: we use a legacy version of jQuery because version >=3.0 breaks the GO enrichment graph tooltips (tipsy)
-    echo $this->Html->script(array('jquery-2.2.4.min', 'bootstrap-3.3.7.min'));
+    echo $this->Html->script(['jquery-2.2.4.min', 'bootstrap-3.3.7.min']);
     ?>
     <title>
         <?php echo $title_for_layout === WEBSITE_TITLE ? $title_for_layout : $title_for_layout . " &middot; TRAPID"; ?>
     </title>
-    <?php echo $this->Html->css(array('bootstrap_paper', 'trapid')) . "\n"; ?>
+    <?php echo $this->Html->css(['bootstrap_paper', 'trapid']) . "\n"; ?>
     <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons" />
     <?php $favicon_name = IS_DEV_ENVIRONMENT ? 'favicon.dev.ico' : 'favicon.ico'; ?>
     <link rel="icon" href="<?php echo $this->webroot . $favicon_name; ?>" type="image/x-icon" />
