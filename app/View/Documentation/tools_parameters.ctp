@@ -3,13 +3,13 @@
         <h1 class="text-primary">Tools & parameters</h1>
     </div>
     <section class="page-section">
-        <p class="text-justify">This page lists the third-party resources and tools used within TRAPID. </p>
-            <p class="text-justify">They are organized by general categories, depending on which part of TRAPID makes use of them, and sorted by alphabetical order. Further information about used versions and parameters, together with links to either the official website or to the relevant publication (when applicable), are also provided.
+        <p class="text-justify">This page lists the third-party resources and tools used within TRAPID.</p>
+        <p class="text-justify">
+            They are organized by general categories, depending on which part of TRAPID makes use of them, and sorted by alphabetical order.
+            Further information about used versions and parameters, together with links to either the official website or to the relevant publication (when applicable), are also provided.
         </p>
     </section>
-
     <div class="row">
-
         <div class="col-md-9" id="tutorial-col">
             <section class="page-section" id="ref-dbs">
                 <h3>Reference databases</h3>
@@ -17,29 +17,32 @@
                     The available reference database encompass protein sequences, functional annotation, and GF information for 115 archaea, 1,678 bacteria, and 326 eukaryotes (88 of which exclusively in PLAZA).</p>
                 <p class="text-justify">
                     For extensive details about the reference databases (e.g. further information on gene family construction, list of included clades/species, ...), please refer to their own documentation.
-                </p><br>
-                <style>
-                    td,th {
-                        text-align: center;
-                        vertical-align: middle;
-                    }
-                    td.first-col, th.first-col{
-                        text-align: right;
-                        font-weight: bold;
-                        width: 15%;
-                    }
-                </style>
+                </p>
+                <br>
                 <div class="table-responsive">
-                    <table class="table table-hover table-striped" style="font-size: 85%;">
+                    <table class="table table-hover table-striped ref-db-table">
                         <thead>
                             <tr>
                                 <th class="first-col"></th>
-                                <?php foreach(['db_trapid_ref_plaza_dicots_04_5_test', 'db_trapid_ref_plaza_monocots_04_5_test', 'db_trapid_ref_plaza_pico_03_test', 'db_trapid_ref_plaza_diatoms_01_test', 'db_trapid_ref_eggnog_test_02'] as $ref_db): ?>
-                                <th><a href="<?php echo $ref_db_data[$ref_db]['url']; ?>" target="_blank"><?php echo $ref_db_data[$ref_db]['name']; ?></a></th>
-                                <?php endforeach;?>
+                                <?php foreach (
+                                    [
+                                        'db_trapid_ref_plaza_dicots_04_5_test',
+                                        'db_trapid_ref_plaza_monocots_04_5_test',
+                                        'db_trapid_ref_plaza_pico_03_test',
+                                        'db_trapid_ref_plaza_diatoms_01_test',
+                                        'db_trapid_ref_eggnog_test_02'
+                                    ]
+                                    as $ref_db
+                                ): ?>
+                                    <th>
+                                        <a href="<?php echo $ref_db_data[$ref_db]['url']; ?>" target="_blank">
+                                            <?php echo $ref_db_data[$ref_db]['name']; ?>
+                                        </a>
+                                    </th>
+                                <?php endforeach; ?>
                             </tr>
-                            </thead>
-                            <tbody>
+                        </thead>
+                        <tbody>
                             <tr>
                                 <td class="first-col"># Species</td>
                                 <td>55</td>
@@ -80,7 +83,7 @@
                                 <td>Tribe-MCL, integrative orthologs</td>
                                 <td>eggNOG</td>
                             </tr>
-                            </tbody>
+                        </tbody>
                     </table>
                 </div>
             </section>
@@ -88,9 +91,8 @@
             <section class="page-section" id="init-processing">
                 <h3>Initial processing</h3>
                 <?php
-                $init_processing_tools = array("diamond", "infernal", "kaiju", "emapper", "ncbi_nr_prot", "ncbi_tax", "rfam");
-                foreach ($init_processing_tools as $tool) {
-                    echo $this->element('doc_tools_parameters', array('tool_data'=>$tools_parameters_data[$tool]));
+                foreach (["diamond", "infernal", "kaiju", "emapper", "ncbi_nr_prot", "ncbi_tax", "rfam"] as $tool) {
+                    echo $this->element('doc_tools_parameters', ['tool_data' => $tools_parameters_data[$tool]]);
                 }
                 ?>
             </section>
@@ -98,9 +100,8 @@
             <section class="page-section" id="msa-phylogeny">
                 <h3>MSA and phylogeny</h3>
                 <?php
-                $msa_trees_tools = array("mafft", "muscle", "fasttree", "iq_tree", "raxml", "phyml");
-                foreach ($msa_trees_tools as $tool) {
-                    echo $this->element('doc_tools_parameters', array('tool_data'=>$tools_parameters_data[$tool]));
+                foreach (["mafft", "muscle", "fasttree", "iq_tree", "raxml", "phyml"] as $tool) {
+                    echo $this->element('doc_tools_parameters', ['tool_data' => $tools_parameters_data[$tool]]);
                 }
                 ?>
             </section>
@@ -108,18 +109,14 @@
             <section class="page-section" id="visualization">
                 <h3>Data visualization</h3>
                 <?php
-                $viz_tools = array("unipept_viz", "krona", "msa_viewer", "phyd3");
-                foreach ($viz_tools as $tool) {
-                    echo $this->element('doc_tools_parameters', array('tool_data'=>$tools_parameters_data[$tool]));
+                foreach (["unipept_viz", "krona", "msa_viewer", "phyd3"] as $tool) {
+                    echo $this->element('doc_tools_parameters', ['tool_data' => $tools_parameters_data[$tool]]);
                 }
                 ?>
             </section>
-
-        </div> <!-- End column -->
-
+        </div> <!-- End content column -->
         <div class="col-md-3 scrollspy" id="navigation-col">
             <ul class="nav hidden-xs hidden-sm" id="sidebar-nav" data-spy="affix">
-<!--                <h5 class="doc-sidebar-header"><i class="material-icons md-24">toc</i> Sections</h5>-->
                 <h5 class="doc-sidebar-header">Contents</h5>
                 <li><a href="#ref-dbs">Reference databases</a></li>
                 <li><a href="#init-processing">Initial processing</a></li>
@@ -128,28 +125,23 @@
                 <li class="sidebar-nav-to-top"><a href="#top">Back to top</a></li>
             </ul>
         </div>
-
-
     </div> <!-- End row -->
 </div>
-</div>
 <script type="text/javascript">
-//    $(document).ready(function () {
-        // Affix navigation (bootstrap)
-        $('body').attr('data-spy', 'scroll');
-        $('body').attr('data-target', '.scrollspy');
-        $('#sidebar-nav').affix({
-            offset: {
-                top: $('#sidebar-nav').offset().top
-            }
-        });
-        // Scroll to anchors smoothly
-        $('a[href^="#"]').click(function () {
-            var the_id = $(this).attr("href");
-            $('html, body').animate({
-                scrollTop: $(the_id).offset().top
-            }, 250, 'swing');
-            return false;
-        });
-//    });
+    // Affix navigation (bootstrap)
+    $('body').attr('data-spy', 'scroll');
+    $('body').attr('data-target', '.scrollspy');
+    $('#sidebar-nav').affix({
+        offset: {
+            top: $('#sidebar-nav').offset().top
+        }
+    });
+    // Scroll to anchors smoothly
+    $('a[href^="#"]').click(function() {
+        var the_id = $(this).attr("href");
+        $('html, body').animate({
+            scrollTop: $(the_id).offset().top
+        }, 250, 'swing');
+        return false;
+    });
 </script>
