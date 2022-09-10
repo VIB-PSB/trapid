@@ -1282,6 +1282,22 @@ a.linkout:after {
     margin-right: auto;
 }
 
+.ref-db-table {
+    font-size: 85%;
+}
+
+.ref-db-table td,
+.ref-db-table th {
+    text-align: center;
+    vertical-align: middle;
+}
+
+.ref-db-table td.first-col,
+.ref-db-table th.first-col {
+    font-weight: bold;
+    text-align: right;
+    width: 15%;
+}
 
 /* Affix/scrollspy navigation: used in documentation and transcript pages */
 
@@ -2354,3 +2370,24 @@ label.optional::after {
     overflow-y: auto;
 }
 
+/* Experiments overview */
+#new-exp-modal .modal-header {
+    padding-bottom: 5px;
+}
+
+#new-exp-modal .form-control {
+    box-sizing: border-box;
+    font-size: 16px;
+    height: auto;
+    position: relative;
+}
+
+#new-exp-modal .form-control:not(select) {
+    padding: 5px 0;
+}
+
+/* Experiment log */
+#exp-log-well {
+    font-family: monospace;
+    font-size: 88%;
+}

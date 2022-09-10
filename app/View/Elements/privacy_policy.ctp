@@ -16,7 +16,7 @@
             <div class="list-group-item faq-answer">
                 <p class='text-justify'>
                     When you register to use TRAPID, the email and user data you provide (organization and country) are collected.
-                    <br/>
+                    <br />
                     By browsing TRAPID, anonymous user statistics are gathered using Google Analytics.
                 </p>
             </div>
@@ -101,8 +101,12 @@
                 </ul>
                 </p>
                 <p class='text-justify'>
-                    If you make a request, we have one month to respond to you.<br/>
-                    If you would like to exercise any of these rights, please <?=$this->Html->link("contact us by email",array("controller"=>"documentation","action"=>"contact"));?>.
+                    If you make a request, we have one month to respond to you.<br />
+                    If you would like to exercise any of these rights, please
+                    <?= $this->Html->link('contact us by email', [
+                        'controller' => 'documentation',
+                        'action' => 'contact'
+                    ]) ?>.
                 </p>
                 <p class='text-justify'>
                     You also have the right to file a complaint with the Belgian Data Protection Authority in case you would be of the opinion that we fail to respect your personal data protection rights.
@@ -119,9 +123,9 @@
             <div class="list-group-item faq-answer">
                 <p class='text-justify'>
                     Cookies are text files placed on your computer to collect standard Internet log information and visitor behavior information.
-                    <br/>
+                    <br />
                     When you visit our websites, we may collect information from you automatically through cookies or similar technology.
-                    <br/><br/>
+                    <br /><br />
                     For further information, visit <a href='http://allaboutcookies.org' target='_blank' class='linkout'>allaboutcookies.org</a>.
                 </p>
             </div>
@@ -150,7 +154,9 @@
         <div class='collapse' id='how_contact_us'>
             <div class="list-group-item faq-answer">
                 <p class='text-justify'>
-                    Please visit the <?=$this->Html->link("contact page",array("controller"=>"documentation","action"=>"contact"));?> to find our contact details.
+                    Please visit the
+                    <?= $this->Html->link('contact page', ['controller' => 'documentation', 'action' => 'contact']) ?>
+                    to find our contact details.
                 </p>
             </div>
         </div>

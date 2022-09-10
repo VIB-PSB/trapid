@@ -9,50 +9,27 @@
     </div>
     <h1 class="text-primary">Log history</h1>
 </div>
-
-
-<div class="well" style='font-family:monospace; font-size:88%;' id="exp-log-well"><?php
-            $colors = array(0 => "#000000", 1 => "#202020", 2 => "#404040", 3 => "#606060");
-            foreach ($log_info as $li) {
-                $l = $li['ExperimentLog'];
-                $date = $l['date'];
-                $action = $l['action'];
-                $param = $l['parameters'];
-                $depth = $l['depth'];
-                echo "+ <span style='color:" . $colors[$depth] . "'>";
-                for ($i = 0; $i < $depth; $i++) {
-                    echo "&nbsp;&nbsp;";
-                }
-                echo $date . "\t" . $action . "\t" . $param;
-                echo "</span><br/>\n";
-
+<section class="page-section">
+    <div class="well" id="exp-log-well"><?php
+        $colors = [0 => '#000000', 1 => '#202020', 2 => '#404040', 3 => '#606060'];
+        foreach ($log_info as $li) {
+            $l = $li['ExperimentLog'];
+            $date = $l['date'];
+            $action = $l['action'];
+            $param = $l['parameters'];
+            $depth = $l['depth'];
+            echo "+ <span style='color:" . $colors[$depth] . "'>";
+            for ($i = 0; $i < $depth; $i++) {
+                echo '&nbsp;&nbsp;';
             }
-            ?>
-        </div>
-
-        <br/><br/>
-
-        <?php
-        /*
-        $num_rows	= count($log_info)+4;
-        if($num_rows>20){$num_rows=20;}
-        echo "<textarea rows='".$num_rows."' style='width:700px;'>";
-        foreach($log_info as $li){
-            $l	= $li['ExperimentLog'];
-            $date	= $l['date'];
-            $action	= $l['action'];
-            $param	= $l['parameters'];
-            $depth	= $l['depth'];
-            for($i=0;$i<=$depth;$i++){echo " * ";}
-            echo $date."\t".$action."\t".$param."\n";
+            echo $date . "\t" . $action . "\t" . $param;
+            echo "</span><br/>\n";
         }
-        echo "</textarea>\n";
-        */
         ?>
-
+    </div>
+</section>
 <script type="text/javascript">
-
-    // function copied from
+    // Export function inspired from this SO answer: https://stackoverflow.com/a/18197341/3588884
     function download(filename, text) {
         var element = document.createElement('a');
         element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(text));
