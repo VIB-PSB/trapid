@@ -7,7 +7,7 @@
     <div class="row" id="choices-row">
         <div class="panel panel-default" id="choices">
             <div class="panel-heading">
-                <h3 class="panel-title">Sankey diagram display options</h3>
+                Sankey diagram display options
             </div>
 
             <div class="panel-body">
@@ -44,7 +44,6 @@
                         'id' => 'middle_refine',
                         'onclick' => 'draw_sankey()'
                     );
-                    // echo $this->Form->button('  Refine  ',$options);
                     echo $this->Form->end();
 
                     ?>
@@ -54,7 +53,6 @@
                     ///////////////// Right refinement /////////////////
                     echo $this->Form->create(false, array('id'=> 'right_refine_form','class'=> 'refine_box'));
                     echo $this->Form->input("Minimum $col_names[2] size: ", array('options' => array(), 'id' =>'right_min'));
-                    // echo $this->Form->button('  Refine  ', array('type' => 'button', 'id' => 'right_refine', 'onclick' => 'draw_sankey()'));
                     echo $this->Form->end();
                     ?>
                 </div>
@@ -227,5 +225,3 @@
     }
 
 </script>
-
-<?php // echo $this->element('sql_dump');  // Dump all MySQL queries (debug) ?>

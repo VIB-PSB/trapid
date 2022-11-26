@@ -58,7 +58,7 @@ $loading_span_elmt = "<span class=\"text-muted\">" . $this->Html->image('small-a
 
 <div class="panel panel-default">
     <div class="panel-heading">
-        <h3 class="panel-title">Transcript information</h3>
+        Transcript information
     </div>
     <div class="panel-body">
         <?php create_stats_row("#Transcripts", $num_transcripts, null); ?>
@@ -73,7 +73,7 @@ $loading_span_elmt = "<span class=\"text-muted\">" . $this->Html->image('small-a
 
 <div class="panel panel-default">
     <div class="panel-heading">
-        <h3 class="panel-title">Meta annotation information</h3>
+        Meta annotation information
     </div>
     <div class="panel-body">
         <?php create_stats_row("#Full-length", $meta_annot_fulllength, perc($meta_annot_fulllength, $num_transcripts, 1, false)); ?>
@@ -85,7 +85,7 @@ $loading_span_elmt = "<span class=\"text-muted\">" . $this->Html->image('small-a
 
 <div class="panel panel-default">
     <div class="panel-heading">
-        <h3 class="panel-title">Taxonomic classification information (Kaiju)</h3>
+        Taxonomic classification information (Kaiju)
     </div>
     <div class="panel-body">
         <?php if ($exp_info['perform_tax_binning'] == 1): ?>
@@ -108,7 +108,7 @@ $loading_span_elmt = "<span class=\"text-muted\">" . $this->Html->image('small-a
 
 <div class="panel panel-default">
     <div class="panel-heading">
-        <h3 class="panel-title">Similarity search information (DIAMOND)</h3>
+        Similarity search information (DIAMOND)
     </div>
     <div class="panel-body">
         <p class="text-justify">Best similarity search hit for each transcript. By default, only the top 20 species are
@@ -150,7 +150,7 @@ $loading_span_elmt = "<span class=\"text-muted\">" . $this->Html->image('small-a
 
 <div class="panel panel-default">
     <div class="panel-heading">
-        <h3 class="panel-title">Gene family information</h3>
+        Gene family information
     </div>
     <div class="panel-body">
         <?php create_stats_row("#Gene families", $num_gf, null); ?>
@@ -162,7 +162,7 @@ $loading_span_elmt = "<span class=\"text-muted\">" . $this->Html->image('small-a
 
 <div class="panel panel-default">
     <div class="panel-heading">
-        <h3 class="panel-title">RNA family information</h3>
+        RNA family information
     </div>
     <div class="panel-body">
         <?php create_stats_row("#RNA families", $num_rf, null); ?>
@@ -179,7 +179,7 @@ $loading_span_elmt = "<span class=\"text-muted\">" . $this->Html->image('small-a
 
 <div class="panel panel-default">
     <div class="panel-heading">
-        <h3 class="panel-title">Functional annotation information</h3>
+        Functional annotation information
     </div>
     <div class="panel-body">
         <?php if (in_array("go", $exp_info['function_types'])): ?>

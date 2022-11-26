@@ -11,19 +11,19 @@ if (isset($ref_gf_id)) {
     // Display GF functional category and description (`$func_data` is set only for eggnog reference DBs)
     if (isset($func_data)) {
         if (!empty($func_data)) {
-            echo " <span class=\"label label-default\">" .
+            echo ' <span class="label label-default">' .
                 $func_data['func_cat_id'] .
                 '</span> <strong>' .
                 $func_data['func_cat_label'] .
                 '</strong> ; ';
             echo $func_data['description'];
         } else {
-            echo "<span class='text-muted'><strong>No NOG functional data found.</strong></span>";
+            echo '<span class="text-muted"><strong>No NOG functional data found.</strong></span>';
         }
         echo '<br>';
     }
 
-    // Display top GOs
+    // Display top GOs (set for both EggNOG and PLAZA reference DBs)
     if (isset($top_gos) && !empty($top_gos)) {
         echo '<strong>Functional data (GO): </strong><br>';
         $array_keys = array_keys($top_gos);
@@ -37,7 +37,6 @@ if (isset($ref_gf_id)) {
                 "'>" .
                 $go_categories[$go_aspect]['text'];
             echo '</span>&nbsp;';
-            // echo ": ";
             foreach ($go_data as $go) {
                 echo "<a class='linkout' target='_blank' href='https://www.ebi.ac.uk/QuickGO/term/" .
                     $go['name'] .

@@ -2,7 +2,6 @@
     <h1 class="text-primary"><?php echo $available_types[$type];?> ratios subsets</h1>
 </div>
 <div class="subdiv">
-	<?php echo $this->element("trapid_experiment");?>
 	<h3>Subset selection</h3>
 	<div class="subdiv">
 		<?php

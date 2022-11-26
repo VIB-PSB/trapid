@@ -8,8 +8,7 @@ echo $this->Html->css('selectize.paper.css');
     <div class="page-header">
         <h1 class="text-primary">Process transcripts</h1>
     </div>
-        <?php // echo $this->element("trapid_experiment"); ?>
-    <section class="page-section">
+    <section class="page-section-sm">
             <p class="text-justify">TRAPID's transcriptome pipeline can be used to annotate and analyze user-provided transcripts  of
             species that are not present in the selected reference database. This is useful for e.g. transcriptome analyzes during specific
             conditions or for species for which no genome is available. Transcripts are initially
@@ -30,7 +29,7 @@ echo $this->Html->css('selectize.paper.css');
             <!-- Similarity search -->
             <div class="panel panel-default">
                 <div class="panel-heading">
-                    <h3 class="panel-title">Similarity search options</h3>
+                    Similarity search options
                 </div>
                 <div class="panel-body">
                             <div class="form-group">
@@ -65,7 +64,7 @@ echo $this->Html->css('selectize.paper.css');
             <!-- RNA annotation / Infernal / RFAM options -->
             <div class="panel panel-default">
                 <div class="panel-heading">
-                    <h3 class="panel-title">RNA annotation options</h3>
+                    RNA annotation options
                 </div>
                 <div class="panel-body">
                     <div class="form-group">
@@ -92,7 +91,7 @@ echo $this->Html->css('selectize.paper.css');
             <!-- GF + annotation -->
             <div class="panel panel-default">
                 <div class="panel-heading">
-                    <h3 class="panel-title">Gene families and annotation options</h3>
+                    Gene families and annotation options
                 </div>
                 <div class="panel-body">
                     <div class="form-group">
@@ -147,12 +146,12 @@ echo $this->Html->css('selectize.paper.css');
             <!-- Extra: tax. binning, sequence tpye, RNA genes annotation -->
             <div class="panel panel-default">
                 <div class="panel-heading">
-                    <h3 class="panel-title">Extra options</h3>
+                    Extra options
                 </div>
                 <div class="panel-body">
                     <div class="form-group">
                         <label for="tax-binning"><strong>Perform taxonomic classification</strong></label> &nbsp;<?php echo $this->element("help_tooltips/create_tooltip", array("tooltip_text"=>$tooltips['initial_processing_tax_binning'], "tooltip_placement"=>"top")); ?>
-                        <span class="pull-right" style="margin-right:12%;"><input checked id="tax-binning" name="tax-binning" value="y" type="checkbox"></span>
+                        <span class="pull-right" style="margin-right:12%;"><input id="tax-binning" name="tax-binning" value="y" type="checkbox"></span>
                     </div>
 
                     <div class="form-group">

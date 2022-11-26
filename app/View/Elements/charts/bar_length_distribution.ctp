@@ -1,24 +1,22 @@
+<?php
+$min_url_str = '/min_transcript_length/';
+$max_url_str = '/max_transcript_length/';
+if (isset($sequence_type) && $sequence_type == 'orf') {
+    $min_url_str = '/min_orf_length/';
+    $max_url_str = '/max_orf_length/';
+}
+?>
 <!-- Barchart div -->
 <div class="hc hc-length-distribution" id="<?php echo $chart_div_id; ?>"></div>
-<?php
-    $min_url_str = "/min_transcript_length/";
-    $max_url_str = "/max_transcript_length/";
-    if(isset($sequence_type) && $sequence_type == "orf") {
-        $min_url_str = "/min_orf_length/";
-        $max_url_str = "/max_orf_length/";
-    }
-    // $length_ranges = $chart_data['labels'];
-?>
 <!-- Barchart JS -->
 <script type='text/javascript' defer="defer">
-    var myChart = Highcharts.chart('<?php echo $chart_div_id; ?>', {
+    var lengthDistChart = Highcharts.chart('<?php echo $chart_div_id; ?>', {
         credits: {
-            enabled:false
+            enabled: false
         },
         chart: {
             backgroundColor: null,
             zoomType: 'x',
-            // plotBackgroundColor: "#e5e5e5"
             plotBackgroundColor: "#ffffff"
         },
         title: {
@@ -35,17 +33,16 @@
                 $i = 0;
                 foreach ($chart_data['values'] as $chart_val) {
                     $i++;
-                    $range_str = str_replace(',',' - ', $chart_val['label']);
+                    $range_str = str_replace(',', ' - ', $chart_val['label']);
                     echo "'" . $range_str . "'";
-                    if($i < $n_ranges) {
-                        echo ", ";
+                    if ($i < $n_ranges) {
+                        echo ', ';
                     }
                 }
                 ?>
             ],
             crosshair: true,
             gridLineWidth: 1,
-            // gridLineColor: "white",
             gridLineColor: "#e5e5e5",
             tickInterval: 1,
             title: {
@@ -53,8 +50,19 @@
             },
             labels: {
                 rotation: -45,
-                formatter: function () {
-                    return '<a target=\'_blank\' href=\'<?php echo $this->Html->url(array("controller"=>"trapid","action"=>"transcript_selection",$exp_id)); ?>' + <?php echo $min_url_str; ?> + this.value.split(' - ')[0] +  <?php echo $max_url_str; ?> + this.value.split(' - ')[1] + "\'>" + this.value + '</a>'
+                formatter: function() {
+                    const lblHrefParts = [
+                        '<?php echo $this->Html->url([
+                            'controller' => 'trapid',
+                            'action' => 'transcript_selection',
+                            $exp_id
+                        ]); ?>',
+                        '<?php echo $min_url_str; ?>',
+                        this.value.split(' - ')[0],
+                        '<?php echo $max_url_str; ?>',
+                        this.value.split(' - ')[1]
+                    ];
+                    return `<a target='_blank' href='${lblHrefParts.join('')}'>${this.value}</a>`
                 },
                 useHTML: true
             }
@@ -76,51 +84,48 @@
             shadow: false,
             shared: true,
             useHTML: true,
-            formatter: function () {
-                // console.log(this);
-                var s = '<strong>Range: ' + this.x + ' bp</strong>';
-                var n_series = this.points.length;
-                for (i = 0; i < n_series; i++) {
-                    s += '<br><i class="hc-tooltip-dot" style="background-color:' + this.points[i].color + ';"></i> ';
-                    s += this.points[i].series.name + ': <strong>' + this.points[i].y + '</strong>';
-
+            formatter: function() {
+                let tooltipContent = `<strong>Range: ${this.x} bp</strong>`;
+                for (i = 0; i < this.points.length; i++) {
+                    tooltipContent += `<br><i class="hc-tooltip-dot" style="background-color:${this.points[i].color}"></i> `;
+                    tooltipContent += `${this.points[i].series.name}: <strong>${this.points[i].y}</strong>`;
                 }
-                return s;
+                return tooltipContent;
             }
         },
         legend: {
             title: {
-                text: 'Data type  <br><span style="font-size: 11px; color: #666; font-weight: normal"><em>Click to hide</em></span>'
+                text: 'Data type  <br><span class="hc-hide-legend">Click to hide</span>'
             },
             align: 'right',
             verticalAlign: 'middle',
             layout: 'vertical',
             x: 0,
-            useHTML:true,
-            backgroundColor:  'transparent' // (Highcharts.theme && Highcharts.theme.legendBackgroundColor) || '#FFFFFF'
+            useHTML: true,
+            backgroundColor: 'transparent'
         },
         series: [
             <?php
             $n_series = sizeof($chart_data['label']);
-            for ($i = 0; $i < $n_series; $i++): ?>
-            {
-                name: '<?php echo $chart_data['label'][$i]?>',
-                type: 'column',
-                data: [<?php
-                        $n_vals = sizeof($chart_data['values']);
-                        $j = 0;
-                        foreach($chart_data['values'] as $chart_val) {
-                            echo $chart_val['values'][$i];
-                            $j++;
-                            if($j < $n_vals) {
-                                echo ", ";
-                            }
+            for ($i = 0; $i < $n_series; $i++): ?> {
+                    name: '<?php echo $chart_data['label'][$i]; ?>',
+                    type: 'column',
+                    data: [<?php
+                    $n_vals = sizeof($chart_data['values']);
+                    $j = 0;
+                    foreach ($chart_data['values'] as $chart_val) {
+                        echo $chart_val['values'][$i];
+                        $j++;
+                        if ($j < $n_vals) {
+                            echo ', ';
                         }
+                    }
                     ?>]
 
-            }<?php if($i != ($n_series-1)) {  echo ",\n"; } ?>
-                <?php endfor; ?>
-            ],
+                }
+                <?php echo $i != $n_series - 1 ? ",\n" : ''; ?>
+            <?php endfor; ?>
+        ],
         plotOptions: {
             series: {
                 stacking: '<?php echo $stacking_str; ?>'
@@ -130,16 +135,7 @@
                 borderWidth: 0,
                 groupPadding: 0,
                 shadow: false
-            }// ,
-/*
-            column: {
-                pointPadding: 0,
-                borderWidth: 0
             }
-*/
         }
-
     });
 </script>
-
-<?php // echo $this->element('sql_dump');  // Dump all MySQL queries (debug) ?>

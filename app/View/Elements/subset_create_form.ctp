@@ -137,7 +137,7 @@
         update_form_check(subset_name_input, create_subset_btn);
     });
 
-    // Quickfix, disable submission button on lead (if it was enabled before and a user reloads the page, it should be disabled).
+    // Quickfix, disable submission button on load (if it was enabled before and a user reloads the page, it should be disabled).
     // Needed or not?
     $(function() {
         update_form_check(subset_name_input, create_subset_btn);
@@ -146,17 +146,14 @@
 
     // Subset creation form submission
     $(create_subset_form).submit(function (e) {
-        console.log("Subset creation form was submitted! ");
-//                    $(loading_div_id).css("display", "block");
         $(loading_div_id).toggleClass('hidden div-inline');
         $(create_subset_btn).attr("disabled", true);
         $(display_div_id).empty();
         $(display_div_id).removeClass('fadeout');
         // Unclean?
         var submission_data = $(this).serialize() + "&selection-parameters=" +  JSON.stringify(selection_parameters);
-        console.log($(this).serialize());
-//                    console.log(JSON.stringify(tax_list));
-        console.log(submission_data);
+        // console.log($(this).serialize());
+        // console.log(submission_data);
         e.preventDefault();
         $.ajax({
             url: "<?php echo $this->Html->url(array("controller" => "trapid", "action" => "create_collection_subset", $exp_id, $collection_type), array("escape" => false)); ?>",

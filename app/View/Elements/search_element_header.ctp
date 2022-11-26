@@ -60,6 +60,7 @@ if(isset($exp_info)){
 </div>
 
 <script type="text/javascript">
+    // TODO: trigger lookup when user focuses the search box (e.g. there could be a search query there already).
     // Search suggestions URL for ajax calls
     var ajaxUrl = "<?php echo $this->Html->url(array("controller" => "trapid", "action" => "suggest_search", $exp_id)); ?>";
     // Lookup timeout

@@ -1,81 +1,66 @@
 <div class='page-header'>
     <h1 class="text-primary">Gene families</h1>
 </div>
-
 <?php $this->Paginator->options(['url' => $this->passedArgs]); ?>
 <table class="table table-bordered table-striped table-hover table-condensed">
     <thead>
-    <th style="width:20%"><?php echo $this->Paginator->sort('gf_id', 'Gene Family'); ?></th>
-    <th style="width:15%"><?php echo $this->Paginator->sort('num_transcripts', '# Transcripts'); ?></th>
-    <?php if ($exp_info['genefamily_type'] == 'HOM') {
-        echo "<th style='width:15%'>External GF</th>\n";
-        echo "<th style='width:10%'>#Genes external GF</th>\n";
-        echo "<th style='width:10%'>#Species external GF</th>\n";
-    } else {
-        echo "<th style='width:10%'>#Genes IOrtho group</th>\n";
-        echo "<th style='width:10%'>#Species IOrtho group</th>\n";
-    } ?>
-    <th style="width:10%">Computed MSA</th>
-    <th style="width:10%">Computed tree</th>
+        <th><?php echo $this->Paginator->sort('gf_id', 'Gene Family'); ?></th>
+        <th><?php echo $this->Paginator->sort('num_transcripts', '# Transcripts'); ?></th>
+        <?php if ($exp_info['genefamily_type'] == 'HOM') {
+            echo "<th>External GF</th>\n";
+            echo "<th>#Genes external GF</th>\n";
+            echo "<th>#Species external GF</th>\n";
+        } else {
+            echo "<th>#Genes IOrtho group</th>\n";
+            echo "<th>#Species IOrtho group</th>\n";
+        } ?>
+        <th>Computed MSA</th>
+        <th>Computed tree</th>
     </thead>
     <tbody>
-    <?php foreach ($gene_families as $gene_family) {
-        echo '<tr>';
-        echo '<td>' .
-            $this->Html->link($gene_family['GeneFamilies']['gf_id'], [
-                'controller' => 'gene_family',
-                'action' => 'gene_family',
-                $exp_id,
-                $gene_family['GeneFamilies']['gf_id']
-            ]) .
-            '</td>';
-        echo '<td>' . $gene_family['GeneFamilies']['num_transcripts'] . '</td>';
-
-        if ($exp_info['genefamily_type'] == 'HOM') {
-            if ($exp_info['allow_linkout']) {
-                if (isset($eggnog_og_linkout)) {
-                    echo '<td>' .
-                        $this->Html->link(
-                            $gene_family['GeneFamilies']['plaza_gf_id'],
-                            $exp_info['datasource_URL'] .
-                                '#/app/results?target_nogs=' .
-                                $gene_family['GeneFamilies']['plaza_gf_id'],
-                            ['target' => '_blank', 'class' => 'linkout']
-                        ) .
-                        "</td>\n";
+        <?php foreach ($gene_families as $gene_family) {
+            echo '<tr>';
+            echo '<td>' .
+                $this->Html->link($gene_family['GeneFamilies']['gf_id'], [
+                    'controller' => 'gene_family',
+                    'action' => 'gene_family',
+                    $exp_id,
+                    $gene_family['GeneFamilies']['gf_id']
+                ]) .
+                '</td>';
+            echo '<td>' . $gene_family['GeneFamilies']['num_transcripts'] . '</td>';
+            if ($exp_info['genefamily_type'] == 'HOM') {
+                if ($exp_info['allow_linkout']) {
+                    $linkout_base = isset($eggnog_og_linkout) ? '#/app/results?target_nogs=' : '/gene_families/view/';
+                    echo '<td>';
+                    echo $this->Html->link(
+                        $gene_family['GeneFamilies']['plaza_gf_id'],
+                        $exp_info['datasource_URL'] . $linkout_base . $gene_family['GeneFamilies']['plaza_gf_id'],
+                        ['target' => '_blank', 'class' => 'linkout']
+                    );
+                    echo "</td>\n";
                 } else {
-                    echo '<td>' .
-                        $this->Html->link(
-                            $gene_family['GeneFamilies']['plaza_gf_id'],
-                            $exp_info['datasource_URL'] .
-                                '/gene_families/view/' .
-                                $gene_family['GeneFamilies']['plaza_gf_id'],
-                            ['target' => '_blank', 'class' => 'linkout']
-                        ) .
-                        "</td>\n";
+                    echo '<td>' . $gene_family['GeneFamilies']['plaza_gf_id'] . "</td>\n";
                 }
+                echo '<td>' . $gf_gene_counts[$gene_family['GeneFamilies']['plaza_gf_id']] . "</td>\n";
+                echo '<td>' . $gf_species_counts[$gene_family['GeneFamilies']['plaza_gf_id']] . "</td>\n";
             } else {
-                echo '<td>' . $gene_family['GeneFamilies']['plaza_gf_id'] . "</td>\n";
+                echo '<td>' . $gf_gene_counts[$gene_family['GeneFamilies']['gf_id']] . "</td>\n";
+                echo '<td>' . $gf_species_counts[$gene_family['GeneFamilies']['gf_id']] . "</td>\n";
             }
-            echo '<td>' . $gf_gene_counts[$gene_family['GeneFamilies']['plaza_gf_id']] . "</td>\n";
-            echo '<td>' . $gf_species_counts[$gene_family['GeneFamilies']['plaza_gf_id']] . "</td>\n";
-        } else {
-            echo '<td>' . $gf_gene_counts[$gene_family['GeneFamilies']['gf_id']] . "</td>\n";
-            echo '<td>' . $gf_species_counts[$gene_family['GeneFamilies']['gf_id']] . "</td>\n";
-        }
 
-        if ($gene_family['GeneFamilies']['msa']) {
-            echo "<td class='text-center'><span class='material-icons md-18 text-success'>check</span></td>";
-        } else {
-            echo "<td class='text-center'><span class='material-icons md-18 text-danger'>close</span></td>";
-        }
-        if ($gene_family['GeneFamilies']['tree']) {
-            echo "<td class='text-center'><span class='material-icons md-18 text-success'>check</span></td>";
-        } else {
-            echo "<td class='text-center'><span class='material-icons md-18 text-danger'>close</span></td>";
-        }
-        echo "</tr>\n";
-    } ?>
+            echo "<td class='text-center'>";
+            echo $gene_family['GeneFamilies']['msa']
+                ? "<span class='material-icons md-18 text-success'>check</span>"
+                : "<span class='material-icons md-18 text-danger'>close</span>";
+            echo '</td>';
+            echo "<td class='text-center'>";
+            echo $gene_family['GeneFamilies']['tree']
+                ? "<span class='material-icons md-18 text-success'>check</span>"
+                : "<span class='material-icons md-18 text-danger'>close</span>";
+            echo '</td>';
+            echo "</tr>\n";
+        } ?>
     </tbody>
 </table>
 <div class="text-right">

@@ -167,7 +167,6 @@ function add_checkboxes(){
 function checkbox_changed(event,col){
     disable_everything();
     var chckbx = event.target;
-    console.log(chckbx.checked);
     // Check if it starts with `left_`
     var sibling_id;
     if(chckbx.id.lastIndexOf('left') === 0){
@@ -214,8 +213,6 @@ function enable_everything(){
                 sibling_id = element.id.replace('right','left');
             }
            element.disabled = $("#"+sibling_id).is(":checked"); // checked;
-           // Debug
-           // console.log("Element: "+element.id+" -- Sibling: "+sibling_id+" -- State: "+element.disabled);
         } else {
             element.disabled = false;
        }
@@ -668,7 +665,7 @@ function draw_sankey() {
     node.append("rect")
 	    .attr("height", function(d) { return d.dy; })
 	    .attr("width", sankey.nodeWidth())
-	    .style("fill", function(d) { console.log(d.name);return d.color = color(d.name); })
+	    .style("fill", function(d) { return d.color = color(d.name); })
 	    // .style("stroke", function(d) { return d3.rgb(d.color).darker(2); })
 	    .style("stroke", function(d) { return d.color = color(d.name); })
 	    .append("hovertext")

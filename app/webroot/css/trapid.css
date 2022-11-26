@@ -1,9 +1,9 @@
-ul.tabbed_header li.selected_tab {
-    /*background: none repeat scroll 0 0 #FFFFFF;*/
+ul.tabbed-header li.selected_tab {
     font-weight: bold;
-    /*border-color: #CCCCCC;*/
+}
 
-    /*padding-bottom: 13px;*/
+ul.tabbed-header li a {
+    cursor: pointer;
 }
 
 div.tabbed_div {
@@ -41,12 +41,6 @@ div.selected_tabbed_div {
 .page-header {
     margin-top: 20px;
 }
-
-/* Add small icon if target of link is '_blank' */
-/* a[target="_blank"]:after {
-	content: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAoAAAAKCAYAAACNMs+9AAAAQElEQVR42qXKwQkAIAxDUUdxtO6/RBQkQZvSi8I/pL4BoGw/XPkh4XigPmsUgh0626AjRsgxHTkUThsG2T/sIlzdTsp52kSS1wAAAABJRU5ErkJggg==);
-	margin: 0 3px 0 5px;
-} */
 
 /* Small breadcrumbs */
 .breadcrumb-sm {
@@ -1022,7 +1016,7 @@ body {
     margin: 0;
     /*margin-bottom: 23px;*/
     z-index: 1000;
-    border-left: 1px #eeeeee solid;
+    border-left: 1px rgba(255, 255, 255, 0.2) solid;
     padding: 0 0px;
     padding-right: 10px;
     -webkit-transition: all 0.5s cubic-bezier(0.55, 0, 0.1, 1);
@@ -1145,8 +1139,7 @@ body {
 }
 
 .header-bar a.sidebar-toggle {
-    border-right: 1px #29B6F6 solid;
-    /*border-right: 1px #ffffff solid;*/
+    border-right: 1px rgba(255, 255, 255, 0.2) solid;
 }
 
 
@@ -1154,7 +1147,10 @@ body {
 .krona-display {
     width: 100%;
     height: 800px;
-    border: 1px solid #aaaaaa;
+}
+
+.bordered {
+    border:1px solid #aaaaaa;
 }
 
 .hidden {
@@ -1180,6 +1176,9 @@ body {
     cursor: pointer;
 }
 
+.tax-rank-row {
+    margin-bottom: 6px;
+}
 /* Small nav pills (used to adjust shown taxonomic level in piechart/barchart summaries) */
 .small-nav > li > a {
     padding-top: 3px;
@@ -1190,9 +1189,34 @@ body {
 }
 
 
+
 /* Core GF completeness */
 .result_link {
     cursor: pointer;
+}
+
+#display-results .dt-button {
+    margin-left: 15px;
+}
+
+.gf-table tr td:first-child:hover .gf-tooltip {
+    display: block;
+}
+
+.gf-tooltip {
+    font-size: 82%;
+    display: none;
+    background: rgb(255,255,255,0.9);
+    border: 1px #cccccc solid;
+    margin-left: 28px;
+    padding: 8px;
+    position: absolute;
+    z-index: 1000;
+    max-width:400px;
+}
+
+#completeness-form .selectize-control.single .selectize-input::after {
+    right: 5px;
 }
 
 .gf-table a {
@@ -1204,6 +1228,9 @@ body {
     margin: 0 3px 0 5px;
 }
 
+.gf-table-pane {
+    margin-bottom: 80px;
+}
 
 /* To use to have text having a fixed-width font (for example in `textarea` elements) */
 .fixed-width-text {
@@ -1616,7 +1643,8 @@ input[type=range]:focus::-ms-fill-upper {
 }
 
 
-/* Highcharts tooltip style (used in a hack where we want tooltips to be displayed on top of the axis labels) */
+/* Highcharts */
+/* Tooltip style (used in a hack where we want tooltips to be displayed on top of the axis labels) */
 .highcharts-tooltip span {
     background-color: #fff;
     border: 1px solid #2196f3;
@@ -1634,6 +1662,29 @@ input[type=range]:focus::-ms-fill-upper {
     margin-right: 2px;
 }
 
+.hc-pie-tax,
+.hc-bar-tax,
+.hc-core-gfs {
+    height: 400px;
+    width: 100%;
+}
+
+.hc-enrichment {
+    width: 100%;
+    height: 475px;
+}
+
+.hc-length-distribution {
+    width: 100%;
+    height: 480px;
+}
+
+.hc-hide-legend {
+    color: #666;
+    font-size: 9px;
+    font-style: italic;
+    font-weight: normal;
+}
 
 /* Override navbar height to be more consistent between external and experiment layouts */
 .navbar {
@@ -1997,6 +2048,10 @@ nav .navbar-nav .navbar-form {
     /*resize: none;*/
 }
 
+.table-trs-fct thead tr th:nth-child(1) {
+    width: 20%;
+}
+
 .row-no-padding > [class*="col-"] {
     padding-left: 0 !important;
     padding-right: 0 !important;
@@ -2174,19 +2229,6 @@ body.external {
     }
 }
 
-
-.hc-enrichment {
-    width: 100%;
-    /*height: 425px;*/
-    height: 475px;
-}
-
-.hc-length-distribution {
-    width: 100%;
-    height: 480px;
-}
-
-
 @media (min-width: 768px) {
     .dl-horizontal dt {
         float: left;
@@ -2334,9 +2376,30 @@ ul.table-items li:before {
     color: #bbbbbb;
 }
 
+#go-parent-check-wrapper {
+    padding-left: 0;
+    margin-bottom: 0;
+}
+
+.enrichment-chart-wrapper {
+    margin: 0 12px;
+}
+
 /* GO enrichment graph */
 #go-graph-viz {
     border: 1px solid #aaaaaa;
+    height: 800px;
+    margin: 0px;
+    width: 100%;
+}
+
+#go-graph-settings {
+    font-size: 88%;
+    margin: 0 0 1em;
+}
+
+#go-graph-extra-settings {
+    margin-top: 5px;
 }
 
 p.go-graph-error {
@@ -2390,4 +2453,40 @@ label.optional::after {
 #exp-log-well {
     font-family: monospace;
     font-size: 88%;
+}
+
+/* Authentication / change password form */
+.form-auth {
+    max-width: 380px;
+    padding: 15px 35px 7px;
+    margin: 0 auto;
+    background-color: #fff;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.form-auth-wrapper {
+    margin-top: 70px;
+    margin-bottom: 70px;
+}
+
+.btn-auth {
+    margin-bottom: 28px;
+    margin-top: 30px;
+}
+
+/* Experiment state */
+.exp-state dt,
+.exp-state dd {
+    line-height: 30px;
+}
+
+select.change-exp-state {
+    font-size: 15px;
+    height: 30px;
+    max-width: 200px;
+    padding: 5px 10px 5px 0;
+}
+
+.reset-link {
+    cursor: pointer;
 }

@@ -1,91 +1,85 @@
-<!-- Experiment main menu (header) -->
-<header id="header-exp" class="header-bar navbar-inverse navbar-fixed-top preload">
+<?php $dropdown_items = [
+    'share' => $this->Html->link('Share experiment', [
+        'controller' => 'trapid',
+        'action' => 'experiment_access',
+        $exp_id
+    ]),
+    'settings' => $this->Html->link('Change settings', [
+        'controller' => 'trapid',
+        'action' => 'experiment_settings',
+        $exp_id
+    ]),
+    'empty' => $this->Html->link(
+        "<span class='glyphicon glyphicon-warning-sign'></span> Reset experiment",
+        ['controller' => 'trapid', 'action' => 'empty_experiment', $exp_id],
+        ['escape' => false],
+        'Are you sure you want to delete all content from this experiment?'
+    ),
+    'delete' => $this->Html->link(
+        "<span class='glyphicon glyphicon-warning-sign'></span> Delete experiment",
+        ['controller' => 'trapid', 'action' => 'delete_experiment', $exp_id],
+        ['escape' => false],
+        'Are you sure you want to delete this experiment?'
+    )
+];
 
+$jobs_label = 'Jobs';
+if ($job_count > 0) {
+    $jobs_label .= "&nbsp;<span class='badge-header'>" . $job_count . '</span>';
+}
+$exp_management_items = [
+    'jobs' => $this->Html->link(
+        $jobs_label,
+        ['controller' => 'trapid', 'action' => 'manage_jobs', $exp_id],
+        ['escape' => false]
+    ),
+    'log' => $this->Html->link('Log', ['controller' => 'trapid', 'action' => 'view_log', $exp_id])
+];
+?>
+<header id="header-exp" class="header-bar navbar-inverse navbar-fixed-top preload">
     <ul class="nav navbar-nav navbar-left">
         <li>
-            <a class="sidebar-toggle" title="Toggle side menu"><span class="glyphicon glyphicon-menu-hamburger" style=""></span></a>
-<!--                        <button class="sidebar-toggle" title="hello world">-->
-<!--                            <span class="sr-only">Toggle navigation</span>-->
-<!--                            <span class="icon-bar"></span>-->
-<!--                            <span class="icon-bar"></span>-->
-<!--                            <span class="icon-bar"></span>-->
-<!--                        </button>-->
+            <a class="sidebar-toggle" title="Toggle side menu"><span class="glyphicon glyphicon-menu-hamburger"></span></a>
         </li>
     </ul>
     <ul class="nav navbar-nav hidden-xs hidden-sm">
         <li>
-            <a class="navbar-brand"><?php echo (isset($exp_title) ? $exp_title : "No title");?></a>
+            <a class="navbar-brand"><?php echo isset($exp_title) ? $exp_title : 'No title'; ?></a>
         </li>
     </ul>
 
     <ul class="nav navbar-nav navbar-right hidden-xs hidden-sm">
-        <li>
-            <a href="<?php echo $this->Html->Url(array("controller"=>"trapid","action"=>"manage_jobs", $exp_id));?>">Jobs&nbsp;
-                <?php if($job_count != 0): ?>
-                <span class="badge-header"><?php echo $job_count; ?></span>
-                <?php endif; ?>
-            </a>
-        </li>
-        <li><?php echo $this->Html->link("Log",array("controller"=>"trapid","action"=>"view_log",$exp_id));?></li>
+        <li><?php echo $exp_management_items['jobs']; ?></li>
+        <li><?php echo $exp_management_items['log']; ?></li>
         <li><a href="#" class="dropdown-toggle" data-toggle="dropdown">
-                <!--                    <span class="glyphicon glyphicon-cog"></span> -->
                 <span class="glyphicon glyphicon-cog"></span>
                 <span class="hidden">Settings</span>
                 <span class="caret"></span></a>
             <ul class="dropdown-menu-right dropdown-menu">
-<!--                <li>--><?php //echo $this->Html->link("View log",array("controller"=>"trapid","action"=>"view_log",$exp_id));?><!--</li>-->
-<!--                <li class="dropdown-header">Experiment</li>-->
-                <li><?php echo $this->Html->link("Share experiment",array("controller"=>"trapid","action"=>"experiment_access",$exp_id));?></li>
-                <li><?php echo $this->Html->link("Change settings",array("controller"=>"trapid","action"=>"experiment_settings",$exp_id));?></li>
-                <li><?php
-                    echo $this->Html->link("<span class='glyphicon glyphicon-warning-sign'></span> Reset experiment",
-                        array("controller"=>"trapid","action"=>"empty_experiment",$exp_id),
-                        array("class"=>"text-info", "escape"=>false),
-                        "Are you sure you want to delete all content from this experiment?"); ?>
-                </li>
-                <li>
-                    <?php    echo $this->Html->link("<span class='glyphicon glyphicon-warning-sign'></span> Delete experiment",
-                        array("controller"=>"trapid","action"=>"delete_experiment",$exp_id),
-                        array("class"=>"text-danger", "escape"=>false), //, "style"=>"color:red;"
-                        "Are you sure you want to delete the experiment?");
-                    ?></li>
-                <!--<li class="dropdown-header">Account</li>
-                <li><?php /*echo $this->Html->link("Change password", array("controller"=>"trapid","action"=>"change_password")); */?></li>
-                <li><?php /*echo $this->Html->link("Logout", array("controller"=>"trapid","action"=>"log_off")); */?></li>-->
-            </ul></li>
+                <li><?php echo $dropdown_items['share']; ?></li>
+                <li><?php echo $dropdown_items['settings']; ?></li>
+                <li><?php echo $dropdown_items['empty']; ?></li>
+                <li><?php echo $dropdown_items['delete']; ?></li>
+            </ul>
+        </li>
     </ul>
     <ul class="nav navbar-nav navbar-right hidden-md hidden-lg navbar-header">
-        <li><a href="#" class="dropdwn-toggle" data-toggle="dropdown" title="Manage experiment"><span class="glyphicon glyphicon-option-vertical"></span></a>
+        <li>
+            <a href="#" class="dropdwn-toggle" data-toggle="dropdown" title="Manage experiment">
+                <span class="glyphicon glyphicon-option-vertical"></span>
+            </a>
             <ul class="dropdown-menu-right dropdown-menu">
-                <li>
-                    <a href="<?php echo $this->Html->Url(array("controller"=>"trapid","action"=>"manage_jobs", $exp_id));?>">Jobs&nbsp;
-                        <?php if($job_count != 0): ?>
-                            <span class="badge"><?php echo $job_count; ?></span>
-                        <?php endif; ?>
-                    </a>
-                </li>
-                <li><?php echo $this->Html->link("Log",array("controller"=>"trapid","action"=>"view_log",$exp_id));?></li>
+                <li><?php echo $exp_management_items['jobs']; ?></li>
+                <li><?php echo $exp_management_items['log']; ?></li>
                 <li role="separator" class="divider"></li>
-                <li><?php echo $this->Html->link("Share experiment",array("controller"=>"trapid","action"=>"experiment_access",$exp_id));?></li>
-                <li><?php echo $this->Html->link("Change settings",array("controller"=>"trapid","action"=>"experiment_settings",$exp_id));?></li>
-                <li><?php
-                    echo $this->Html->link("<span class='glyphicon glyphicon-warning-sign'></span> Reset experiment",
-                        array("controller"=>"trapid","action"=>"empty_experiment",$exp_id),
-                        array("class"=>"text-info", "escape"=>false),
-                        "Are you sure you want to delete all content from this experiment?"); ?>
-                </li>
-                <li>
-                    <?php    echo $this->Html->link("<span class='glyphicon glyphicon-warning-sign'></span> Delete experiment",
-                        array("controller"=>"trapid","action"=>"delete_experiment",$exp_id),
-                        array("class"=>"text-danger", "escape"=>false), //, "style"=>"color:red;"
-                        "Are you sure you want to delete the experiment?");
-                    ?></li>
+                <li><?php echo $dropdown_items['share']; ?></li>
+                <li><?php echo $dropdown_items['settings']; ?></li>
+                <li><?php echo $dropdown_items['empty']; ?></li>
+                <li><?php echo $dropdown_items['delete']; ?></li>
             </ul>
-
-            </li>
+        </li>
     </ul>
     <div id="header-search-container">
-        <?php echo $this->element("search_element_header"); ?>
+        <?php echo $this->element('search_element_header'); ?>
     </div>
-
 </header>

@@ -204,7 +204,6 @@ $function_headers = array(
 <!--  });-->
 <!--</script>-->
 <script type="text/javascript">
-    console.log("Activate popover!");
     $('[data-toggle="popover"]').popover({
         placement: 'bottom',
         content: function() {
@@ -216,3 +215,4 @@ $function_headers = array(
         delay: 50
     });
 </script>
+<?php // echo $this->element('sql_dump');  // Dump all MySQL queries (debug) ?>

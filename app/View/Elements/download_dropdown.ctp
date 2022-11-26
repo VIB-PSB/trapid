@@ -1,9 +1,9 @@
 <?php
 // Add class to `.dropdown-menu` ul element if `$align_right` is true
 // This aligns the dropdown menu options to the right
-$dropdown_menu_class = "dropdown-menu";
-if(isset($align_right) && $align_right) {
-    $dropdown_menu_class = "dropdown-menu dropdown-menu-right";
+$dropdown_menu_class = 'dropdown-menu';
+if (isset($align_right) && $align_right) {
+    $dropdown_menu_class = 'dropdown-menu dropdown-menu-right';
 }
 ?>
 
@@ -17,10 +17,9 @@ if(isset($align_right) && $align_right) {
     <ul class="<?php echo $dropdown_menu_class; ?>" aria-labelledby="download-btn" id="download-list">
         <li><a id="download-table">Table content (TSV)</a></li>
         <li role="separator" class="divider"></li>
-<!--        <li class="dropdown-header">Sequences</li>-->
         <li><a id="download-fasta_transcript">Transcripts (FASTA)</a></li>
         <li><a id="download-fasta_orf">Predicted ORFs (FASTA)</a></li>
-        <?php if(isset($allow_reference_aa_download)) : ?>
+        <?php if (isset($allow_reference_aa_download)): ?>
         <li><a id="download-fasta_protein_ref">Proteins (incl. reference, FASTA)</a></li>
         <?php endif; ?>
     </ul>
@@ -32,11 +31,8 @@ if(isset($align_right) && $align_right) {
     var hiddenField = document.getElementById("download_type");  // Kept the underscore
 
     function downloadData(downloadLink, hiddenField, downloadForm) {
-        // Get download type value from id of 'a' element
-        var dlId = downloadLink.id;
-        var dlType = dlId.split("-")[1];
-        // Set download type value and submit download form
-        hiddenField.value = dlType;
+        // Set download type value retrieved from id of anchor element and submit download form.
+        hiddenField.value = downloadLink.id.split("-")[1];
         downloadForm.submit();
     }
 

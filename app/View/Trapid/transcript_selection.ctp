@@ -107,7 +107,6 @@
         <div class="page-header">
         <h1 class="text-primary">Transcript selection</h1>
         </div>
-            <?php // echo $this->element("trapid_experiment"); ?>
             <h3>Selection parameters</h3>
                 <?php
                 //pr($parameters);

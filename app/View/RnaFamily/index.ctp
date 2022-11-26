@@ -2,7 +2,7 @@
     <h1 class="text-primary">RNA families</h1>
 </div>
 <section class="page-section">
-    <?php $this->Paginator->options(['zurl' => $this->passedArgs]); ?>
+    <?php $this->Paginator->options(['url' => $this->passedArgs]); ?>
     <table class="table table-bordered table-striped table-hover table-condensed">
         <thead>
             <th><?php echo $this->Paginator->sort('rf_id', 'RNA Family'); ?></th>

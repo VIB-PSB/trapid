@@ -1,20 +1,15 @@
 <!-- Core GFs barchart div -->
-<div class="hc" id="<?php echo $chart_div_id; ?>" style="width:100%; height:400px;"></div>
+<div class="hc hc-core-gfs" id="<?php echo $chart_div_id; ?>"></div>
 
 <!-- Core GFs barchart JS -->
-<script type='text/javascript' defer="defer">
-    $(function () {
-        /*
-        Highcharts.setOptions({
-            colors: ['#4662a0', '#aadb87', '#da495b', '#66edc6', '#fde5a5', '#66ceed', '#fdb7a5', '#7ea45d', '#eace6b',
-                '#7cb5ec', '#90ed7d', '#f7a35c', '#8085e9', '#f15c80', '#e4d354', '#2b908f', '#f45b5b', '#91e8e1']
-        });
-        */
+<script type="text/javascript" defer="defer">
+    $(function() {
         var completenessBarchart = Highcharts.chart('<?php echo $chart_div_id; ?>', {
             credits: {
-                enabled:false
+                enabled: false
             },
             chart: {
+                backgroundColor: null,
                 plotBorderWidth: null,
                 plotShadow: false,
                 type: 'column'
@@ -32,12 +27,14 @@
                 maxPadding: 0,
                 max: <?php echo $n_total; ?>,
                 endOnTick: false,
-                title: { text: 'Number of core GFs' },
+                title: {
+                    text: 'Number of core GFs'
+                },
                 labels: {
                     style: {
                         color: '#bbb'
                     },
-                    formatter: function () {
+                    formatter: function() {
                         return this.value;
                     }
                 }
@@ -53,15 +50,15 @@
             },
             legend: {
                 enabled: true,
-                labelFormatter: function () {
-                    if(this.data.length > 0) {
+                labelFormatter: function() {
+                    if (this.data.length > 0) {
                         return this.data[0].category;
                     } else {
                         return this.name;
                     }
                 },
                 title: {
-                    text: 'Core GFs<br><span style="font-size: 9px; color: #666; font-weight: normal"><em>Click to hide</em></span>'
+                    text: 'Core GFs<br><span class="hc-hide-legend">Click to hide</span>'
                 },
                 align: 'right',
                 verticalAlign: 'top',
@@ -70,16 +67,21 @@
                 y: 100,
                 useHTML: true
             },
-            series: [
-                {
-                    data: [{x: 0, y: <?php echo $n_represented; ?>}],
+            series: [{
+                    data: [{
+                        x: 0,
+                        y: <?php echo $n_represented; ?>
+                    }],
                     name: "Represented"
                 },
                 {
-                    data: [{x: 1, y: <?php echo $n_missing; ?>}],
+                    data: [{
+                        x: 1,
+                        y: <?php echo $n_missing; ?>
+                    }],
                     name: "Missing"
                 }
-                ]
+            ]
         });
     });
 </script>
