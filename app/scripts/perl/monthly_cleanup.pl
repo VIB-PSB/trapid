@@ -8,35 +8,35 @@ use FindBin qw{$Bin};
 # This perl script is meant to do two separate things:
 #
 # the first one is to gather a list of experiments which have not been accessed
-# in X months (X is variabel, but should be something like 3 months).
-# Each of these experiments will be stored in the database, where they are flagged as "to-delete", and an email will be send to
+# in X months (X is variable, but should be something like 3 months).
+# Each of these experiments will be stored in the database, where they are flagged as "to-delete", and an email will be sent to
 # the owner of those experiments (1 email, possibly containing multiple experiments).
 #
-# The second one is to delete those experiments for which a warning email has been send Y months ago (Y is variabel, but defaults to 2).
-# However, these experiments should not be blindly deleted, rather, a secondary check should be made whether the "last-edit-date' is now updated
+# The second one is to delete those experiments for which a warning email has been send Y months ago (Y is variable, but defaults to 2).
+# However, these experiments should not be blindly deleted, rather, a second check should be made whether the "last-edit-date' is now updated
 # so the deletion should not occur.
 
 
-#basic parameter check
+# Basic parameter check
 if(scalar(@ARGV)<10){
-	print STDERR "Error: parameters!!!\n";
+	print STDERR "Error: incorrect parameters!!!\n";
 	exit;
 }
 
-#read parameters
+# Read parameters
 my %par;
 
-#TRAPID database parameters
+# TRAPID database parameters
 $par{"trapid_db_server"}	= $ARGV[0];
 $par{"trapid_db_name"}		= $ARGV[1];
 $par{"trapid_db_port"}		= $ARGV[2];
 $par{"trapid_db_user"}		= $ARGV[3];
 $par{"trapid_db_password"}	= $ARGV[4];
 
-#temp_dir
+# Temporary directory
 $par{"temp_dir"}		= $ARGV[5];
 
-# cleanup settings
+# Cleanup settings
 $par{"year"}			= $ARGV[6];
 $par{"month"}			= $ARGV[7];
 $par{"no_access"}		= $ARGV[8];
@@ -56,7 +56,7 @@ if($dbh->err){
 
 
 #first step : get the correct id from cleanup_date, which shall be used subsequently to store the experiments which
-#have not been access in X (no_acecss) months
+#have not been access in X (no_access) months
 my $cleanup_date_id		= &get_cleanup_date_id($dbh,$par{"year"},$par{"month"});
 print STDOUT "cleanup_id : ".$cleanup_date_id."\n";
 
@@ -117,12 +117,13 @@ sub delete_experiments($ $ $){
 	my $query7	= "DELETE FROM `transcripts` WHERE `experiment_id`= ? ";
 	my $query8	= "DELETE FROM `similarities` WHERE `experiment_id`= ? ";
 	my $query9	= "DELETE FROM `rna_similarities` WHERE `experiment_id`= ? ";
-	my $query10	= "DELETE FROM `data_uploads` WHERE `experiment_id`= ? ";
-	my $query11	= "DELETE FROM `experiment_jobs` WHERE `experiment_id`= ? ";
-	my $query12	= "DELETE FROM `experiment_log` WHERE `experiment_id` = ? ";
-	my $query13	= "DELETE FROM `experiment_stats` WHERE `experiment_id` = ? ";
-	my $query14	= "DELETE FROM `experiments` WHERE `experiment_id`= ? ";
-	my $query15	= "DELETE FROM `cleanup_experiments` WHERE `experiment_id` = ? ";
+	my $query10	= "DELETE FROM `completeness_results` WHERE `experiment_id`= ? ";
+	my $query11	= "DELETE FROM `data_uploads` WHERE `experiment_id`= ? ";
+	my $query12	= "DELETE FROM `experiment_jobs` WHERE `experiment_id`= ? ";
+	my $query13	= "DELETE FROM `experiment_log` WHERE `experiment_id` = ? ";
+	my $query14	= "DELETE FROM `experiment_stats` WHERE `experiment_id` = ? ";
+	my $query15	= "DELETE FROM `experiments` WHERE `experiment_id`= ? ";
+	my $query16	= "DELETE FROM `cleanup_experiments` WHERE `experiment_id` = ? ";
 
 	my $db_exp_info = $dbh->prepare($exp_info_query);
 	my $db_deleted_exp = $dbh->prepare($deleted_exp_query);
@@ -142,6 +143,7 @@ sub delete_experiments($ $ $){
 	my $dbq13	= $dbh->prepare($query13);
 	my $dbq14	= $dbh->prepare($query14);
 	my $dbq15	= $dbh->prepare($query15);
+	my $dbq16	= $dbh->prepare($query16);
 
 	foreach my $tde (@to_delete_exps){
 		# Retrieve experiment's data
@@ -173,6 +175,7 @@ sub delete_experiments($ $ $){
 		$dbq13->execute($tde);
 		$dbq14->execute($tde);
 		$dbq15->execute($tde);
+		$dbq16->execute($tde);
 
 		# Delete the data on the web-share
 		system("rm -rf ".$tmp_dir."/".$tde."/");
@@ -187,7 +190,7 @@ sub delete_experiments($ $ $){
 # most difficult subroutine
 # Check for each experiment id, which is associated with the delete_date_id, whether it should still be deleted,
 # by going over the edit_date of the experiment.
-# If it has to be deleted, than remove the date from the necessary tables, and also the necessary temporary data (
+# If it has to be deleted, then remove the data from the necessary tables, and also the necessary temporary data.
 #
 sub check_before_delete_experiments($ $ $ $ $){
 	my $dbh			= $_[0];
@@ -255,12 +258,11 @@ sub send_email_outdated_experiments($ $ $){
 		print STDOUT "email for ".$oe_title."\n";
 		my $subject	= "Subject: Your TRAPID experiment will soon be deleted. \n";
 		#my $content	= "Dear,\nYour TRAPID experiment titled <html><a href='http://bioinformatics.psb.ugent.be/webtools/trapid/".$oe."'>".$oe_title."</a></html> has not been accessed in ".$no_access." months.\n";
-		my $content	= "Dear,\nYour TRAPID experiment with title '".$oe_title."' and id '".$oe."' has not been accessed in ".$no_access." months.\n";
+		my $content	= "Dear user,\nYour TRAPID experiment with title '".$oe_title."' and id '".$oe."' has not been accessed in ".$no_access." months.\n";
 		$content	= $content."In order to save valuable disk space this experiment will be deleted in one month.\n";
-		$content	= $content."This can be prevented by logging into the TRAPID system again, and simply accessing the experiment, which will update the access data for this experiment\n";
-		# $content	= $content."You can access TRAPID at http://bioinformatics.psb.ugent.be/webtools/trapid/ \n";
-		$content	= $content."You can access TRAPID at https://bioinformatics.psb.ugent.be/trapid_02/ \n";
-		$content	= $content."\n\nThank you for your interest in TRAPID\n";
+		$content	= $content."This can be prevented by logging into TRAPID and accessing the experiment, which will update the access data for this experiment.\n\n";
+		$content	= $content."You can access TRAPID at http://bioinformatics.psb.ugent.be/trapid_02/ \n";
+		$content	= $content."\n\nThank you for using TRAPID.\n";
 		my $send_to	= "To: ".$user_email."\n";
 		open(SENDMAIL, "|$sendmail") or die "Cannot open $sendmail: $!";
 		print SENDMAIL $from;
@@ -279,8 +281,8 @@ sub send_email_outdated_experiments($ $ $){
 
 
 
-#Flag in the database all experiments which are to be deleted during the next check.
-#No they are just flagged.
+# Flag in the database all experiments which are to be deleted during the next check.
+# For now, they are just flagged and not deleted yet.
 sub flag_outdated_experiments($ $ $){
 	my $dbh			= $_[0];
 	my $cleanup_date_id	= $_[1];
@@ -334,7 +336,7 @@ sub get_delete_date_id($ $ $ $){
 	my $delete_limit	= $_[3];
 	my $result		= -1;
 
-	#first step: get the correct deletion date for month and year
+	#first step: get the correct deletion date for month and year (current cleanup date - `$delete_limit` months)
 	my $fixed_month		= $month;
 	my $fixed_year		= $year;
 	for(my $i=0;$i<$delete_limit;$i++){
