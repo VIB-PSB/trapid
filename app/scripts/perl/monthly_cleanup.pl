@@ -55,45 +55,49 @@ if($dbh->err){
 }
 
 
-#first step : get the correct id from cleanup_date, which shall be used subsequently to store the experiments which
-#have not been access in X (no_access) months
-my $cleanup_date_id		= &get_cleanup_date_id($dbh,$par{"year"},$par{"month"});
-print STDOUT "cleanup_id : ".$cleanup_date_id."\n";
-
-#second step: gather all the experiments, for which the "last-edit-date" is longer ago than the indicated "year" and "month"  minus the "no_access"
-#variable, which should be a measurement in number of months.
-my @outdated_experiments	= &get_outdated_experiments($dbh,$par{"year"},$par{"month"},$par{"no_access"});
-#foreach my $oe (@outdated_experiments){print STDOUT $oe."\n";}
-print STDOUT "Number of experiments flagged as outdated : ".@outdated_experiments."\n";
-
-#third step, store those experiments in the database.
-&flag_outdated_experiments($dbh,$cleanup_date_id,\@outdated_experiments);
-
-#Fourth step, send an email to the owner of the flagged experiments, that they should either delete their experiment, or
-#check their experiment to mark it as "edited".
-&send_email_outdated_experiments($dbh,$par{"no_access"},\@outdated_experiments);
-
-
-#Fifth step, we select the cleanup date id of X months ago (the "warning" variable), and this we use
-#id to select the experiments which might be tentavily deleted (after double check on the edit date)
+# First step, we select the cleanup date id of X months ago (current date - the "warning" variable).
+# We use this id to select the experiments which were flagged as outdated during cleanup of X months ago.
+# These experiments might be tentavily deleted, after double check on the edit date.
+# Previously, this step occurred  after the retrieval of outdated experiments.
+# However, this could result in users getting two emails for their outdated experiment:
+#  * first when the experiment is flagged as outdated,
+#  * again if it is still outdated the next month (except it would be among the experiments to delete)
 my $delete_date_id		= &get_delete_date_id($dbh,$par{"year"},$par{"month"},$par{"warning"});
 
-#if delete date id is minus 1: there is no associated date-id found for deletion.
-#So we skip this step, and hope the experiments will be deleted in the coming months by using the "<" symbol in the next queries.
+# if `$delete_date_id` equals `-1`: there is no associated date-id found for deletion.
+# So we skip this step, and hope the experiments will be deleted in the coming months by using the "<" symbol in the next queries.
 if($delete_date_id!=-1){
-	#Sixth and final step: delete all experiments which are associated with a cleanup-date equal to or smaller than the "delete_date_id"
+	# Get all experiments which are associated with a cleanup-date equal to or smaller than the "delete_date_id"
 	my @to_delete_experiments 	= &check_before_delete_experiments($dbh,$delete_date_id,$par{"year"},$par{"month"},$par{"no_access"});
 
-	#delete all the experiments given through the function above
+	# Delete all the experiments given through the function above
 	&delete_experiments($dbh,$par{"temp_dir"},\@to_delete_experiments);
 
 }
 
 
+# Second step : get the correct id from cleanup_date, which shall be used subsequently to store the experiments which
+# have not been access in X (no_access) months
+my $cleanup_date_id		= &get_cleanup_date_id($dbh,$par{"year"},$par{"month"});
+print STDOUT "cleanup_id : ".$cleanup_date_id."\n";
+
+# Third step: gather all the experiments, for which the "last-edit-date" is longer ago than the indicated "year" and "month"  minus the "no_access"
+# variable, which should be a measurement in number of months.
+my @outdated_experiments	= &get_outdated_experiments($dbh,$par{"year"},$par{"month"},$par{"no_access"});
+#foreach my $oe (@outdated_experiments){print STDOUT $oe."\n";}
+print STDOUT "Number of experiments flagged as outdated : ".@outdated_experiments."\n";
+
+# Fourth step, store outdated experiments in the database.
+&flag_outdated_experiments($dbh,$cleanup_date_id,\@outdated_experiments);
+
+# Fifth step, send an email to the owner of the flagged experiments, that they should either delete their experiment, or
+# check their experiment to update the last edit date.
+&send_email_outdated_experiments($dbh,$par{"no_access"},\@outdated_experiments);
+
 
 my $stime2			= time();
 print STDERR "Time used for cleanup processing: ".($stime2-$stime1)."s \n";
-#close database connection
+# Close database connection
 $dbh->disconnect();
 
 
@@ -259,8 +263,8 @@ sub send_email_outdated_experiments($ $ $){
 		my $subject	= "Subject: Your TRAPID experiment will soon be deleted. \n";
 		#my $content	= "Dear,\nYour TRAPID experiment titled <html><a href='http://bioinformatics.psb.ugent.be/webtools/trapid/".$oe."'>".$oe_title."</a></html> has not been accessed in ".$no_access." months.\n";
 		my $content	= "Dear user,\nYour TRAPID experiment with title '".$oe_title."' and id '".$oe."' has not been accessed in ".$no_access." months.\n";
-		$content	= $content."In order to save valuable disk space this experiment will be deleted in one month.\n";
-		$content	= $content."This can be prevented by logging into TRAPID and accessing the experiment, which will update the access data for this experiment.\n\n";
+		$content	= $content."In order to save valuable disk space this experiment will be deleted next month.\n";
+		$content	= $content."This can be prevented by logging into TRAPID and accessing the experiment this month, which will update the access date for this experiment.\n\n";
 		$content	= $content."You can access TRAPID at http://bioinformatics.psb.ugent.be/trapid_02/ \n";
 		$content	= $content."\n\nThank you for using TRAPID.\n";
 		my $send_to	= "To: ".$user_email."\n";
@@ -272,7 +276,7 @@ sub send_email_outdated_experiments($ $ $){
 		print SENDMAIL "Content-type: text/plain\n\n";
 		print SENDMAIL $content;
 		close(SENDMAIL);
-
+		sleep 1;
 		#}
 	}
 	$dbq->finish();
