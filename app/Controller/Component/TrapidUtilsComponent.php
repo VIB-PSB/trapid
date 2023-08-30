@@ -1115,7 +1115,7 @@ class TrapidUtilsComponent extends Component{
 
     // Ensure parameters passed to this function are sanitized (e.g. result of `find()`)
     function send_registration_email($email, $password, $password_update=false){
-      $trapid_admins = array("frbuc@psb.vib-ugent.be", "mibel@psb.ugent.be", "klpoe@psb.ugent.be");
+      $trapid_admins = array("francois.bucchini@protonmail.com", "mibel@psb.ugent.be", "klpoe@psb.ugent.be");
       $subject = "TRAPID authentication information";
       $message = "Welcome to TRAPID 2.0, the web resource for rapid analysis of transcriptome data.\nHere is the required authentication information.\n\nUser email address: ".$email."\nPassword: ".$password."\n\nThank you for using TRAPID 2.0.";
       if($password_update){
