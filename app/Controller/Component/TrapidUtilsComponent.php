@@ -350,6 +350,7 @@ class TrapidUtilsComponent extends Component{
   }
 
 
+  // TODO: rename rapsearch to diamond
   function checkAvailableRapsearchDB($plaza_db,$data){
     $result		= array();
     $final_blast_dir	= BLAST_DB_DIR."".$plaza_db."/";

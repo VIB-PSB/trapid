@@ -5,27 +5,27 @@ if ($exp_info['process_state'] != "finished") {
 }
 ?>
 
-
 <div class="page-header">
     <h1 class="text-primary">Export data</h1>
 </div>
 
-<p class="text-justify">
-    Detailed descriptions and minimal examples of export files can be found in the
-    <?php echo $this->Html->link("documentation", array("controller" => "documentation", "action" => "general", "#" => "data-export")); ?>.
-</p>
-<p class="text-justify">
-    <strong>Note:</strong> exported files are generated on-the-fly and can take a while (up to ~1 minute) to be created.
-</p>
-<?php if (isset($export_failed) && ($export_failed === true)) : ?>
-    <br>
-    <p class="text-justify text-danger">
-        <strong>Error: an error occurred while exporting data.</strong> If this keeps happening and you feel what you did should not have resulted in such an error, please
-        <?php echo $this->Html->link("contact us", array("controller" => "documentation", "action" => "contact")); ?>.
+<section class="page-section-sm">
+    <p class="text-justify">
+        Detailed descriptions and minimal examples of export files can be found in the
+        <?php echo $this->Html->link("documentation", array("controller" => "documentation", "action" => "general", "#" => "data-export")); ?>.
     </p>
-<?php endif; ?>
+    <p class="text-justify">
+        <strong>Note:</strong> exported files are generated on-the-fly and can take a while (up to ~1 minute) to be created.
+    </p>
+    <?php if (isset($export_failed) && ($export_failed === true)) : ?>
+        <br>
+        <p class="text-justify text-danger">
+            <strong>Error: an error occurred while exporting data.</strong> If this keeps happening and you feel what you did should not have resulted in such an error, please
+            <?php echo $this->Html->link("contact us", array("controller" => "documentation", "action" => "contact")); ?>.
+        </p>
+    <?php endif; ?>
+</section>
 
-<br>
 <ul class="nav nav-tabs nav-justified" id="tabs" data-tabs="tabs">
     <li class="active"><a href="#structural-data" data-toggle="tab">Structural data</a></li>
     <li><a href="#tax-data" data-toggle="tab">Taxonomic classification</a></li>
@@ -39,29 +39,30 @@ if ($exp_info['process_state'] != "finished") {
 <div class="tab-content page-section-sm">
     <div id="structural-data" class="tab-pane active"><br>
         <h4>Export structural data</h4>
-        <span><strong>Select columns for output data:</strong></span>
-        <br />
+        <p class='text-justify'>
+            <strong>Select columns for output data:</strong>
+        </p>
         <?php echo $this->Form->create(false, array("url" => array("controller" => "trapid", "action" => "export_data", $exp_id), "type" => "post")); ?>
         <input type="hidden" name="export_type" value="structural" />
-
         <?php
         foreach ($structural_export as $k => $v) {
-            echo "<div class='form-group' style='margin-bottom:3px;'>";
+            echo "<div class='checkbox'>";
+            echo "<label for='" . $k . "'>\n";
             if ($k != "transcript_id") {
-                echo "<input type='checkbox' name='" . $k . "' id='" . $k . "' class='standard_checkbox' $unfinished />";
+                echo "<input type='checkbox' name='" . $k . "' id='" . $k . "' $unfinished />";
             } else {
-                echo "<input type='checkbox' name='" . $k . "' id='" . $k . "' checked='checked' class='standard_checkbox' />";
+                echo "<input type='checkbox' name='" . $k . "' id='" . $k . "' checked='checked' />";
             }
-            echo "&nbsp;&nbsp;<label for='" . $k . "'> " . $v . "</label>\n";
+            echo $v;
+            echo "</label>\n";
             echo "</div>";
         }
         ?>
-        <br />
-        <button class="btn btn-default" type="submit">
+        <button class="btn btn-default export-btn" type="submit">
             <span class="glyphicon glyphicon-download-alt"></span>&nbsp;
             Structural information
         </button>
-        </form>
+        <?php echo $this->Form->end(); ?>
     </div>
 
     <div id="tax-data" class="tab-pane"><br>
@@ -70,15 +71,21 @@ if ($exp_info['process_state'] != "finished") {
             The taxonomic classification export file contains all transcripts with their associated taxonomic label (tax ID, lineage) and
             classification metrics (score, number of matching tax IDs, number of matching sequences).
         </p>
-        <?php echo $this->Form->create(false, array("url" => array("controller" => "trapid", "action" => "export_data", $exp_id), "type" => "post")); ?>
+        <?php echo $this->Form->create(false, array("url" => array("controller" => "trapid", "action" => "export_data", $exp_id), "type" => "post", "class" => "export-btn-group")); ?>
         <input type="hidden" name="export_type" value="tax" />
         <?php if ($exp_info['perform_tax_binning'] == 1) : ?>
-            <button class="btn btn-default" type="submit" <?php echo $unfinished; ?>><span class="glyphicon glyphicon-download-alt"></span> Transcripts tax. classification</button>
+            <button class="btn btn-default" type="submit" <?php echo $unfinished; ?>>
+                <span class="glyphicon glyphicon-download-alt"></span>
+                &nbsp;Transcripts tax. classification
+            </button>
         <?php else : ?>
-            <button class="btn btn-default" type="submit" disabled><span class="glyphicon glyphicon-download-alt"></span> Transcripts tax. classification</button>
+            <button class="btn btn-default" type="submit" disabled>
+                <span class="glyphicon glyphicon-download-alt"></span>
+                &nbsp;Transcripts tax. classification
+            </button>
             <span class="text-muted small">No taxonomic classification performed during initial processing.</span>
         <?php endif; ?>
-        </form>
+        <?php echo $this->Form->end(); ?>
     </div>
 
     <div id="gf-data" class="tab-pane"><br>
@@ -94,25 +101,24 @@ if ($exp_info['process_state'] != "finished") {
                 <strong>Gf reference data</strong> contains the gene content of the reference gene families.
             </li>
         </ul>
-        <br />
         <div class="export-btn-group">
             <?php echo $this->Form->create(false, array("url" => array("controller" => "trapid", "action" => "export_data", $exp_id), "type" => "post")); ?>
             <input type="hidden" name="export_type" value="gf" />
             <input type="hidden" name="gf_type" value="transcript" />
             <button class="btn btn-default" type="submit" <?php echo $unfinished; ?>><span class="glyphicon glyphicon-download-alt"></span> Transcripts with GF</button>
-            </form>
+            <?php echo $this->Form->end(); ?>
 
             <?php echo $this->Form->create(false, array("url" => array("controller" => "trapid", "action" => "export_data", $exp_id), "type" => "post")); ?>
             <input type="hidden" name="export_type" value="gf" />
             <input type="hidden" name="gf_type" value="phylo" />
             <button class="btn btn-default" type="submit" <?php echo $unfinished; ?>><span class="glyphicon glyphicon-download-alt"></span> GF with transcripts</button>
-            </form>
+            <?php echo $this->Form->end(); ?>
 
             <?php echo $this->Form->create(false, array("url" => array("controller" => "trapid", "action" => "export_data", $exp_id), "type" => "post")); ?>
             <input type="hidden" name="export_type" value="gf" />
             <input type="hidden" name="gf_type" value="reference" />
             <button class="btn btn-default" type="submit" <?php echo $unfinished; ?>><span class="glyphicon glyphicon-download-alt"></span> GF reference data</button>
-            </form>
+            <?php echo $this->Form->end(); ?>
         </div>
     </div>
 
@@ -127,28 +133,25 @@ if ($exp_info['process_state'] != "finished") {
             </li>
         </ul>
 
-        <br />
-        <div style="float:left;margin-right: 20px;">
+        <div class="export-btn-group">
             <?php echo $this->Form->create(false, array("url" => array("controller" => "trapid", "action" => "export_data", $exp_id), "type" => "post")); ?>
             <input type="hidden" name="export_type" value="rf" />
             <input type="hidden" name="rf_type" value="transcript" />
             <button class="btn btn-default" type="submit" <?php echo $unfinished; ?>><span class="glyphicon glyphicon-download-alt"></span> Transcripts with RF</button>
-            </form>
-        </div>
+            <?php echo $this->Form->end(); ?>
 
-        <div style="float:left;margin-right: 20px;">
             <?php echo $this->Form->create(false, array("url" => array("controller" => "trapid", "action" => "export_data", $exp_id), "type" => "post")); ?>
             <input type="hidden" name="export_type" value="rf" />
             <input type="hidden" name="rf_type" value="rf" />
             <button class="btn btn-default" type="submit" <?php echo $unfinished; ?>><span class="glyphicon glyphicon-download-alt"></span> RF with transcripts</button>
-            </form>
+            <?php echo $this->Form->end(); ?>
         </div>
     </div>
 
     <div id="sqces-data" class="tab-pane"><br>
         <h4>Export sequences</h4>
 
-        <p class="text-justify"><strong>Note:</strong> Protein sequences are translated ORF sequences. </p>
+        <p class="text-justify"><strong>Note:</strong> Protein sequences are translated ORF sequences.</p>
 
         <?php echo $this->Form->create(false, array("url" => array("controller" => "trapid", "action" => "export_data", $exp_id), "type" => "post", "class" => "form-inline")); ?>
         <input type="hidden" name="export_type" value="sequence" />
@@ -194,22 +197,18 @@ if ($exp_info['process_state'] != "finished") {
                             <strong>GO meta data</strong> contains GO terms with counts and associated transcripts.
                         </li>
                     </ul>
-                    <br />
-                    <div style="float:left;margin-right: 20px;">
+                    <div class="export-btn-group">
                         <?php echo $this->Form->create(false, array("url" => array("controller" => "trapid", "action" => "export_data", $exp_id), "type" => "post")); ?>
                         <input type="hidden" name="export_type" value="go" />
                         <input type="hidden" name="functional_type" value="transcript_go" />
                         <button class="btn btn-default" type="submit" <?php echo $unfinished; ?>><span class="glyphicon glyphicon-download-alt"></span> Transcripts with GO</button>
-                        </form>
-                    </div>
+                        <?php echo $this->Form->end(); ?>
 
-
-                    <div style="float:left;width:220px;">
                         <?php echo $this->Form->create(false, array("url" => array("controller" => "trapid", "action" => "export_data", $exp_id), "type" => "post")); ?>
                         <input type="hidden" name="export_type" value="go" />
                         <input type="hidden" name="functional_type" value="meta_go" />
                         <button class="btn btn-default" type="submit" <?php echo $unfinished; ?>><span class="glyphicon glyphicon-download-alt"></span> GO meta data</button>
-                        </form>
+                        <?php echo $this->Form->end(); ?>
                     </div>
                 </section>
             <?php endif; ?>
@@ -225,26 +224,20 @@ if ($exp_info['process_state'] != "finished") {
                             <strong>Protein domain meta data</strong> contains protein domains with counts and associated transcripts.
                         </li>
                     </ul>
-                    <br />
-                    <div style="float:left;margin-right: 20px;">
+                    <div class="export-btn-group">
                         <?php echo $this->Form->create(false, array("url" => array("controller" => "trapid", "action" => "export_data", $exp_id), "type" => "post")); ?>
                         <input type="hidden" name="export_type" value="interpro" />
                         <input type="hidden" name="functional_type" value="transcript_ipr" />
                         <button class="btn btn-default" type="submit" <?php echo $unfinished; ?>><span class="glyphicon glyphicon-download-alt"></span> Transcripts with protein domain</button>
-                        </form>
-                    </div>
-
-
-                    <div style="float:left;">
+                        <?php echo $this->Form->end(); ?>
                         <?php echo $this->Form->create(false, array("url" => array("controller" => "trapid", "action" => "export_data", $exp_id), "type" => "post")); ?>
                         <input type="hidden" name="export_type" value="interpro" />
                         <input type="hidden" name="functional_type" value="meta_ipr" />
                         <button class="btn btn-default" type="submit" <?php echo $unfinished; ?>><span class="glyphicon glyphicon-download-alt"></span> Protein domain meta data</button>
-                        </form>
+                        <?php echo $this->Form->end(); ?>
                     </div>
                 </section>
             <?php endif; ?>
-
 
             <?php if (in_array("ko", $exp_info['function_types'])) : ?>
                 <section class="page-section-sm">
@@ -257,22 +250,17 @@ if ($exp_info['process_state'] != "finished") {
                             <strong>KO meta data</strong> contains protein domains with counts and associated transcripts.
                         </li>
                     </ul>
-                    <br />
-                    <div style="float:left;margin-right: 20px;">
+                    <div class="export-btn-group">
                         <?php echo $this->Form->create(false, array("url" => array("controller" => "trapid", "action" => "export_data", $exp_id), "type" => "post")); ?>
                         <input type="hidden" name="export_type" value="ko" />
                         <input type="hidden" name="functional_type" value="transcript_ko" />
                         <button class="btn btn-default" type="submit" <?php echo $unfinished; ?>><span class="glyphicon glyphicon-download-alt"></span> Transcripts with KO</button>
-                        </form>
-                    </div>
-
-
-                    <div style="float:left;">
+                        <?php echo $this->Form->end(); ?>
                         <?php echo $this->Form->create(false, array("url" => array("controller" => "trapid", "action" => "export_data", $exp_id), "type" => "post")); ?>
                         <input type="hidden" name="export_type" value="ko" />
                         <input type="hidden" name="functional_type" value="meta_ko" />
                         <button class="btn btn-default" type="submit" <?php echo $unfinished; ?>><span class="glyphicon glyphicon-download-alt"></span> KO meta data</button>
-                        </form>
+                        <?php echo $this->Form->end(); ?>
                     </div>
                 </section>
             <?php endif; ?>
@@ -282,25 +270,21 @@ if ($exp_info['process_state'] != "finished") {
     <div id="subset-data" class="tab-pane"><br>
         <h4>Export subsets</h4>
         <?php
-        echo $this->Form->create(false, array("url" => array("controller" => "trapid", "action" => "export_data", $exp_id), "type" => "post"));
+        echo $this->Form->create(false, array("url" => array("controller" => "trapid", "action" => "export_data", $exp_id), "type" => "post", "class" => "export-subsets"));
         echo "<input type='hidden' name='export_type' value='subsets' />\n";
 
-        echo "<div style='float:left;width:290px;'>\n";
         $disabled = null;
         if (count($available_subsets) == 0) {
             $disabled = " disabled='disabled' ";
         }
-        echo "<select name='subset_label' $disabled style='max-width:280px;' class='form-control'>\n";
+        echo "<select name='subset_label' $disabled class='form-control'>\n";
         foreach ($available_subsets as $subset => $count) {
-            echo "<option value='" . $subset . "' >" . $subset . " (" . $count . " transcripts)</option>\n";
+            $trs_word = $count == 1 ? 'transcript' : 'transcripts';
+            echo "<option value='" . $subset . "' >" . $subset . " (" . $count . " " . $trs_word . ")</option>\n";
         }
         echo "</select>\n";
-        echo "</div>\n";
-
-        echo "<div style='float:left;width:220px;'>\n";
         echo "<button class=\"btn btn-default\" type=\"submit\"><span class=\"glyphicon glyphicon-download-alt\"></span> Download subset</button>";
-        echo "</div>\n";
-        echo "</form>\n";
+        echo $this->Form->end();
         ?>
     </div>
 </div>

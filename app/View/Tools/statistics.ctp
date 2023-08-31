@@ -1,53 +1,59 @@
 <?php
-echo $this->Html->script(array("jspdf/jspdf.umd.min.js", "jspdf/jspdf.plugin.autotable.min.js"));
+echo $this->Html->script(['jspdf/jspdf.umd.min.js', 'jspdf/jspdf.plugin.autotable.min.js']);
 
 function perc($num, $total, $nr, $textmode = true) {
-    $perc = round(100 * $num / $total, $nr);
-    $res = "";
+    $perc = round((100 * $num) / $total, $nr);
+    $res = '';
     if ($textmode) {
-        $res = " (" . $perc . "%)";
-    }
-    else {
+        $res = ' (' . $perc . '%)';
+    } else {
         $res = $perc;
     }
-    //$res = " (".round(100*$num/$total,$nr)."%)";
     return $res;
 }
 
 function draw_progress_bar($perc) {
-    return "<div class=\"progress stats-progress\"><div class=\"progress-bar\" role=\"progressbar\" style=\"width: " . $perc . "%;\" aria-valuenow=\"" . $perc . "\" aria-valuemin=\"0\" aria-valuemax=\"100\"></div></div>";
+    return "<div class=\"progress stats-progress\"><div class=\"progress-bar\" role=\"progressbar\" style=\"width: " .
+        $perc .
+        "%;\" aria-valuenow=\"" .
+        $perc .
+        "\" aria-valuemin=\"0\" aria-valuemax=\"100\"></div></div>";
 }
 
 function create_stats_row($metrics_name, $metrics_value, $metrics_perc, $row_id = null, $ajax = false) {
     if (!$row_id) {
         echo "<div class=\"row\">\n";
-    }
-    else {
+    } else {
         echo "<div class=\"row\" id='" . $row_id . "'>\n";
     }
     echo "<div class=\"col-md-4 col-md-offset-1 col-xs-8 stats-metric\">" . $metrics_name . "</div>\n";
     if ($metrics_perc) {
-        echo "<div class=\"col-md-2 col-xs-4 stats-value\">" . $metrics_value . " (" . $metrics_perc . "%)" . "</div>\n";
+        echo "<div class=\"col-md-2 col-xs-4 stats-value\">" .
+            $metrics_value .
+            ' (' .
+            $metrics_perc .
+            '%)' .
+            "</div>\n";
         echo "<div class=\"col-md-4 hidden-sm hidden-xs\">\n";
         echo draw_progress_bar($metrics_perc);
         echo "</div>\n";
-    }
-    else {
+    } else {
         echo "<div class=\"col-md-2 col-xs-4 stats-value\">" . $metrics_value . "</div>\n";
     }
     echo "</div>\n";
 }
 
-// HTML string for a 'loading' span element
-$loading_span_elmt = "<span class=\"text-muted\">" . $this->Html->image('small-ajax-loader.gif', array("style" => "max-height: 14px;")) . " &nbsp; loading...</span>";
+$loading_span_elmt =
+    "<span class=\"text-muted\">" .
+    $this->Html->image('small-ajax-loader.gif', ['style' => 'max-height: 14px;']) .
+    ' &nbsp; loading...</span>';
 ?>
 
 <div class="page-header">
     <div class='btn-toolbar pull-right'>
-        <!-- This line return is an ugly fix to position the export button -->
-        <br>
+        <br> <!-- Fix to position the export button -->
         <button type="submit" class="btn btn-sm btn-default" id="btn-pdf-export" disabled>
-            <?php echo $this->Html->image('small-ajax-loader.gif', array("style" => "max-height: 12px;")); ?>
+            <?php echo $this->Html->image('small-ajax-loader.gif', ['style' => 'max-height: 12px;']); ?>
             <span class="glyphicon glyphicon-download-alt hidden"></span>
             Export to PDF
         </button>
@@ -61,13 +67,25 @@ $loading_span_elmt = "<span class=\"text-muted\">" . $this->Html->image('small-a
         Transcript information
     </div>
     <div class="panel-body">
-        <?php create_stats_row("#Transcripts", $num_transcripts, null); ?>
-        <?php create_stats_row("Average sequence length", $loading_span_elmt, null, "avg_trs_length"); ?>
-        <?php create_stats_row("#Transcripts with ORF", $num_orfs, null); ?>
-        <?php create_stats_row("Average ORF length", $loading_span_elmt, null, "avg_orf_length"); ?>
-        <?php create_stats_row("#ORFs with a start codon", $num_start_codons, perc($num_start_codons, $num_transcripts, 1, false)); ?>
-        <?php create_stats_row("#ORFs with a stop codon", $num_stop_codons, perc($num_stop_codons, $num_transcripts, 1, false)); ?>
-        <?php create_stats_row("#Transcripts with putative frameshift", $num_putative_fs, perc($num_putative_fs, $num_transcripts, 1, false)); ?>
+        <?php create_stats_row('#Transcripts', $num_transcripts, null); ?>
+        <?php create_stats_row('Average sequence length', $loading_span_elmt, null, 'avg_trs_length'); ?>
+        <?php create_stats_row('#Transcripts with ORF', $num_orfs, null); ?>
+        <?php create_stats_row('Average ORF length', $loading_span_elmt, null, 'avg_orf_length'); ?>
+        <?php create_stats_row(
+            '#ORFs with a start codon',
+            $num_start_codons,
+            perc($num_start_codons, $num_transcripts, 1, false)
+        ); ?>
+        <?php create_stats_row(
+            '#ORFs with a stop codon',
+            $num_stop_codons,
+            perc($num_stop_codons, $num_transcripts, 1, false)
+        ); ?>
+        <?php create_stats_row(
+            '#Transcripts with putative frameshift',
+            $num_putative_fs,
+            perc($num_putative_fs, $num_transcripts, 1, false)
+        ); ?>
     </div>
 </div>
 
@@ -76,10 +94,26 @@ $loading_span_elmt = "<span class=\"text-muted\">" . $this->Html->image('small-a
         Meta annotation information
     </div>
     <div class="panel-body">
-        <?php create_stats_row("#Full-length", $meta_annot_fulllength, perc($meta_annot_fulllength, $num_transcripts, 1, false)); ?>
-        <?php create_stats_row("#Quasi full-length", $meta_annot_quasi, perc($meta_annot_quasi, $num_transcripts, 1, false)); ?>
-        <?php create_stats_row("#Partial", $meta_annot_partial, perc($meta_annot_partial, $num_transcripts, 1, false)); ?>
-        <?php create_stats_row("#No information", $meta_annot_noinfo, perc($meta_annot_noinfo, $num_transcripts, 1, false)); ?>
+        <?php create_stats_row(
+            '#Full-length',
+            $meta_annot_fulllength,
+            perc($meta_annot_fulllength, $num_transcripts, 1, false)
+        ); ?>
+        <?php create_stats_row(
+            '#Quasi full-length',
+            $meta_annot_quasi,
+            perc($meta_annot_quasi, $num_transcripts, 1, false)
+        ); ?>
+        <?php create_stats_row(
+            '#Partial',
+            $meta_annot_partial,
+            perc($meta_annot_partial, $num_transcripts, 1, false)
+        ); ?>
+        <?php create_stats_row(
+            '#No information',
+            $meta_annot_noinfo,
+            perc($meta_annot_noinfo, $num_transcripts, 1, false)
+        ); ?>
     </div>
 </div>
 
@@ -89,17 +123,26 @@ $loading_span_elmt = "<span class=\"text-muted\">" . $this->Html->image('small-a
     </div>
     <div class="panel-body">
         <?php if ($exp_info['perform_tax_binning'] == 1): ?>
-            <?php create_stats_row("#Classified", $num_classified_trs, perc($num_classified_trs, $num_transcripts, 2, false)); ?>
-            <?php create_stats_row("#Unclassified", $num_unclassified_trs, perc($num_unclassified_trs, $num_transcripts, 2, false)); ?>
+            <?php create_stats_row(
+                '#Classified',
+                $num_classified_trs,
+                perc($num_classified_trs, $num_transcripts, 2, false)
+            ); ?>
+            <?php create_stats_row(
+                '#Unclassified',
+                $num_unclassified_trs,
+                perc($num_unclassified_trs, $num_transcripts, 2, false)
+            ); ?>
             <h5>Domain composition</h5>
-            <!--            <p class="text-justify">Number of transcript by domain of life</p>-->
-            <?php
-            foreach ($top_tax_domain as $top_tax) {
-                if ($top_tax[0] != "Unclassified") {
-                    create_stats_row("#" . $top_tax[0], (int)$top_tax[1], perc((int)$top_tax[1], $num_transcripts, 2, false));
+            <?php foreach ($top_tax_domain as $top_tax) {
+                if ($top_tax[0] != 'Unclassified') {
+                    create_stats_row(
+                        '#' . $top_tax[0],
+                        (int) $top_tax[1],
+                        perc((int) $top_tax[1], $num_transcripts, 2, false)
+                    );
                 }
-            }
-            ?>
+            } ?>
         <?php else: ?>
             <p class="lead text-muted">No taxonomic classification was performed for this experiment. </p>
         <?php endif; ?>
@@ -115,13 +158,13 @@ $loading_span_elmt = "<span class=\"text-muted\">" . $this->Html->image('small-a
             shown. If there are more, click the <code>Show all</code> link to display all species.</p>
 
         <?php
-        $split = explode(";", $exp_info['hit_results']);
-        $tmp = array();
+        $split = explode(';', $exp_info['hit_results']);
+        $tmp = [];
         $sum = 0;
-        $max_species = 20;  // Max. number of species to show by default.. Should this come from the controller instead?
+        $max_species = 20; // Max. number of species to show by default.. Should this come from the controller instead?
         $extra_div = false;
         foreach ($split as $s) {
-            $k = explode("=", $s);
+            $k = explode('=', $s);
             $tmp[$k[0]] = $k[1];
             $sum += $k[1];
         }
@@ -133,17 +176,17 @@ $loading_span_elmt = "<span class=\"text-muted\">" . $this->Html->image('small-a
                 $extra_div = true;
                 echo "<a id=\"toggle-extra-hits\" onclick=\"toggleExtraHits()\">";
                 echo "<span id=\"toggle-extra-hits-icon\" class=\"glyphicon small-icon glyphicon-menu-right\"></span> ";
-                echo "Show all...";
+                echo 'Show all...';
                 echo "</a>\n";
                 echo "<div id='extra-hits' class='hidden'>\n";
             }
             create_stats_row($all_species[$k], $v, perc($v, $sum, 2, false));
             if ($extra_div && $k == $last_species) {
-                echo "</div>";
+                echo '</div>';
             }
         }
-        echo "<hr>";
-        create_stats_row("Total hits", $sum, null);
+        echo '<hr>';
+        create_stats_row('Total hits', $sum, null);
         ?>
     </div>
 </div>
@@ -153,10 +196,26 @@ $loading_span_elmt = "<span class=\"text-muted\">" . $this->Html->image('small-a
         Gene family information
     </div>
     <div class="panel-body">
-        <?php create_stats_row("#Gene families", $num_gf, null); ?>
-        <?php create_stats_row("#Transcripts in GF", $num_transcript_gf, perc($num_transcript_gf, $num_transcripts, 1, false)); ?>
-        <?php create_stats_row("Largest GF", $this->Html->link($biggest_gf['gf_id'], array("controller" => "gene_family", "action" => "gene_family", $exp_id, $biggest_gf['gf_id'])) . " (" . $biggest_gf['num_transcripts'] . " transcripts)", null); ?>
-        <?php create_stats_row("#Single copy", $single_copy, null); ?>
+        <?php create_stats_row('#Gene families', $num_gf, null); ?>
+        <?php create_stats_row(
+            '#Transcripts in GF',
+            $num_transcript_gf,
+            perc($num_transcript_gf, $num_transcripts, 1, false)
+        ); ?>
+        <?php create_stats_row(
+            'Largest GF',
+            $this->Html->link($biggest_gf['gf_id'], [
+                'controller' => 'gene_family',
+                'action' => 'gene_family',
+                $exp_id,
+                $biggest_gf['gf_id']
+            ]) .
+                ' (' .
+                $biggest_gf['num_transcripts'] .
+                ' transcripts)',
+            null
+        ); ?>
+        <?php create_stats_row('#Single copy', $single_copy, null); ?>
     </div>
 </div>
 
@@ -165,15 +224,33 @@ $loading_span_elmt = "<span class=\"text-muted\">" . $this->Html->image('small-a
         RNA family information
     </div>
     <div class="panel-body">
-        <?php create_stats_row("#RNA families", $num_rf, null); ?>
-        <?php create_stats_row("#Transcripts in RF", $num_transcript_rf, perc($num_transcript_rf, $num_transcripts, 1, false)); ?>
-        <?php
-        if ($biggest_rf['rf_id'] == 'N/A') {
-            create_stats_row("Largest RF", $biggest_rf['rf_id'] . " (" . $biggest_rf['num_transcripts'] . " transcripts)", null);
+        <?php create_stats_row('#RNA families', $num_rf, null); ?>
+        <?php create_stats_row(
+            '#Transcripts in RF',
+            $num_transcript_rf,
+            perc($num_transcript_rf, $num_transcripts, 1, false)
+        ); ?>
+        <?php if ($biggest_rf['rf_id'] == 'N/A') {
+            create_stats_row(
+                'Largest RF',
+                $biggest_rf['rf_id'] . ' (' . $biggest_rf['num_transcripts'] . ' transcripts)',
+                null
+            );
         } else {
-            create_stats_row("Largest RF", $this->Html->link($biggest_rf['rf_id'], array("controller" => "rna_family", "action" => "rna_family", $exp_id, $biggest_rf['rf_id'])) . " (" . $biggest_rf['num_transcripts'] . " transcripts)", null);
-        }
-        ?>
+            create_stats_row(
+                'Largest RF',
+                $this->Html->link($biggest_rf['rf_id'], [
+                    'controller' => 'rna_family',
+                    'action' => 'rna_family',
+                    $exp_id,
+                    $biggest_rf['rf_id']
+                ]) .
+                    ' (' .
+                    $biggest_rf['num_transcripts'] .
+                    ' transcripts)',
+                null
+            );
+        } ?>
     </div>
 </div>
 
@@ -182,20 +259,32 @@ $loading_span_elmt = "<span class=\"text-muted\">" . $this->Html->image('small-a
         Functional annotation information
     </div>
     <div class="panel-body">
-        <?php if (in_array("go", $exp_info['function_types'])): ?>
+        <?php if (in_array('go', $exp_info['function_types'])): ?>
             <h5>Gene Ontology</h5>
-            <?php create_stats_row("#GO terms", $num_go, null); ?>
-            <?php create_stats_row("#Transcripts with GO", $num_transcript_go, perc($num_transcript_go, $num_transcripts, 1, false)); ?>
+            <?php create_stats_row('#GO terms', $num_go, null); ?>
+            <?php create_stats_row(
+                '#Transcripts with GO',
+                $num_transcript_go,
+                perc($num_transcript_go, $num_transcripts, 1, false)
+            ); ?>
         <?php endif; ?>
-        <?php if (in_array("interpro", $exp_info['function_types'])): ?>
+        <?php if (in_array('interpro', $exp_info['function_types'])): ?>
             <h5>InterPro</h5>
-            <?php create_stats_row("#InterPro domains", $num_interpro, null); ?>
-            <?php create_stats_row("#Transcripts with Protein Domain", $num_transcript_interpro, perc($num_transcript_interpro, $num_transcripts, 1, false)); ?>
+            <?php create_stats_row('#InterPro domains', $num_interpro, null); ?>
+            <?php create_stats_row(
+                '#Transcripts with Protein Domain',
+                $num_transcript_interpro,
+                perc($num_transcript_interpro, $num_transcripts, 1, false)
+            ); ?>
         <?php endif; ?>
-        <?php if (in_array("ko", $exp_info['function_types'])): ?>
+        <?php if (in_array('ko', $exp_info['function_types'])): ?>
             <h5>KEGG Orthology</h5>
-            <?php create_stats_row("#KO terms", $num_ko, null); ?>
-            <?php create_stats_row("#Transcripts with KO", $num_transcript_ko, perc($num_transcript_ko, $num_transcripts, 1, false)); ?>
+            <?php create_stats_row('#KO terms', $num_ko, null); ?>
+            <?php create_stats_row(
+                '#Transcripts with KO',
+                $num_transcript_ko,
+                perc($num_transcript_ko, $num_transcripts, 1, false)
+            ); ?>
         <?php endif; ?>
     </div>
 </div>
@@ -225,7 +314,9 @@ $loading_span_elmt = "<span class=\"text-muted\">" . $this->Html->image('small-a
     function get_avg_transcript_length(exp_id) {
         let row_id = "#avg_trs_length";
         let stat_val_elmt = document.querySelector(row_id).querySelector('.stats-value');
-        let ajax_url = <?php echo "\"" . $this->Html->url(array("controller" => "tools", "action" => "avg_transcript_length")) . "\"";?>+"/" + exp_id + "/";
+        let ajax_url = <?php echo "\"" .
+            $this->Html->url(['controller' => 'tools', 'action' => 'avg_transcript_length']) .
+            "\""; ?>+"/" + exp_id + "/";
         $.ajax({
             type: "GET",
             url: ajax_url,
@@ -250,7 +341,9 @@ $loading_span_elmt = "<span class=\"text-muted\">" . $this->Html->image('small-a
     function get_avg_orf_length(exp_id) {
         let row_id = "#avg_orf_length";
         let stat_val_elmt = document.querySelector(row_id).querySelector('.stats-value');
-        let ajax_url = <?php echo "\"" . $this->Html->url(array("controller" => "tools", "action" => "avg_orf_length")) . "\"";?>+"/" + exp_id + "/";
+        let ajax_url = <?php echo "\"" .
+            $this->Html->url(['controller' => 'tools', 'action' => 'avg_orf_length']) .
+            "\""; ?>+"/" + exp_id + "/";
         $.ajax({
             type: "GET",
             url: ajax_url,

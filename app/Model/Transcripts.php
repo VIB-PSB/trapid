@@ -10,26 +10,6 @@ class Transcripts extends AppModel {
         'orf_sequence' => 'UNCOMPRESS(Transcripts.orf_sequence)'
     ];
 
-    function getBasicInformationTranscripts($exp_id, $transcript_ids) {
-        $result = [];
-        $transcripts_string = "('" . implode("','", $transcript_ids) . "')";
-        $query =
-            "SELECT `transcript_id`,`gf_id`,`meta_annotation` FROM `transcripts` WHERE `experiment_id`='" .
-            $exp_id .
-            "' AND `transcript_id` IN " .
-            $transcripts_string .
-            ' ';
-        $res = $this->query($query);
-        foreach ($res as $r) {
-            $result[$r['transcripts']['transcript_id']] = [
-                'transcript_id' => $r['transcripts']['transcript_id'],
-                'gf_id' => $r['transcripts']['gf_id'],
-                'meta_annotation' => $r['transcripts']['meta_annotation']
-            ];
-        }
-        return $result;
-    }
-
     // Note: using a raw query because the "find" method uses too much memory to be effective
     function getColumnInfo($exp_id, $columns) {
         $query = 'SELECT `transcript_id`';

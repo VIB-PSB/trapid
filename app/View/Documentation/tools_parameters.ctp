@@ -26,11 +26,11 @@
                                 <th class="first-col"></th>
                                 <?php foreach (
                                     [
-                                        'db_trapid_ref_plaza_dicots_04_5_test',
-                                        'db_trapid_ref_plaza_monocots_04_5_test',
-                                        'db_trapid_ref_plaza_pico_03_test',
-                                        'db_trapid_ref_plaza_diatoms_01_test',
-                                        'db_trapid_ref_eggnog_test_02'
+                                        'db_trapid_ref_plaza_dicots_04_5',
+                                        'db_trapid_ref_plaza_monocots_04_5',
+                                        'db_trapid_ref_plaza_pico_03',
+                                        'db_trapid_ref_plaza_diatoms_01',
+                                        'db_trapid_ref_eggnog_04_5'
                                     ]
                                     as $ref_db
                                 ): ?>

@@ -35,7 +35,7 @@
             'url' => ['controller' => 'trapid', 'action' => "change_status/$exp_id"],
             'type' => 'post'
         ]);
-        echo "<dl class='standard dl-horizontal exp-state'>\n";
+        echo "<dl class='dl-horizontal exp-state'>\n";
         echo "<dt>Warning</dt>\n";
         echo "<dd><span class='" . $message_class . "'>" . $message . "</span></dd>\n";
         echo "<dt>Current status</dt>\n";

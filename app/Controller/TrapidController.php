@@ -6,7 +6,7 @@ class TrapidController extends AppController{
   var $name		= "Trapid";
   var $helpers		= array("Html", "Form"); // ,"Javascript","Ajax"); //NOTE: Javascript and Ajax helpers were removed in Cake 2.X
 
-  var $uses	= array('Authentication', 'AnnotSources', 'Annotation', 'CleanupDate', 'CleanupExperiments',
+  var $uses	= array('Authentication', 'AnnotSources', 'Annotation', 'CleanupDate', 'CleanupExperiments', 'CompletenessResults',
                     'Configuration', 'DataSources', 'DataUploads', 'DeletedExperiments', 'ExperimentJobs', 'ExperimentLog', 'Experiments', 'ExperimentStats',
                     'ExtendedGo', 'FunctionalEnrichments', 'FullTaxonomy', 'GeneFamilies', 'GfData', 'GoParents', 'HelpTooltips', 'KoTerms',
                     'News', 'ProteinMotifs', 'SharedExperiments', 'Similarities', 'Transcripts', 'TranscriptsGo',
@@ -47,7 +47,7 @@ class TrapidController extends AppController{
   }
 
 
-
+  // TODO: delete as it is not used?
   function qdel_experiment($cluster_id=null){
     Configure::write("debug",1);
     $exp_id	= "1";
@@ -136,6 +136,7 @@ class TrapidController extends AppController{
     $this->set("disk_usage",$usage);
 
     if($_POST && array_key_exists("form_type",$_POST)){
+      // Note: `clear_storage` is not enabled on change status view
       if($_POST['form_type']=="clear_storage"){
 	shell_exec("rm -rf ".$tmp_dir."* ");
 	$this->redirect(array("controller"=>"trapid","action"=>"experiments"));
@@ -423,7 +424,7 @@ class TrapidController extends AppController{
      foreach($shared_user_ids as $sui){$shared_users['shared'][$sui] = $all_users[$sui];}
      $this->set("shared_users",$shared_users);
 
-     $this->set("active_header_item", "Settings");
+     $this->set("active_header_item", "Share experiment");
      $this->set("title_for_layout", "Experiment access");
 
   }
@@ -462,7 +463,7 @@ class TrapidController extends AppController{
       $exp_info	= $this->Experiments->getDefaultInformation($exp_id);
       $this->redirect(array("controller"=>"trapid","action"=>"experiment",$exp_id));
     }
-    $this->set("active_header_item", "Settings");
+    $this->set("active_header_item", "Change settings");
     $this->set("title_for_layout", "Change experiment settings");
   }
 
@@ -1937,7 +1938,7 @@ class TrapidController extends AppController{
     $this->set("clades_species",$clades);
     $this->set("gf_representatives",$gf_representatives);
     if(count($species_info)==0) {
-        $this->set("error","No valid species similarity search databases found. ");
+        $this->set("error","No valid species similarity search databases found. Species similarity search databases are available for PLAZA reference databases only.");
         $this->set("no_species_available", true);
     }
     if(count($clades)==0 && count($species_info)>0){$this->set("error","No valid clades similarity search databases found. ");}
@@ -2195,7 +2196,7 @@ class TrapidController extends AppController{
     $this->set("exp_info", $exp_info);
     $this->set("exp_id", $exp_id);
 
-    // Gey help tooltips data
+    // Get help tooltips data
     $tooltips = $this->TrapidUtils->indexArraySimple(
           $this->HelpTooltips->find("all", array("conditions"=>array("tooltip_id LIKE 'data_upload%'"))),
           "HelpTooltips","tooltip_id","tooltip_text"
@@ -2618,8 +2619,8 @@ class TrapidController extends AppController{
 
         // Perform export
         if($_POST){
-            // pr($_POST);
             set_time_limit($max_timeout);
+
             $timestamp = date('Ymd_his');
             $user_id		= $this->Cookie->read("email");
             if(!array_key_exists("export_type",$_POST)){return;}
@@ -2835,6 +2836,7 @@ class TrapidController extends AppController{
     $this->Transcripts->query("DELETE FROM `transcripts` WHERE `experiment_id`='".$exp_id."'");
     $this->Similarities->query("DELETE FROM `similarities` WHERE `experiment_id`='".$exp_id."'");
     $this->RnaSimilarities->query("DELETE FROM `rna_similarities` WHERE `experiment_id`='".$exp_id."'");
+    $this->CompletenessResults->query("DELETE FROM `completeness_results` WHERE `experiment_id`='".$exp_id."'");
     $this->DataUploads->query("DELETE FROM `data_uploads` WHERE `experiment_id`='".$exp_id."'");
 
     // Delete all associated jobs from the cluster
@@ -3029,10 +3031,10 @@ class TrapidController extends AppController{
 	      if(!$user_data){$this->set("error","Wrong email/password");return;}
 	      $this->Cookie->write("user_id", $user_data['Authentication']['user_id']);
 	      $this->Cookie->write("email", $user_data['Authentication']['email']);
-//          $this->cleanup_experiments();
-          $this->redirect(array("controller"=>"trapid","action"=>"experiments"));
-        }
-        else{
+        //          $this->cleanup_experiments();
+        $this->redirect(array("controller"=>"trapid","action"=>"experiments"));
+      }
+      else{
     	  $this->redirect(array("controller"=>"trapid","action"=>"authentication"));
     	}
       }
@@ -3062,7 +3064,9 @@ class TrapidController extends AppController{
     $cleanup_delete	= 1;
 
     $cleanup_id	= $this->CleanupDate->checkDateStatus($year,$month);
-    if($cleanup_id==-1){
+    // cleanup_id == -1 means no record exist for the current year and month in cleanup_date.
+    // Create and run monthly experiment cleanup script. 
+    if($cleanup_id == -1) {
       $output_file	= TMP."experiment_data/cleanup_".$year."_".$month.".out";
       $error_file	= TMP."experiment_data/cleanup_".$year."_".$month.".err";
       $qsub_file	= $this->TrapidUtils->create_qsub_script_general();
@@ -3070,7 +3074,7 @@ class TrapidController extends AppController{
 
       if($qsub_file == null || $shell_script == null){}
       else{
-	$command  	= "sh $qsub_file -q medium -o $output_file -e $error_file $shell_script ";
+	$command  	= "sh $qsub_file -q long -o $output_file -e $error_file $shell_script ";
 	//pr($command);
         $output		= array();
 //        exec($command,$output);

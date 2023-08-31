@@ -48,7 +48,7 @@ def main():
     exp_id = config['experiment']['exp_id']
     tmp_dir = config['experiment']['tmp_exp_dir']
     enricher_bin = config['enrichment']['enricher_bin']
-    # Check existence of enrichmer bin
+    # Check existence of enricher bin
     fe.check_enricher_bin(enricher_bin, cmd_args.verbose)
     # Get GO data from reference database if `fa_type` is GO
     go_data = {}

@@ -154,7 +154,7 @@ my $jtime1		= time();
 
 # If transcripts are being processed using EggNOG data, we run Eggnog-mapper (modified version that ignores the
 #  similarity search step), and perform post-processing using modified scripts.
-if($par{plaza_db_name} eq "db_trapid_ref_eggnog_test_02") {
+if($par{plaza_db_name} eq "db_trapid_ref_eggnog_04_5") {
 	# Call modified version of EggNOG-mapper
 	my $outfile_prefix = $par{"temp_dir"} . "emapper_" . $par{"experiment"};
 	my $emapper = "emapper_trapid.py";

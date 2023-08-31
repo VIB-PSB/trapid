@@ -46,7 +46,16 @@ echo $this->Html->css(['enricher.css']);
         (e.g. <samp>value = 1</samp> is two-fold enriched).
     </p>
 </section>
-
+<style>
+    .enrichment-options {
+        max-width: 540px;
+    }
+    .dl-content-flex {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+    }
+</style>
 <h3>Subset selection</h3>
 <section class="page-section-sm">
     <?php
@@ -54,11 +63,12 @@ echo $this->Html->css(['enricher.css']);
         echo "<p class='text-justify text-danger'><strong>Error: " . $error . "</strong></p>\n";
     }
     echo $this->Form->create(false, ["url" => ["controller" => "tools", "action" => "enrichment", $exp_id], "type" => "post", "id" => "enrichment-form"]);
-    echo "<dl class='dl-horizontal' style='max-width:530px;'>";
+    echo "<dl class='dl-horizontal enrichment-options'>";
     echo "<dt>Annotation type</dt>";
     echo "<dd>";
-    echo $this->element("help_tooltips/create_tooltip", ["tooltip_text" => $tooltips['enrichment_type'], "tooltip_placement" => "right"]);
     $i = 0;
+    echo '<div class="dl-content-flex">';
+    echo '<span>';
     foreach ($available_types as $type_id => $type_str) {
         if ($i == 0 || (isset($type) && $type == $type_id)) {
             $checked = "checked";
@@ -68,11 +78,13 @@ echo $this->Html->css(['enricher.css']);
         echo "<label><input type='radio' name='annotation_type' id='annotation_type' value='" . $type_id . "' " . $checked . "> <strong>" . $type_str . "</strong></label>&nbsp; &nbsp;";
         $i++;
     }
+    echo '</span>';
+    echo $this->element("help_tooltips/create_tooltip", ["tooltip_text" => $tooltips['enrichment_type'], "tooltip_placement" => "right"]);
+    echo '</div>';
     echo "</dd>";
-    echo "<dt>Subset";
-    echo "</dt>";
+    echo "<dt>Subset</dt>";
     echo "<dd>";
-    echo $this->element("help_tooltips/create_tooltip", ["tooltip_text" => $tooltips['enrichment_subset'], "tooltip_placement" => "right"]);
+    echo '<div class="dl-content-flex">';
     echo "<select name='subset' style='width:300px;' class='form-control'>";
     foreach ($subsets as $subset => $count) {
         if (isset($selected_subset) && $selected_subset == $subset) {
@@ -82,10 +94,12 @@ echo $this->Html->css(['enricher.css']);
         }
     }
     echo "</select>\n";
+    echo $this->element("help_tooltips/create_tooltip", ["tooltip_text" => $tooltips['enrichment_subset'], "tooltip_placement" => "right"]);
+    echo "</div>";
     echo "</dd>\n";
     echo "<dt>Maximum q-value</dt>";
     echo "<dd>";
-    echo $this->element("help_tooltips/create_tooltip", ["tooltip_text" => $tooltips['enrichment_pvalue'], "tooltip_placement" => "right"]);
+    echo '<div class="dl-content-flex">';
     echo "<select name='pvalue' style='width:80px;' class='form-control'>";
     foreach ($possible_pvalues as $ppv) {
         if ($ppv == $selected_pvalue) {
@@ -95,6 +109,8 @@ echo $this->Html->css(['enricher.css']);
         }
     }
     echo "</select>\n";
+    echo $this->element("help_tooltips/create_tooltip", ["tooltip_text" => $tooltips['enrichment_pvalue'], "tooltip_placement" => "right"]);
+    echo "</div>";
     echo "</dd>";
     echo "</dl><br/>";
     echo "<input type='submit' class='btn btn-primary' value='Compute enrichment' />\n";

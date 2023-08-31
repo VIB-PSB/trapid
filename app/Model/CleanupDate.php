@@ -8,6 +8,7 @@ class CleanupDate extends AppModel {
     var $name = 'CleanupDate';
     var $useTable = 'cleanup_date';
 
+    /* Return id of a cleanup date record for a given year and month. If a record does not exist, insert it (and return -1). */
     function checkDateStatus($year, $month) {
         $query = "SELECT `id` FROM `cleanup_date` WHERE `year`='" . $year . "' AND `month`='" . $month . "' ";
         $res = $this->query($query);

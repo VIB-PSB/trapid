@@ -19,7 +19,7 @@ class TranscriptsGo extends AppModel {
             $result[] = [
                 $r['transcripts_annotation']['transcript_id'],
                 $r['transcripts_annotation']['name'],
-                $r['transcripts_annotation']['is_hidden'],
+                $r['transcripts_annotation']['is_hidden']
             ];
         }
         return $result;
@@ -99,7 +99,7 @@ class TranscriptsGo extends AppModel {
             $result[$r['transcripts_annotation']['name']] = [
                 'count' => $r[0]['count'],
                 'desc' => $go_terms[$r['transcripts_annotation']['name']]['desc'],
-                'info' => $go_terms[$r['transcripts_annotation']['name']]['info'],
+                'info' => $go_terms[$r['transcripts_annotation']['name']]['info']
             ];
         }
         return $result;

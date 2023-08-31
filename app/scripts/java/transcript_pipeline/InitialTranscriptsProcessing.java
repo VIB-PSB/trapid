@@ -174,7 +174,7 @@ public class InitialTranscriptsProcessing {
             // In the future the DB name shouldn't be hardcoded...
             /* UNCLEAN AND WORK IN PROGRESS! */
             // For testing purposes just copy-paste things in this big `if`. In the future have two clearly and properly separated pipelines.
-            if (plaza_database_name.equals("db_trapid_ref_eggnog_test_02")) {
+            if (plaza_database_name.equals("db_trapid_ref_eggnog_04_5")) {
                 System.out.println("EGGNOG PROCESSING!");
                 // No need to run step 1!
 
@@ -3664,7 +3664,6 @@ public class InitialTranscriptsProcessing {
         Map<String, Set<String>> transcript_ko
     ) throws Exception {
         long t51 = System.currentTimeMillis();
-        // TRAPID db structure changed for version 2...
         String insert_ko_annot =
             "INSERT INTO `transcripts_annotation` (`experiment_id`, `type`, `transcript_id`, `name`, `is_hidden`) VALUES ('" +
             trapid_exp_id +
