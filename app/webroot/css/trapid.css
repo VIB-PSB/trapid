@@ -2490,3 +2490,51 @@ select.change-exp-state {
 .reset-link {
     cursor: pointer;
 }
+
+
+/* Export data */
+.export-btn-group,
+.export-subsets {
+    align-items: center;
+    display: inline-flex;
+    gap: 18px;
+    margin-top: 18px;
+}
+
+@media only screen and (max-width: 768px) {
+    .export-btn-group,
+    .export-subsets {
+        display: flex;
+        justify-content: center;
+        flex-direction: column;
+    }
+    .export-btn-group .btn {
+        display: block;
+        width: 100%;
+    }
+}
+
+@supports not (gap: 18px) {
+    .export-btn-group > :not(:last-child),
+    .export-subsets > :not(:last-child) {
+        margin-right: 18px;
+    }
+    @media only screen and (max-width: 768px) {
+        .export-btn-group > :not(:last-child),
+        .export-subsets > :not(:last-child) {
+            margin-top: 18px;
+            margin-right: 0;
+        }
+    }
+}
+
+.export-btn {
+    margin-top: 18px;
+}
+
+.export-subsets select {
+    max-width: 30vw;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}

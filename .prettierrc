@@ -4,7 +4,7 @@
     "useTabs": false,
     "overrides": [
         {
-            "files": "*.php",
+            "files": ["*.php", "*.ctp"],
             "options": {
                 "braceStyle": "1tbs",
                 "singleQuote": true,
@@ -15,7 +15,8 @@
         {
             "files": "*.java",
             "options": {
-                "trailingComma": "none"
+                "trailingComma": "none",
+                "endOfLine": "lf"
             }
         }
     ]
