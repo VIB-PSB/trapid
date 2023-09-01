@@ -1,7 +1,7 @@
 <?php
 echo $this->Html->script([
-    'https://code.highcharts.com/highcharts.js',
-    'https://code.highcharts.com/modules/exporting.js'
+    'https://code.highcharts.com/8.0/highcharts.js',
+    'https://code.highcharts.com/8.0/modules/exporting.js'
 ]); ?>
 <div class="page-header">
     <h1 class="text-primary">Sequence length distribution</h1>

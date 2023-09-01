@@ -1,5 +1,5 @@
 <?php
-echo $this->Html->script(['https://code.highcharts.com/highcharts.js', 'https://code.highcharts.com/modules/exporting.js']);
+echo $this->Html->script(['https://code.highcharts.com/8.0/highcharts.js', 'https://code.highcharts.com/8.0/modules/exporting.js']);
 echo $this->Html->script(['d3-3.5.6.min.js', 'unipept-visualizations.min.js']);
 ?>
 

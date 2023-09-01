@@ -1,7 +1,7 @@
 <?php
 echo $this->Html->script([
-    'https://code.highcharts.com/highcharts.js',
-    'https://code.highcharts.com/modules/exporting.js'
+    'https://code.highcharts.com/8.0/highcharts.js',
+    'https://code.highcharts.com/8.0/modules/exporting.js'
 ]);
 echo $this->Html->script([
     'https://cdn.datatables.net/buttons/1.5.6/js/dataTables.buttons.min.js',
