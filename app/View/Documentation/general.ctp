@@ -460,7 +460,7 @@ function create_export_example($elmt_id, $example_data) {
                     <div class="col-md-8">
                         <p class="text-justify">
                             Taxonomic classification results can be explored by the user through multiple interactive visualizations. To access the taxonomic classification results, click <code>Taxonomic classification</code> in the side menu, within a TRAPID experiment. If this step was not performed during the initial processing, this page is not accessible. </p>
-                        <p class="text-justify">The Krona radial chart, visible in Figure 5, and the tree viewer enable an in-depth examination of the results. In contrast, the sample composition bar and pie charts (Figure 6) provide a quick overview of the results, depicting the domain-level composition and the ten most represented clades at adjustable taxonomic ranks.
+                        <p class="text-justify">The Krona radial chart, visible in Figure 5, and the tree viewer enable an in-depth examination of the results. In contrast, the sample composition bar and pie charts (Figure 6) provide a quick overview of the results, depicting the domain-level composition and the ten most represented clades at adjustable taxonomic ranks. This page's layout was inspired by EBI Metagenomics.
                     </div>
                 </div>
                 <div class="row">

@@ -22,7 +22,7 @@ TRAPID 2.0 is freely accessible for academic use.  If you have a commercial inte
 
 ## Support 
 
-If you experience a bug, or if you have any question, remark or suggestion, please [contact us](http://bioinformatics.psb.ugent.be/trapid_02/documentation/contact).
+If you experience a bug, or if you have any question, remark or suggestion, please [contact us](http://bioinformatics.psb.ugent.be/trapid_02/documentation/contact) or [open an issue](https://github.com/VIB-PSB/trapid/issues).
 
 
 ## Installation 
@@ -88,5 +88,5 @@ SQL schemes and example data for the required databases can be found [here](http
 4. Clone or download the repository. 
 5. Change configuration: 
     * Create and edit all necessary INI files in the `app/scripts/ini_files`, starting from the available templates (`*.default`, to rename as `*.ini`). 
-    * Change the database configuration in `app/config/database.php`. 
+    * Change the database configuration in `app/Config/database.php`. 
 6. Edit the `.htaccess` file in the root directory as appropriate.
