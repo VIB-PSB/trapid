@@ -1,6 +1,0 @@
-<?php
-header("Content-type: text/plain");
-if(isset($tree)){
-echo $tree;
-}
-?>

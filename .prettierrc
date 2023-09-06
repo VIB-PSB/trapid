@@ -1,0 +1,23 @@
+{
+    "printWidth": 120,
+    "tabWidth": 4,
+    "useTabs": false,
+    "overrides": [
+        {
+            "files": ["*.php", "*.ctp"],
+            "options": {
+                "braceStyle": "1tbs",
+                "singleQuote": true,
+                "phpVersion": "7.2",
+                "trailingCommaPHP": false
+            }
+        },
+        {
+            "files": "*.java",
+            "options": {
+                "trailingComma": "none",
+                "endOfLine": "lf"
+            }
+        }
+    ]
+}

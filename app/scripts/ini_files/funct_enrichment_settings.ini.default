@@ -1,0 +1,29 @@
+; This INI file is a template used for functional enrichments of an experiment.
+; It is modified and copied at the root of the experiment tmp directory when a user submits any enrichment job.
+; Values that are modified upon job submission (i.e. experiment-specific) are between brackets (`<>`).
+
+; TRAPID DB connection data
+[trapid_db]
+trapid_db_server = "db_server"
+trapid_db_name = "db_name"
+trapid_db_port = 3306
+trapid_db_username = "username"
+trapid_db_password = "password"
+
+; Reference DB connection data
+[reference_db]
+reference_db_server = "db_server"
+reference_db_name = "<reference_db_name>"
+reference_db_port = 3306
+reference_db_username = "username"
+reference_db_password = "password"
+
+[experiment]
+; Experiment identifier
+exp_id = "<exp_id>"
+; Experiment temporary processing directory (normally created in the `tmp_path` defined in `webapp_settings`)
+tmp_exp_dir = "<tmp_exp_path>"
+
+[enrichment]
+; Path to the enricher binary (normally `app/scripts/bin/enricher`)
+enricher_bin = "/path/to/app/scripts/bin/enricher"

@@ -1,5 +1,5 @@
 #sankey{
-  overflow:auto
+  overflow:auto;
 }
 
 #right_refine_form {
@@ -16,23 +16,123 @@
   margin: 10px 0px;
 }
 
-.node rect {
-  cursor: move;
-  fill-opacity: .9;
-  shape-rendering: crispEdges;
-}
-
 .node text {
   pointer-events: none;
   text-shadow: 0 1px 0 #fff;
 }
 
 .link {
+  cursor: help;
   fill: none;
   stroke: #000;
-  stroke-opacity: .2;
+  stroke-opacity: .15;
+  transition: stroke-opacity 0.2s;
 }
 
-.link:hover {
-  stroke-opacity: .5;
+.link:hover,
+.link.connected:hover,
+.link.highlighted:hover {
+  stroke-opacity: .38;
+  transition: stroke-opacity 0.2s;
+}
+
+.link.connected {
+    stroke-opacity: .29;
+    transition: stroke-opacity 0.2s;
+}
+
+.link.highlighted {
+    stroke-opacity: .29;
+    transition: stroke-opacity 0.2s;
+}
+
+
+#choices {
+  /* display: flex; */
+  font-size: 88%;
+  justify-content: space-between;
+  /*justify-content: space-between;*/
+}
+
+
+#middle_min.fading, #right_min.fading {
+    animation: background-fade 0.8s 1;
+}
+
+@keyframes background-fade {
+    from { background-color: #ffecd0; }
+    to { background-color: initial; }
+}
+
+/*
+#choices:last-child  {
+    margin-right:50px;
+}
+
+.refine_box{
+    text-align: justify;
+}
+*/
+
+.left_col, .right_col{
+  display: inline-block;
+}
+
+.bad_label{
+  font-weight: bold;
+  color: #B22222;
+}
+
+.node rect {
+  cursor: grab;
+  fill-opacity: .85;
+  /*fill-opacity: .9;*/
+  stroke: none;
+  shape-rendering: crispEdges;
+  transition: fill-opacity 0.2s;
+}
+
+.node.dragged rect {
+    cursor: grabbing;
+}
+
+.node rect:hover,
+.node.highlighted rect:hover {
+  fill-opacity: 1;
+  transition: fill-opacity 0.2s;
+}
+
+
+.node.highlighted rect {
+    filter: saturate(1.05) brightness(1.05);
+    stroke: #636363 !important;
+    transition: filter 0.2s;
+}
+
+
+/* Sankey diagram tooltips */
+.d3-tip {
+    font-size: 85%;
+    padding: 6px;
+    background-color: rgba(255, 255, 255, 0.9);
+    /*border-radius: 2px;*/
+    pointer-events: none;
+    /*box-shadow: 1px 1px 4px grey;*/
+    z-index: 1000;
+    line-height: 1.25;
+    max-width: 180px;
+}
+
+.d3-tip-link {
+    border: 1px solid #999999;
+}
+
+.d3-tip-footer {
+    margin-top: 4px;
+    font-size: 80%;
+    color: #888888;
+}
+
+.d3-tip-title {
+    font-weight: bold;
 }

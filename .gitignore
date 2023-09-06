@@ -1,2 +1,6 @@
 *~
-app_controller.php
+*.class
+*.pyc
+*.ini
+.idea
+app/webroot/favicon.ico

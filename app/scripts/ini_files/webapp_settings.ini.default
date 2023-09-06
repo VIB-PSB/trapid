@@ -1,0 +1,27 @@
+[Website]
+; Default page title
+default_title = "Default TRAPID title"
+is_dev_environment = true
+
+; TRAPID instance name for `tmp_path` and `tmp_url` needs to be the same (here `trapid_tmp`)
+[Tmp]
+tmp_path = "/path/to/trapid_tmp/"
+tmp_url = "http://trapid.host.url/readwrite/trapid_tmp/"
+
+; Path to DIAMOND DBs and extra files used by TRAPID (historically named `blast_db_path`)
+[Blast_db]
+blast_db_path = "/path/to/blast_db/"
+
+; User limits: maximum number of jobs running on the cluster for an experiment and maximum number of experiments
+[User_limits]
+max_cluster_jobs = 2
+max_user_experiments = 20
+
+; Authentication cookie settings
+[Auth_cookies]
+cookie_name = "trapid_cookie"
+cookie_time = 7200
+cookie_domain = "trapid.host.url"
+cookie_path = "/trapid_path/"
+cookie_key = "A_long_random_difficult_to_guess_string"
+cookie_secure = 0
