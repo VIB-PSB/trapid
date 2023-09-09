@@ -1084,6 +1084,32 @@ class TrapidUtilsComponent extends Component{
     }
 
 
+  // Create shell script for asynchronous experiment deletion. Return file name.
+  function create_shell_script_delete_exp($exp_id) {
+    $base_scripts_location = APP . "scripts/";
+    $tmp_dir_root = TMP."experiment_data/";
+    $tmp_dir_exp = $tmp_dir_root . $exp_id . "/";
+    $necessary_modules = array("python/x86_64/2.7.2");
+    $shell_file = $tmp_dir_root . "delete_exp_" . $exp_id . ".sh";
+    $fh = fopen($shell_file, "w");
+    fwrite($fh,"#Loading necessary modules\n");
+    foreach($necessary_modules as $nm){
+      fwrite($fh,"module load ".$nm." \n");
+    }
+    $deletion_parameters = array($exp_id, $tmp_dir_exp, TRAPID_DB_NAME, TRAPID_DB_SERVER, TRAPID_DB_USER, TRAPID_DB_PASSWORD);
+
+    fwrite($fh,"\n#Launching experiment deletion script\n");
+    $deletion_script = $base_scripts_location . "python/delete_experiment.py";
+    $deletion_command_line = "python " . $deletion_script . " " . implode(" ",$deletion_parameters);
+    fwrite($fh, "date\n");
+    fwrite($fh, $deletion_command_line . "\n");
+    fwrite($fh, "date\n");
+    fclose($fh);
+    shell_exec("chmod a+x ".$shell_file);
+    return $shell_file;
+  }
+
+
     // Generate a random character string
     // Added symbols to improve passwords generated with this function
     function rand_str($length = 32, $chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890'){

@@ -12,10 +12,11 @@ class AppController extends Controller {
     var $helpers = ['Html', 'Form'];
     var $process_states = [
         'default' => ['empty', 'upload', 'finished'],
-        'all' => ['empty', 'upload', 'finished', 'processing', 'error'],
+        'all' => ['empty', 'upload', 'finished', 'processing', 'error', 'deleting'],
         'finished' => ['finished'],
         'upload' => ['upload'],
-        'start' => ['empty', 'upload']
+        'start' => ['empty', 'upload'],
+        'deleting' => ['deleting']
     ];
     var $uses = ['Authentication', 'Experiments', 'SharedExperiments'];
 
