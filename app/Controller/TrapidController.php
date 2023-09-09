@@ -2829,11 +2829,12 @@ class TrapidController extends AppController{
       $this->redirect(array("controller"=>"trapid","action"=>"delete_experiment_sync", $exp_id));
     }
 
-    // Delete all associated jobs from the cluster
-    // This will prevent overloading of the cluster system by malignant people constantly creating new experiments with
-    // new jobs, and subsequently deleting them
+    // Delete all associated jobs from the cluster to prevent abuse
     $jobs = $this->ExperimentJobs->getJobs($exp_id);
-    foreach($jobs as $job){$job_id=$job['job_id'];$this->TrapidUtils->deleteClusterJob($exp_id,$job_id);}
+    foreach($jobs as $job) {
+      $job_id=$job['job_id'];
+      $this->TrapidUtils->deleteClusterJob($exp_id,$job_id);
+    }
 
     // Create and submit experiment deletion job
     $qsub_file	= $this->TrapidUtils->create_qsub_script_general();
