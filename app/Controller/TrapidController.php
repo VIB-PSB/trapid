@@ -2824,27 +2824,33 @@ class TrapidController extends AppController{
     $exp_info	= $this->Experiments->getDefaultInformation($exp_id);
     $this->TrapidUtils->checkPageAccess($exp_info['title'],$exp_info["process_state"],$this->process_states["default"]);
 
+    // Attempt synchronous deletion (experiment in `empty` state)
+    if ($exp_info['process_state'] ==  'empty') {
+      $this->redirect(array("controller"=>"trapid","action"=>"delete_experiment_sync", $exp_id));
+    }
+
     // Delete all associated jobs from the cluster
     // This will prevent overloading of the cluster system by malignant people constantly creating new experiments with
     // new jobs, and subsequently deleting them
     $jobs = $this->ExperimentJobs->getJobs($exp_id);
     foreach($jobs as $job){$job_id=$job['job_id'];$this->TrapidUtils->deleteClusterJob($exp_id,$job_id);}
 
-    // Update experiment process state to make it unavailable
-    $this->Experiments->updateAll(
-      ["process_state" => "'deleting'"],
-      ["experiment_id" => $exp_id]
-    );
     // Create and submit experiment deletion job
     $qsub_file	= $this->TrapidUtils->create_qsub_script_general();
     $shell_file = $this->TrapidUtils->create_shell_script_delete_exp($exp_id);
     $qsub_out	= TMP . "experiment_data/delete_exp_" . $exp_id . ".out";
     $qsub_err	= TMP . "experiment_data/delete_exp_" . $exp_id . ".err";
-    // TODO: add error state?
     if($shell_file == null || $qsub_file == null ) {
-      // $this->set("error","Problem performing deletion. Please contact us.");
-      // $this->redirect(array("controller"=>"trapid","action"=>"experiments"));
+      $this->autoRender = false;
+      $this->response->statusCode(500);
+      echo "Error: unable to perform experiment deletion. If this error persists, please contact us.";
+      return;
     } else {
+      // Update experiment process state to make it unavailable
+      $this->Experiments->updateAll(
+        ["process_state" => "'deleting'"],
+        ["experiment_id" => $exp_id]
+      );
       $command  = "sh $qsub_file -q medium -o $qsub_out -e $qsub_err ". " -cwd "  . $shell_file;
       exec($command, $output);
       $this->redirect(array("controller"=>"trapid","action"=>"experiments"));
