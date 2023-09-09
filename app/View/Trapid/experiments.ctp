@@ -25,7 +25,7 @@
         } else {
             foreach ($experiments as $experiment) {
                 $e = $experiment['Experiments'];
-                echo "<tr>";
+                echo $e['process_state'] == 'loading_db' ? "<tr class='loading_state'>" : '<tr>';
                 if ($e['process_state'] == 'error') {
                     echo "<td>" . $e['title'] . "</td>";
                     echo "<td><span id='exp_count_" . $e['experiment_id'] . "'>" . $experiment['count'] . "</span></td>";
