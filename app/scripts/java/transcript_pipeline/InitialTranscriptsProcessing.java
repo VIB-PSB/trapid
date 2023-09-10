@@ -1416,7 +1416,7 @@ public class InitialTranscriptsProcessing {
     }
 
     /**
-     * Assign GO terms to each transcript, based on the associated gene family (and the 50% rule).
+     * Assign GO terms to each transcript, based on the associated gene family (and the minimum frequency rule).
      * @param plaza_connection Connection to PLAZA database
      * @param transcript2gf Mapping from transcripts to gene families
      * @param gf2transcripts Mapping from gene families to transcripts
@@ -1508,7 +1508,7 @@ public class InitialTranscriptsProcessing {
             }
 
             //now, iterate over all the GO identifiers, and select those who are present in at least
-            //50% of the genes associated with this gene family
+            //50% (by default) of the genes associated with this gene family
             Set<String> selected_gos = new HashSet<String>();
             double gene_gf_count = gas.gf_size;
             for (String go_id : go_genes.keySet()) {
@@ -1519,8 +1519,10 @@ public class InitialTranscriptsProcessing {
             }
 
             //now add these selected gos to each of the transcript family members of the gene family.
-            for (String transcript_id : gf2transcripts.get(gf_id)) {
-                transcript_go.put(transcript_id, new HashSet<String>(selected_gos));
+            if (selected_gos.size() > 0) {
+                for (String transcript_id : gf2transcripts.get(gf_id)) {
+                    transcript_go.put(transcript_id, new HashSet<String>(selected_gos));
+                }
             }
 
             //clear the temporary storage for this gene family.
@@ -1656,7 +1658,7 @@ public class InitialTranscriptsProcessing {
     }
 
     /**
-     * Assign protein domains to each transcript, based on the associated gene family (and the 50% rule).
+     * Assign protein domains to each transcript, based on the associated gene family (and the minimum frequency rule).
      * @param plaza_connection Connection to PLAZA database
      * @param transcript2gf Mapping from transcripts to gene families
      * @param gf2transcripts Mapping from gene families to transcripts
@@ -1720,7 +1722,7 @@ public class InitialTranscriptsProcessing {
             }
 
             //now, iterate over all the Interpro identifiers, and select those who are present in at least
-            //50% of the genes associated with this gene family
+            //50% (by default) of the genes associated with this gene family
             double gene_gf_count = gas.gf_size;
             Set<String> selected_interpros = new HashSet<String>();
             for (String ipr_id : interpro_genes.keySet()) {
@@ -1731,8 +1733,10 @@ public class InitialTranscriptsProcessing {
             }
 
             //now add these selected gos to each of the transcript family members of the gene family.
-            for (String transcript_id : gf2transcripts.get(gf_id)) {
-                transcript_interpro.put(transcript_id, new HashSet<String>(selected_interpros));
+            if (selected_interpros.size() > 0) {
+                for (String transcript_id : gf2transcripts.get(gf_id)) {
+                    transcript_interpro.put(transcript_id, new HashSet<String>(selected_interpros));
+                }
             }
 
             interpro_genes.clear();
@@ -1809,8 +1813,6 @@ public class InitialTranscriptsProcessing {
             "INSERT INTO `transcripts_annotation` (`experiment_id`, `type`, `transcript_id`, `name`, `is_hidden`) VALUES ('" +
             trapid_exp_id +
             "', 'go', ?, ?, ?) ";
-        // TRAPID db strcture updated for version 2
-        // String insert_go_annot				= "INSERT INTO `transcripts_go` (`experiment_id`,`transcript_id`,`go`,`is_hidden`) VALUES ('"+trapid_exp_id+"',?,?,?) ";
         PreparedStatement ins_go_annot = trapid_connection.prepareStatement(insert_go_annot);
         boolean prev_commit_state = trapid_connection.getAutoCommit();
         trapid_connection.setAutoCommit(false);
@@ -1880,8 +1882,6 @@ public class InitialTranscriptsProcessing {
             "INSERT INTO `transcripts_annotation` (`experiment_id`, `type`, `transcript_id`, `name`, `is_hidden`) VALUES ('" +
             trapid_exp_id +
             "', 'ipr', ?, ?, '0') ";
-        // TRAPID db structure changed for version 2...
-        // String insert_ipr_annot				= "INSERT INTO `transcripts_interpro` (`experiment_id`,`transcript_id`,`interpro`) VALUES ('"+trapid_exp_id+"', ? , ? )  ";
         PreparedStatement ins_ipr_annot = trapid_connection.prepareStatement(insert_ipr_annot);
         boolean prev_commit_state = trapid_connection.getAutoCommit();
         trapid_connection.setAutoCommit(false);
