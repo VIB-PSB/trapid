@@ -162,7 +162,7 @@ if (isset($message)) {
                             if ($trapid_gf_id != null) {
                                 echo "<input type='hidden' name='trapid_gf_id' value='" . $trapid_gf_id . "' />";
                             }
-                            echo "<input type='submit' class='btn btn-sm' value='Set as gene family' $disabled_change_form />";
+                                echo "<input type='submit' class='btn btn-sm' value='Set as gene family' disabled/>";
                             echo $this->Form->end();
                             echo '</div>';
                             echo '</td>';
