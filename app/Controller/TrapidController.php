@@ -2605,7 +2605,6 @@ class TrapidController extends AppController{
         $structural_export = array("transcript_id"=>"Transcript identifier","frame_info"=>"Frame information","frameshift_info"=>"Frameshift information","orf"=>"ORF information","meta_annotation"=>"Meta annotation");
         $structural_export_cols = array(	"transcript_id"=>array("transcript_id"),
             "frame_info"=>array("detected_frame","detected_strand","full_frame_info"),
-//					"frameshift_info"=>array("putative_frameshift","is_frame_corrected"),
             "frameshift_info"=>array("putative_frameshift"),
             "orf"=>array("orf_start","orf_stop","orf_contains_start_codon","orf_contains_stop_codon"),
             "meta_annotation"=>array("meta_annotation","meta_annotation_score")
@@ -2953,7 +2952,7 @@ class TrapidController extends AppController{
    * Authentication: registration and login
    */
   function authentication($registration=null){
-     Configure::write("debug",3);
+     Configure::write("debug", 0);
     $this->layout = "external";  // Layout for external pages (i.e. not in experiment)
     $this -> set('title_for_layout', "Authentication");
 

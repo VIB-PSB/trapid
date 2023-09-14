@@ -1,7 +1,7 @@
 <?php
 
 /*
- * This model represents protein motifs (i.e. InterPro domains) information associated to the transcripts
+ * This model represents Gene Ontology terms information associated to the transcripts
  */
 
 class TranscriptsGo extends AppModel {
@@ -14,7 +14,6 @@ class TranscriptsGo extends AppModel {
             $exp_id .
             "' AND `type`='go'";
         $res = $this->query($query);
-        pr($res);
         foreach ($res as $r) {
             $result[] = [
                 $r['transcripts_annotation']['transcript_id'],

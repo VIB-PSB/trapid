@@ -34,7 +34,7 @@
     <footer class="footer">
         <div class="container">
             <span class="text-muted">Powered by the <a href="http://bioinformatics.psb.ugent.be/cnb" target="_blank">CNB group</a> at <a href="https://psb.ugent.be/" target="_blank">VIB-UGent<span class="hidden-xs"> Center for Plant Systems Biology</span></a>.</span>
-            <span class="text-muted pull-right">&COPY; 2022 TRAPID</span>
+            <span class="text-muted pull-right">&COPY; 2023 TRAPID</span>
         </div>
     </footer>
 

@@ -269,7 +269,8 @@ function create_export_example($elmt_id, $example_data) {
                 <section class="page-section-sm">
                     <h4 id="data-search">Searching for data</h4>
                     <p class="text-justify">The user has the ability to search for various data types within their experiment, using the search box present in the header of the experiment. Functional annotation (GO terms, protein domains, or KO terms) can be searched using either identifiers (e.g. <code>GO:0005509</code>) or
-                        descriptions (e.g. <code>Calcium ion binding</code>). Similarly, gene and RNA families can be searched using either TRAPID's internal identifier (with a <code>exp_id_</code> prefix) or
+                        descriptions (e.g. <code>Calcium ion binding</code>). Searching functional annotations by identifier looks up exact matches only, whereas searching by description yields all results overlapping the query.
+                        Similarly, gene and RNA families can be searched using either TRAPID's internal identifier (with a <code>exp_id_</code> prefix) or
                         the reference DB gene family identifier. Finally, the search box is convenient to retrieve the transcripts having a given meta-annotation. </p>
                     <h4 id="data-export">Exporting data</h4>
                     <p class="text-justify">The TRAPID platform allows the export of both the original data and the

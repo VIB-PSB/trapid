@@ -2592,7 +2592,7 @@ class ToolsController extends AppController {
     function handle_core_gf_completeness($exp_id, $cluster_job_id, $clade_tax_id, $label, $tax_source, $species_perc, $top_hits) {
         parent::check_user_exp($exp_id);
         $this->autoRender = false;
-        $job_result = $this->TrapidUtils->waitfor_cluster($exp_id, $cluster_job_id, 600, 5);
+        $job_result = $this->TrapidUtils->waitfor_cluster($exp_id, $cluster_job_id, 1200, 5);
         // Once our job finished running (with error or not) remove it from the `experiment_jobs` table
         $this->ExperimentJobs->deleteJob($exp_id, $cluster_job_id);
         // Load results.

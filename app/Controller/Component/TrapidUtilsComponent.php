@@ -132,7 +132,7 @@ class TrapidUtilsComponent extends Component{
 
     // Zip result file and cleanup previous export files
     // Now export files are generated with different names. Should every zip archive be removed?
-	shell_exec("rm -f " . $zip_rm);
+    shell_exec("rm -f " . $zip_rm);
     shell_exec("zip -j ".$internal_zip." ".$internal_file);
     shell_exec("rm -f ".$internal_file);
     $result	= $ext_dir.$zip_name;
@@ -187,8 +187,6 @@ class TrapidUtilsComponent extends Component{
     //execute shell script with java program
     shell_exec("chmod a+x ".$shell_file);
     $output = shell_exec("sh ".$shell_file);
-
-    // pr($output);
 
     //zip result file and cleanup
     // if(file_exists($internal_zip)){
@@ -432,7 +430,6 @@ class TrapidUtilsComponent extends Component{
   // If the fraction of running jobs is more than `$full`, status of the queue is set to 'full'
   function check_cluster_status($busy=0.5, $full=1.0, $queues = ["long", "medium", "short"]){
     $cluster_status = [];
-    // aaa
 //    $qhost_cmd = ". /opt/sge/default/common/settings.sh && qhost -q";
     $qhost_cmd = ". /etc/profile.d/settings.sh && qhost -q";
     $qhost_out = [];
@@ -917,8 +914,6 @@ class TrapidUtilsComponent extends Component{
         // Read base ini file
         $initial_processing_ini_file = INI . "exp_initial_processing_settings.ini";
         $initial_processing_ini_data = parse_ini_file($initial_processing_ini_file, true);
-//        pr($initial_processing_ini_data);
-//        pr(array($plaza_db, $blast_db, $gf_type, $num_top_hits, $evalue, $func_annot, $tax_binning, $tax_scope));
         // Replace values with experiment-specific values
         $initial_processing_ini_data["experiment"]["tmp_exp_dir"] = $tmp_dir;
         $initial_processing_ini_data["experiment"]["exp_id"] = $exp_id;
@@ -1147,7 +1142,7 @@ class TrapidUtilsComponent extends Component{
       $message = "Welcome to TRAPID 2.0, the web resource for rapid analysis of transcriptome data.\nHere is the required authentication information.\n\nUser email address: ".$email."\nPassword: ".$password."\n\nThank you for using TRAPID 2.0.";
       if($password_update){
           $subject = "TRAPID password change";
-	      $message		= "The password for your TRAPID account has been changed.\n\nThe new password is: ".$password."\n\nYou can change it at anytime: log in to TRAPID and select 'Account > Change password'.\n\nThank you for using the TRAPID 2.0.\n";
+	      $message		= "The password for your TRAPID account has been changed.\n\nThe new password is: ".$password."\n\nYou can change it at anytime: log in to TRAPID and select 'Account > Change password'.\n\nThank you for using TRAPID 2.0.\n";
       }
 
       $Email = new CakeEmail();

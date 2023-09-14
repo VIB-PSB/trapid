@@ -9,7 +9,6 @@ class Annotation extends AppModel {
     // Note: field is `go` and not `name` as we are querying a reference database
     function getSequencesGo($go_term) {
         $query = "SELECT `gene_id` FROM `gene_go` WHERE `go`='" . $go_term . "' ";
-        //    $query 		= "SELECT `gene_id` FROM `gene_go` WHERE `name`='".$go_term."' ";
         $res = $this->query($query);
         $gene_ids = [];
         foreach ($res as $r) {
