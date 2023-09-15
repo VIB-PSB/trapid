@@ -225,7 +225,7 @@ if (isset($subset_error) || isset($subset_message)) {
 
     <!-- Subset import -->
     <?php if ($enable_subset_upload): ?>
-        <div id="subset-import" class="<?php echo $active_subset_tab ? 'tab-pane active' : 'tab-pane'; ?>">
+        <div id="subset-import" class="<?php echo (!$enable_transcript_upload || $active_subset_tab) ? 'tab-pane active' : 'tab-pane'; ?>">
             <br>
             <?php
             if (isset($subset_error)) {
