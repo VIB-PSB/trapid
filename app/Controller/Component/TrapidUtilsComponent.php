@@ -508,6 +508,23 @@ class TrapidUtilsComponent extends Component{
   }
 
 
+  function cluster_job_exists($exp_id, $job_id, $should_cleanup_files = false) {
+    // Remove all files older than X days in the experiment's folder
+    if ($should_cleanup_files) {
+      $tmp_dir = TMP."experiment_data/".$exp_id."/";
+      shell_exec("find $tmp_dir -maxdepth 1 -atime +8 -type f -exec rm -f {} \\;");
+    }
+    $qstat_script = $this->create_qstat_script($exp_id);
+    $command = "sh $qstat_script -j $job_id 2>&1";
+    $out = array();
+    exec($command, $out);
+    if($out[0] == "Following jobs do not exist:") {
+      return false;
+    }
+    return true;
+  }
+
+
   function sync_file($file,$max_sync_time=10){
     $cont		= true;
     $sync_time		= 0;

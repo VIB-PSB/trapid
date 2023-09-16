@@ -222,12 +222,6 @@ echo $this->Html->css('selectize.paper.css');
         <?php endif; ?>
     </div>
     <br>
-    <div id="loading" class="hidden">
-        <div class="text-center">
-            <div class="ajax-spinner"></div><br>
-            Loading... Please wait.
-        </div>
-    </div>
     <div id="display-results"></div>
 </section>
 
@@ -236,9 +230,12 @@ echo $this->Html->css('selectize.paper.css');
     $(function() {
         // Various elements id, as JS vars
         const display_div_id = "#display-results";
-        const loading_div_id = "#loading";
         const sub_btn_id = "#completeness-submit";
         $(".result_link").click(function() {
+            if (typeof coreGfNS !== 'undefined') {
+                clearTimeout(coreGfNS.timeoutId);
+                $(sub_btn_id).attr("disabled", false);
+            }
             let param_list = $(this).attr("id").split("_").slice(1);
             let ajax_url = "<?php echo $this->Html->url([
                 'controller' => 'tools',
@@ -264,7 +261,6 @@ echo $this->Html->css('selectize.paper.css');
             });
         });
         $("#completeness-form").submit(function(e) {
-            $(loading_div_id).removeClass('hidden');
             $(sub_btn_id).attr("disabled", true);
             $(display_div_id).empty();
             e.preventDefault();
@@ -274,8 +270,9 @@ echo $this->Html->css('selectize.paper.css');
                 data: $(this).serialize(),
                 dataType: 'html',
                 success: function(data) {
-                    $(loading_div_id).addClass('hidden');
-                    $(sub_btn_id).attr("disabled", false);
+                    // Global variable to keep track of elapsed time and render an error message in case a job takes too long.
+                    // See controller's `handle_core_gf_completeness` method for more information.
+                    coreGfNS = { ellapsedTimeMs: 0, timeoutId: null };
                     $(display_div_id).fadeOut('slow', function() {
                         $(display_div_id).hide().html(data).fadeIn();
                         document.querySelector(display_div_id).scrollIntoView({

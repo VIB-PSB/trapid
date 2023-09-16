@@ -2194,8 +2194,8 @@ body.external {
     border-radius: 50%;
     width: 28px;
     height: 28px;
-    -webkit-animation: spin 0.9s linear infinite; /* Safari */
-    animation: spin 0.9s linear infinite;
+    -webkit-animation: spin 1s linear infinite; /* Safari */
+    animation: spin 1s linear infinite;
 }
 
 .ajax-spinner-sm {

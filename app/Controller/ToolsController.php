@@ -2510,6 +2510,7 @@ class ToolsController extends AppController {
         // If there are already too many jobs running, it should not be possible to submit a new job (TODO).
         $current_job_number = $this->ExperimentJobs->getNumJobs($exp_id);
         // if($current_job_number>=MAX_CLUSTER_JOBS){$this->redirect(array("controller"=>"gene_family","action"=>"gene_family",$exp_id,$gf_id));}
+
         // Submission of new core GF completeness job.
         if ($this->request->is('post')) {
             // pr($this->request->data);
@@ -2520,9 +2521,13 @@ class ToolsController extends AppController {
             if (empty($clade_db)) {
                 // To change (does not look clean). Move to 'job handling' function?
                 $this->autoRender = false;
-                return "Invalid clade, try again. ";
-                // $this->set("error","Invalid phylogenetic clade: '".$clade_tax_id."'.");return;
+                return "<p class='text-danger'><strong>Error:</strong> Invalid clade selected (" . $clade_tax_id. ").</p>";
             }
+            if ($current_job_number >= MAX_CLUSTER_JOBS) {
+                $this->autoRender = false;
+                return "<p class='text-danger'><strong>Error:</strong> too many concurrent jobs are running for this experiment.</p>";
+            }
+
             $transcript_label = "None";
             if ($this->request->data['transcripts-choice'] != "all") {
                 $transcript_label = $this->request->data['transcripts-choice'];
@@ -2551,8 +2556,8 @@ class ToolsController extends AppController {
             $completeness_dir = $tmp_dir . "completeness/";
             $qsub_file = $this->TrapidUtils->create_qsub_script($exp_id);
             $shell_file = $this->TrapidUtils->create_shell_script_completeness(
-                $clade_tax_id,  // Clade tax id
-                $exp_id,  // Experiment ID
+                $clade_tax_id,
+                $exp_id,
                 $transcript_label,  // Transcript label. 'None' if all transcripts were chosen.
                 $species_perc, // `species_perc` (threshold to consider what is a core GF or not)
                 $top_hits, // `top_hits`, the number of top gits (by query) used for the core GF completeness analysis.
@@ -2560,7 +2565,7 @@ class ToolsController extends AppController {
                 $db_type // The type of reference database (different wrapper script called when working with EggNOG)
             );
             if ($shell_file == null || $qsub_file == null) {
-                $this->set("error", "Problem creating program files. ");
+                $this->set("error", "Unable to submit completeness job: problem creating program files.");
                 return;
             }
             $qsub_out = $completeness_dir . "core_gf_completeness_" . $exp_id . "_" . $clade_tax_id . "_sp" . $species_perc . "_th" . $top_hits . ".out";
@@ -2582,32 +2587,42 @@ class ToolsController extends AppController {
             $this->ExperimentLog->addAction($exp_id, "core_gf_completeness", "options", 1);
             $this->ExperimentLog->addAction($exp_id, "core_gf_completeness_options", "conservation_threshold=" . $species_perc, 2);
             $this->ExperimentLog->addAction($exp_id, "core_gf_completeness_options", "top_hits=" . $top_hits, 2);
-//                $this->ExperimentLog->addAction($exp_id,"core_gf_completeness_options","tax_source"." ncbi", 2);
+            // $this->ExperimentLog->addAction($exp_id,"core_gf_completeness_options","tax_source"." ncbi", 2);
             $this->redirect(array("controller" => "tools", "action" => "handle_core_gf_completeness", $exp_id, $cluster_job, $clade_tax_id, $transcript_label, $tax_source, $species_perc, $top_hits));
         }
     }
 
 
     // Wait for cluster job to finish. Once it is over, redirect to `load_core_gf_completeness`
-    function handle_core_gf_completeness($exp_id, $cluster_job_id, $clade_tax_id, $label, $tax_source, $species_perc, $top_hits) {
+    function handle_core_gf_completeness($exp_id, $cluster_job_id, $clade_tax_id, $label, $tax_source, $species_perc, $top_hits, $status = null) {
         parent::check_user_exp($exp_id);
-        $this->autoRender = false;
-        $job_result = $this->TrapidUtils->waitfor_cluster($exp_id, $cluster_job_id, 1200, 5);
-        // Once our job finished running (with error or not) remove it from the `experiment_jobs` table
-        $this->ExperimentJobs->deleteJob($exp_id, $cluster_job_id);
-        // Load results.
-        // if($job_result != "ok"){
-        //     $this->redirect(...);
-        // }
-
-//        if($job_result != 0) {
-//            return "<p class='text-danger'>Error! Check chosen clade & parameters?</p>";
-//        }
+        $this->layout = "";
         // Quick fix for an issue with decimal places with jobs having `$species_perc` set to 1
         if ($species_perc == 1) {
             $species_perc = number_format($species_perc, 1, '.', '');
         }
-        $this->redirect(array("controller" => "tools", "action" => "load_core_gf_completeness", $exp_id, $clade_tax_id, $label, $tax_source, $species_perc, $top_hits));
+        $job_exists = $this->TrapidUtils->cluster_job_exists($exp_id, $cluster_job_id);
+        if ($job_exists) {
+            $this->set("interval_ms", 20000);
+            $this->set("max_duration_ms", 480000); // 8 minutes
+            $this->set("result_elmt_id", "display-results");
+            // Set all variables that need to be retained to display results after job completion.
+            $this->set("exp_id", $exp_id);
+            $this->set("cluster_job_id", $cluster_job_id);
+            $this->set("clade_tax_id", $clade_tax_id);
+            $this->set("label", $label);
+            $this->set("tax_source", $tax_source);
+            $this->set("species_perc", $species_perc);
+            $this->set("top_hits", $top_hits);
+        } elseif ($status == "timeout") {
+            $this->ExperimentJobs->deleteJob($exp_id, $cluster_job_id);
+            $this->TrapidUtils->deleteClusterJob($exp_id, $cluster_job_id);
+            $this->autoRender = false;
+            return "<p class='text-danger'><strong>Error:</strong> job was not completed in appropiate amount of time</p>";
+        } else {
+            $this->ExperimentJobs->deleteJob($exp_id, $cluster_job_id);
+            $this->redirect(array("controller" => "tools", "action" => "load_core_gf_completeness", $exp_id, $clade_tax_id, $label, $tax_source, $species_perc, $top_hits));
+        }
     }
 
 
@@ -2628,7 +2643,7 @@ class ToolsController extends AppController {
         // Dirty but works to catch errors.
         if (empty($completeness_job)) {
             $this->autoRender = false;
-            return ("<p class='text-danger'><strong>Error:</strong> could not retrieve any species from the reference database. Are you sure the clade you chose is represented there?</p>");
+            return ("<p class='text-danger'><strong>Error:</strong> no completeness results found for the selected parameters. Are you sure the clade you chose is represented in the reference database?</p>");
         }
         // Count number of missing/represented GFs. Done this way:
         // get length of strings: if 0, return 0, otherwise give the length of string splitted by `;`

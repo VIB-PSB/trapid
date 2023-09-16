@@ -109,6 +109,7 @@
     </div>
 </div>
 <script>
+    $("#completeness-submit").attr("disabled", false);
     <?php if ($linkout_prefix) : ?>
         // Redirect to external GF page
         function redirectToPage(gf_id) {
