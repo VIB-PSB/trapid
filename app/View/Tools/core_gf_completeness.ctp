@@ -226,16 +226,16 @@ echo $this->Html->css('selectize.paper.css');
 </section>
 
 <script type="text/javascript">
+    // Track ellapsed time and render an error message in case a job takes too long.
+    // See `handle_core_gf_completeness` controller and view for more information.
+    var coreGfNS = { ellapsedTimeMs: 0, timeoutId: null };
     // Load completeness data when user clicks on a result link ('previous jobs' table)
     $(function() {
-        // Various elements id, as JS vars
         const display_div_id = "#display-results";
         const sub_btn_id = "#completeness-submit";
         $(".result_link").click(function() {
-            if (typeof coreGfNS !== 'undefined') {
-                clearTimeout(coreGfNS.timeoutId);
-                $(sub_btn_id).attr("disabled", false);
-            }
+            clearTimeout(coreGfNS.timeoutId);
+            $(sub_btn_id).attr("disabled", false);
             let param_list = $(this).attr("id").split("_").slice(1);
             let ajax_url = "<?php echo $this->Html->url([
                 'controller' => 'tools',
@@ -270,8 +270,6 @@ echo $this->Html->css('selectize.paper.css');
                 data: $(this).serialize(),
                 dataType: 'html',
                 success: function(data) {
-                    // Global variable to keep track of elapsed time and render an error message in case a job takes too long.
-                    // See controller's `handle_core_gf_completeness` method for more information.
                     coreGfNS = { ellapsedTimeMs: 0, timeoutId: null };
                     $(display_div_id).fadeOut('slow', function() {
                         $(display_div_id).hide().html(data).fadeIn();
@@ -281,7 +279,7 @@ echo $this->Html->css('selectize.paper.css');
                     });
                 },
                 error: function() {
-                    alert('Unable to submit completeness job!');
+                    alert('Unable to submit completeness job.');
                 }
             });
         });

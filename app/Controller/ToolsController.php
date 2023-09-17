@@ -74,192 +74,6 @@ class ToolsController extends AppController {
         $this->set("aln", $alignment_str);
     }
 
-    // TODO: delete this function (now both MSA and trees  are created with `create_tree()`)
-    // function create_msa($exp_id = null, $gf_id = null, $stripped = null) {
-    //     if (!$exp_id || !$gf_id) {
-    //         $this->redirect(array("controller" => "trapid", "action" => "experiments"));
-    //     }
-    //     // $exp_id	= mysql_real_escape_string($exp_id);
-    //     parent::check_user_exp($exp_id);
-    //     $this->set('title_for_layout', 'Multiple sequence alignment');
-    //     $exp_info = $this->Experiments->getDefaultInformation($exp_id);
-    //     $this->set("exp_info", $exp_info);
-    //     $this->set("exp_id", $exp_id);
-
-    //     //check gf_id
-    //     $gf_info = $this->GeneFamilies->find("first", array("conditions" => array("experiment_id" => $exp_id, "gf_id" => $gf_id)));
-    //     if (!$gf_info) {
-    //         $this->redirect(array("controller" => "trapid", "action" => "experiment", $exp_id));
-    //     }
-    //     $this->set("gf_id", $gf_id);
-    //     $this->set("gf_info", $gf_info);
-
-    //     //check whether the number of jobs in the queue for this experiment has not been reached.
-    //     $current_job_number = $this->ExperimentJobs->getNumJobs($exp_id);
-    //     if ($current_job_number >= MAX_CLUSTER_JOBS) {
-    //         $this->redirect(array("controller" => "gene_family", "action" => "gene_family", $exp_id, $gf_id));
-    //     }
-
-    //     //get phylogenetic profile, depending on type of GF assignment (HOM/IORTHO)
-    //     $phylo_profile = array();
-    //     if ($exp_info['genefamily_type'] == "HOM") {
-    //         $gf_content = $this->GfData->find("all", array("conditions" => array("gf_id" => $gf_info['GeneFamilies']['plaza_gf_id']), "fields" => "gene_id"));
-    //         //pr($gf_content);
-    //         $phylo_profile = $this->Annotation->getSpeciesProfile($this->TrapidUtils->reduceArray($gf_content, "GfData", "gene_id"));
-    //     }
-    //     else if ($exp_info['genefamily_type'] == "IORTHO") {
-    //         $iortho_content = $this->GeneFamilies->find("first", array("conditions" => array("experiment_id" => $exp_id, "gf_id" => $gf_id), "fields" => array("gf_content")));
-    //         $phylo_profile = $this->Annotation->getSpeciesProfile(explode(" ", $iortho_content['GeneFamilies']['gf_content']));
-    //     }
-    //     $this->set("phylo_profile", $phylo_profile);
-
-
-    //     //retrieve the species from the associated reference database
-    //     $available_species = $this->AnnotSources->find("all");
-    //     $available_species_tax = $this->TrapidUtils->indexArrayMulti($available_species, "AnnotSources", "tax_id", array("species", "common_name"));
-    //     $available_species_common = $this->TrapidUtils->indexArrayMulti($available_species, "AnnotSources", "common_name", array("species", "tax_id"));
-    //     $available_clades = $this->FullTaxonomy->findClades(array_keys($available_species_tax));
-    //     ksort($available_species_common);
-
-    //     $clades_species_tax = $available_clades["clade_species_tax"];
-    //     $clades_parental = $available_clades["parent_child_clades"];
-    //     $full_tree = $available_clades["full_tree"];
-    //     $this->set("available_species_tax", $available_species_tax);
-    //     $this->set("available_clades", $clades_species_tax);
-    //     $this->set("parent_child_clades", $clades_parental);
-    //     $this->set("available_species_common", $available_species_common);
-    //     $this->set("full_tree", $full_tree);
-
-    //     $MAX_GENES_MSA_TREE = 250; // 200;
-    //     $this->set("MAX_GENES", $MAX_GENES_MSA_TREE);
-
-    //     $editing_modes = array("0.10" => "Stringent editing", "0.25" => "Relaxed editing");
-    //     $this->set("editing_modes", $editing_modes);
-
-
-    //     // pr($clades_parental);
-    //     //pr($clades_species_tax);
-    //     //pr($full_tree);
-
-
-    //     //ok, check whether there is already a multiple sequence alignment present in the database.
-    //     //if so, get the used-species, and the msa, and display it!
-    //     if ($gf_info['GeneFamilies']['msa']) {
-    //         $this->set("previous_result", true);
-    //         $tax2clades = array();
-    //         foreach ($available_clades["clade_species_tax"] as $clade => $tax_list) {
-    //             foreach ($tax_list as $tax) {
-    //                 if (!array_key_exists($tax, $tax2clades)) {
-    //                     $tax2clades[$tax] = array();
-    //                 }
-    //                 $tax2clades[$tax][$clade] = $clade;
-    //             }
-    //         }
-    //         $selected_species = array();
-    //         $selected_clades = array();
-    //         $used_species = explode(",", $gf_info['GeneFamilies']["used_species"]);
-    //         foreach ($used_species as $us) {
-    //             $selected_species[$us] = $us;
-    //             foreach ($tax2clades[$us] as $cl) {
-    //                 $selected_clades[$cl] = $cl;
-    //             }
-    //         }
-    //         $this->set("selected_species", $selected_species);
-    //         $this->set("selected_clades", $selected_clades);
-    //         $this->set("hashed_user_id", parent::get_hashed_user_id());
-    //     }
-    //     if ($stripped == "stripped" && $gf_info['GeneFamilies']['msa_stripped']) {
-    //         $this->set("stripped_msa", true);
-    //     }
-    //     else {
-    //         $this->set("stripped_msa", false);
-    //     }
-
-
-    //     if ($_POST) {
-    //         $tmp_dir = TMP . "experiment_data/" . $exp_id . "/";
-    //         $this->set("previous_result", false);
-    //         $selected_species = array();
-    //         $selected_clades = array();
-    //         foreach ($_POST as $k => $v) {
-    //             $t = trim($k);
-    //             if (array_key_exists($t, $available_species_tax)) {
-    //                 $selected_species[$t] = $t;
-    //             }
-    //             else if (array_key_exists($t, $clades_parental)) {
-    //                 $selected_clades[$t] = $t;
-    //             }
-    //         }
-    //         $this->set("selected_species", $selected_species);
-    //         $this->set("selected_clades", $selected_clades);
-
-    //         if (count($selected_species) == 0) {
-    //             $this->set("error", "No genes/species selected");
-    //             return;
-    //         }
-    //         //do it here, don't trust user input
-    //         $gene_count = 0;
-    //         foreach ($selected_species as $ss) {
-    //             $gene_count += $phylo_profile[$available_species_tax[$ss]['species']];
-    //         }
-    //         if ($gene_count > $MAX_GENES_MSA_TREE || $gene_count == 0) {
-    //             $this->set("error", "Incorrect number of genes selected");
-    //             return;
-    //         }
-
-    //         //check for double gene ids/transcript ids in the input! Important, as this will otherwise crash the strip_msa procedure
-    //         $contains_double_entries = $this->has_double_entries($exp_id, $gf_info['GeneFamilies'], $selected_species, $exp_info['genefamily_type']);
-    //         if ($contains_double_entries) {
-    //             $this->set("error", "Some transcripts have the same name as genes in the selected species.");
-    //             return;
-    //         }
-
-    //         //ok, now write this species information to the database.
-    //         $this->GeneFamilies->updateAll(array("used_species" => "'" . implode(",", $selected_species) . "'"), array("experiment_id" => $exp_id, "gf_id" => $gf_id));
-    //         //create launch scripts, and put them on the web cluster. The view should show an ajax page which checks every X seconds
-    //         //whether the job has finished yet.
-    //         $qsub_file = $this->TrapidUtils->create_qsub_script($exp_id);
-    //         $shell_file = $this->TrapidUtils->create_shell_script_msa($exp_id, $exp_info['used_plaza_database'], $gf_id);
-
-    //         if ($shell_file == null || $qsub_file == null) {
-    //             $this->set("error", "problem creating program files");
-    //             return;
-    //         }
-    //         $qsub_out = $tmp_dir . "msa_" . $exp_id . "_" . $gf_id . ".out";
-    //         $qsub_err = $tmp_dir . "msa_" . $exp_id . "_" . $gf_id . ".err";
-    //         if (file_exists($qsub_out)) {
-    //             unlink($qsub_out);
-    //         }
-    //         if (file_exists($qsub_err)) {
-    //             unlink($qsub_err);
-    //         }
-    //         $command = "sh $qsub_file -q short -o $qsub_out -e $qsub_err $shell_file";
-    //         $output = array();
-    //         exec($command, $output);
-    //         $cluster_job = $this->TrapidUtils->getClusterJobId($output);
-
-    //         //add job to the cluster queue, and then redirect the entire program.
-    //         //the user will receive an email to notify him when the job is done, together with a link to this page.
-    //         //the result will then automatically be opened.
-    //         $this->ExperimentJobs->addJob($exp_id, $cluster_job, "short", "create_msa " . $gf_id);
-
-    //         //if($cluster_job==null){$this->set("error","Problem with retrieving job identifier from web cluster");return;}
-    //         //$this->set("job_id",$cluster_job);
-    //         //$this->set("run_pipeline",true);
-    //         $this->ExperimentLog->addAction($exp_id, "create_msa", $gf_id);
-    //         //declare options
-    //         $this->ExperimentLog->addAction($exp_id, "create_msa", "options", 1);
-    //         $this->ExperimentLog->addAction($exp_id, "create_msa", "gene_family=" . $gf_id, 2);
-    //         $this->ExperimentLog->addAction($exp_id, "create_msa", "selected_species", 2);
-    //         foreach ($selected_species as $ss) {
-    //             $this->ExperimentLog->addAction($exp_id, "create_msa", $ss, 3);
-    //         }
-    //         $this->ExperimentLog->addAction($exp_id, "create_msa_start", $gf_id, 1);
-    //         $this->set("run_pipeline", true);
-    //         return;
-    //     }
-    // }
-
 
     function has_double_entries($exp_id, $gf_info, $selected_species, $gf_type) {
         //step 1: get the transcript ids which are in the experiment and in the gene family.
@@ -2601,11 +2415,15 @@ class ToolsController extends AppController {
         if ($species_perc == 1) {
             $species_perc = number_format($species_perc, 1, '.', '');
         }
-        $job_exists = $this->TrapidUtils->cluster_job_exists($exp_id, $cluster_job_id);
-        if ($job_exists) {
+        if ($this->TrapidUtils->cluster_job_exists($exp_id, $cluster_job_id)) {
+            if ($status == "timeout") {
+                $this->ExperimentJobs->deleteJob($exp_id, $cluster_job_id);
+                $this->TrapidUtils->deleteClusterJob($exp_id, $cluster_job_id);
+                $this->autoRender = false;
+                return "<p class='text-danger'><strong>Error:</strong> job was not completed in appropiate amount of time</p>";
+            }
             $this->set("interval_ms", 20000);
-            $this->set("max_duration_ms", 480000); // 8 minutes
-            $this->set("result_elmt_id", "display-results");
+            $this->set("max_duration_ms", 360000); // 6 minutes
             // Set all variables that need to be retained to display results after job completion.
             $this->set("exp_id", $exp_id);
             $this->set("cluster_job_id", $cluster_job_id);
@@ -2614,11 +2432,6 @@ class ToolsController extends AppController {
             $this->set("tax_source", $tax_source);
             $this->set("species_perc", $species_perc);
             $this->set("top_hits", $top_hits);
-        } elseif ($status == "timeout") {
-            $this->ExperimentJobs->deleteJob($exp_id, $cluster_job_id);
-            $this->TrapidUtils->deleteClusterJob($exp_id, $cluster_job_id);
-            $this->autoRender = false;
-            return "<p class='text-danger'><strong>Error:</strong> job was not completed in appropiate amount of time</p>";
         } else {
             $this->ExperimentJobs->deleteJob($exp_id, $cluster_job_id);
             $this->redirect(array("controller" => "tools", "action" => "load_core_gf_completeness", $exp_id, $clade_tax_id, $label, $tax_source, $species_perc, $top_hits));

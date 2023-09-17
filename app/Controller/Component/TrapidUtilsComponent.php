@@ -518,10 +518,7 @@ class TrapidUtilsComponent extends Component{
     $command = "sh $qstat_script -j $job_id 2>&1";
     $out = array();
     exec($command, $out);
-    if($out[0] == "Following jobs do not exist:") {
-      return false;
-    }
-    return true;
+    return $out[0] != "Following jobs do not exist:";
   }
 
 

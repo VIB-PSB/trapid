@@ -1,10 +1,8 @@
 <?php
 
 // Intermediate view handling long-running core GF completeness jobs:
-//    1. Show a loading indicator in the results dive (`$result_elmt_id`), and reload itself after `$interval` milliseconds.
-//    2. Increment ellapsed time. 
-
-// TODO: if we go beyond that duration, render a timeout message (and job gets deleted from cluster).
+//    1. Display a loading message in the results div (`#display-results`) and reload this view after `$interval` milliseconds.
+//    2. Increment ellapsed time: if the job runs longer than this duration, trigger rendering of an error message.
 
 if (isset($interval_ms, $max_duration_ms)): ?>
 
@@ -16,18 +14,34 @@ if (isset($interval_ms, $max_duration_ms)): ?>
     </div>
 </div>
 
-<!-- Reload state of job after `$interval` seconds -->
 <script defer="defer" type="text/javascript">
-const loadUrl = "<?php echo $this->Html->url(['controller' => 'tools', 'action' => 'handle_core_gf_completeness', $exp_id, $cluster_job_id, $clade_tax_id, $label, $tax_source, $species_perc, $top_hits]); ?>";
 const intervalMs = <?php echo $interval_ms; ?>;
-const targetElmtSelector = "#<?php echo $result_elmt_id ?>";
+const maxDurationMs = <?php echo $max_duration_ms; ?>;
+const baseUrl = "<?php echo $this->Html->url(['controller' => 'tools', 'action' => 'handle_core_gf_completeness']); ?>";
+const params = <?php echo json_encode([
+    $exp_id,
+    $cluster_job_id,
+    $clade_tax_id,
+    $label,
+    $tax_source,
+    $species_perc,
+    $top_hits
+]); ?>
+
+if (coreGfNS.ellapsedTimeMs + intervalMs > maxDurationMs) {
+    params.push('timeout');
+}
+
+const reloadUrl = [baseUrl, ...params].join('/');
+
+function reloadCoreGfJob(selector, url) {
+    $(selector).load(url);
+    coreGfNS.ellapsedTimeMs += intervalMs;
+}
+
 $(document).ready(function() {
-    function reloadJobState(selector) {
-        $(targetElmtSelector).load(loadUrl);
-        coreGfNS.ellapsedTimeMs += intervalMs;
-    }
-        const timeoutId = setTimeout(reloadJobState, intervalMs, targetElmtSelector);
-        coreGfNS.timeoutId = timeoutId;
-    });
+    const timeoutId = setTimeout(reloadCoreGfJob, intervalMs, '#display-results', reloadUrl);
+    coreGfNS.timeoutId = timeoutId;
+});
 </script>
 <?php endif; ?>
