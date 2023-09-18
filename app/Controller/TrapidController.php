@@ -36,29 +36,6 @@ class TrapidController extends AppController{
 					)
 			  );
 
-  function qdel_all($code=null){
-    if($code=="enable_delete"){
-      Configure::write("debug",2);
-      $qdel_file	= $this->TrapidUtils->create_qdel_script("test");
-      $out	= array();
-      exec("sh ".$qdel_file." -u \"apache\"  2>&1",$out);
-      pr($out);
-    }
-  }
-
-
-  // TODO: delete as it is not used?
-  function qdel_experiment($cluster_id=null){
-    Configure::write("debug",1);
-    $exp_id	= "1";
-    if(!$cluster_id){$cluster_id = "1549";}
-    $qdel_file	= $this->TrapidUtils->create_qdel_script($exp_id);
-    $out	= array();
-    exec("sh ".$qdel_file." ".$cluster_id." 2>&1",$out);
-    pr($out);
-  }
-
-
 
   function manage_jobs($exp_id=null){
     if(!$exp_id){$this->redirect(array("controller"=>"trapid","action"=>"experiments"));}
