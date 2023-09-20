@@ -51,9 +51,7 @@ class TrapidController extends AppController{
     $tooltip_text_cluster_status = $this->HelpTooltips->getTooltipText("cluster_status");
     $this->set("tooltip_text_cluster_status", $tooltip_text_cluster_status);
 
-      // pr($finished_jobs);
     foreach($finished_jobs as $finished_job_id) {
-        // pr("Delete job ". $finished_job_id);
         $this->ExperimentJobs->deleteJob($exp_id, $finished_job_id);
         // Remove from `$experiment_jobs`
         // I am doing this because although the value is deleted from the DB, it is still in the array
@@ -179,7 +177,6 @@ class TrapidController extends AppController{
     if(!$exp_id){$this->redirect(array("controller"=>"trapid","action"=>"experiments"));}
     // $exp_id	= mysql_real_escape_string($exp_id);
     parent::check_user_exp($exp_id);
-    // pr($exp_info);
     $num_transcripts = "NA";  // Default value to display
     $exp_transcripts	= $this->Experiments->getTranscriptCount($exp_id);
     if($exp_transcripts){
@@ -251,14 +248,12 @@ class TrapidController extends AppController{
             // I am doing this because although the value is deleted from the DB, it is still in the array (and still on the page)
             foreach($exp_jobs as $k=>$v) {
                 if(in_array($v['job_id'], $finished_jobs)) {
-                    // pr("remove ". $v['job_id'] . ", key ". $k);
                     unset($experiments[$key]['experiment_jobs'][$k]);
                 }
             }
         }
     }
 
-    // pr($experiments);
     $this->set("experiments",$experiments);
 
     //shared experiments
@@ -613,7 +608,6 @@ class TrapidController extends AppController{
           else {
               $gf_ids = $this->GfData->find("all",array("conditions"=>array("gene_id"=>$gene_ids)));
           }
-//          pr($gf_ids);
       }
       $gf_ids		= $this->TrapidUtils->indexArraySimple($gf_ids,"GfData","gene_id","gf_id");
       $plaza_gf_ids	= array_unique(array_values($gf_ids));
@@ -965,7 +959,6 @@ class TrapidController extends AppController{
     $this->set("exp_info",$exp_info);
     $this->set("exp_id",$exp_id);
 
-      // pr($parameters);
     for($i=0;$i<count($parameters);$i++){
       $value	= $parameters[$i];
       if($value=="go" && $i<(count($parameters)-1)){
@@ -979,7 +972,6 @@ class TrapidController extends AppController{
     // if($v=="go"){$parameters[$k+1] = str_replace("-",":",$parameters[$k+1]);	}
     // $parameters[$k] = urldecode($v);
     //}
-    //pr($parameters);
 
     $download_type		= null;
     $available_download_types	= array("table","fasta_transcript","fasta_orf","fasta_protein_ref");
@@ -1080,7 +1072,6 @@ class TrapidController extends AppController{
           if (!in_array($collection_type, $allowed_types)) {
               return;
           }
-//          pr($this->request->data);
 
           // Sanitize subset name and check validity
           $subset_name = filter_var($this->request->data['subset-add-select'], FILTER_SANITIZE_STRING);  // TODO: use a more strignent filter
@@ -1259,7 +1250,6 @@ class TrapidController extends AppController{
     function search($exp_id=null) {
         parent::check_user_exp($exp_id);
         $exp_info = $this->Experiments->getDefaultInformation($exp_id);
-        //	pr($exp_info); // Debug
         $this->TrapidUtils->checkPageAccess($exp_info['title'], $exp_info["process_state"], $this->process_states["default"]);
         $this->set("exp_info", $exp_info);
         $this->set("exp_id", $exp_id);
@@ -1399,8 +1389,6 @@ class TrapidController extends AppController{
                     // Find first result matching GF query .. Why not display all the matches instead?
                     $gf = $this->GeneFamilies->find("first", array("conditions" => array("experiment_id" => $exp_id, "gf_id LIKE" => "%$sv%")));
                     $gf_id = $gf['GeneFamilies']['gf_id'];
-                    // pr($gf_id);
-                    // return;
                     $this->redirect(array("controller" => "gene_family", "action" => "gene_family", $exp_id, urlencode($gf_id)));
                 }
                 break;
@@ -1900,9 +1888,6 @@ class TrapidController extends AppController{
     $clades	= $this->TrapidUtils->valueToIndexArray(explode(";",$data_sources["DataSources"]["clades"]));
     ksort($clades);
     // Replace RapSearch2 by DIAMOND
-    // $species_info	= $this->TrapidUtils->checkAvailableRapsearchDB($exp_info['used_plaza_database'],$species_info);
-    // $clades		= $this->TrapidUtils->checkAvailableRapsearchDB($exp_info['used_plaza_database'],$clades);
-    // $gf_representatives	= $this->TrapidUtils->checkAvailableRapsearchDB($exp_info['used_plaza_database'],array("gf_representatives"=>"Genefamily representatives"));
     $species_info	= $this->TrapidUtils->checkAvailableDiamondDB($exp_info['used_plaza_database'],$species_info);
     $clades		= $this->TrapidUtils->checkAvailableDiamondDB($exp_info['used_plaza_database'],$clades);
     $gf_representatives	= $this->TrapidUtils->checkAvailableDiamondDB($exp_info['used_plaza_database'],array("gf_representatives"=>"Genefamily representatives"));
@@ -1919,8 +1904,6 @@ class TrapidController extends AppController{
     if(count($species_info)==0){unset($possible_db_types["SINGLE_SPECIES"]);}
     if(count($clades)==0){unset($possible_db_types["CLADE"]);}
     if(count($gf_representatives)==0){unset($possible_db_types["GF_REP"]);}
-
-    //pr($possible_db_types);
 
     //retrieve information for the gene family type
     if($data_sources['DataSources']['gf']==0){unset($possible_gf_types['HOM']);}
@@ -1962,8 +1945,6 @@ class TrapidController extends AppController{
       $this->set("default_sim_search_clade", $default_sim_search_clade);
 
       if($_POST){
-//        pr($_POST);
-//        return;
 
       // Parameter checking.
       // TODO: check existence of new keys (tax binning, nc RNA annotation, translation table, etc.)
@@ -2071,9 +2052,6 @@ class TrapidController extends AppController{
           $rfam_clans_str = "None";
       }
 
-      // pr($_POST);
-      // return;
-
       // Parameters are ok: we can now proceed with the actual pipeline organization.
       // Create shell file for submission to the web-cluster.
       // Shell file contains both the necessary module load statements
@@ -2082,7 +2060,6 @@ class TrapidController extends AppController{
       $qsub_file  = $this->TrapidUtils->create_qsub_script($exp_id);
       // Create configuration file for initial processing of this experiment
       $ini_file = $this->TrapidUtils->create_ini_file_initial($exp_id,$exp_info['used_plaza_database'],$blast_db,$gf_type,$num_blast_hits,$blast_evalue, $func_annot, $perform_tax_binning, $tax_scope, $rfam_clans_str, $use_cds, $transl_table);
-      // pr($ini_file);
       // $shell_file = $this->TrapidUtils->create_shell_file_initial($exp_id,$exp_info['used_plaza_database'],$blast_db,$gf_type,$num_blast_hits,$possible_evalues[$blast_evalue],$func_annot, $perform_tax_binning);
       // $shell_file = $this->TrapidUtils->create_shell_file_initial($exp_id,$exp_info['used_plaza_database'],$blast_db,$gf_type,$num_blast_hits,$blast_evalue, $func_annot, $perform_tax_binning, $tax_scope);
       $shell_file = $this->TrapidUtils->create_shell_file_initial($exp_id, $ini_file);
@@ -2097,8 +2074,6 @@ class TrapidController extends AppController{
 
       $output   = array();
       $command  = "sh $qsub_file -pe serial 2 -q long -o $qsub_out -e $qsub_err $shell_file";
-      // pr($command);
-      // return;
       exec($command,$output);
       $job_id	= $this->TrapidUtils->getClusterJobId($output);
 
@@ -2321,8 +2296,6 @@ class TrapidController extends AppController{
 
         $this->ExperimentLog->addAction($exp_id,"upload transcript data into DB","");
 	$this->redirect(array("controller"=>"trapid","action"=>"experiments"));
-	//pr($shell_file);
-	//return;
       }
       else{
 	$this->set("error","No valid type defined");$this->set("uploaded_files",$uploaded_files);return;
@@ -2400,7 +2373,6 @@ class TrapidController extends AppController{
 	  if($file_extension=="gz" || $file_extension=="tar.gz"){
 	    //check uncompressed file size
 	    $file_info	= explode("\n",shell_exec("gzip -l ".$myFile));
-	    //pr($file_info);return;
 	    if(count($file_info)<2){$this->set("error","Corrupt archive");return;}
 	    $file_info	= explode(" ",$file_info[1]);
 	    $fi	= array();
@@ -2423,7 +2395,6 @@ class TrapidController extends AppController{
 	    $file_info = explode(",",$file_info[3]);
 	    $file_info = explode(" ",$file_info[1]);
 	    $file_size = $file_info[1];
-	    //pr($file_size);return;
 	    if($file_size>$MAX_FILE_SIZE_ZIP_EXPANDED){$this->set("error","Uncompressed file is too large");return;}
 	    //extract file
 	    shell_exec("unzip -p ".$myFile." > ".$tmp_dir."unzipped.fasta");
@@ -2735,7 +2706,6 @@ class TrapidController extends AppController{
                 $subset_label		= filter_var($_POST['subset_label'], FILTER_SANITIZE_STRING);
                 if(!array_key_exists($subset_label,$available_subsets)){return;}
                 $file_path = $this->TrapidUtils->performExport($plaza_database,$user_id,$exp_id,"TRANSCRIPT_LABEL",$subset_label."_transcripts_exp".$exp_id.".txt",$subset_label);
-                //pr($file_path);
                 if(is_null($file_path)) {
                     $this->set("export_failed", true);
                     return;
@@ -2933,7 +2903,6 @@ class TrapidController extends AppController{
     $this -> set('title_for_layout', "Authentication");
 
       $hashed_pass	= hash("sha256","test");
-    // pr($hashed_pass);
 
     // Basic first check: see whether user is already logged in.
     $user_id		= $this->Cookie->read("user_id");
@@ -3088,10 +3057,8 @@ class TrapidController extends AppController{
       if($qsub_file == null || $shell_script == null){}
       else{
 	$command  	= "sh $qsub_file -q long -o $output_file -e $error_file $shell_script ";
-	//pr($command);
         $output		= array();
 //        exec($command,$output);
-	//pr($output);
       }
      }
   }

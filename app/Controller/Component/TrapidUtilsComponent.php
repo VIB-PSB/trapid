@@ -123,8 +123,6 @@ class TrapidUtilsComponent extends Component{
     $cluster_output = null;
     $cluster_exit_status = 0;
     exec($cluster_cmd, $cluster_output, $cluster_exit_status);
-    // pr($cluster_output);
-    // pr($cluster_exit_status);
     // If the job finished with an exit status other than zero, return `null`
     if($cluster_exit_status != 0) {
       return null;
@@ -328,7 +326,6 @@ class TrapidUtilsComponent extends Component{
   function indexArraySimple($data,$table_name,$column_key,$column_val){
     $result =	array();
     foreach($data as $d){
-//        pr($data);
       $d1	= $d[$table_name][$column_key];
       $d2	= $d[$table_name][$column_val];
       $result[$d1] = $d2;
@@ -347,19 +344,6 @@ class TrapidUtilsComponent extends Component{
     return $result;
   }
 
-
-  // TODO: rename rapsearch to diamond
-  function checkAvailableRapsearchDB($plaza_db,$data){
-    $result		= array();
-    $final_blast_dir	= BLAST_DB_DIR."".$plaza_db."/";
-    foreach($data as $k=>$v){
-      //check whether file with necessary name exists in the directory. If so, add to result.
-      $blast_db		= $final_blast_dir."".$k.".rap";
-      //pr($blast_db."\t".$v);
-      if(file_exists($blast_db)){$result[$k] = $v;}
-    }
-    return $result;
-  }
 
   function checkJobStatus($exp_id,$jobs_data){
     $tmp_dir		= TMP."experiment_data/".$exp_id."/";
@@ -464,7 +448,6 @@ class TrapidUtilsComponent extends Component{
         foreach($data as $k=>$v){
             //check whether file with necessary name exists in the directory. If so, add to result.
             $blast_db		= $final_blast_dir."".$k.".dmnd";
-            //pr($blast_db."\t".$v);
             if(file_exists($blast_db)){$result[$k] = $v;}
         }
         return $result;
@@ -999,7 +982,6 @@ class TrapidUtilsComponent extends Component{
 
 
     function create_shell_file_upload($exp_id,$upload_dir){
-        //pr($upload_dir);
         $tmp_dir                = TMP."experiment_data/".$exp_id."/";
         $base_scripts_location  = APP."scripts/";
         $necessary_modules      = array("perl");

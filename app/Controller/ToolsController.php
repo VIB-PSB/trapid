@@ -98,15 +98,10 @@ class ToolsController extends AppController {
         }
         Configure::write("debug", 1);
         //$shared_identifiers = array_intersect($transcripts,$gene_ids);
-        //pr($shared_identifiers);
 
         $count_transcripts = count($transcripts);
         $count_genes = count($gene_ids);
         $count_merged = count(array_unique(array_merge($transcripts, $gene_ids)));
-        //pr($transcripts);
-        //pr($count_transcripts."\t". count(array_unique($transcripts)));
-        //pr($count_genes);
-        //pr($count_merged);
         if ($count_merged == ($count_transcripts + $count_genes)) {
             return false;
         }
@@ -226,7 +221,6 @@ class ToolsController extends AppController {
         if ($exp_info['genefamily_type'] == "HOM") {
             $gf_content = $this->GfData->find("all", array("conditions" => array("gf_id" => $gf_info['GeneFamilies']['plaza_gf_id']), "fields" => "gene_id"));
             $phylo_profile = $this->Annotation->getSpeciesProfile($this->TrapidUtils->reduceArray($gf_content, "GfData", "gene_id"));
-            // pr($gf_content);
         }
         else if ($exp_info['genefamily_type'] == "IORTHO") {
             $iortho_content = $this->GeneFamilies->find("first", array("conditions" => array("experiment_id" => $exp_id, "gf_id" => $gf_id), "fields" => array("gf_content")));
@@ -344,7 +338,6 @@ class ToolsController extends AppController {
                 }
                 else if (strlen($t) > 8 && substr($t, 0, 8) == "exclude_") {
                     $putative_transcript = substr($t, 8);
-                    //pr($putative_transcript);
                     if (array_key_exists($putative_transcript, $gf_transcripts)) {
                         $exclude_transcripts[] = $putative_transcript;
                     }
@@ -352,11 +345,6 @@ class ToolsController extends AppController {
             }
             $this->set("selected_species", $selected_species);
             $this->set("selected_clades", $selected_clades);
-
-            // pr($exclude_transcripts);
-            //pr($selected_species);
-            //pr($selected_clades);
-            //return;
 
             // First check if user chose to generate MSA only!
             $msa_only = false;
@@ -593,9 +581,6 @@ class ToolsController extends AppController {
                 $this->set("subset1_size", count($subset1_transcripts));
                 $this->set("subset2_size", count($subset2_transcripts));
 
-                // pr(count($subset1_transcripts));
-                // pr(count($subset2_transcripts));
-
                 //ok, now select all the GOs from extended go which adhere to the given category and depth
                 $go_ids = $this->ExtendedGo->find("all", array("conditions" => array("type" => "go", "num_sptr_steps" => $go_depth, "is_obsolete" => "0", "info" => $go_category), "fields" => array("name", "desc")));
 
@@ -642,7 +627,6 @@ class ToolsController extends AppController {
                 }
                 $this->set("num_selected_gos", $counter);
                 $this->set("result", $result);
-//	    pr($result);
             }
 
         }
@@ -1032,10 +1016,6 @@ class ToolsController extends AppController {
         $go_types = $this->TrapidUtils->indexArraySimple($go_data, "ExtendedGo", "name", "info");
         $go_sptr = $this->TrapidUtils->indexArraySimple($go_data, "ExtendedGo", "name", "num_sptr_steps");
 
-//    pr($go_data);
-//    pr($go_types);
-//    pr($go_sptr);
-
         $sptr_array = array();
         $max_sptr = 0;
         $data = array();
@@ -1061,16 +1041,13 @@ class ToolsController extends AppController {
             if (array_key_exists($i, $sptr_array)) {
                 $level_gos = $sptr_array[$i];
                 foreach ($level_gos as $level_go) {
-//	      pr($level_go);
                     if (count($all_graphs) > 0) {
                         //check the already present graphs in the array, to determine whether or not the given GO term is already accounted for
                         $done = false;
                         foreach ($all_graphs as $ag) {
-//    	          pr("BEFORE");
 //                  if($level_go == "GO:0034621") {
 //    	          pr($ag);
 //                  }
-//    	          pr("AFTER");
                             if (array_key_exists($level_go, $ag['desc'])) {
                                 $done = true;
                                 break 1;
@@ -1089,10 +1066,6 @@ class ToolsController extends AppController {
             }
         }
 
-        // pr($sptr_array);
-        //pr($data);
-//    pr($all_graphs);
-        //pr($accepted_gos);
         $this->set("all_graphs", $all_graphs);
         $this->set("accepted_gos", $accepted_gos);
         $this->set("data", $data);
@@ -1220,7 +1193,6 @@ class ToolsController extends AppController {
             "fields" => array("identifier", "label", "p_value", "log_enrichment", "subset_ratio", "subset_hits", "is_hidden"),
             "conditions" => array("experiment_id" => $exp_id, "label" => $subset_title, "max_p_value" => $pvalue, "data_type" => $type)
         ));
-        // pr($db_results);
 
         $result = array();
         foreach ($db_results as $r) {
@@ -1232,7 +1204,6 @@ class ToolsController extends AppController {
         }
 
         $this->set("result", $result);
-//       pr($result);
 
         // Get extra information when working with GO: aspects / interactive enrichment GO graph input data
         if ($type == "go") {
@@ -1380,9 +1351,7 @@ class ToolsController extends AppController {
         $possible_graphtypes = array("grouped" => "", "stacked" => "normal");
 
         if ($this->request->is('post')) {
-//        pr(ini_get('memory_limit'));
             ini_set('memory_limit', '256M');
-//        pr(ini_get('memory_limit'));
             $invalid_str = "<p class='text-center lead text-danger'>Invalid parameters. Cannot display graph!</p>";  // Quick and dirty error message
             $this->layout = "";
             $this->autoRender = false;
@@ -2123,7 +2092,6 @@ class ToolsController extends AppController {
         parent::check_user_exp($exp_id);
         try {
             $krona_html_path = TMP . "experiment_data/" . $exp_id . "/kaiju/kaiju_merged.krona.html";
-            // pr($krona_html_path);  // Debug
             $krona_code = implode(" ", file($krona_html_path));
         } catch (Exception $e) {
             $krona_code = "Unable to retrieve Krona code";
@@ -2138,13 +2106,11 @@ class ToolsController extends AppController {
     // In the future, this information should be in the database and read from there instead.
     function read_top_tax_data($exp_id = null, $tax_rank) {
         $top_tax_path = TMP . "experiment_data/" . $exp_id . "/kaiju/top_tax." . $tax_rank . ".tsv";
-        // pr($top_tax_path);
         $top_tax_data = array();
         $top_tax_file = file($top_tax_path);
         foreach ($top_tax_file as $key => $value) {
             $top_tax_data[$key] = explode("\t", $value);
         }
-//         pr($top_tax_data);  // Debug
         return $top_tax_data;
     }
 
@@ -2201,9 +2167,7 @@ class ToolsController extends AppController {
             $tax_names = array_slice(json_decode($this->request->data['tax-list']), 0, $max_tax);
             // 2. Look for redundancies in the selected clades and create a list of tax names to lookup
             $tax_lookup = array();
-            // pr($tax_names);
             foreach ($tax_names as $tn) {
-                // pr($tn);
                 if ($tn == $unclassified_str) {
                     array_push($tax_lookup, $tn);
                 }
@@ -2211,13 +2175,11 @@ class ToolsController extends AppController {
                     $lineage = $this->FullTaxonomy->find("first", array("fields" => array("tax"), "conditions" => array("scname" => $tn)));
                     // Is any of its parent there? Yes = we do not want to look it up (redundant).
                     $parents_list = array_slice(explode('; ', $lineage["FullTaxonomy"]["tax"]), 1);
-                    // pr($parents_list);
                     if (sizeof(array_intersect($parents_list, $tax_names)) == 0) {
                         array_push($tax_lookup, $tn);
                     }
                 }
             }
-            // pr($tax_lookup);
             // 3. Retrieve tax binning results
             $tax_binning_summary = $this->TranscriptsTax->getSummaryAndLineages($exp_id);
             // If unable to retrieve the results, return an error message!
@@ -2233,13 +2195,11 @@ class ToolsController extends AppController {
                 // If user chose `$unclassified_str`, handle it
                 if ($tax_id == 0 && in_array($unclassified_str, $tax_lookup)) {
                     $transcripts = array_merge($transcripts, $tax_binning_summary[$tax_id]["transcripts"]);
-                    // pr($tax_binning_summary[$tax_id]["transcripts"]);
                 }
                 if (sizeof(array_intersect($tax_binning_summary[$tax_id]["lineage"], $tax_lookup)) != 0) {
                     $transcripts = array_merge($transcripts, $tax_binning_summary[$tax_id]["transcripts"]);
                 }
             }
-            // pr($transcripts);
             // 5. Create the new subset with these transcripts
             if (sizeof($transcripts) > 0) {
                 // Here I tried multiple ways to save the data
@@ -2254,7 +2214,6 @@ class ToolsController extends AppController {
                 //     array_push($to_save, array("transcript_id"=>$transcript, "experiment_id"=>$exp_id, "label"=>$subset_name));
                 // }
                 // $this->TranscriptsLabels->saveMany($to_save, array("callbacks"=>false));
-                // pr($to_save);
 
                 // Way 3: using DboSource's `insertMulti()` method: seems to be the fastest as of now.
 //                $counter = $this->TranscriptsLabels->enterTranscriptsInsertMulti($exp_id, $transcripts, $subset_name);
@@ -2327,7 +2286,6 @@ class ToolsController extends AppController {
 
         // Submission of new core GF completeness job.
         if ($this->request->is('post')) {
-            // pr($this->request->data);
             $clade_tax_id = $this->request->data['clade'];
             $clade_db = $this->FullTaxonomy->find("first", array("conditions" => array("txid" => $clade_tax_id)));
             // If clade not in `full_taxonomy`, do not launch job and return error message.
@@ -2462,7 +2420,6 @@ class ToolsController extends AppController {
         // get length of strings: if 0, return 0, otherwise give the length of string splitted by `;`
         $n_missing = strlen($completeness_job['CompletenessResults']['missing_gfs']) ? sizeof(explode(";", $completeness_job['CompletenessResults']['missing_gfs'])) : 0;
         $n_represented = strlen($completeness_job['CompletenessResults']['represented_gfs']) ? sizeof(explode(";", $completeness_job['CompletenessResults']['represented_gfs'])) : 0;
-        // pr(explode(";", $completeness_job['CompletenessResults']['represented_gfs']));
         $n_total = $n_missing + $n_represented;
         $missing_gfs_array = array();
         $represented_gfs_array = array();
@@ -2471,14 +2428,12 @@ class ToolsController extends AppController {
                 $record = explode(":", $missing_gf_str);
                 array_push($missing_gfs_array, array("gf_id" => $record[0], "n_genes" => $record[1], "n_species" => $record[2], "gf_weight" => $record[3]));
             }
-            // pr($missing_gfs_array);
         }
         if ($n_represented > 0) {
             foreach (explode(";", $completeness_job['CompletenessResults']['represented_gfs']) as $represented_gf_str) {
                 $record = explode(":", $represented_gf_str);
                 array_push($represented_gfs_array, array("gf_id" => $record[0], "n_genes" => $record[1], "n_species" => $record[2], "gf_weight" => $record[3], "queries" => $record[4]));
             }
-            // pr($represented_gfs_array);
         }
 
         // Get linkout prefix if it is allowed, otherwise return null

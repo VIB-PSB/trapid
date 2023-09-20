@@ -15,7 +15,6 @@ class DocumentationController extends AppController {
         $this->set('title_for_layout', 'About');
     }
 
-    /* Trying to separate 'about' and 'contact' pages! */
     function contact() {
         $this->set('active_header_item', 'Contact');
         $this->set('title_for_layout', 'Contact us');
