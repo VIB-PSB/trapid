@@ -51,17 +51,20 @@ if (isset($sequence_type) && $sequence_type == 'orf') {
             labels: {
                 rotation: -45,
                 formatter: function() {
+                    const lengthInterval = this.value.split(' - ');
                     const lblHrefParts = [
                         '<?php echo $this->Html->url([
                             'controller' => 'trapid',
                             'action' => 'transcript_selection',
                             $exp_id
-                        ]); ?>',
-                        '<?php echo $min_url_str; ?>',
-                        this.value.split(' - ')[0],
-                        '<?php echo $max_url_str; ?>',
-                        this.value.split(' - ')[1]
+                        ]); ?>'
                     ];
+                    if (lengthInterval.length === 1 && lengthInterval[0].startsWith('>=')) {
+                        const minLength = lengthInterval[0].replace('>=', '');
+                        lblHrefParts.push('<?php echo $min_url_str; ?>', minLength);
+                    } else {
+                        lblHrefParts.push('<?php echo $min_url_str; ?>', lengthInterval[0], '<?php echo $max_url_str; ?>', lengthInterval[1]);
+                    }
                     return `<a target='_blank' href='${lblHrefParts.join('')}'>${this.value}</a>`
                 },
                 useHTML: true
