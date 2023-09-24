@@ -8,7 +8,7 @@ class TranscriptsTax extends AppModel {
     var $useTable = 'transcripts_tax';
 
     public $virtualFields = [
-        'tax_results' => 'UNCOMPRESS(TranscriptsTax.tax_results)',
+        'tax_results' => 'UNCOMPRESS(TranscriptsTax.tax_results)'
     ];
 
     /* Get unique tax ids, associated transcripts and lineages from `transcripts_tax` table */

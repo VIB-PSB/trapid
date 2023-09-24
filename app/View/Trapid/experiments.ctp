@@ -25,6 +25,8 @@
         } else {
             foreach ($experiments as $experiment) {
                 $e = $experiment['Experiments'];
+                $exp_job_count = count($experiment['experiment_jobs']);
+                $exp_job_str = $exp_job_count > 1 ? " jobs" : " job";
                 echo $e['process_state'] == 'loading_db' ? "<tr class='loading_state'>" : '<tr>';
                 if ($e['process_state'] == 'error') {
                     echo "<td>" . $e['title'] . "</td>";
@@ -35,8 +37,8 @@
                         "<td>" . $this->Html->link($experiment['DataSources']['name'], $experiment['DataSources']['URL']) . "</td>" :
                         "<td>" . $experiment['DataSources']['name'] . "</td>";
                     echo "<td>" . $this->Html->link("View log", ["controller" => "trapid", "action" => "view_log", $e['experiment_id']]) . "</td>\n";
-                    echo count($experiment['experiment_jobs']) > 0 ?
-                        "<td>" . $this->Html->link(count($experiment['experiment_jobs']) . " jobs", ["controller" => "trapid","action" => "manage_jobs", $e['experiment_id']]) . "</td>" :
+                    echo $exp_job_count > 0 ?
+                        "<td>" . $this->Html->link($exp_job_count . $exp_job_str, ["controller" => "trapid","action" => "manage_jobs", $e['experiment_id']]) . "</td>" :
                         "<td class='text-muted'>NA</td>";
                     echo "<td class='text-center text-muted'> - </td>";
                     echo "<td class='text-center text-muted'> - </td>";
@@ -49,8 +51,8 @@
                         "<td>" . $this->Html->link($experiment['DataSources']['name'], $experiment['DataSources']['URL']) . "</td>" :
                         "<td>" . $experiment['DataSources']['name'] . "</td>";
                     echo "<td>" . $this->Html->link("View log", ["controller" => "trapid", "action" => "view_log", $e['experiment_id']]) . "</td>\n";
-                    echo count($experiment['experiment_jobs']) > 0 ?
-                        "<td>" . $this->Html->link(count($experiment['experiment_jobs']) . " jobs", ["controller" => "trapid","action" => "manage_jobs", $e['experiment_id']]) . "</td>" :
+                    echo $exp_job_count > 0 ?
+                        "<td>" . $this->Html->link($exp_job_count . $exp_job_str, ["controller" => "trapid","action" => "manage_jobs", $e['experiment_id']]) . "</td>" :
                         "<td class='text-muted'>NA</td>";
                     echo "<td class='text-center text-muted'> - </td>";
                     echo "<td class='text-center text-muted'> - </td>";
@@ -63,8 +65,8 @@
                         "<td>" . $this->Html->link($experiment['DataSources']['name'], $experiment['DataSources']['URL']) . "</td>" :
                         "<td>" . $experiment['DataSources']['name'] . "</td>";
                     echo "<td>" . $this->Html->link("View log", ["controller" => "trapid", "action" => "view_log", $e['experiment_id']]) . "</td>\n";
-                    echo count($experiment['experiment_jobs']) > 0 ?
-                        "<td>" . $this->Html->link(count($experiment['experiment_jobs']) . " jobs", ["controller" => "trapid","action" => "manage_jobs", $e['experiment_id']]) . "</td>" :
+                    echo $exp_job_count > 0 ?
+                        "<td>" . $this->Html->link($exp_job_count . $exp_job_str, ["controller" => "trapid","action" => "manage_jobs", $e['experiment_id']]) . "</td>" :
                         "<td class='text-muted'>NA</td>";
                     echo "<td class='text-center text-muted'> - </td>";
                     echo "<td class='text-center text-muted'> - </td>";
@@ -75,8 +77,8 @@
                     echo "<td class='text-muted'>" . $e['last_edit_date'] . "</td>";
                     echo "<td class='text-muted'>" . $experiment['DataSources']['name'] . "</td>";
                         echo "<td class='text-center text-muted'> - </td>";
-                        echo count($experiment['experiment_jobs']) > 0 ?
-                        "<td>" . $this->Html->link(count($experiment['experiment_jobs']) . " jobs", ["controller" => "trapid","action" => "manage_jobs", $e['experiment_id']]) . "</td>" :
+                        echo $exp_job_count > 0 ?
+                        "<td>" . $this->Html->link($exp_job_count . $exp_job_str, ["controller" => "trapid","action" => "manage_jobs", $e['experiment_id']]) . "</td>" :
                         "<td class='text-muted'>NA</td>";
                     echo "<td class='text-center text-muted'> - </td>";
                     echo "<td class='text-center text-muted'> - </td>";
@@ -90,8 +92,8 @@
                         "<td>" . $this->Html->link($experiment['DataSources']['name'], $experiment['DataSources']['URL']) . "</td>" :
                         "<td>" . $experiment['DataSources']['name'] . "</td>";
                     echo "<td>" . $this->Html->link("View log", ["controller" => "trapid", "action" => "view_log", $e['experiment_id']]) . "</td>\n";
-                    echo count($experiment['experiment_jobs']) > 0 ?
-                        "<td>" . $this->Html->link(count($experiment['experiment_jobs']) . " jobs", ["controller" => "trapid","action" => "manage_jobs", $e['experiment_id']]) . "</td>" :
+                    echo $exp_job_count > 0 ?
+                        "<td>" . $this->Html->link($exp_job_count . $exp_job_str, ["controller" => "trapid","action" => "manage_jobs", $e['experiment_id']]) . "</td>" :
                         "<td class='text-muted'>NA</td>";
                     echo "<td class='text-center'>" .
                         $this->Html->link("<span class='material-icons text-info'>replay</span>",

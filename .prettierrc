@@ -19,5 +19,7 @@
                 "endOfLine": "lf"
             }
         }
-    ]
+    ],
+    "parser": "php",
+    "plugins": ["@prettier/plugin-php"]
 }

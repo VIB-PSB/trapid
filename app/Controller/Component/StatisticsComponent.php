@@ -1,15 +1,13 @@
 <?php
-App::uses("Component", "Controller");
+App::uses('Component', 'Controller');
 
 class StatisticsComponent extends Component {
-
-
     function makeVennOverview($transcript2labels) {
-        $result = array();
+        $result = [];
         foreach ($transcript2labels as $transcript => $labels) {
             $labels = array_unique($labels);
             sort($labels);
-            $label_string = implode(";;;", $labels);
+            $label_string = implode(';;;', $labels);
             if (!array_key_exists($label_string, $result)) {
                 $result[$label_string] = 0;
             }
@@ -18,29 +16,27 @@ class StatisticsComponent extends Component {
         return $result;
     }
 
-
     function create_json_data_infovis($data, $data_label) {
         $values = $data['values'];
         $labels = $data['labels'];
-        $result = array();
-        $new_values = array();
+        $result = [];
+        $new_values = [];
         for ($i = 0; $i < count($values); $i++) {
-            $val = array();
-            $val["label"] = $labels[$i];
-            $val["values"] = array($values[$i]);
+            $val = [];
+            $val['label'] = $labels[$i];
+            $val['values'] = [$values[$i]];
             $new_values[] = $val;
         }
         // $result["color"] = array("#FF0000","#00FF00","#0000FF");
 
-        $result["label"] = array($data_label);
-        $result["values"] = $new_values;
+        $result['label'] = [$data_label];
+        $result['values'] = $new_values;
         return $result;
     }
 
-
     function normalize_json_data($json) {
         // `sums` represents the total amount of transcripts/genes
-        $sums = array();
+        $sums = [];
         // First step, get the sum for each possible entry
         foreach ($json['label'] as $k => $v) {
             $sums[$k] = 0;
@@ -55,7 +51,7 @@ class StatisticsComponent extends Component {
         // Second step: normalize the data
         foreach ($json['values'] as $index => $val) {
             foreach ($val['values'] as $k => $v) {
-                $norm = ceil(100 * $v / $sums[$k]);
+                $norm = ceil((100 * $v) / $sums[$k]);
                 // $norm = 100*$v/$sums[$k];
                 $json['values'][$index]['values'][$k] = $norm;
             }
@@ -63,11 +59,10 @@ class StatisticsComponent extends Component {
         return $json;
     }
 
-
     function update_json_data($data_label, $data, $json, $bins, $reduce_count = true) {
         $num_bins = count($bins['labels']);
-        $min_val_arr = explode(",", $bins['labels'][0]);
-        $max_val_arr = explode(",", $bins['labels'][$num_bins - 1]);
+        $min_val_arr = explode(',', $bins['labels'][0]);
+        $max_val_arr = explode(',', $bins['labels'][$num_bins - 1]);
         $min_val = $min_val_arr[0];
         $max_val = $max_val_arr[1];
         $interval = $min_val_arr[1] - $min_val_arr[0];
@@ -103,10 +98,9 @@ class StatisticsComponent extends Component {
         return $json;
     }
 
-
     function create_length_bins($data, $num_bins) {
-        sort($data);  // Sort lengths by increasing size (from small to large)
-        $result = array();
+        sort($data); // Sort lengths by increasing size (from small to large)
+        $result = [];
         // Initialize array, makes it easier downstream
         for ($i = 0; $i < $num_bins; $i++) {
             $result[$i] = 0;
@@ -121,17 +115,19 @@ class StatisticsComponent extends Component {
             }
             $result[$bin]++;
         }
-        $labels = array();
+        $labels = [];
         for ($i = 0; $i < $num_bins; $i++) {
-            if ($i != ($num_bins - 1)) {
-                $labels[] = "" . ($smallest_length + round($i * $bin_size)) . "," . ($smallest_length + round(($i + 1) * $bin_size));
-            }
-            else {
-                $labels[] = "" . ($smallest_length + round($i * $bin_size)) . "," . $largest_length;
+            if ($i != $num_bins - 1) {
+                $labels[] =
+                    '' .
+                    ($smallest_length + round($i * $bin_size)) .
+                    ',' .
+                    ($smallest_length + round(($i + 1) * $bin_size));
+            } else {
+                $labels[] = '' . ($smallest_length + round($i * $bin_size)) . ',' . $largest_length;
             }
         }
-        $final_result = array("values" => $result, "labels" => $labels);
+        $final_result = ['values' => $result, 'labels' => $labels];
         return $final_result;
     }
-
 }
