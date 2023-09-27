@@ -199,6 +199,13 @@ class LabelsController extends AppController {
                 $label_id .
                 ';'
         );
+        $label_count = $this->TranscriptsLabels->find('count', [
+            'fields' => 'DISTINCT label',
+            'conditions' => ['experiment_id' => $exp_id]
+        ]);
+        if ($label_count == 0) {
+            $this->redirect(['controller' => 'trapid', 'action' => 'experiment', $exp_id]);
+        }
         $this->redirect(['controller' => 'labels', 'action' => 'subset_overview', $exp_id]);
     }
 

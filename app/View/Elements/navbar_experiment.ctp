@@ -217,6 +217,7 @@ $link_text = [
             <li class="divider"></li>
             <?php if ($exp_info['label_count'] == 0): ?>
                 <?php foreach (['subsets', 'enrichment', 'sankey', 'compare_subsets'] as $link_id) {
+                    echo "<li class=\"sidebar-text sidebar-disabled\">"  . $link_text[$link_id][0] . "</li>\n";
                 } ?>
             <?php else: ?>
                 <?php echo "<li><a href='" .
