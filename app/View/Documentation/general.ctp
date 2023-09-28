@@ -547,8 +547,7 @@ function create_export_example($elmt_id, $example_data) {
                     </div>
                     <div class="col-md-8">
                         <p class="text-justify">Similar to the MSA, the user also has the
-                            ability to create a phylogenetic tree within a gene family context (see previous section).
-                            In order to create a phylogenetic tree.</p>
+                            ability to create a phylogenetic tree within a gene family context (see previous section). </p>
                         <p class="text-justify">In order to create phylogenetic trees that are less dependent on
                             putative large gaps, the standard MSA can optionally be edited (or stripped). In this
                             stripped MSA the alignment length is reduced by removing input sequences, positions, or both (depending on the user's choice). </p>
