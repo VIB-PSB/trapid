@@ -49,7 +49,7 @@ class ExtendedGo extends AppModel {
         $result = [];
         $query_result = $this->find('all', [
             'fields' => 'name',
-            'conditions' => ['type' => 'go', 'is_obsolete' => 0, 'num_sptr_steps' => 0],
+            'conditions' => ['type' => 'go', 'is_obsolete' => 0, 'num_sptr_steps' => 0]
         ]);
         if ($query_result) {
             $result = array_map(function ($qr) {

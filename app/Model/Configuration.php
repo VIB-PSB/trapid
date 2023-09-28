@@ -40,9 +40,9 @@ class Configuration extends AppModel {
             'conditions' => [
                 'method' => 'initial_processing_settings',
                 'key' => 'ncrna',
-                'attr' => 'default_rfam_clans',
+                'attr' => 'default_rfam_clans'
             ],
-            'fields' => ['value'],
+            'fields' => ['value']
         ]);
         $default_clans = explode(',', $default_clans['Configuration']['value']);
         return $default_clans;

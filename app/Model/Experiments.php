@@ -108,7 +108,7 @@ class Experiments extends AppModel {
         $ref_db_type = 'plaza'; // PLAZA by default
         $exp_data = $this->find('first', [
             'conditions' => ['experiment_id' => $exp_id],
-            'fields' => ['used_plaza_database'],
+            'fields' => ['used_plaza_database']
         ]);
         if ($exp_data) {
             $ref_db_name = $exp_data['Experiments']['used_plaza_database'];

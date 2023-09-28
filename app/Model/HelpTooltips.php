@@ -7,7 +7,7 @@ class HelpTooltips extends AppModel {
     function getTooltipText($tooltip_id) {
         $tooltip_text_data = $this->find('first', [
             'conditions' => ['tooltip_id' => $tooltip_id],
-            'fields' => ['tooltip_text'],
+            'fields' => ['tooltip_text']
         ]);
         if (!$tooltip_text_data) {
             return null;

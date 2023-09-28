@@ -4,7 +4,6 @@
  */
 
 class FunctionalEnrichments extends AppModel {
-
     function getTranscriptToLabelAndGF($exp_id) {
         $result = [];
         $query = "SELECT transcript_id, label,gf_id
@@ -79,7 +78,7 @@ class FunctionalEnrichments extends AppModel {
             $enr_results[$label][$p_val][$ident] = [
                 'is_hidden' => $hidden,
                 'enrichment' => (float) $sign,
-                'n_hits' => (int) $n_hits,
+                'n_hits' => (int) $n_hits
             ];
             if (!isset($enr_hits_gf[$label][$ident])) {
                 $n_hits_gf = [];

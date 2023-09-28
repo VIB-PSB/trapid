@@ -12,7 +12,7 @@ class ExperimentStats extends AppModel {
         $stat_keys = [
             'go' => ['num_transcript_go', 'num_go'],
             'ipr' => ['num_transcript_interpro', 'num_interpro'],
-            'ko' => ['num_transcript_ko', 'num_ko'],
+            'ko' => ['num_transcript_ko', 'num_ko']
         ];
         if (!in_array($fa_type, $possible_types)) {
             return null;
@@ -21,11 +21,11 @@ class ExperimentStats extends AppModel {
         // Retrieve data from DB
         $trs_fa = $this->find('first', [
             'fields' => ['stat_value'],
-            'conditions' => ['experiment_id' => $exp_id, 'stat_type' => $stat_types[$fa_type][0]],
+            'conditions' => ['experiment_id' => $exp_id, 'stat_type' => $stat_types[$fa_type][0]]
         ]);
         $n_fa = $this->find('first', [
             'fields' => ['stat_value'],
-            'conditions' => ['experiment_id' => $exp_id, 'stat_type' => $stat_types[$fa_type][1]],
+            'conditions' => ['experiment_id' => $exp_id, 'stat_type' => $stat_types[$fa_type][1]]
         ]);
         if ($trs_fa) {
             $fa_stats[$stat_keys[$fa_type][0]] = $trs_fa['ExperimentStats']['stat_value'];

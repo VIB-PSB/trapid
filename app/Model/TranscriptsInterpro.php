@@ -40,7 +40,7 @@ class TranscriptsInterpro extends AppModel {
         foreach ($res as $r) {
             $result[$r['transcripts_annotation']['name']] = [
                 'count' => $r[0]['count'],
-                'desc' => $ipr_terms[$r['transcripts_annotation']['name']],
+                'desc' => $ipr_terms[$r['transcripts_annotation']['name']]
             ];
         }
         return $result;
