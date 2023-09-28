@@ -110,7 +110,7 @@ if (isset($data_subset1)) :
                     echo "<div class='row row-table-download'>";
                     echo $this->Html->link(
                         $table_download_text,
-                        array("controller" => "tools", "action" => "compare_ratios_download", $exp_id, "ipr", "1", urlencode($subset1), urlencode($subset2)),
+                        array("controller" => "tools", "action" => "download_compare_ratios", $exp_id, "ipr", "1", urlencode($subset1), urlencode($subset2)),
                         array("class" => "btn btn-default btn-sm pull-right", "escape" => false)
                     );
                     echo "</div>";
@@ -159,7 +159,7 @@ if (isset($data_subset1)) :
                     echo "<div class='row row-table-download'>";
                     echo $this->Html->link(
                         $table_download_text,
-                        array("controller" => "tools", "action" => "compare_ratios_download", $exp_id, "ipr", "2", urlencode($subset1), urlencode($subset2)),
+                        array("controller" => "tools", "action" => "download_compare_ratios", $exp_id, "ipr", "2", urlencode($subset1), urlencode($subset2)),
                         array("class" => "btn btn-default btn-sm pull-right", "escape" => false)
                     );
                     echo "</div>";
@@ -203,7 +203,7 @@ if (isset($data_subset1)) :
                     echo "<div class='row row-table-download'>";
                     echo $this->Html->link(
                         $table_download_text,
-                        array("controller" => "tools", "action" => "compare_ratios_download", $exp_id, "ipr", "3", urlencode($subset1), urlencode($subset2)),
+                        array("controller" => "tools", "action" => "download_compare_ratios", $exp_id, "ipr", "3", urlencode($subset1), urlencode($subset2)),
                         array("class" => "btn btn-default btn-sm pull-right", "escape" => false)
                     );
                     echo "</div>";
@@ -267,7 +267,7 @@ if (isset($data_subset1)) :
                         echo "<div class='row row-table-download'>";
                         echo $this->Html->link(
                             $table_download_text,
-                            array("controller" => "tools", "action" => "compare_ratios_download", $exp_id, "go", "1", urlencode($subset1), urlencode($subset2), $go_type),
+                            array("controller" => "tools", "action" => "download_compare_ratios", $exp_id, "go", "1", urlencode($subset1), urlencode($subset2), $go_type),
                             array("class" => "btn btn-default btn-sm pull-right", "escape" => false)
                         );
                         echo "</div>";
@@ -329,7 +329,7 @@ if (isset($data_subset1)) :
                         echo "<div class='row row-table-download'>";
                         echo $this->Html->link(
                             $table_download_text,
-                            array("controller" => "tools", "action" => "compare_ratios_download", $exp_id, "go", "2", urlencode($subset1), urlencode($subset2), $go_type),
+                            array("controller" => "tools", "action" => "download_compare_ratios", $exp_id, "go", "2", urlencode($subset1), urlencode($subset2), $go_type),
                             array("class" => "btn btn-default btn-sm pull-right", "escape" => false)
                         );
                         echo "</div>";
@@ -386,7 +386,7 @@ if (isset($data_subset1)) :
                     echo "<div class='row row-table-download'>";
                     echo $this->Html->link(
                         $table_download_text,
-                        array("controller" => "tools", "action" => "compare_ratios_download", $exp_id, "go", "3", urlencode($subset1), urlencode($subset2), $go_type),
+                        array("controller" => "tools", "action" => "download_compare_ratios", $exp_id, "go", "3", urlencode($subset1), urlencode($subset2), $go_type),
                         array("class" => "btn btn-default btn-sm pull-right", "escape" => false)
                     );
                     echo "</div>";

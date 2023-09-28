@@ -868,7 +868,7 @@ class ToolsController extends AppController {
         }
     }
 
-    function compare_ratios_download(
+    function download_compare_ratios(
         $exp_id = null,
         $type = null,
         $comparison = null,
