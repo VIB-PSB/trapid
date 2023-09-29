@@ -10,7 +10,7 @@
                 'controller' => 'trapid',
                 'action' => 'transcript',
                 $exp_id,
-                $transcript_info['transcript_id']
+                urlencode($transcript_info['transcript_id'])
             ]); ?>
         </dd>
         <dt>RNA family</dt>

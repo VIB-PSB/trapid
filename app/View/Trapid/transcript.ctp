@@ -525,7 +525,7 @@
                     if ($transcript_info['is_rna_gene']) { // Link is displayed only if the transcript was flagged as RNA gene
                         echo $this->Html->link(
                             "Browse transcript's RNA similarity search output (Infernal)",
-                            array("controller" => "trapid", "action" => "rna_similarity_hits", $exp_id, $transcript_info['transcript_id'])
+                            ["controller" => "trapid", "action" => "rna_similarity_hits", $exp_id, urlencode($transcript_info['transcript_id'])]
                         );
                     } else {
                         echo "Unavailable";

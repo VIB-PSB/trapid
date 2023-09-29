@@ -916,6 +916,7 @@ class TrapidController extends AppController {
             $exp_info['process_state'],
             $this->process_states['default']
         );
+        $transcript_id = urldecode($transcript_id);
         //check whether transcript is valid
         $transcript_info = $this->Transcripts->find('first', [
             'conditions' => ['experiment_id' => $exp_id, 'transcript_id' => $transcript_id]
@@ -963,31 +964,6 @@ class TrapidController extends AppController {
      *
      ******************************************************************************************************
      */
-
-    // Unused function? To remove?
-    function detect_orfs($exp_id = null, $transcript_id = null) {
-        $this->layout = '';
-        if (!$exp_id || !$transcript_id) {
-            $this->redirect(['controller' => 'trapid', 'action' => 'experiments']);
-        }
-        parent::check_user_exp($exp_id);
-        $exp_info = $this->Experiments->getDefaultInformation($exp_id);
-        $this->set('exp_info', $exp_info);
-        $this->set('exp_id', $exp_id);
-        $this->TrapidUtils->checkPageAccess(
-            $exp_info['title'],
-            $exp_info['process_state'],
-            $this->process_states['default']
-        );
-
-        //check whether transcript is valid
-        $transcript_info = $this->Transcripts->find('first', [
-            'conditions' => ['experiment_id' => $exp_id, 'transcript_id' => $transcript_id]
-        ]);
-        if (!$transcript_info) {
-            $this->redirect(['controller' => 'trapid', 'action' => 'experiment', $exp_id]);
-        }
-    }
 
     function transcript($exp_id = null, $transcript_id = null) {
         if (!$exp_id || !$transcript_id) {
