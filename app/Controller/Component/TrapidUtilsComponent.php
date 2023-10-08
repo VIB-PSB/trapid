@@ -50,6 +50,136 @@ class TrapidUtilsComponent extends Component {
     }
 
     /**
+     * Initiate experiment data export: create export script and submit it.
+     *
+     * @param $plaza_db TRAPID reference database
+     * @param $email experiment's owner email, used to append a hash to the export zip archive name
+     * @param $exp_id experiment identifier
+     * @param $export_key export key (parameter for 'ExportManager' Java program indicating the data type to export)
+     * @param $filename export file name
+     * @param null $filter export data filter that can either indicate columns to include in the export file (in the
+     * case of structural data export) or a transcript subset (in the case of sequence or subset export)
+     * @return array Job id and export file zip archive name.
+     */
+    function initiateExport($plaza_db, $email, $exp_id, $export_key, $filename, $filter = null) {
+        $tmp_dir = TMP . 'experiment_data/' . $exp_id . '/';
+        $base_scripts_location = APP . 'scripts/';
+        $java_location = $base_scripts_location . 'java/';
+        // Translation table json file location is needed if exporting protein sequences
+        $transl_tables_file = $base_scripts_location . 'cfg/all_translation_tables.json';
+        $salt = $exp_id;
+        $timestamp = date('Ymd_Gis', time());
+        $hash = hash('sha256', $email . $salt);
+        $internal_file = $tmp_dir . $filename;
+        // Give a meaningful file name to the zip archive
+        $zip_name = implode('_', [strtolower($export_key), $exp_id, $timestamp, substr($hash, 0, 14)]) . '.zip';
+        $internal_zip = $tmp_dir . $zip_name;
+        $java_cmd = 'java';
+        $java_program = 'transcript_pipeline.ExportManager';
+        $java_params = [
+            TRAPID_DB_SERVER,
+            $plaza_db,
+            TRAPID_DB_USER,
+            TRAPID_DB_PASSWORD,
+            TRAPID_DB_SERVER,
+            TRAPID_DB_NAME,
+            TRAPID_DB_USER,
+            TRAPID_DB_PASSWORD,
+            $transl_tables_file,
+            $exp_id,
+            $export_key,
+            $internal_file
+        ];
+        if ($filter != null) {
+            $java_params[] = $filter;
+        }
+        $export_basename = 'export_data';
+        $shell_file = $tmp_dir . $export_basename . '.sh';
+        $error_file = $tmp_dir . $export_basename . '.err';
+        $output_file = $tmp_dir . $export_basename . '.out';
+
+        // Cleanup previous export files
+        // Command to remove previous export shell script and stderr/stdout files
+        $export_rm = implode(' ', ['rm -f', $shell_file, $error_file, $output_file]);
+        // Zip archives to remove (pattern for 'rm' command) when a new zip archive is generated
+        $zip_rm = $tmp_dir . '*_' . substr($hash, 0, 14) . '.zip';
+        // Now export files are generated with different names. Should every zip archive be removed?
+        shell_exec($export_rm);
+        shell_exec('rm -f ' . $zip_rm);
+
+        // Create export shell script
+        $fh = fopen($shell_file, 'w');
+        fwrite($fh, "#!/bin/bash \n");
+        fwrite($fh, "module load java\n\n");
+        fwrite($fh, "hostname\n");
+        fwrite($fh, "date\n");
+        fwrite(
+            $fh,
+            $java_cmd .
+                ' -cp ' .
+                $java_location .
+                '.:' .
+                $java_location .
+                '..:' .
+                $java_location .
+                'lib/* ' .
+                $java_program .
+                ' ' .
+                implode(' ', $java_params) .
+                "\n"
+        );
+        fwrite($fh, "if [ $? -eq 0 ]\nthen\necho \"Compress export file\"\n");
+        fwrite($fh, 'rm -f ' . $zip_rm . "\n");
+        fwrite($fh, 'zip -j ' . $internal_zip . ' ' . $internal_file . "\n");
+        fwrite($fh, 'rm -f ' . $internal_file . "\n");
+        fwrite($fh, "echo \"Export finished successfully\"\ndate\nexit 0\n");
+        fwrite($fh, "else\necho \"Export finished with an error\"\ndate\nexit 1\n");
+        fwrite($fh, "fi\n");
+        fclose($fh);
+        shell_exec('chmod a+x ' . $shell_file);
+
+        // Run export shell script on the web cluster
+        $cluster_cmd =
+            '. /etc/profile.d/settings.sh && qsub -q medium -e ' .
+            $error_file .
+            ' -o ' .
+            $output_file .
+            ' ' .
+            $shell_file;
+        $cluster_output = null;
+        exec($cluster_cmd, $cluster_output);
+        if (count($cluster_output) == 0) {
+            return null;
+        }
+        $job_id = $this->getClusterJobId($cluster_output);
+        return ['jobId' => $job_id, 'zipName' => $zip_name];
+    }
+
+    /**
+     * Check experiment data export job status.
+     *
+     * @param $exp_id experiment identifier.
+     * @param $job_id export cluster job id.
+     * @return string export job status: 'running', 'error', or 'ready'.
+     */
+    function checkExportJobStatus($exp_id, $job_id) {
+        $tmp_dir = TMP . 'experiment_data/' . $exp_id . '/';
+        $export_basename = 'export_data';
+        $output_file = $tmp_dir . $export_basename . '.out';
+        // Asserting `$output_file` exist is needed because of latency between a job finishing and files being visible.
+        if ($this->cluster_job_exists($exp_id, $job_id) || !file_exists($output_file)) {
+            return 'running';
+        }
+        // Note: we assert the job finished with an error using the content of `$output_file`, but it would be better to
+        // check the cluster job's exit status instead.
+        $error_str = 'Export finished with an error';
+        if (strpos(file_get_contents($output_file), $error_str) !== false) {
+            return 'error';
+        }
+        return 'ready';
+    }
+
+    /**
      * Perform experiment data export: create export script, run it, compress exported file and return archive file path.
      *
      * @param $plaza_db TRAPID reference database
@@ -110,7 +240,6 @@ class TrapidUtilsComponent extends Component {
         fwrite($fh, "module load java\n\n");
         fwrite($fh, "hostname\n");
         fwrite($fh, "date\n");
-        //fwrite($fh,"java -cp ".$java_location.".:".$java_location."..:".$java_location."mysql.jar ".$java_program." ".implode(" ",$java_params)."\n");
         fwrite(
             $fh,
             $java_cmd .

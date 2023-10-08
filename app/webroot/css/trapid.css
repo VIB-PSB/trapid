@@ -2108,14 +2108,13 @@ a.fixed-header-anchor {
 }
 
 .doc-figure img {
-    cursor: pointer;
+    cursor: zoom-in;
     border: 1px lightgray solid;
     padding: 5px;
     transition: filter 0.2s;
 }
 
 .doc-figure img:hover {
-    cursor: pointer;
     filter: brightness(105%) grayscale(40%);
 }
 
@@ -2501,9 +2500,16 @@ select.change-exp-state {
     margin-top: 18px;
 }
 
+.export-sqces {
+    align-items: baseline;
+    display: inline-flex;
+    gap: 18px;
+}
+
 @media only screen and (max-width: 768px) {
     .export-btn-group,
-    .export-subsets {
+    .export-subsets,
+    .export-sqces {
         display: flex;
         justify-content: center;
         flex-direction: column;
@@ -2516,12 +2522,14 @@ select.change-exp-state {
 
 @supports not (gap: 18px) {
     .export-btn-group > :not(:last-child),
-    .export-subsets > :not(:last-child) {
+    .export-subsets > :not(:last-child),
+    .export-sqces > :not(:last-child) {
         margin-right: 18px;
     }
     @media only screen and (max-width: 768px) {
         .export-btn-group > :not(:last-child),
-        .export-subsets > :not(:last-child) {
+        .export-subsets > :not(:last-child),
+        .export-sqces > :not(:last-child) {
             margin-top: 18px;
             margin-right: 0;
         }
@@ -2532,9 +2540,22 @@ select.change-exp-state {
     margin-top: 18px;
 }
 
-.export-subsets select {
+.export-subsets select,
+.export-sqces select {
     max-width: 30vw;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+}
+
+.export-tabs > .disabled {
+    cursor: not-allowed;
+}
+
+.export-tabs > .disabled > a {
+    pointer-events: none;
+}
+
+.btn > .loading {
+    max-height: 12px;
 }

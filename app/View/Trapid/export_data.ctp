@@ -1,7 +1,9 @@
 <?php
 $unfinished = null;
+$unfinished_cls = null;
 if ($exp_info['process_state'] != "finished") {
     $unfinished = " disabled='disabled' ";
+    $unfinished_cls = " disabled";
 }
 ?>
 
@@ -26,7 +28,7 @@ if ($exp_info['process_state'] != "finished") {
     <?php endif; ?>
 </section>
 
-<ul class="nav nav-tabs nav-justified" id="tabs" data-tabs="tabs">
+<ul class="nav nav-tabs nav-justified export-tabs" id="tabs" data-tabs="tabs">
     <li class="active"><a href="#structural-data" data-toggle="tab">Structural data</a></li>
     <li><a href="#tax-data" data-toggle="tab">Taxonomic classification</a></li>
     <li><a href="#gf-data" data-toggle="tab">Gene family data</a></li>
@@ -46,19 +48,18 @@ if ($exp_info['process_state'] != "finished") {
         <input type="hidden" name="export_type" value="structural" />
         <?php
         foreach ($structural_export as $k => $v) {
-            echo "<div class='checkbox'>";
+            $checkbox_attrs = $k == "transcript_id" ? "checked='checked'" : $unfinished;
+            $container_cls = $k == "transcript_id" ? null : $unfinished_cls;
+            echo "<div class='checkbox" . $container_cls . "'>";
             echo "<label for='" . $k . "'>\n";
-            if ($k != "transcript_id") {
-                echo "<input type='checkbox' name='" . $k . "' id='" . $k . "' $unfinished />";
-            } else {
-                echo "<input type='checkbox' name='" . $k . "' id='" . $k . "' checked='checked' />";
-            }
+            echo "<input type='checkbox' name='" . $k . "' id='" . $k . "' " . $checkbox_attrs . " />";
             echo $v;
             echo "</label>\n";
             echo "</div>";
         }
         ?>
-        <button class="btn btn-default export-btn" type="submit">
+        <button class="btn btn-default export-btn perform-export" type="submit">
+            <?php echo $this->Html->image('small-ajax-loader.gif', ['class' => 'loading hidden']); ?>
             <span class="glyphicon glyphicon-download-alt"></span>&nbsp;
             Structural information
         </button>
@@ -74,12 +75,14 @@ if ($exp_info['process_state'] != "finished") {
         <?php echo $this->Form->create(false, array("url" => array("controller" => "trapid", "action" => "export_data", $exp_id), "type" => "post", "class" => "export-btn-group")); ?>
         <input type="hidden" name="export_type" value="tax" />
         <?php if ($exp_info['perform_tax_binning'] == 1) : ?>
-            <button class="btn btn-default" type="submit" <?php echo $unfinished; ?>>
+            <button class="btn btn-default perform-export" type="submit" <?php echo $unfinished; ?>>
+                <?php echo $this->Html->image('small-ajax-loader.gif', ['class' => 'loading hidden']); ?>
                 <span class="glyphicon glyphicon-download-alt"></span>
                 &nbsp;Transcripts tax. classification
             </button>
         <?php else : ?>
-            <button class="btn btn-default" type="submit" disabled>
+            <button class="btn btn-default perform-export" type="submit" disabled>
+                <?php echo $this->Html->image('small-ajax-loader.gif', ['class' => 'loading hidden']); ?>
                 <span class="glyphicon glyphicon-download-alt"></span>
                 &nbsp;Transcripts tax. classification
             </button>
@@ -105,19 +108,31 @@ if ($exp_info['process_state'] != "finished") {
             <?php echo $this->Form->create(false, array("url" => array("controller" => "trapid", "action" => "export_data", $exp_id), "type" => "post")); ?>
             <input type="hidden" name="export_type" value="gf" />
             <input type="hidden" name="gf_type" value="transcript" />
-            <button class="btn btn-default" type="submit" <?php echo $unfinished; ?>><span class="glyphicon glyphicon-download-alt"></span> Transcripts with GF</button>
+            <button class="btn btn-default perform-export" type="submit" <?php echo $unfinished; ?>>
+                <?php echo $this->Html->image('small-ajax-loader.gif', ['class' => 'loading hidden']); ?>
+                <span class="glyphicon glyphicon-download-alt"></span> 
+                Transcripts with GF
+            </button>
             <?php echo $this->Form->end(); ?>
 
             <?php echo $this->Form->create(false, array("url" => array("controller" => "trapid", "action" => "export_data", $exp_id), "type" => "post")); ?>
             <input type="hidden" name="export_type" value="gf" />
             <input type="hidden" name="gf_type" value="phylo" />
-            <button class="btn btn-default" type="submit" <?php echo $unfinished; ?>><span class="glyphicon glyphicon-download-alt"></span> GF with transcripts</button>
+            <button class="btn btn-default perform-export" type="submit" <?php echo $unfinished; ?>>
+                <?php echo $this->Html->image('small-ajax-loader.gif', ['class' => 'loading hidden']); ?>
+                <span class="glyphicon glyphicon-download-alt"></span> 
+                GF with transcripts
+            </button>
             <?php echo $this->Form->end(); ?>
 
             <?php echo $this->Form->create(false, array("url" => array("controller" => "trapid", "action" => "export_data", $exp_id), "type" => "post")); ?>
             <input type="hidden" name="export_type" value="gf" />
             <input type="hidden" name="gf_type" value="reference" />
-            <button class="btn btn-default" type="submit" <?php echo $unfinished; ?>><span class="glyphicon glyphicon-download-alt"></span> GF reference data</button>
+            <button class="btn btn-default perform-export" type="submit" <?php echo $unfinished; ?>>
+                <?php echo $this->Html->image('small-ajax-loader.gif', ['class' => 'loading hidden']); ?>
+                <span class="glyphicon glyphicon-download-alt"></span> 
+                GF reference data
+            </button>
             <?php echo $this->Form->end(); ?>
         </div>
     </div>
@@ -137,13 +152,20 @@ if ($exp_info['process_state'] != "finished") {
             <?php echo $this->Form->create(false, array("url" => array("controller" => "trapid", "action" => "export_data", $exp_id), "type" => "post")); ?>
             <input type="hidden" name="export_type" value="rf" />
             <input type="hidden" name="rf_type" value="transcript" />
-            <button class="btn btn-default" type="submit" <?php echo $unfinished; ?>><span class="glyphicon glyphicon-download-alt"></span> Transcripts with RF</button>
+            <button class="btn btn-default perform-export" type="submit" <?php echo $unfinished; ?>>
+                <?php echo $this->Html->image('small-ajax-loader.gif', ['class' => 'loading hidden']); ?>
+                <span class="glyphicon glyphicon-download-alt"></span> 
+                Transcripts with RF
+            </button>
             <?php echo $this->Form->end(); ?>
 
             <?php echo $this->Form->create(false, array("url" => array("controller" => "trapid", "action" => "export_data", $exp_id), "type" => "post")); ?>
             <input type="hidden" name="export_type" value="rf" />
             <input type="hidden" name="rf_type" value="rf" />
-            <button class="btn btn-default" type="submit" <?php echo $unfinished; ?>><span class="glyphicon glyphicon-download-alt"></span> RF with transcripts</button>
+            <button class="btn btn-default perform-export" type="submit" <?php echo $unfinished; ?>>
+                <?php echo $this->Html->image('small-ajax-loader.gif', ['class' => 'loading hidden']); ?>
+                <span class="glyphicon glyphicon-download-alt"></span> RF with transcripts
+            </button>
             <?php echo $this->Form->end(); ?>
         </div>
     </div>
@@ -153,7 +175,7 @@ if ($exp_info['process_state'] != "finished") {
 
         <p class="text-justify"><strong>Note:</strong> Protein sequences are translated ORF sequences.</p>
 
-        <?php echo $this->Form->create(false, array("url" => array("controller" => "trapid", "action" => "export_data", $exp_id), "type" => "post", "class" => "form-inline")); ?>
+        <?php echo $this->Form->create(false, array("url" => array("controller" => "trapid", "action" => "export_data", $exp_id), "type" => "post", "class" => "form-inline export-sqces")); ?>
         <input type="hidden" name="export_type" value="sequence" />
         <div class="form-group">
             <label for="sequence_type"><strong>Sequence type</strong></label>&nbsp;
@@ -167,9 +189,9 @@ if ($exp_info['process_state'] != "finished") {
                 <input type="radio" <?php echo $unfinished; ?> id="sequence_type_aa" name="sequence_type" value="aa">Protein&nbsp;
             </label>
         </div>
-        <div class="form-group" style="margin-left:20px;">
+        <div class="form-group">
             <label for="subset_label"><strong>Transcript selection</strong></label>&nbsp;
-            <select name='subset_label' id='subset_label' style='max-width:280px;' class='form-control'>
+            <select name='subset_label' id='subset_label' class='form-control'>
                 <option selected value="">All transcripts</option>
                 <?php
                 foreach ($available_subsets as $subset => $count) {
@@ -178,7 +200,11 @@ if ($exp_info['process_state'] != "finished") {
                 ?>
             </select>
         </div>
-        <button <?php echo $unfinished; ?> type="submit" class="btn btn-default" style="margin-left:20px;"><span class="glyphicon glyphicon-download-alt"></span> Export sequences</button>
+        <button <?php echo $unfinished; ?> type="submit" class="btn btn-default perform-export">
+            <?php echo $this->Html->image('small-ajax-loader.gif', ['class' => 'loading hidden']); ?>
+            <span class="glyphicon glyphicon-download-alt"></span> 
+            Export sequences
+        </button>
         <?php echo $this->Form->end(); ?>
     </div>
 
@@ -201,13 +227,19 @@ if ($exp_info['process_state'] != "finished") {
                         <?php echo $this->Form->create(false, array("url" => array("controller" => "trapid", "action" => "export_data", $exp_id), "type" => "post")); ?>
                         <input type="hidden" name="export_type" value="go" />
                         <input type="hidden" name="functional_type" value="transcript_go" />
-                        <button class="btn btn-default" type="submit" <?php echo $unfinished; ?>><span class="glyphicon glyphicon-download-alt"></span> Transcripts with GO</button>
+                        <button class="btn btn-default perform-export" type="submit" <?php echo $unfinished; ?>>
+                            <?php echo $this->Html->image('small-ajax-loader.gif', ['class' => 'loading hidden']); ?>
+                            <span class="glyphicon glyphicon-download-alt"></span> Transcripts with GO
+                        </button>
                         <?php echo $this->Form->end(); ?>
 
                         <?php echo $this->Form->create(false, array("url" => array("controller" => "trapid", "action" => "export_data", $exp_id), "type" => "post")); ?>
                         <input type="hidden" name="export_type" value="go" />
                         <input type="hidden" name="functional_type" value="meta_go" />
-                        <button class="btn btn-default" type="submit" <?php echo $unfinished; ?>><span class="glyphicon glyphicon-download-alt"></span> GO meta data</button>
+                        <button class="btn btn-default perform-export" type="submit" <?php echo $unfinished; ?>>
+                            <?php echo $this->Html->image('small-ajax-loader.gif', ['class' => 'loading hidden']); ?>
+                            <span class="glyphicon glyphicon-download-alt"></span> GO meta data
+                        </button>
                         <?php echo $this->Form->end(); ?>
                     </div>
                 </section>
@@ -228,12 +260,18 @@ if ($exp_info['process_state'] != "finished") {
                         <?php echo $this->Form->create(false, array("url" => array("controller" => "trapid", "action" => "export_data", $exp_id), "type" => "post")); ?>
                         <input type="hidden" name="export_type" value="interpro" />
                         <input type="hidden" name="functional_type" value="transcript_ipr" />
-                        <button class="btn btn-default" type="submit" <?php echo $unfinished; ?>><span class="glyphicon glyphicon-download-alt"></span> Transcripts with protein domain</button>
+                        <button class="btn btn-default perform-export" type="submit" <?php echo $unfinished; ?>>
+                            <?php echo $this->Html->image('small-ajax-loader.gif', ['class' => 'loading hidden']); ?>
+                            <span class="glyphicon glyphicon-download-alt"></span> Transcripts with protein domain
+                        </button>
                         <?php echo $this->Form->end(); ?>
                         <?php echo $this->Form->create(false, array("url" => array("controller" => "trapid", "action" => "export_data", $exp_id), "type" => "post")); ?>
                         <input type="hidden" name="export_type" value="interpro" />
                         <input type="hidden" name="functional_type" value="meta_ipr" />
-                        <button class="btn btn-default" type="submit" <?php echo $unfinished; ?>><span class="glyphicon glyphicon-download-alt"></span> Protein domain meta data</button>
+                        <button class="btn btn-default perform-export" type="submit" <?php echo $unfinished; ?>>
+                            <?php echo $this->Html->image('small-ajax-loader.gif', ['class' => 'loading hidden']); ?>
+                            <span class="glyphicon glyphicon-download-alt"></span> Protein domain meta data
+                        </button>
                         <?php echo $this->Form->end(); ?>
                     </div>
                 </section>
@@ -254,12 +292,18 @@ if ($exp_info['process_state'] != "finished") {
                         <?php echo $this->Form->create(false, array("url" => array("controller" => "trapid", "action" => "export_data", $exp_id), "type" => "post")); ?>
                         <input type="hidden" name="export_type" value="ko" />
                         <input type="hidden" name="functional_type" value="transcript_ko" />
-                        <button class="btn btn-default" type="submit" <?php echo $unfinished; ?>><span class="glyphicon glyphicon-download-alt"></span> Transcripts with KO</button>
+                        <button class="btn btn-default perform-export" type="submit" <?php echo $unfinished; ?>>
+                            <?php echo $this->Html->image('small-ajax-loader.gif', ['class' => 'loading hidden']); ?>
+                            <span class="glyphicon glyphicon-download-alt"></span> Transcripts with KO
+                        </button>
                         <?php echo $this->Form->end(); ?>
                         <?php echo $this->Form->create(false, array("url" => array("controller" => "trapid", "action" => "export_data", $exp_id), "type" => "post")); ?>
                         <input type="hidden" name="export_type" value="ko" />
                         <input type="hidden" name="functional_type" value="meta_ko" />
-                        <button class="btn btn-default" type="submit" <?php echo $unfinished; ?>><span class="glyphicon glyphicon-download-alt"></span> KO meta data</button>
+                        <button class="btn btn-default perform-export" type="submit" <?php echo $unfinished; ?>>
+                            <?php echo $this->Html->image('small-ajax-loader.gif', ['class' => 'loading hidden']); ?>
+                            <span class="glyphicon glyphicon-download-alt"></span> KO meta data
+                        </button>
                         <?php echo $this->Form->end(); ?>
                     </div>
                 </section>
@@ -283,8 +327,96 @@ if ($exp_info['process_state'] != "finished") {
             echo "<option value='" . $subset . "' >" . $subset . " (" . $count . " " . $trs_word . ")</option>\n";
         }
         echo "</select>\n";
-        echo "<button class=\"btn btn-default\" type=\"submit\"><span class=\"glyphicon glyphicon-download-alt\"></span> Download subset</button>";
+        echo "<button class=\"btn btn-default perform-export\" type=\"submit\">";
+        echo $this->Html->image('small-ajax-loader.gif', ['class' => 'loading hidden']);
+        echo "<span class=\"glyphicon glyphicon-download-alt\"></span> Download subset</button>";
         echo $this->Form->end();
         ?>
     </div>
 </div>
+<script type="text/javascript">
+    const performExportBtns = document.querySelectorAll('.perform-export');
+    const baseDownloadUrl = "<?php echo TMP_WEB . 'experiment_data/' . $exp_id; ?>";
+
+    performExportBtns.forEach((exportBtn) => {
+        exportBtn.addEventListener('click', function(event) {
+            // Initiate export and delegate to `handleExport()`.
+            try {
+                event.preventDefault();
+                setLoadingState(true);
+                $.ajax({
+                    url: "<?php echo $this->Html->url(['controller' => 'trapid', 'action' => 'export_data', $exp_id], ['escape' => false]); ?>",
+                    type: 'POST',
+                    data: $(this).parent().serialize(),
+                    dataType: 'json',
+                    success: function(data) {
+                        const exportData = data;
+                        exportData.status = null;
+                        const exportTimeout = setTimeout(handleExport, 2500, exportData);
+                    },
+                    error: function() {
+                        setLoadingState(false);
+                        alert("Unable to start the export. Please contact us to report the issue.");
+                    }
+                });
+            } catch (error) {
+                setLoadingState(false);
+                alert("An error occurred during the export. Please contact us to report the issue.");
+                console.error(error);
+          }
+        }, false);
+    });
+
+    function handleExport(exportData, intervalMs = 4000) {
+        const baseUrl = "<?php echo $this->Html->url(['controller' => 'trapid', 'action' => 'handle_export_data'], ['escape' => false]); ?>";
+        const params = <?php echo json_encode([$exp_id]); ?>;
+        params.push(exportData.jobId);
+        const checkJobUrl = [baseUrl, ...params].join('/');
+        $.ajax({
+            url: checkJobUrl,
+            dataType: 'json',
+            success: function(data) {
+                exportData.status = data.status;
+                // Note: we don't check 'error' status as in this case the requests retuns status code 500, triggering the error below
+                if (exportData.status === 'ready') {
+                    const downloadUrl = [baseDownloadUrl, exportData.zipName].join('/');
+                    console.log(exportData, downloadUrl);
+                    downloadExportFile(downloadUrl);
+                    setLoadingState(false);
+                } else {
+                    const checkTimeout = setTimeout(handleExport, intervalMs, exportData);
+                }
+            },
+            error: function() {
+                setLoadingState(false);
+                alert("An error occurred during the export. Please contact us to report the issue.");
+            },
+        });
+    }
+
+
+    function setLoadingState(isLoading) {
+        // Disable tabs during export
+        document.querySelectorAll('.export-tabs li:not(.active)').forEach((tab) => {
+            tab.classList.toggle('disabled', isLoading);
+        })
+        // Set export buttons 'loading' state (disabled + spinner + loading class)
+        document.querySelectorAll('.perform-export').forEach((btn) => {
+            if (!btn.disabled || btn.classList.contains('loading')) {
+                btn.disabled = isLoading;
+                btn.classList.toggle('loading', isLoading);
+                btn.querySelector('img').classList.toggle('hidden', !isLoading);
+                btn.querySelector('.glyphicon').classList.toggle('hidden', isLoading);
+            }
+        });
+    }
+
+    function downloadExportFile(fileUrl) {
+        const anchor = document.createElement("a");
+        anchor.href = fileUrl;
+        document.body.appendChild(anchor);
+        anchor.click();
+        window.URL.revokeObjectURL(fileUrl);
+        anchor.remove();
+    }
+</script>

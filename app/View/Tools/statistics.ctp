@@ -53,7 +53,7 @@ $loading_span_elmt =
     <div class='btn-toolbar pull-right'>
         <br> <!-- Fix to position the export button -->
         <button type="submit" class="btn btn-sm btn-default" id="btn-pdf-export" disabled>
-            <?php echo $this->Html->image('small-ajax-loader.gif', ['style' => 'max-height: 12px;']); ?>
+            <?php echo $this->Html->image('small-ajax-loader.gif', ['class' => 'loading']); ?>
             <span class="glyphicon glyphicon-download-alt hidden"></span>
             Export to PDF
         </button>

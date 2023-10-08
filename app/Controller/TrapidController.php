@@ -3195,13 +3195,15 @@ class TrapidController extends AppController {
     /**
      *
      * Export experiment data. Export is performed via POST request in which the export type is specified by the
-     * `export_type` variable. The export file is created with the `performExport` function of the TrapidUtils component.
+     * `export_type` variable. A shell script is created and submitted on the cluster with the `initiateExport` function of the TrapidUtils component.
+     * The export job data is sent to the frontend and the export is finalized by the `handle_export_data()` function.
      *
      * @param null $exp_id the experiment id.
      */
     function export_data($exp_id = null) {
         // Maximum time allowed for an export job
         $max_timeout = 210;
+        set_time_limit($max_timeout);
         // Configure::write("debug",2);
         parent::check_user_exp($exp_id);
         $exp_info = $this->Experiments->getDefaultInformation($exp_id);
@@ -3235,17 +3237,18 @@ class TrapidController extends AppController {
         $available_subsets = $this->TranscriptsLabels->getLabels($exp_id);
         $this->set('available_subsets', $available_subsets);
 
-        // Perform export
+        // Perform export. This now happens in two steps: (i) initiate export (here), and (ii) check export job status (`handle_export_data`)
         if ($_POST) {
-            set_time_limit($max_timeout);
-
-            $timestamp = date('Ymd_his');
+            $this->autoRender = false;
             $user_id = $this->Cookie->read('email');
             if (!array_key_exists('export_type', $_POST)) {
-                return;
+                $this->response->statusCode('500');
+                return 'Error: Invalid export type';
             }
+
             $export_type = $_POST['export_type'];
-            $this->set('export_type', $export_type);
+            $this->response->type('json');
+
             if ($export_type == 'structural') {
                 //get columns for export
                 $columns = [];
@@ -3258,7 +3261,7 @@ class TrapidController extends AppController {
                 }
 
                 $columns_string = implode(',', $columns);
-                $file_path = $this->TrapidUtils->performExport(
+                $export_data = $this->TrapidUtils->initiateExport(
                     $plaza_database,
                     $user_id,
                     $exp_id,
@@ -3266,15 +3269,14 @@ class TrapidController extends AppController {
                     'structural_data_exp' . $exp_id . '.txt',
                     $columns_string
                 );
-                if (is_null($file_path)) {
-                    $this->set('export_failed', true);
+                if (is_null($export_data)) {
+                    $this->response->statusCode('500');
                     return;
                 }
-                $this->set('file_path', $file_path);
-                $this->redirect($file_path);
-                return;
+                return json_encode($export_data);
             } elseif ($export_type == 'sequence') {
                 if (!array_key_exists('sequence_type', $_POST)) {
+                    $this->response->statusCode('500');
                     return;
                 }
                 $sequence_type = $_POST['sequence_type'];
@@ -3285,9 +3287,9 @@ class TrapidController extends AppController {
                     $subset_label = filter_var($_POST['subset_label'], FILTER_SANITIZE_STRING);
                     $outfile_suffix = $outfile_suffix . '_' . $subset_label;
                 }
-                $file_path = null;
+                $export_data = null;
                 if ($sequence_type == 'original') {
-                    $file_path = $this->TrapidUtils->performExport(
+                    $export_data = $this->TrapidUtils->initiateExport(
                         $plaza_database,
                         $user_id,
                         $exp_id,
@@ -3296,7 +3298,7 @@ class TrapidController extends AppController {
                         $subset_label
                     );
                 } elseif ($sequence_type == 'orf') {
-                    $file_path = $this->TrapidUtils->performExport(
+                    $export_data = $this->TrapidUtils->initiateExport(
                         $plaza_database,
                         $user_id,
                         $exp_id,
@@ -3305,7 +3307,7 @@ class TrapidController extends AppController {
                         $subset_label
                     );
                 } elseif ($sequence_type == 'aa') {
-                    $file_path = $this->TrapidUtils->performExport(
+                    $export_data = $this->TrapidUtils->initiateExport(
                         $plaza_database,
                         $user_id,
                         $exp_id,
@@ -3314,36 +3316,33 @@ class TrapidController extends AppController {
                         $subset_label
                     );
                 }
-                if (is_null($file_path)) {
-                    $this->set('export_failed', true);
+                if (is_null($export_data)) {
+                    $this->response->statusCode('500');
                     return;
                 }
-                $this->set('file_path', $file_path);
-                $this->redirect($file_path);
-                return;
+                return json_encode($export_data);
             } elseif ($export_type == 'tax') {
-                $file_path = $this->TrapidUtils->performExport(
+                $export_data = $this->TrapidUtils->initiateExport(
                     $plaza_database,
                     $user_id,
                     $exp_id,
                     'TAX_CLASSIFICATION',
                     'transcripts_tax_exp' . $exp_id . '.txt'
                 );
-                if (is_null($file_path)) {
-                    $this->set('export_failed', true);
+                if (is_null($export_data)) {
+                    $this->response->statusCode('500');
                     return;
                 }
-                $this->set('file_path', $file_path);
-                $this->redirect($file_path);
-                return;
+                return json_encode($export_data);
             } elseif ($export_type == 'gf') {
                 if (!array_key_exists('gf_type', $_POST)) {
+                    $this->response->statusCode('500');
                     return;
                 }
                 $gf_type = $_POST['gf_type'];
-                $file_path = null;
+                $export_data = null;
                 if ($gf_type == 'transcript') {
-                    $file_path = $this->TrapidUtils->performExport(
+                    $export_data = $this->TrapidUtils->initiateExport(
                         $plaza_database,
                         $user_id,
                         $exp_id,
@@ -3351,7 +3350,7 @@ class TrapidController extends AppController {
                         'transcripts_gf_exp' . $exp_id . '.txt'
                     );
                 } elseif ($gf_type == 'phylo') {
-                    $file_path = $this->TrapidUtils->performExport(
+                    $export_data = $this->TrapidUtils->initiateExport(
                         $plaza_database,
                         $user_id,
                         $exp_id,
@@ -3359,7 +3358,7 @@ class TrapidController extends AppController {
                         'gf_transcripts_exp' . $exp_id . '.txt'
                     );
                 } elseif ($gf_type == 'reference') {
-                    $file_path = $this->TrapidUtils->performExport(
+                    $export_data = $this->TrapidUtils->initiateExport(
                         $plaza_database,
                         $user_id,
                         $exp_id,
@@ -3367,21 +3366,20 @@ class TrapidController extends AppController {
                         'gf_reference_exp' . $exp_id . '.txt'
                     );
                 }
-                if (is_null($file_path)) {
-                    $this->set('export_failed', true);
+                if (is_null($export_data)) {
+                    $this->response->statusCode('500');
                     return;
                 }
-                $this->set('file_path', $file_path);
-                $this->redirect($file_path);
-                return;
+                return json_encode($export_data);
             } elseif ($export_type == 'rf') {
                 if (!array_key_exists('rf_type', $_POST)) {
+                    $this->response->statusCode('500');
                     return;
                 }
                 $rf_type = $_POST['rf_type'];
-                $file_path = null;
+                $export_data = null;
                 if ($rf_type == 'transcript') {
-                    $file_path = $this->TrapidUtils->performExport(
+                    $export_data = $this->TrapidUtils->initiateExport(
                         $plaza_database,
                         $user_id,
                         $exp_id,
@@ -3389,7 +3387,7 @@ class TrapidController extends AppController {
                         'transcripts_rf_exp' . $exp_id . '.txt'
                     );
                 } elseif ($rf_type == 'rf') {
-                    $file_path = $this->TrapidUtils->performExport(
+                    $export_data = $this->TrapidUtils->initiateExport(
                         $plaza_database,
                         $user_id,
                         $exp_id,
@@ -3397,21 +3395,19 @@ class TrapidController extends AppController {
                         'rf_transcripts_exp' . $exp_id . '.txt'
                     );
                 }
-                if (is_null($file_path)) {
-                    $this->set('export_failed', true);
+                if (is_null($export_data)) {
+                    $this->response->statusCode('500');
                     return;
                 }
-                $this->set('file_path', $file_path);
-                $this->redirect($file_path);
-                return;
+                return json_encode($export_data);
             } elseif ($export_type == 'go' || $export_type == 'interpro' || $export_type == 'ko') {
                 if (!array_key_exists('functional_type', $_POST)) {
                     return;
                 }
                 $functional_type = $_POST['functional_type'];
-                $file_path = null;
+                $export_data = null;
                 if ($functional_type == 'transcript_go') {
-                    $file_path = $this->TrapidUtils->performExport(
+                    $export_data = $this->TrapidUtils->initiateExport(
                         $plaza_database,
                         $user_id,
                         $exp_id,
@@ -3419,7 +3415,7 @@ class TrapidController extends AppController {
                         'transcripts_go_exp' . $exp_id . '.txt'
                     );
                 } elseif ($functional_type == 'meta_go') {
-                    $file_path = $this->TrapidUtils->performExport(
+                    $export_data = $this->TrapidUtils->initiateExport(
                         $plaza_database,
                         $user_id,
                         $exp_id,
@@ -3427,7 +3423,7 @@ class TrapidController extends AppController {
                         'go_transcripts_exp' . $exp_id . '.txt'
                     );
                 } elseif ($functional_type == 'transcript_ipr') {
-                    $file_path = $this->TrapidUtils->performExport(
+                    $export_data = $this->TrapidUtils->initiateExport(
                         $plaza_database,
                         $user_id,
                         $exp_id,
@@ -3435,7 +3431,7 @@ class TrapidController extends AppController {
                         'transcripts_interpro_exp' . $exp_id . '.txt'
                     );
                 } elseif ($functional_type == 'meta_ipr') {
-                    $file_path = $this->TrapidUtils->performExport(
+                    $export_data = $this->TrapidUtils->initiateExport(
                         $plaza_database,
                         $user_id,
                         $exp_id,
@@ -3443,7 +3439,7 @@ class TrapidController extends AppController {
                         'interpro_transcripts_exp' . $exp_id . '.txt'
                     );
                 } elseif ($functional_type == 'transcript_ko') {
-                    $file_path = $this->TrapidUtils->performExport(
+                    $export_data = $this->TrapidUtils->initiateExport(
                         $plaza_database,
                         $user_id,
                         $exp_id,
@@ -3451,7 +3447,7 @@ class TrapidController extends AppController {
                         'transcripts_ko_exp' . $exp_id . '.txt'
                     );
                 } elseif ($functional_type == 'meta_ko') {
-                    $file_path = $this->TrapidUtils->performExport(
+                    $export_data = $this->TrapidUtils->initiateExport(
                         $plaza_database,
                         $user_id,
                         $exp_id,
@@ -3459,22 +3455,21 @@ class TrapidController extends AppController {
                         'ko_transcripts_exp' . $exp_id . '.txt'
                     );
                 }
-                if (is_null($file_path)) {
-                    $this->set('export_failed', true);
+                if (is_null($export_data)) {
+                    $this->response->statusCode('500');
                     return;
                 }
-                $this->set('file_path', $file_path);
-                $this->redirect($file_path);
-                return;
+                return json_encode($export_data);
             } elseif ($export_type == 'subsets') {
                 if (!array_key_exists('subset_label', $_POST)) {
+                    $this->response->statusCode('500');
                     return;
                 }
                 $subset_label = filter_var($_POST['subset_label'], FILTER_SANITIZE_STRING);
                 if (!array_key_exists($subset_label, $available_subsets)) {
                     return;
                 }
-                $file_path = $this->TrapidUtils->performExport(
+                $export_data = $this->TrapidUtils->initiateExport(
                     $plaza_database,
                     $user_id,
                     $exp_id,
@@ -3482,16 +3477,38 @@ class TrapidController extends AppController {
                     $subset_label . '_transcripts_exp' . $exp_id . '.txt',
                     $subset_label
                 );
-                if (is_null($file_path)) {
-                    $this->set('export_failed', true);
+                if (is_null($export_data)) {
+                    $this->response->statusCode('500');
                     return;
                 }
-                $this->set('file_path', $file_path);
-                $this->redirect($file_path);
+                return json_encode($export_data);
             } else {
+                $this->response->statusCode('500');
                 return;
             }
         }
+    }
+
+    /**
+     *
+     * Handle data export job: check if an export job is running on the cluster and return the job status as a simple JSON object.
+     * If the job completed, finalize the export with the `initiateExport` function of the TrapidUtils component.
+     *
+     * @param null $exp_id the experiment id.
+     * @param null $job_id the export job cluster job id.
+     */
+    function handle_export_data($exp_id = null, $cluster_job_id = null) {
+        $this->autoRender = false;
+        $this->response->type('json');
+        parent::check_user_exp($exp_id);
+        if (!$exp_id || !$cluster_job_id) {
+            return;
+        }
+        $export_status = $this->TrapidUtils->checkExportJobStatus($exp_id, $cluster_job_id);
+        if ($export_status == 'error') {
+            $this->response->statusCode(500);
+        }
+        return json_encode(['status' => $export_status]);
     }
 
     function empty_experiment($exp_id = null) {

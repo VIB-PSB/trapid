@@ -277,7 +277,7 @@ function create_export_example($elmt_id, $example_data) {
                         annotated and processed data of a user experiment.
                         This data access is available under the <em>Export data</em> header on an experiment page and
                         includes structural ORF information, transcript/ORF/protein sequences, taxonomic classification,
-                        gene/RNA family information, and functional GO/InterPro information.</p>
+                        gene/RNA family information, and functional GO/InterPro/KO information.</p>
                     <p class="text-justify">The remainder of this section consists of a description of each type of export file, organized by category, complemented by minimal examples (ten first records).
                         Please click on the <span class='label label-primary'>Toggle example</span> links to show the corresponding minimal example export file. </p>
                 </section>
