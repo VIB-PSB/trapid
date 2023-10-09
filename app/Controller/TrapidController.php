@@ -3193,18 +3193,16 @@ class TrapidController extends AppController {
     }
 
     /**
-     *
-     * Export experiment data. Export is performed via POST request in which the export type is specified by the
-     * `export_type` variable. A shell script is created and submitted on the cluster with the `initiateExport` function of the TrapidUtils component.
+     * Export experiment data. The export is performed via POST request in which the export type is specified by the
+     * `export_type` variable. A shell script is created and submitted on the cluster with the `initiateExport` function
+     * of the TrapidUtils component.
      * The export job data is sent to the frontend and the export is finalized by the `handle_export_data()` function.
      *
-     * @param null $exp_id the experiment id.
+     * @param null $exp_id the experiment's identifier.
      */
     function export_data($exp_id = null) {
-        // Maximum time allowed for an export job
-        $max_timeout = 210;
-        set_time_limit($max_timeout);
-        // Configure::write("debug",2);
+        // Maximum time allowed for an export job in milliseconds
+        $max_duration_ms = 240000; // 4 minutes
         parent::check_user_exp($exp_id);
         $exp_info = $this->Experiments->getDefaultInformation($exp_id);
         $plaza_database = $exp_info['used_plaza_database'];
@@ -3213,10 +3211,6 @@ class TrapidController extends AppController {
             $exp_info['process_state'],
             $this->process_states['default']
         );
-        $this->set('exp_info', $exp_info);
-        $this->set('exp_id', $exp_id);
-        $this->set('active_sidebar_item', 'Export data');
-        $this->set('title_for_layout', 'Export data');
 
         $structural_export = [
             'transcript_id' => 'Transcript identifier',
@@ -3232,13 +3226,21 @@ class TrapidController extends AppController {
             'orf' => ['orf_start', 'orf_stop', 'orf_contains_start_codon', 'orf_contains_stop_codon'],
             'meta_annotation' => ['meta_annotation', 'meta_annotation_score']
         ];
-        $this->set('structural_export', $structural_export);
 
         $available_subsets = $this->TranscriptsLabels->getLabels($exp_id);
-        $this->set('available_subsets', $available_subsets);
 
-        // Perform export. This now happens in two steps: (i) initiate export (here), and (ii) check export job status (`handle_export_data`)
-        if ($_POST) {
+        $this->set('exp_info', $exp_info);
+        $this->set('exp_id', $exp_id);
+        $this->set('max_duration_ms', $max_duration_ms);
+        $this->set('structural_export', $structural_export);
+        $this->set('available_subsets', $available_subsets);
+        $this->set('active_sidebar_item', 'Export data');
+        $this->set('title_for_layout', 'Export data');
+
+        // Perform export. This now happens in two steps:
+        // 1. Initiate export: submit export job to the cluster (here),
+        // 2. Check export job status and kill it in case of timeout (`handle_export_data`)
+        if ($this->request->is('post')) {
             $this->autoRender = false;
             $user_id = $this->Cookie->read('email');
             if (!array_key_exists('export_type', $_POST)) {
@@ -3250,7 +3252,7 @@ class TrapidController extends AppController {
             $this->response->type('json');
 
             if ($export_type == 'structural') {
-                //get columns for export
+                // Get columns for export
                 $columns = [];
                 foreach ($_POST as $k => $v) {
                     if (array_key_exists($k, $structural_export_cols)) {
@@ -3259,7 +3261,6 @@ class TrapidController extends AppController {
                         }
                     }
                 }
-
                 $columns_string = implode(',', $columns);
                 $export_data = $this->TrapidUtils->initiateExport(
                     $plaza_database,
@@ -3282,7 +3283,7 @@ class TrapidController extends AppController {
                 $sequence_type = $_POST['sequence_type'];
                 $subset_label = null;
                 $outfile_suffix = '_exp' . $exp_id;
-                // ok check?
+                // OK check?
                 if (array_key_exists('subset_label', $_POST) && !empty($_POST['subset_label'])) {
                     $subset_label = filter_var($_POST['subset_label'], FILTER_SANITIZE_STRING);
                     $outfile_suffix = $outfile_suffix . '_' . $subset_label;
@@ -3490,20 +3491,28 @@ class TrapidController extends AppController {
     }
 
     /**
-     *
-     * Handle data export job: check if an export job is running on the cluster and return the job status as a simple JSON object.
+     * Handle data export job: check if an export job is running and return the job status as a simple JSON object.
      * If the job completed, finalize the export with the `initiateExport` function of the TrapidUtils component.
+     * If the job is running for too long (timeout), kill it, and return an error.
      *
      * @param null $exp_id the experiment id.
      * @param null $job_id the export job cluster job id.
+     * @param null $has_timed_out whether the job has timed out (ran longer than the allowed `$max_duration_ms`).
      */
-    function handle_export_data($exp_id = null, $cluster_job_id = null) {
+    function handle_export_data($exp_id = null, $cluster_job_id = null, $has_timed_out = null) {
         $this->autoRender = false;
         $this->response->type('json');
         parent::check_user_exp($exp_id);
         if (!$exp_id || !$cluster_job_id) {
             return;
         }
+        if ($has_timed_out && $has_timed_out == 1) {
+            $this->TrapidUtils->deleteClusterJob($exp_id, $cluster_job_id);
+            // TODO: also remove export files, even though launching a new export job will remove them?
+            $this->response->statusCode(504);
+            return json_encode(['status' => 'timedOut']);
+        }
+
         $export_status = $this->TrapidUtils->checkExportJobStatus($exp_id, $cluster_job_id);
         if ($export_status == 'error') {
             $this->response->statusCode(500);

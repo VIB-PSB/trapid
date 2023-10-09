@@ -50,7 +50,7 @@ class TrapidUtilsComponent extends Component {
     }
 
     /**
-     * Initiate experiment data export: create export script and submit it.
+     * Initiate experiment data export: create export script, cleanup previous export files, and submit job.
      *
      * @param $plaza_db TRAPID reference database
      * @param $email experiment's owner email, used to append a hash to the export zip archive name
@@ -59,7 +59,12 @@ class TrapidUtilsComponent extends Component {
      * @param $filename export file name
      * @param null $filter export data filter that can either indicate columns to include in the export file (in the
      * case of structural data export) or a transcript subset (in the case of sequence or subset export)
-     * @return array Job id and export file zip archive name.
+     * @return array[
+     *  'jobId' => string,
+     *  'zipName' => string,
+     *  'status' => null
+     * ]
+     * Export job data (id, zip archive name, status placeholder). Return `null` if the job could not be submitted.
      */
     function initiateExport($plaza_db, $email, $exp_id, $export_key, $filename, $filter = null) {
         $tmp_dir = TMP . 'experiment_data/' . $exp_id . '/';
@@ -101,9 +106,9 @@ class TrapidUtilsComponent extends Component {
         // Cleanup previous export files
         // Command to remove previous export shell script and stderr/stdout files
         $export_rm = implode(' ', ['rm -f', $shell_file, $error_file, $output_file]);
-        // Zip archives to remove (pattern for 'rm' command) when a new zip archive is generated
+        // Zip archives to remove (pattern for 'rm' command) when a new zip archive is generated.
+        // This should match all export files for the experiment.
         $zip_rm = $tmp_dir . '*_' . substr($hash, 0, 14) . '.zip';
-        // Now export files are generated with different names. Should every zip archive be removed?
         shell_exec($export_rm);
         shell_exec('rm -f ' . $zip_rm);
 
@@ -128,7 +133,7 @@ class TrapidUtilsComponent extends Component {
                 implode(' ', $java_params) .
                 "\n"
         );
-        fwrite($fh, "if [ $? -eq 0 ]\nthen\necho \"Compress export file\"\n");
+        fwrite($fh, "if [ $? -eq 0 ]\nthen\necho \"Zip export file\"\n");
         fwrite($fh, 'rm -f ' . $zip_rm . "\n");
         fwrite($fh, 'zip -j ' . $internal_zip . ' ' . $internal_file . "\n");
         fwrite($fh, 'rm -f ' . $internal_file . "\n");
@@ -152,26 +157,26 @@ class TrapidUtilsComponent extends Component {
             return null;
         }
         $job_id = $this->getClusterJobId($cluster_output);
-        return ['jobId' => $job_id, 'zipName' => $zip_name];
+        return ['jobId' => $job_id, 'zipName' => $zip_name, 'status' => null];
     }
 
     /**
-     * Check experiment data export job status.
+     * Check and return experiment data export job status.
      *
      * @param $exp_id experiment identifier.
-     * @param $job_id export cluster job id.
+     * @param $job_id export cluster job identifier.
      * @return string export job status: 'running', 'error', or 'ready'.
      */
     function checkExportJobStatus($exp_id, $job_id) {
         $tmp_dir = TMP . 'experiment_data/' . $exp_id . '/';
         $export_basename = 'export_data';
         $output_file = $tmp_dir . $export_basename . '.out';
-        // Asserting `$output_file` exist is needed because of latency between a job finishing and files being visible.
+        // Assert `$output_file` existence because of latency between job completion and file vibility.
         if ($this->cluster_job_exists($exp_id, $job_id) || !file_exists($output_file)) {
             return 'running';
         }
-        // Note: we assert the job finished with an error using the content of `$output_file`, but it would be better to
-        // check the cluster job's exit status instead.
+        // Note: asserting thr job finished with an error based on the content of `$output_file` is ok, but it would be
+        // better to check the cluster job's exit status instead.
         $error_str = 'Export finished with an error';
         if (strpos(file_get_contents($output_file), $error_str) !== false) {
             return 'error';
@@ -181,6 +186,7 @@ class TrapidUtilsComponent extends Component {
 
     /**
      * Perform experiment data export: create export script, run it, compress exported file and return archive file path.
+     * Note: this is not used anymore, see `initiateExport()` instead.
      *
      * @param $plaza_db TRAPID reference database
      * @param $email experiment's owner email, used to append a hash to the export zip archive name
@@ -285,140 +291,6 @@ class TrapidUtilsComponent extends Component {
         shell_exec('zip -j ' . $internal_zip . ' ' . $internal_file);
         shell_exec('rm -f ' . $internal_file);
         $result = $ext_dir . $zip_name;
-        return $result;
-    }
-
-    // Former export function, running locally
-    // 2020-12-29: users reported the file export was not working anymore and is replaced by a function that runs the java
-    // export code on the web cluster.
-    function performExportLocal($plaza_db, $email, $exp_id, $export_key, $filename, $filter = null) {
-        $tmp_dir = TMP . 'experiment_data/' . $exp_id . '/';
-        $ext_dir = TMP_WEB . 'experiment_data/' . $exp_id . '/';
-        $salt = $exp_id;
-        $timestamp = date('Ymd_Gis', time());
-        $hash = hash('sha256', $email . '' . $salt);
-        $internal_file = $tmp_dir . '' . $filename;
-        // $internal_zip	= $tmp_dir."".$hash.".zip";
-        // Give more meaningful file name to the zip archive
-        $zip_name = strtolower($export_key) . '_' . $exp_id . '_' . $timestamp . '_' . substr($hash, 0, 14) . '.zip';
-        // Zip archives to remove (pattern for 'rm' command) when a new zip archive is generated
-        $zip_rm = $tmp_dir . '*_' . substr($hash, 0, 14) . '.zip';
-        $internal_zip = $tmp_dir . $zip_name;
-        //create shell file
-        // TODO: replace hardcoded path to Java (replaced since `/usr/bin/java` was pointing to nothing after migration)
-        $java_cmd = '/software/shared/apps/x86_64/java/1.6.0_17/bin/java'; // Not `usr/bin//java` anymore!
-        $shell_file = $tmp_dir . 'export_data.sh';
-        $base_scripts_location = APP . 'scripts/';
-        // Translation table json file location is needed if exporting protein sequences
-        $transl_tables_file = $base_scripts_location . 'cfg/all_translation_tables.json';
-        $java_location = $base_scripts_location . 'java/';
-        $fh = fopen($shell_file, 'w');
-
-        $java_program = 'transcript_pipeline.ExportManager';
-        // TODO: create separate user to read from the reference databases
-        $java_params = [
-            TRAPID_DB_SERVER,
-            $plaza_db,
-            TRAPID_DB_USER,
-            TRAPID_DB_PASSWORD,
-            TRAPID_DB_SERVER,
-            TRAPID_DB_NAME,
-            TRAPID_DB_USER,
-            TRAPID_DB_PASSWORD,
-            $transl_tables_file,
-            $exp_id,
-            $export_key,
-            $internal_file
-        ];
-        if ($filter != null) {
-            $java_params[] = $filter;
-        }
-
-        //fwrite($fh,"module load java\n");
-        //fwrite($fh,"java -cp ".$java_location.".:".$java_location."..:".$java_location."mysql.jar ".$java_program." ".implode(" ",$java_params)."\n");
-        fwrite(
-            $fh,
-            $java_cmd .
-                ' -cp ' .
-                $java_location .
-                '.:' .
-                $java_location .
-                '..:' .
-                $java_location .
-                'lib/* ' .
-                $java_program .
-                ' ' .
-                implode(' ', $java_params) .
-                " 2>&1\n"
-        );
-        fclose($fh);
-
-        //execute shell script with java program
-        shell_exec('chmod a+x ' . $shell_file);
-        $output = shell_exec('sh ' . $shell_file);
-
-        //zip result file and cleanup
-        // if(file_exists($internal_zip)){
-        // shell_exec("rm -f ".$internal_zip);
-        // Now export files are generated with different names. Should every zip archive be removed?
-        shell_exec('rm -f ' . $zip_rm);
-        // }
-        shell_exec('zip -j ' . $internal_zip . ' ' . $internal_file);
-        shell_exec('rm -f ' . $internal_file);
-        $result = $ext_dir . '' . $zip_name;
-        return $result;
-    }
-
-    // Unused
-    function createZipFileData($email, $exp_id, $data, $columnHeader, $filename) {
-        $tmp_dir = TMP . 'experiment_data/' . $exp_id . '/';
-        $ext_dir = TMP_WEB . 'experiment_data/' . $exp_id . '/';
-        $salt = $exp_id;
-        $hash = hash('sha256', $email . '' . $salt);
-        $internal_file = $tmp_dir . '' . $filename;
-        $internal_zip = $tmp_dir . '' . $hash . '.zip';
-        $fh = fopen($internal_file, 'w');
-        foreach ($columnHeader as $ch) {
-            fwrite($fh, $ch . "\t");
-        }
-        fwrite($fh, "\n");
-
-        foreach ($data as $dat) {
-            foreach ($dat as $d) {
-                fwrite($fh, $d . "\t");
-            }
-            fwrite($fh, "\n");
-        }
-        fclose($fh);
-        if (file_exists($internal_zip)) {
-            shell_exec('rm -f ' . $internal_zip);
-        }
-        shell_exec('zip -j ' . $internal_zip . ' ' . $internal_file);
-        shell_exec('rm -f ' . $internal_file);
-        $result = $ext_dir . '' . $hash . '.zip';
-        return $result;
-    }
-
-    // Unused
-    function createZipSeqFile($email, $exp_id, $data, $filetitle) {
-        $tmp_dir = TMP . 'experiment_data/' . $exp_id . '/';
-        $ext_dir = TMP_WEB . 'experiment_data/' . $exp_id . '/';
-        $salt = $exp_id;
-        $hash = hash('sha256', $email . '' . $salt);
-        $internal_fasta = $tmp_dir . '' . $filetitle;
-        $internal_zip = $tmp_dir . '' . $hash . '.zip';
-        $fh = fopen($internal_fasta, 'w');
-        foreach ($data as $k => $v) {
-            fwrite($fh, '>' . $k . "\n");
-            fwrite($fh, $v . "\n");
-        }
-        fclose($fh);
-        if (file_exists($internal_zip)) {
-            shell_exec('rm -f ' . $internal_zip);
-        }
-        shell_exec('zip -j ' . $internal_zip . ' ' . $internal_fasta);
-        shell_exec('rm -f ' . $internal_fasta);
-        $result = $ext_dir . '' . $hash . '.zip';
         return $result;
     }
 

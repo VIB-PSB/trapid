@@ -337,6 +337,8 @@ if ($exp_info['process_state'] != "finished") {
 <script type="text/javascript">
     const performExportBtns = document.querySelectorAll('.perform-export');
     const baseDownloadUrl = "<?php echo TMP_WEB . 'experiment_data/' . $exp_id; ?>";
+    const maxDurationMs = <?php echo $max_duration_ms; ?>;
+    const checkIntervalMs = 4000;
 
     performExportBtns.forEach((exportBtn) => {
         exportBtn.addEventListener('click', function(event) {
@@ -351,36 +353,40 @@ if ($exp_info['process_state'] != "finished") {
                     dataType: 'json',
                     success: function(data) {
                         const exportData = data;
-                        exportData.status = null;
-                        const exportTimeout = setTimeout(handleExport, 2500, exportData);
+                        exportData.ellapsedTimeMs = 0;
+                        const exportTimeout = setTimeout(handleExport, checkIntervalMs, exportData);
                     },
                     error: function() {
                         setLoadingState(false);
-                        alert("Unable to start the export. Please contact us to report the issue.");
+                        alert("Unable to start the export. If this issue persists, please contact us.");
                     }
                 });
             } catch (error) {
                 setLoadingState(false);
-                alert("An error occurred during the export. Please contact us to report the issue.");
+                alert("An error occurred during the export. If this issue persists, please contact us.");
                 console.error(error);
           }
         }, false);
     });
 
-    function handleExport(exportData, intervalMs = 4000) {
+    function handleExport(exportData, intervalMs = checkIntervalMs) {
         const baseUrl = "<?php echo $this->Html->url(['controller' => 'trapid', 'action' => 'handle_export_data'], ['escape' => false]); ?>";
         const params = <?php echo json_encode([$exp_id]); ?>;
         params.push(exportData.jobId);
+        if (exportData.ellapsedTimeMs + intervalMs > maxDurationMs) {
+            params.push('1');
+        }
         const checkJobUrl = [baseUrl, ...params].join('/');
         $.ajax({
             url: checkJobUrl,
             dataType: 'json',
             success: function(data) {
                 exportData.status = data.status;
-                // Note: we don't check 'error' status as in this case the requests retuns status code 500, triggering the error below
+                exportData.ellapsedTimeMs += intervalMs;
+                // Note: we don't check 'error' status as in this case the requests retuns status code 500, raising
+                // the error below.
                 if (exportData.status === 'ready') {
                     const downloadUrl = [baseDownloadUrl, exportData.zipName].join('/');
-                    console.log(exportData, downloadUrl);
                     downloadExportFile(downloadUrl);
                     setLoadingState(false);
                 } else {
@@ -389,7 +395,7 @@ if ($exp_info['process_state'] != "finished") {
             },
             error: function() {
                 setLoadingState(false);
-                alert("An error occurred during the export. Please contact us to report the issue.");
+                alert("An error occurred during the export. If this issue persists, please contact us.");
             },
         });
     }
