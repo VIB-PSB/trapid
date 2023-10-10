@@ -61,6 +61,7 @@ class TrapidUtilsComponent extends Component {
      * case of structural data export) or a transcript subset (in the case of sequence or subset export)
      * @return array[
      *  'jobId' => string,
+     *  'timestamp' => string,
      *  'zipName' => string,
      *  'status' => null
      * ]
@@ -98,14 +99,19 @@ class TrapidUtilsComponent extends Component {
         if ($filter != null) {
             $java_params[] = $filter;
         }
-        $export_basename = 'export_data';
-        $shell_file = $tmp_dir . $export_basename . '.sh';
-        $error_file = $tmp_dir . $export_basename . '.err';
-        $output_file = $tmp_dir . $export_basename . '.out';
+        $export_basename = 'export_data__';
+        $shell_file = $tmp_dir . $export_basename . $timestamp . '.sh';
+        $error_file = $tmp_dir . $export_basename . $timestamp . '.err';
+        $output_file = $tmp_dir . $export_basename . $timestamp . '.out';
 
         // Cleanup previous export files
-        // Command to remove previous export shell script and stderr/stdout files
-        $export_rm = implode(' ', ['rm -f', $shell_file, $error_file, $output_file]);
+        // Command to remove previous export shell script and stderr/stdout files (all from experiment)
+        $export_rm = implode(' ', [
+            'rm -f',
+            $tmp_dir . $export_basename . '*.sh ',
+            $tmp_dir . $export_basename . '*.err ',
+            $tmp_dir . $export_basename . '*.out'
+        ]);
         // Zip archives to remove (pattern for 'rm' command) when a new zip archive is generated.
         // This should match all export files for the experiment.
         $zip_rm = $tmp_dir . '*_' . substr($hash, 0, 14) . '.zip';
@@ -157,7 +163,7 @@ class TrapidUtilsComponent extends Component {
             return null;
         }
         $job_id = $this->getClusterJobId($cluster_output);
-        return ['jobId' => $job_id, 'zipName' => $zip_name, 'status' => null];
+        return ['jobId' => $job_id, 'timestamp' => $timestamp, 'zipName' => $zip_name, 'status' => null];
     }
 
     /**
@@ -165,17 +171,22 @@ class TrapidUtilsComponent extends Component {
      *
      * @param $exp_id experiment identifier.
      * @param $job_id export cluster job identifier.
+     * @param $timestamp export timestamp (serves to identify output file).
      * @return string export job status: 'running', 'error', or 'ready'.
      */
-    function checkExportJobStatus($exp_id, $job_id) {
+    function checkExportJobStatus($exp_id, $job_id, $timestamp) {
         $tmp_dir = TMP . 'experiment_data/' . $exp_id . '/';
-        $export_basename = 'export_data';
-        $output_file = $tmp_dir . $export_basename . '.out';
-        // Assert `$output_file` existence because of latency between job completion and file vibility.
-        if ($this->cluster_job_exists($exp_id, $job_id) || !file_exists($output_file)) {
+        $export_basename = 'export_data__';
+        $output_file = $tmp_dir . $export_basename . $timestamp . '.out';
+        if ($this->cluster_job_exists($exp_id, $job_id)) {
             return 'running';
         }
-        // Note: asserting thr job finished with an error based on the content of `$output_file` is ok, but it would be
+        // Assert `$output_file` existence (wait for output file to become visible).
+        $output_file_sync = $this->sync_file($output_file, 5);
+        if (!$output_file_sync) {
+            return 'error';
+        }
+        // Note: asserting the job finished with an error based on the content of `$output_file` is ok, but it would be
         // better to check the cluster job's exit status instead.
         $error_str = 'Export finished with an error';
         if (strpos(file_get_contents($output_file), $error_str) !== false) {

@@ -3497,23 +3497,23 @@ class TrapidController extends AppController {
      *
      * @param null $exp_id the experiment id.
      * @param null $job_id the export job cluster job id.
+     * @param null $timestamp the export's timestamp.
      * @param null $has_timed_out whether the job has timed out (ran longer than the allowed `$max_duration_ms`).
      */
-    function handle_export_data($exp_id = null, $cluster_job_id = null, $has_timed_out = null) {
+    function handle_export_data($exp_id = null, $cluster_job_id = null, $timestamp = null, $has_timed_out = null) {
         $this->autoRender = false;
         $this->response->type('json');
         parent::check_user_exp($exp_id);
-        if (!$exp_id || !$cluster_job_id) {
+        if (!$exp_id || !$cluster_job_id || !$timestamp) {
             return;
         }
-        if ($has_timed_out && $has_timed_out == 1) {
+        $export_status = $this->TrapidUtils->checkExportJobStatus($exp_id, $cluster_job_id, $timestamp);
+        if ($export_status == 'running' && $has_timed_out && $has_timed_out == 1) {
             $this->TrapidUtils->deleteClusterJob($exp_id, $cluster_job_id);
             // TODO: also remove export files, even though launching a new export job will remove them?
             $this->response->statusCode(504);
             return json_encode(['status' => 'timedOut']);
         }
-
-        $export_status = $this->TrapidUtils->checkExportJobStatus($exp_id, $cluster_job_id);
         if ($export_status == 'error') {
             $this->response->statusCode(500);
         }

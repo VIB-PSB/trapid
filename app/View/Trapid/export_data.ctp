@@ -372,7 +372,7 @@ if ($exp_info['process_state'] != "finished") {
     function handleExport(exportData, intervalMs = checkIntervalMs) {
         const baseUrl = "<?php echo $this->Html->url(['controller' => 'trapid', 'action' => 'handle_export_data'], ['escape' => false]); ?>";
         const params = <?php echo json_encode([$exp_id]); ?>;
-        params.push(exportData.jobId);
+        params.push(exportData.jobId, exportData.timestamp);
         if (exportData.ellapsedTimeMs + intervalMs > maxDurationMs) {
             params.push('1');
         }
@@ -382,7 +382,7 @@ if ($exp_info['process_state'] != "finished") {
             dataType: 'json',
             success: function(data) {
                 exportData.status = data.status;
-                exportData.ellapsedTimeMs += intervalMs;
+                exportData.ellapsedTimeMs += intervalMs;  // ignores request time.
                 // Note: we don't check 'error' status as in this case the requests retuns status code 500, raising
                 // the error below.
                 if (exportData.status === 'ready') {
