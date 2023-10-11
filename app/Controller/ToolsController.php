@@ -2850,15 +2850,16 @@ class ToolsController extends AppController {
         $status = null
     ) {
         parent::check_user_exp($exp_id);
+        $clean_job_id = filter_var($cluster_job_id, FILTER_SANITIZE_NUMBER_INT);
         $this->layout = '';
         // Quick fix for an issue with decimal places with jobs having `$species_perc` set to 1
         if ($species_perc == 1) {
             $species_perc = number_format($species_perc, 1, '.', '');
         }
-        if ($this->TrapidUtils->cluster_job_exists($exp_id, $cluster_job_id)) {
+        if ($this->TrapidUtils->cluster_job_exists($exp_id, $clean_job_id)) {
             if ($status == 'timeout') {
-                $this->ExperimentJobs->deleteJob($exp_id, $cluster_job_id);
-                $this->TrapidUtils->deleteClusterJob($exp_id, $cluster_job_id);
+                $this->ExperimentJobs->deleteJob($exp_id, $clean_job_id);
+                $this->TrapidUtils->deleteClusterJob($exp_id, $clean_job_id);
                 $this->autoRender = false;
                 return "<p class='text-danger'><strong>Error:</strong> job was not completed in appropiate amount of time</p>";
             }
@@ -2866,14 +2867,14 @@ class ToolsController extends AppController {
             $this->set('max_duration_ms', 360000); // 6 minutes
             // Set all variables that need to be retained to display results after job completion.
             $this->set('exp_id', $exp_id);
-            $this->set('cluster_job_id', $cluster_job_id);
+            $this->set('cluster_job_id', $clean_job_id);
             $this->set('clade_tax_id', $clade_tax_id);
             $this->set('label', $label);
             $this->set('tax_source', $tax_source);
             $this->set('species_perc', $species_perc);
             $this->set('top_hits', $top_hits);
         } else {
-            $this->ExperimentJobs->deleteJob($exp_id, $cluster_job_id);
+            $this->ExperimentJobs->deleteJob($exp_id, $clean_job_id);
             $this->redirect([
                 'controller' => 'tools',
                 'action' => 'load_core_gf_completeness',
