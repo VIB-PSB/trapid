@@ -128,33 +128,6 @@ class Transcripts extends AppModel {
         return $result;
     }
 
-    function getMetaAnnotation($exp_id) {
-        $query =
-            "SELECT `meta_annotation`,`meta_annotation_score`,COUNT(`transcript_id`) as count FROM `transcripts`
-			WHERE `experiment_id`='" .
-            $exp_id .
-            "' GROUP BY `meta_annotation`,`meta_annotation_score` ";
-        $res = $this->query($query);
-        $result = [];
-        foreach ($res as $r) {
-            $meta_annotation = $r['transcripts']['meta_annotation'];
-            $meta_annotation_score = $r['transcripts']['meta_annotation_score'];
-            $count = $r[0]['count'];
-            if ($meta_annotation == '') {
-                //no gene family assigned?
-                $result['none']['none'] = $count;
-                $result['none']['total'] = $count;
-            } else {
-                if (!array_key_exists($meta_annotation, $result)) {
-                    $result[$meta_annotation] = ['total' => 0];
-                }
-                $result[$meta_annotation][$meta_annotation_score] = $count;
-                $result[$meta_annotation]['total'] += $count;
-            }
-        }
-        return $result;
-    }
-
     function getLabelToGFMapping($exp_id, $reverse = false) {
         $query =
             "SELECT COUNT(*), transcripts.`gf_id`,transcripts_labels.`label`

@@ -1588,23 +1588,6 @@ class ToolsController extends AppController {
         }
     }
 
-    // TODO: remove unused method?
-    function orf_statistics($exp_id = null) {
-        parent::check_user_exp($exp_id);
-        $exp_info = $this->Experiments->getDefaultInformation($exp_id);
-        $this->TrapidUtils->checkPageAccess(
-            $exp_info['title'],
-            $exp_info['process_state'],
-            $this->process_states['default']
-        );
-        $this->set('exp_info', $exp_info);
-        $this->set('exp_id', $exp_id);
-
-        //now, get distribution of meta annotation of ORF sequences.
-        $meta_info = $this->Transcripts->getMetaAnnotation($exp_id);
-        $this->set('meta_info', $meta_info);
-    }
-
     function length_distribution($exp_id = null) {
         parent::check_user_exp($exp_id);
         $exp_info = $this->Experiments->getDefaultInformation($exp_id);
